@@ -107,6 +107,106 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
 import android.Manifest
+import android.provider.CallLog
+import android.text.format.DateFormat
+import java.util.Date
+import android.content.Intent
+import android.net.Uri
+import android.app.role.RoleManager
+import android.os.Build
+import android.telecom.TelecomManager
+
+// CallLog Helpers for Android OS Call Log Database
+fun loadRealCallLog(context: Context): List<CallRecord> {
+  val list = mutableListOf<CallRecord>()
+  try {
+    val cursor = context.contentResolver.query(
+      CallLog.Calls.CONTENT_URI,
+      arrayOf(
+        CallLog.Calls._ID,
+        CallLog.Calls.NUMBER,
+        CallLog.Calls.CACHED_NAME,
+        CallLog.Calls.TYPE,
+        CallLog.Calls.DATE,
+        CallLog.Calls.CACHED_NUMBER_TYPE
+      ),
+      null,
+      null,
+      CallLog.Calls.DATE + " DESC"
+    )
+
+    val colors = listOf(AvatarOrange, AvatarBlue, AvatarGreen)
+    val textColors = listOf(AvatarOrangeText, AvatarBlueText, AvatarGreenText)
+
+    cursor?.use {
+      val idCol = it.getColumnIndex(CallLog.Calls._ID)
+      val numCol = it.getColumnIndex(CallLog.Calls.NUMBER)
+      val nameCol = it.getColumnIndex(CallLog.Calls.CACHED_NAME)
+      val typeCol = it.getColumnIndex(CallLog.Calls.TYPE)
+      val dateCol = it.getColumnIndex(CallLog.Calls.DATE)
+      val numTypeCol = it.getColumnIndex(CallLog.Calls.CACHED_NUMBER_TYPE)
+
+      while (it.moveToNext()) {
+        val id = if (idCol != -1) it.getInt(idCol) else 0
+        val number = if (numCol != -1) it.getString(numCol) ?: "" else ""
+        val nameRaw = if (nameCol != -1) it.getString(nameCol) else null
+        val typeInt = if (typeCol != -1) it.getInt(typeCol) else CallLog.Calls.INCOMING_TYPE
+        val dateMs = if (dateCol != -1) it.getLong(dateCol) else 0L
+        val numType = if (numTypeCol != -1) it.getInt(numTypeCol) else -1
+
+        val name = nameRaw?.takeIf { it.isNotBlank() } ?: "Unknown"
+
+        val label = when (numType) {
+          ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Home"
+          ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> "Mobile"
+          ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> "Work"
+          else -> "Other"
+        }
+
+        val type = when (typeInt) {
+          CallLog.Calls.MISSED_TYPE -> CallType.MISSED
+          CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
+          else -> CallType.INCOMING
+        }
+
+        val timestamp = if (dateMs > 0) {
+          DateFormat.format("MMM dd, h:mm a", Date(dateMs)).toString()
+        } else {
+          "Unknown"
+        }
+
+        val avatarText = if (name != "Unknown" && name.isNotEmpty()) {
+          if (name.length >= 2) name.substring(0, 2).uppercase() else name.take(1).uppercase()
+        } else {
+          "?"
+        }
+
+        val hashCodeVal = name.hashCode()
+        val posHashCode = if (hashCodeVal < 0) -hashCodeVal else hashCodeVal
+        val colorIdx = posHashCode % colors.size
+        val avatarBg = colors[colorIdx]
+        val avatarTextColor = textColors[colorIdx]
+
+        list.add(
+          CallRecord(
+            id = id,
+            name = name,
+            number = number,
+            label = label,
+            timestamp = timestamp,
+            type = type,
+            avatarText = avatarText,
+            avatarBg = avatarBg,
+            avatarTextColor = avatarTextColor
+          )
+        )
+      }
+    }
+  } catch (e: Exception) {
+    e.printStackTrace()
+  }
+  return list
+}
 
 // Contact CRUD Helpers for Android OS Contacts Database
 fun loadRealContacts(context: Context): List<Contact> {
@@ -370,10 +470,36 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+
+    // Check and request default dialer role on startup
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+      val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+      if (!roleManager.isRoleHeld(RoleManager.ROLE_DIALER)) {
+        val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+        startActivity(intent)
+      }
+    } else {
+      val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+      val currentDefault = telecomManager.defaultDialerPackage
+      if (currentDefault != packageName) {
+        val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+          putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+        }
+        startActivity(intent)
+      }
+    }
+
     setContent {
-      var isDarkTheme by rememberSaveable { mutableStateOf(false) }
+      var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
       DialerTheme(isDarkTheme = isDarkTheme) {
-        MainScreen(isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it })
+        MainScreen(
+          isDarkTheme = isDarkTheme,
+          onThemeChange = { newVal ->
+            isDarkTheme = newVal
+            prefs.edit().putBoolean("dark_theme", newVal).apply()
+          }
+        )
       }
     }
   }
@@ -530,14 +656,15 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     )
   }
 
-  // Contact Permission and Database Loading State
+  // Contact & Call Log Permission and Database Loading State
   var hasContactsPermission by remember { mutableStateOf(false) }
+  var hasCallLogPermission by remember { mutableStateOf(false) }
 
   val permissionLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestMultiplePermissions()
   ) { permissions ->
-    val readGranted = permissions[Manifest.permission.READ_CONTACTS] ?: false
-    hasContactsPermission = readGranted
+    hasContactsPermission = permissions[Manifest.permission.READ_CONTACTS] ?: false
+    hasCallLogPermission = permissions[Manifest.permission.READ_CALL_LOG] ?: false
   }
 
   fun refreshContacts() {
@@ -550,12 +677,26 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     }
   }
 
-  LaunchedEffect(hasContactsPermission) {
+  fun refreshCallLog() {
+    val callLogGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
+    hasCallLogPermission = callLogGranted
+    if (callLogGranted) {
+      val realCallLog = loadRealCallLog(context)
+      if (realCallLog.isNotEmpty()) {
+        callHistory.clear()
+        callHistory.addAll(realCallLog)
+      }
+    }
+  }
+
+  LaunchedEffect(hasContactsPermission, hasCallLogPermission) {
     refreshContacts()
+    refreshCallLog()
   }
 
   LaunchedEffect(Unit) {
     refreshContacts()
+    refreshCallLog()
   }
 
   // State for Edit Contact Dialog
@@ -599,6 +740,25 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
         avatarTextColor = AvatarBlueText
       )
     )
+
+    // Try to place a real phone call!
+    try {
+      val callIntent = Intent(Intent.ACTION_CALL, Uri.parse("tel:${Uri.encode(number)}")).apply {
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+      }
+      if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+        context.startActivity(callIntent)
+      } else {
+        // Fallback to ACTION_DIAL which does not require permission
+        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(number)}")).apply {
+          flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        context.startActivity(dialIntent)
+      }
+    } catch (e: Exception) {
+      e.printStackTrace()
+      Toast.makeText(context, "Could not place call: ${e.message}", Toast.LENGTH_SHORT).show()
+    }
   }
 
   // Filter lists based on search
@@ -647,7 +807,17 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
               primaryText = currentPrimaryDarkText,
               secondaryText = currentGrayText,
               activePill = currentActiveBluePill,
-              brandBlue = currentBrandBlue
+              brandBlue = currentBrandBlue,
+              hasPermission = hasCallLogPermission,
+              onRequestPermission = {
+                permissionLauncher.launch(
+                  arrayOf(
+                    Manifest.permission.READ_CALL_LOG,
+                    Manifest.permission.WRITE_CALL_LOG,
+                    Manifest.permission.CALL_PHONE
+                  )
+                )
+              }
             )
 
             1 -> ContactsTabContent(

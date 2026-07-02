@@ -312,7 +312,9 @@ fun RecentsTabContent(
   primaryText: Color,
   secondaryText: Color,
   activePill: Color,
-  brandBlue: Color
+  brandBlue: Color,
+  hasPermission: Boolean = true,
+  onRequestPermission: () -> Unit = {}
 ) {
   var expandedRecordId by remember { mutableStateOf<Int?>(null) }
   var isPlayingVoicemail by remember { mutableStateOf(false) }
@@ -372,6 +374,39 @@ fun RecentsTabContent(
           callRecords.forEach { onDeleteRecord(it.id) }
         }
       )
+    }
+
+    if (!hasPermission) {
+      androidx.compose.material3.Card(
+        modifier = Modifier
+          .fillMaxWidth()
+          .padding(bottom = 12.dp),
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = activePill.copy(alpha = 0.25f)),
+        shape = RoundedCornerShape(16.dp)
+      ) {
+        Column(
+          modifier = Modifier.padding(16.dp),
+          horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+          Text("🔒 Offline Simulation Mode", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
+          Spacer(modifier = Modifier.height(4.dp))
+          Text(
+            text = "To access, load, and call the real call history on your phone, please enable the Call Log Permission.",
+            fontSize = 11.sp,
+            color = secondaryText,
+            textAlign = TextAlign.Center
+          )
+          Spacer(modifier = Modifier.height(10.dp))
+          Button(
+            onClick = onRequestPermission,
+            colors = ButtonDefaults.buttonColors(containerColor = brandBlue),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.height(32.dp)
+          ) {
+            Text("Enable Call Log", fontSize = 11.sp, color = Color.White)
+          }
+        }
+      }
     }
 
     if (groupedRecords.isEmpty()) {
@@ -857,7 +892,7 @@ fun ContactsTabContent(
               .fillMaxWidth()
               .clip(RoundedCornerShape(16.dp))
               .clickable { onCallClick(contact) }
-              .padding(12.dp),
+              .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
             verticalAlignment = Alignment.CenterVertically
           ) {
             Box(
@@ -874,7 +909,7 @@ fun ContactsTabContent(
                 color = contact.avatarTextColor
               )
             }
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             Column(modifier = Modifier.weight(1f)) {
               Text(
                 text = contact.name,
@@ -890,7 +925,10 @@ fun ContactsTabContent(
             }
 
             // Star/Unstar toggle
-            IconButton(onClick = { onToggleFavorite(contact) }) {
+            IconButton(
+              onClick = { onToggleFavorite(contact) },
+              modifier = Modifier.width(36.dp)
+            ) {
               Icon(
                 imageVector = Icons.Default.Star,
                 contentDescription = "Favorite Toggle",
@@ -900,8 +938,11 @@ fun ContactsTabContent(
 
             // More options dropdown
             var menuExpanded by remember { mutableStateOf(false) }
-            Box(modifier = Modifier.padding(horizontal = 2.dp)) {
-              IconButton(onClick = { menuExpanded = true }) {
+            Box(modifier = Modifier.padding(horizontal = 0.dp)) {
+              IconButton(
+                onClick = { menuExpanded = true },
+                modifier = Modifier.width(30.dp)
+              ) {
                 Text("⋮", fontSize = 18.sp, color = secondaryText, fontWeight = FontWeight.Bold)
               }
               DropdownMenu(
