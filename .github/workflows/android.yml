@@ -20,8 +20,15 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Decode Debug Keystore
-      run: base64 -d -i debug.keystore.base64 > debug.keystore
+    - name: Decode or Generate Debug Keystore
+      run: |
+        if [ -f debug.keystore.base64 ]; then
+          echo "Decoding debug keystore from base64..."
+          base64 -d -i debug.keystore.base64 > debug.keystore
+        else
+          echo "debug.keystore.base64 not found. Generating a new debug keystore..."
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+        fi
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
