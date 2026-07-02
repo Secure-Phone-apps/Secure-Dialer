@@ -1,0 +1,902 @@
+package com.example
+
+import android.content.Context
+import android.media.AudioManager
+import android.media.ToneGenerator
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
+import android.provider.ContactsContract
+import android.content.ContentProviderOperation
+import android.content.ContentValues
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import android.Manifest
+
+// Contact CRUD Helpers for Android OS Contacts Database
+fun loadRealContacts(context: Context): List<Contact> {
+  val list = mutableListOf<Contact>()
+  try {
+    val contentResolver = context.contentResolver
+    val cursor = contentResolver.query(
+      ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+      arrayOf(
+        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+        ContactsContract.CommonDataKinds.Phone.NUMBER,
+        ContactsContract.CommonDataKinds.Phone.TYPE,
+        ContactsContract.CommonDataKinds.Phone.LABEL,
+        ContactsContract.CommonDataKinds.Phone.STARRED
+      ),
+      null,
+      null,
+      ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
+    )
+
+    val colors = listOf(AvatarOrange, AvatarBlue, AvatarGreen)
+    val textColors = listOf(AvatarOrangeText, AvatarBlueText, AvatarGreenText)
+
+    cursor?.use {
+      val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+      val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+      val typeIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)
+      val labelIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL)
+      val starredIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.STARRED)
+
+      while (it.moveToNext()) {
+        val name = if (nameIndex != -1) it.getString(nameIndex) ?: "Unknown" else "Unknown"
+        val number = if (numberIndex != -1) it.getString(numberIndex) ?: "" else ""
+        val type = if (typeIndex != -1) it.getInt(typeIndex) else -1
+        val labelStr = if (labelIndex != -1) it.getString(labelIndex) ?: "" else ""
+        val favorite = if (starredIndex != -1) it.getInt(starredIndex) == 1 else false
+
+        val label = when (type) {
+          ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Home"
+          ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> "Mobile"
+          ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> "Work"
+          else -> if (labelStr.isNotEmpty()) labelStr else "Mobile"
+        }
+
+        if (number.isNotEmpty() && list.none { it.number == number && it.name == name }) {
+          val colorIdx = (name.hashCode() and 0x7FFFFFFF) % colors.size
+          list.add(
+            Contact(
+              name = name,
+              number = number,
+              label = label,
+              favorite = favorite,
+              avatarBg = colors[colorIdx],
+              avatarTextColor = textColors[colorIdx]
+            )
+          )
+        }
+      }
+    }
+  } catch (e: Exception) {
+    e.printStackTrace()
+  }
+  return list
+}
+
+fun addRealContact(context: Context, name: String, number: String, label: String): Boolean {
+  return try {
+    val ops = arrayListOf<ContentProviderOperation>()
+
+    ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+      .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+      .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+      .build())
+
+    ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+      .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+      .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+      .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+      .build())
+
+    val type = when (label.lowercase()) {
+      "home" -> ContactsContract.CommonDataKinds.Phone.TYPE_HOME
+      "work" -> ContactsContract.CommonDataKinds.Phone.TYPE_WORK
+      else -> ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+    }
+
+    ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+      .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+      .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+      .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
+      .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, type)
+      .build())
+
+    context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+    true
+  } catch (e: Exception) {
+    e.printStackTrace()
+    false
+  }
+}
+
+fun deleteRealContact(context: Context, name: String): Boolean {
+  return try {
+    val resolver = context.contentResolver
+    resolver.delete(
+      ContactsContract.RawContacts.CONTENT_URI,
+      "${ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY} = ?",
+      arrayOf(name)
+    )
+    true
+  } catch (e: Exception) {
+    e.printStackTrace()
+    false
+  }
+}
+
+fun updateRealContact(context: Context, oldName: String, newName: String, newNumber: String, newLabel: String): Boolean {
+  return try {
+    val resolver = context.contentResolver
+
+    val cursor = resolver.query(
+      ContactsContract.Data.CONTENT_URI,
+      arrayOf(ContactsContract.Data.RAW_CONTACT_ID),
+      "${ContactsContract.Data.DISPLAY_NAME} = ?",
+      arrayOf(oldName),
+      null
+    )
+    var rawContactId: Long? = null
+    cursor?.use {
+      if (it.moveToFirst()) {
+        rawContactId = it.getLong(0)
+      }
+    }
+
+    if (rawContactId == null) return false
+
+    val nameValues = ContentValues().apply {
+      put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, newName)
+    }
+    resolver.update(
+      ContactsContract.Data.CONTENT_URI,
+      nameValues,
+      "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
+      arrayOf(rawContactId.toString(), ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+    )
+
+    val phoneValues = ContentValues().apply {
+      put(ContactsContract.CommonDataKinds.Phone.NUMBER, newNumber)
+      val type = when (newLabel.lowercase()) {
+        "home" -> ContactsContract.CommonDataKinds.Phone.TYPE_HOME
+        "work" -> ContactsContract.CommonDataKinds.Phone.TYPE_WORK
+        else -> ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
+      }
+      put(ContactsContract.CommonDataKinds.Phone.TYPE, type)
+    }
+    resolver.update(
+      ContactsContract.Data.CONTENT_URI,
+      phoneValues,
+      "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
+      arrayOf(rawContactId.toString(), ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
+    )
+
+    true
+  } catch (e: Exception) {
+    e.printStackTrace()
+    false
+  }
+}
+
+fun toggleRealContactFavorite(context: Context, name: String, isFavorite: Boolean): Boolean {
+  return try {
+    val resolver = context.contentResolver
+
+    val cursor = resolver.query(
+      ContactsContract.Contacts.CONTENT_URI,
+      arrayOf(ContactsContract.Contacts._ID),
+      "${ContactsContract.Contacts.DISPLAY_NAME} = ?",
+      arrayOf(name),
+      null
+    )
+    var contactId: Long? = null
+    cursor?.use {
+      if (it.moveToFirst()) {
+        contactId = it.getLong(0)
+      }
+    }
+
+    if (contactId == null) return false
+
+    val values = ContentValues().apply {
+      put(ContactsContract.Contacts.STARRED, if (isFavorite) 1 else 0)
+    }
+    resolver.update(
+      ContactsContract.Contacts.CONTENT_URI,
+      values,
+      "${ContactsContract.Contacts._ID} = ?",
+      arrayOf(contactId.toString())
+    )
+    true
+  } catch (e: Exception) {
+    e.printStackTrace()
+    false
+  }
+}
+
+// Professional Polish Theme Colors
+val BrandBlueLight = Color(0xFF0B57D0)
+val SoftBlueBgLight = Color(0xFFF7F9FF)
+val ActiveBluePillLight = Color(0xFFD3E3FD)
+val SearchBarBgLight = Color(0xFFE9EEF6)
+val GrayTextLight = Color(0xFF44474E)
+val PrimaryDarkTextLight = Color(0xFF191C20)
+val NavBgLight = Color(0xFFF3F6FC)
+val NavBorderLight = Color(0xFFDDE3EA)
+
+// Dark Theme Variants
+val BrandBlueDark = Color(0xFFA8C7FA)
+val SoftBlueBgDark = Color(0xFF111318)
+val ActiveBluePillDark = Color(0xFF004A77)
+val SearchBarBgDark = Color(0xFF282A2F)
+val GrayTextDark = Color(0xFFC4C6D0)
+val PrimaryDarkTextDark = Color(0xFFE2E2E9)
+val NavBgDark = Color(0xFF1E2025)
+val NavBorderDark = Color(0xFF44474E)
+
+// Avatar Colors
+val AvatarOrange = Color(0xFFFFDBCB)
+val AvatarOrangeText = Color(0xFF311300)
+val AvatarBlue = Color(0xFFD1E4FF)
+val AvatarBlueText = Color(0xFF001D36)
+val AvatarGreen = Color(0xFFD9E7CB)
+val AvatarGreenText = Color(0xFF141E0D)
+
+// Data Classes
+data class CallRecord(
+  val id: Int,
+  val name: String,
+  val number: String,
+  val label: String,
+  val timestamp: String,
+  val type: CallType,
+  val avatarText: String,
+  val avatarBg: Color,
+  val avatarTextColor: Color
+)
+
+enum class CallType {
+  MISSED, OUTGOING, INCOMING
+}
+
+data class Contact(
+  val name: String,
+  val number: String,
+  val label: String,
+  val favorite: Boolean = false,
+  val avatarBg: Color,
+  val avatarTextColor: Color
+)
+
+class MainActivity : ComponentActivity() {
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+    setContent {
+      var isDarkTheme by rememberSaveable { mutableStateOf(false) }
+      DialerTheme(isDarkTheme = isDarkTheme) {
+        MainScreen(isDarkTheme = isDarkTheme, onThemeChange = { isDarkTheme = it })
+      }
+    }
+  }
+}
+
+@Composable
+fun DialerTheme(isDarkTheme: Boolean, content: @Composable () -> Unit) {
+  val colors = if (isDarkTheme) {
+    darkColorScheme(
+      primary = BrandBlueDark,
+      background = SoftBlueBgDark,
+      surface = SoftBlueBgDark,
+      onPrimary = Color.Black,
+      onBackground = PrimaryDarkTextDark,
+      onSurface = PrimaryDarkTextDark
+    )
+  } else {
+    lightColorScheme(
+      primary = BrandBlueLight,
+      background = SoftBlueBgLight,
+      surface = SoftBlueBgLight,
+      onPrimary = Color.White,
+      onBackground = PrimaryDarkTextLight,
+      onSurface = PrimaryDarkTextLight
+    )
+  }
+  MaterialTheme(
+    colorScheme = colors,
+    content = content
+  )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
+  val context = LocalContext.current
+  val haptic = LocalHapticFeedback.current
+
+  // Theme-aware styles
+  val currentBrandBlue = if (isDarkTheme) BrandBlueDark else BrandBlueLight
+  val currentSoftBlueBg = if (isDarkTheme) SoftBlueBgDark else SoftBlueBgLight
+  val currentActiveBluePill = if (isDarkTheme) ActiveBluePillDark else ActiveBluePillLight
+  val currentSearchBarBg = if (isDarkTheme) SearchBarBgDark else SearchBarBgLight
+  val currentGrayText = if (isDarkTheme) GrayTextDark else GrayTextLight
+  val currentPrimaryDarkText = if (isDarkTheme) PrimaryDarkTextDark else PrimaryDarkTextLight
+  val currentNavBg = if (isDarkTheme) NavBgDark else NavBgLight
+  val currentNavBorder = if (isDarkTheme) NavBorderDark else NavBorderLight
+
+  // DTMF Tone Generator
+  val toneGenerator = remember {
+    try {
+      ToneGenerator(AudioManager.STREAM_DTMF, 80)
+    } catch (e: Exception) {
+      null
+    }
+  }
+
+  fun playDtmf(key: String) {
+    toneGenerator?.let {
+      val tone = when (key) {
+        "1" -> ToneGenerator.TONE_DTMF_1
+        "2" -> ToneGenerator.TONE_DTMF_2
+        "3" -> ToneGenerator.TONE_DTMF_3
+        "4" -> ToneGenerator.TONE_DTMF_4
+        "5" -> ToneGenerator.TONE_DTMF_5
+        "6" -> ToneGenerator.TONE_DTMF_6
+        "7" -> ToneGenerator.TONE_DTMF_7
+        "8" -> ToneGenerator.TONE_DTMF_8
+        "9" -> ToneGenerator.TONE_DTMF_9
+        "0" -> ToneGenerator.TONE_DTMF_0
+        "*" -> ToneGenerator.TONE_DTMF_S
+        "#" -> ToneGenerator.TONE_DTMF_P
+        else -> -1
+      }
+      if (tone != -1) {
+        it.startTone(tone, 120)
+      }
+    }
+  }
+
+  // Navigation tabs state
+  var selectedTab by rememberSaveable { mutableIntStateOf(0) } // Default to "Recents"
+
+  // Search state
+  var searchQuery by rememberSaveable { mutableStateOf("") }
+
+  // State for Dialpad Overlay
+  var isDialpadVisible by rememberSaveable { mutableStateOf(false) }
+  var dialpadInput by rememberSaveable { mutableStateOf("") }
+
+  // Settings State Drawer / Dialog
+  var isSettingsVisible by rememberSaveable { mutableStateOf(false) }
+
+  // Settings features
+  var dialpadTonesEnabled by rememberSaveable { mutableStateOf(true) }
+  var vibrateOnClickEnabled by rememberSaveable { mutableStateOf(true) }
+  var preferredSim by rememberSaveable { mutableStateOf("SIM 1") }
+  var voicemailNumber by rememberSaveable { mutableStateOf("+1 (555) 011-9988") }
+
+  // Blocked Numbers
+  val blockedNumbers = remember {
+    mutableStateListOf("+1 (555) 019-3847", "911-FAKE")
+  }
+
+  // Quick Responses
+  val quickResponses = remember {
+    mutableStateListOf(
+      "In a meeting. Call you later?",
+      "Can't talk right now. What's up?",
+      "On my way, speak soon!",
+      "I'll call you right back."
+    )
+  }
+
+  // Speed Dial Configuration (1 to 9 mapped to phone number strings)
+  val speedDialMap = remember {
+    mutableStateMapOf<Int, String>().apply {
+      put(2, "+1 (555) 012-3456") // Mapped to Alex Murphy
+      put(3, "+1 (555) 014-2200") // Mapped to Benji (Home)
+    }
+  }
+
+  // State for Active In-call Screen
+  var isCallActive by rememberSaveable { mutableStateOf(false) }
+  var callingContactName by rememberSaveable { mutableStateOf("") }
+  var callingContactNumber by rememberSaveable { mutableStateOf("") }
+
+  // State for Add Contact Dialog
+  var isAddContactDialogVisible by rememberSaveable { mutableStateOf(false) }
+  var newContactName by rememberSaveable { mutableStateOf("") }
+  var newContactNumber by rememberSaveable { mutableStateOf("") }
+  var newContactLabel by rememberSaveable { mutableStateOf("Mobile") }
+
+  // Mock call history state
+  val callHistory = remember {
+    mutableStateListOf(
+      CallRecord(1, "Alex Murphy", "+1 (555) 012-3456", "Mobile", "12:45 PM", CallType.MISSED, "AM", AvatarOrange, AvatarOrangeText),
+      CallRecord(101, "Unknown Caller", "+1 (555) 011-9988", "Voicemail", "June 28", CallType.INCOMING, "?", Color.LightGray, Color.DarkGray),
+      CallRecord(2, "Sarah Jenkins", "+1 (555) 018-9821", "Work", "Yesterday", CallType.OUTGOING, "S", AvatarBlue, AvatarBlueText),
+      CallRecord(102, "David Miller", "+1 (555) 013-1122", "Voicemail", "June 25", CallType.INCOMING, "D", AvatarBlue, AvatarBlueText),
+      CallRecord(3, "Benji (Home)", "+1 (555) 014-2200", "Landline", "Monday", CallType.INCOMING, "B", AvatarGreen, AvatarGreenText)
+    )
+  }
+
+  // Mock contacts list
+  val contactsList = remember {
+    mutableStateListOf(
+      Contact("Alex Murphy", "+1 (555) 012-3456", "Mobile", true, AvatarOrange, AvatarOrangeText),
+      Contact("Benji (Home)", "+1 (555) 014-2200", "Landline", false, AvatarGreen, AvatarGreenText),
+      Contact("Charlie Davis", "+1 (555) 019-3847", "Mobile", false, AvatarOrange, AvatarOrangeText),
+      Contact("David Miller", "+1 (555) 013-1122", "Work", true, AvatarBlue, AvatarBlueText),
+      Contact("Elena Rostova", "+1 (555) 017-4499", "Mobile", true, AvatarGreen, AvatarGreenText),
+      Contact("Sarah Jenkins", "+1 (555) 018-9821", "Work", false, AvatarBlue, AvatarBlueText)
+    )
+  }
+
+  // Contact Permission and Database Loading State
+  var hasContactsPermission by remember { mutableStateOf(false) }
+
+  val permissionLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestMultiplePermissions()
+  ) { permissions ->
+    val readGranted = permissions[Manifest.permission.READ_CONTACTS] ?: false
+    hasContactsPermission = readGranted
+  }
+
+  fun refreshContacts() {
+    val readGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+    hasContactsPermission = readGranted
+    if (readGranted) {
+      val realList = loadRealContacts(context)
+      contactsList.clear()
+      contactsList.addAll(realList)
+    }
+  }
+
+  LaunchedEffect(hasContactsPermission) {
+    refreshContacts()
+  }
+
+  LaunchedEffect(Unit) {
+    refreshContacts()
+  }
+
+  // State for Edit Contact Dialog
+  var isEditContactDialogVisible by remember { mutableStateOf(false) }
+  var oldContactToEdit by remember { mutableStateOf<Contact?>(null) }
+  var editContactName by remember { mutableStateOf("") }
+  var editContactNumber by remember { mutableStateOf("") }
+  var editContactLabel by remember { mutableStateOf("Mobile") }
+
+  // Voicemail state
+  val voicemailRecords = remember {
+    mutableStateListOf(
+      CallRecord(101, "Unknown Caller", "+1 (555) 011-9988", "Voicemail", "June 28", CallType.INCOMING, "?", Color.LightGray, Color.DarkGray),
+      CallRecord(102, "David Miller", "+1 (555) 013-1122", "Voicemail", "June 25", CallType.INCOMING, "D", AvatarBlue, AvatarBlueText)
+    )
+  }
+
+  // Blocked check utility
+  fun initiateCall(name: String, number: String, label: String = "Mobile") {
+    // Check if the number is in the blocklist
+    if (blockedNumbers.contains(number)) {
+      Toast.makeText(context, "🚫 Call Blocked: $number is in your Blocklist!", Toast.LENGTH_LONG).show()
+      return
+    }
+
+    callingContactName = name
+    callingContactNumber = number
+    isCallActive = true
+
+    // Log the outgoing call
+    callHistory.add(
+      0, CallRecord(
+        id = (callHistory.maxOfOrNull { it.id } ?: 0) + 1,
+        name = name,
+        number = number,
+        label = label,
+        timestamp = "Just now",
+        type = CallType.OUTGOING,
+        avatarText = if (name.length >= 2) name.substring(0, 2).uppercase() else name.take(1).uppercase(),
+        avatarBg = AvatarBlue,
+        avatarTextColor = AvatarBlueText
+      )
+    )
+  }
+
+  // Filter lists based on search
+  val filteredCallHistory = callHistory.filter {
+    it.name.contains(searchQuery, ignoreCase = true) || it.number.contains(searchQuery, ignoreCase = true)
+  }
+
+  val filteredContacts = contactsList.filter {
+    it.name.contains(searchQuery, ignoreCase = true) || it.number.contains(searchQuery, ignoreCase = true)
+  }
+
+  Scaffold(
+    modifier = Modifier.fillMaxSize(),
+    containerColor = currentSoftBlueBg,
+    contentWindowInsets = WindowInsets.safeDrawing
+  ) { paddingValues ->
+    Box(
+      modifier = Modifier
+        .fillMaxSize()
+        .padding(paddingValues)
+    ) {
+      Column(modifier = Modifier.fillMaxSize()) {
+        // 1. Search Bar Header with Settings Menu Option
+        HeaderSearchBar(
+          searchQuery = searchQuery,
+          onQueryChange = { searchQuery = it },
+          onSettingsClick = { isSettingsVisible = true },
+          onProfileClick = { isSettingsVisible = true },
+          searchBg = currentSearchBarBg,
+          textStyleColor = currentPrimaryDarkText,
+          grayTextColor = currentGrayText,
+          activePillColor = currentActiveBluePill
+        )
+
+        // 2. Main Content Area based on selected Tab
+        Box(
+          modifier = Modifier
+            .fillMaxWidth()
+            .weight(1f)
+        ) {
+          when (selectedTab) {
+            0 -> RecentsTabContent(
+              callRecords = filteredCallHistory,
+              onCallClick = { record -> initiateCall(record.name, record.number, record.label) },
+              onDeleteRecord = { id -> callHistory.removeAll { it.id == id } },
+              primaryText = currentPrimaryDarkText,
+              secondaryText = currentGrayText,
+              activePill = currentActiveBluePill,
+              brandBlue = currentBrandBlue
+            )
+
+            1 -> ContactsTabContent(
+              contacts = filteredContacts,
+              onCallClick = { contact -> initiateCall(contact.name, contact.number, contact.label) },
+              onAddContactClick = { isAddContactDialogVisible = true },
+              onToggleFavorite = { contact ->
+                if (hasContactsPermission) {
+                  val success = toggleRealContactFavorite(context, contact.name, !contact.favorite)
+                  if (success) {
+                    Toast.makeText(context, "Star toggled successfully", Toast.LENGTH_SHORT).show()
+                  }
+                  refreshContacts()
+                } else {
+                  val index = contactsList.indexOfFirst { it.name == contact.name && it.number == contact.number }
+                  if (index != -1) {
+                    contactsList[index] = contactsList[index].copy(favorite = !contact.favorite)
+                  }
+                }
+              },
+              primaryText = currentPrimaryDarkText,
+              secondaryText = currentGrayText,
+              activePill = currentActiveBluePill,
+              brandBlue = currentBrandBlue,
+              hasPermission = hasContactsPermission,
+              onRequestPermission = {
+                permissionLauncher.launch(
+                  arrayOf(
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.WRITE_CONTACTS
+                  )
+                )
+              },
+              onEditContact = { contact ->
+                oldContactToEdit = contact
+                editContactName = contact.name
+                editContactNumber = contact.number
+                editContactLabel = contact.label
+                isEditContactDialogVisible = true
+              },
+              onDeleteContact = { contact ->
+                if (hasContactsPermission) {
+                  val success = deleteRealContact(context, contact.name)
+                  if (success) {
+                    Toast.makeText(context, "🗑️ Contact deleted: ${contact.name}", Toast.LENGTH_SHORT).show()
+                  } else {
+                    Toast.makeText(context, "Failed to delete contact", Toast.LENGTH_SHORT).show()
+                  }
+                  refreshContacts()
+                } else {
+                  contactsList.removeAll { it.name == contact.name && it.number == contact.number }
+                  Toast.makeText(context, "🗑️ Sim-Contact deleted: ${contact.name}", Toast.LENGTH_SHORT).show()
+                }
+              }
+            )
+
+            2 -> DialpadTabContent(
+              inputValue = dialpadInput,
+              onValueChange = {
+                if (it.length > dialpadInput.length) {
+                  val added = it.last().toString()
+                  if (dialpadTonesEnabled) playDtmf(added)
+                  if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                }
+                dialpadInput = it
+              },
+              onCallClick = { number ->
+                if (number.isNotEmpty()) {
+                  val matchedContact = contactsList.find { it.number == number }
+                  initiateCall(matchedContact?.name ?: "Unknown Number", number, matchedContact?.label ?: "Mobile")
+                  dialpadInput = ""
+                }
+              },
+              onSpeedDialCall = { number ->
+                val matchedContact = contactsList.find { it.number == number }
+                initiateCall(matchedContact?.name ?: "Speed Dial", number, matchedContact?.label ?: "Mobile")
+              },
+              speedDialMap = speedDialMap,
+              activePill = currentActiveBluePill,
+              searchBg = currentSearchBarBg,
+              primaryText = currentPrimaryDarkText,
+              grayText = currentGrayText
+            )
+          }
+        }
+
+        // 3. Bottom Navigation Bar
+        BottomNavBar(
+          selectedTab = selectedTab,
+          onTabSelected = { selectedTab = it },
+          navBg = currentNavBg,
+          navBorder = currentNavBorder,
+          activePill = currentActiveBluePill,
+          primaryText = currentPrimaryDarkText,
+          grayText = currentGrayText
+        )
+      }
+
+      // 6. Immersive Fullscreen Active Call Screen with Quick Responses Rejection
+      AnimatedVisibility(
+        visible = isCallActive,
+        enter = fadeIn(),
+        exit = fadeOut()
+      ) {
+        ActiveCallScreen(
+          contactName = callingContactName,
+          contactNumber = callingContactNumber,
+          preferredSim = preferredSim,
+          quickResponses = quickResponses,
+          onHangUp = { isCallActive = false },
+          onQuickDecline = { responseText ->
+            isCallActive = false
+            Toast.makeText(context, "💬 Rejection SMS Sent: \"$responseText\"", Toast.LENGTH_LONG).show()
+          },
+          isDarkTheme = isDarkTheme,
+          contacts = contactsList,
+          activePill = currentActiveBluePill
+        )
+      }
+
+      // 7. Full-Featured Settings Panel
+      AnimatedVisibility(
+        visible = isSettingsVisible,
+        enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+        exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+        modifier = Modifier.fillMaxSize()
+      ) {
+        SettingsPanel(
+          isDarkTheme = isDarkTheme,
+          onThemeChange = onThemeChange,
+          dialpadTonesEnabled = dialpadTonesEnabled,
+          onTonesChange = { dialpadTonesEnabled = it },
+          vibrateOnClickEnabled = vibrateOnClickEnabled,
+          onVibrateChange = { vibrateOnClickEnabled = it },
+          preferredSim = preferredSim,
+          onSimChange = { preferredSim = it },
+          voicemailNumber = voicemailNumber,
+          onVoicemailChange = { voicemailNumber = it },
+          blockedNumbers = blockedNumbers,
+          quickResponses = quickResponses,
+          speedDialMap = speedDialMap,
+          contacts = contactsList,
+          onClose = { isSettingsVisible = false },
+          primaryText = currentPrimaryDarkText,
+          secondaryText = currentGrayText,
+          navBg = currentNavBg,
+          searchBg = currentSearchBarBg,
+          brandBlue = currentBrandBlue,
+          activePill = currentActiveBluePill
+        )
+      }
+
+      // 8. Add Contact Dialog
+      if (isAddContactDialogVisible) {
+        AddContactDialog(
+          name = newContactName,
+          onNameChange = { newContactName = it },
+          number = newContactNumber,
+          onNumberChange = { newContactNumber = it },
+          label = newContactLabel,
+          onLabelChange = { newContactLabel = it },
+          onDismiss = {
+            isAddContactDialogVisible = false
+            newContactName = ""
+            newContactNumber = ""
+          },
+          onConfirm = {
+            if (newContactName.isNotBlank() && newContactNumber.isNotBlank()) {
+              if (hasContactsPermission) {
+                val success = addRealContact(context, newContactName, newContactNumber, newContactLabel)
+                if (success) {
+                  Toast.makeText(context, "Contact saved successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                  Toast.makeText(context, "Failed to save contact", Toast.LENGTH_SHORT).show()
+                }
+                refreshContacts()
+              } else {
+                contactsList.add(
+                  Contact(
+                    name = newContactName,
+                    number = newContactNumber,
+                    label = newContactLabel,
+                    avatarBg = listOf(AvatarOrange, AvatarBlue, AvatarGreen).random(),
+                    avatarTextColor = listOf(AvatarOrangeText, AvatarBlueText, AvatarGreenText).random()
+                  )
+                )
+                Toast.makeText(context, "Sim-Contact saved locally", Toast.LENGTH_SHORT).show()
+              }
+              isAddContactDialogVisible = false
+              newContactName = ""
+              newContactNumber = ""
+            }
+          },
+          softBlueBg = currentSoftBlueBg,
+          activeBluePill = currentActiveBluePill,
+          searchBarBg = currentSearchBarBg,
+          primaryDarkText = currentPrimaryDarkText,
+          brandBlue = currentBrandBlue,
+          grayText = currentGrayText
+        )
+      }
+
+      // 9. Edit Contact Dialog
+      if (isEditContactDialogVisible && oldContactToEdit != null) {
+        AddContactDialog(
+          name = editContactName,
+          onNameChange = { editContactName = it },
+          number = editContactNumber,
+          onNumberChange = { editContactNumber = it },
+          label = editContactLabel,
+          onLabelChange = { editContactLabel = it },
+          onDismiss = {
+            isEditContactDialogVisible = false
+            oldContactToEdit = null
+          },
+          onConfirm = {
+            val old = oldContactToEdit
+            if (old != null && editContactName.isNotBlank() && editContactNumber.isNotBlank()) {
+              if (hasContactsPermission) {
+                val success = updateRealContact(context, old.name, editContactName, editContactNumber, editContactLabel)
+                if (success) {
+                  Toast.makeText(context, "Contact updated successfully", Toast.LENGTH_SHORT).show()
+                } else {
+                  Toast.makeText(context, "Failed to update contact", Toast.LENGTH_SHORT).show()
+                }
+                refreshContacts()
+              } else {
+                val index = contactsList.indexOfFirst { it.name == old.name && it.number == old.number }
+                if (index != -1) {
+                  contactsList[index] = contactsList[index].copy(
+                    name = editContactName,
+                    number = editContactNumber,
+                    label = editContactLabel
+                  )
+                }
+                Toast.makeText(context, "Sim-Contact updated successfully", Toast.LENGTH_SHORT).show()
+              }
+              isEditContactDialogVisible = false
+              oldContactToEdit = null
+            }
+          },
+          softBlueBg = currentSoftBlueBg,
+          activeBluePill = currentActiveBluePill,
+          searchBarBg = currentSearchBarBg,
+          primaryDarkText = currentPrimaryDarkText,
+          brandBlue = currentBrandBlue,
+          grayText = currentGrayText
+        )
+      }
+    }
+  }
+}

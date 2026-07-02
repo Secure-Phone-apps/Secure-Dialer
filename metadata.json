@@ -1,0 +1,8 @@
+{
+  "name": "Secure Dialer",
+  "description": "A modern android dialer with best privacy available.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
