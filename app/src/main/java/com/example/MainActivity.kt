@@ -82,6 +82,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -538,6 +539,11 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
 
+  // Real-time Telecom Call observers
+  val systemActiveCall by CallManager.currentCall.collectAsState()
+  val systemCallState by CallManager.callState.collectAsState()
+  val systemCallerNumber by CallManager.callerNumber.collectAsState()
+
   // Theme-aware styles
   val currentBrandBlue = if (isDarkTheme) BrandBlueDark else BrandBlueLight
   val currentSoftBlueBg = if (isDarkTheme) SoftBlueBgDark else SoftBlueBgLight
@@ -654,6 +660,26 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
       Contact("Elena Rostova", "+1 (555) 017-4499", "Mobile", true, AvatarGreen, AvatarGreenText),
       Contact("Sarah Jenkins", "+1 (555) 018-9821", "Work", false, AvatarBlue, AvatarBlueText)
     )
+  }
+
+  // Synchronize UI Call state reactively with the real OS Telecom Call Manager
+  LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, contactsList) {
+    if (systemActiveCall != null) {
+      isCallActive = true
+      if (systemCallerNumber.isNotEmpty()) {
+        callingContactNumber = systemCallerNumber
+        val cleanCallerNumber = systemCallerNumber.replace("\\s|-|\\(|\\)".toRegex(), "")
+        val matched = contactsList.find { 
+          it.number.replace("\\s|-|\\(|\\)".toRegex(), "") == cleanCallerNumber 
+        }
+        callingContactName = matched?.name ?: systemCallerNumber
+      } else {
+        callingContactNumber = "Unknown"
+        callingContactName = "Unknown"
+      }
+    } else {
+      isCallActive = false
+    }
   }
 
   // Contact & Call Log Permission and Database Loading State
@@ -927,12 +953,20 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
           contactNumber = callingContactNumber,
           preferredSim = preferredSim,
           quickResponses = quickResponses,
-          onHangUp = { isCallActive = false },
+          onHangUp = { 
+            CallManager.disconnect()
+            isCallActive = false 
+          },
+          onAnswer = {
+            CallManager.answer()
+          },
           onQuickDecline = { responseText ->
+            CallManager.disconnect()
             isCallActive = false
             Toast.makeText(context, "💬 Rejection SMS Sent: \"$responseText\"", Toast.LENGTH_LONG).show()
           },
           isDarkTheme = isDarkTheme,
+          isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
           contacts = contactsList,
           activePill = currentActiveBluePill
         )

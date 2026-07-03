@@ -1557,7 +1557,8 @@ fun ActiveCallScreen(
   isDarkTheme: Boolean = true,
   isIncoming: Boolean = false,
   contacts: List<Contact> = emptyList(),
-  activePill: Color = Color.Unspecified
+  activePill: Color = Color.Unspecified,
+  onAnswer: () -> Unit = {}
 ) {
   var callDuration by remember { mutableStateOf(0) }
   var isMuted by remember { mutableStateOf(false) }
@@ -2125,21 +2126,50 @@ fun ActiveCallScreen(
         }
       }
 
-      // Hang up
-      Box(
+      // Actions: Answer and Hang Up
+      Row(
         modifier = Modifier
-          .size(72.dp)
-          .clip(CircleShape)
-          .background(Color(0xFFDC2626))
-          .clickable { onHangUp() }
-          .testTag("hangup_button"),
-        contentAlignment = Alignment.Center
+          .fillMaxWidth()
+          .padding(bottom = 16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
       ) {
-        Text(
-          text = "❌",
-          fontSize = 22.sp,
-          color = Color.White
-        )
+        if (isIncoming) {
+          // Green Answer Button
+          Box(
+            modifier = Modifier
+              .size(72.dp)
+              .clip(CircleShape)
+              .background(Color(0xFF16A34A))
+              .clickable { onAnswer() }
+              .testTag("answer_button"),
+            contentAlignment = Alignment.Center
+          ) {
+            Text(
+              text = "📞",
+              fontSize = 22.sp,
+              color = Color.White
+            )
+          }
+          Spacer(modifier = Modifier.width(48.dp))
+        }
+
+        // Red Hang Up / Decline Button
+        Box(
+          modifier = Modifier
+            .size(72.dp)
+            .clip(CircleShape)
+            .background(Color(0xFFDC2626))
+            .clickable { onHangUp() }
+            .testTag("hangup_button"),
+          contentAlignment = Alignment.Center
+        ) {
+          Text(
+            text = "❌",
+            fontSize = 22.sp,
+            color = Color.White
+          )
+        }
       }
     }
   }
