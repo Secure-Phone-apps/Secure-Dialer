@@ -768,23 +768,7 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
     )
 
     // Try to place a real phone call!
-    try {
-      val callIntent = Intent(Intent.ACTION_CALL, Uri.parse("tel:${Uri.encode(number)}")).apply {
-        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-      }
-      if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-        context.startActivity(callIntent)
-      } else {
-        // Fallback to ACTION_DIAL which does not require permission
-        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${Uri.encode(number)}")).apply {
-          flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }
-        context.startActivity(dialIntent)
-      }
-    } catch (e: Exception) {
-      e.printStackTrace()
-      Toast.makeText(context, "Could not place call: ${e.message}", Toast.LENGTH_SHORT).show()
-    }
+    CallManager.placeCall(context, number)
   }
 
   // Filter lists based on search

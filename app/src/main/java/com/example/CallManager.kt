@@ -2,6 +2,7 @@ package com.example
 
 import android.telecom.Call
 import android.telecom.VideoProfile
+import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -50,6 +51,19 @@ object CallManager {
     fun answer() {
         try {
             _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    fun placeCall(context: Context, number: String) {
+        try {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
+            if (telecomManager != null) {
+                val uri = android.net.Uri.fromParts("tel", number, null)
+                val extras = android.os.Bundle()
+                telecomManager.placeCall(uri, extras)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
