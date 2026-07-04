@@ -1165,6 +1165,7 @@ fun DialpadTabContent(
   onValueChange: (String) -> Unit,
   onCallClick: (String) -> Unit,
   onSpeedDialCall: (String) -> Unit,
+  voicemailNumber: String,
   speedDialMap: Map<Int, String>,
   activePill: Color,
   searchBg: Color,
@@ -1484,7 +1485,10 @@ fun DialpadOverlay(
                   .combinedClickable(
                     onClick = { onValueChange(inputValue + key.first) },
                     onLongClick = {
-                      if (key.third != -1) {
+                      if (key.first == "1") {
+                        Toast.makeText(context, "📞 Calling Voicemail: $voicemailNumber", Toast.LENGTH_SHORT).show()
+                        onSpeedDialCall(voicemailNumber)
+                      } else if (key.third != -1) {
                         val speedNum = speedDialMap[key.third]
                         if (speedNum != null) {
                           Toast.makeText(context, "📞 Calling Speed Dial mapped to key ${key.first}!", Toast.LENGTH_SHORT).show()
@@ -1558,11 +1562,13 @@ fun ActiveCallScreen(
   isIncoming: Boolean = false,
   contacts: List<Contact> = emptyList(),
   activePill: Color = Color.Unspecified,
-  onAnswer: () -> Unit = {}
+  onAnswer: () -> Unit = {},
+  callState: Int = android.telecom.Call.STATE_DISCONNECTED
 ) {
   var callDuration by remember { mutableStateOf(0) }
   var isMuted by remember { mutableStateOf(false) }
   var isSpeakerOn by remember { mutableStateOf(false) }
+  var isBluetoothOn by remember { mutableStateOf(false) }
   var isOnHold by remember { mutableStateOf(false) }
   var isQuickDeclineMenuOpen by remember { mutableStateOf(false) }
   var isInCallDialpadOpen by remember { mutableStateOf(false) }
@@ -1631,10 +1637,12 @@ fun ActiveCallScreen(
     }
   }
 
-  LaunchedEffect(key1 = true) {
-    while (true) {
-      delay(1000)
-      callDuration++
+  LaunchedEffect(key1 = callState) {
+    if (callState == android.telecom.Call.STATE_ACTIVE) {
+      while (true) {
+        delay(1000)
+        callDuration++
+      }
     }
   }
 
@@ -1819,7 +1827,7 @@ fun ActiveCallScreen(
                         .background(listBgColor)
                         .clickable {
                           inCallDialpadInput += key
-                          playInCallDtmf(key)
+                          CallManager.playDtmf(key[0])
                         },
                       contentAlignment = Alignment.Center
                     ) {
@@ -2021,13 +2029,8 @@ fun ActiveCallScreen(
             isActive = isMuted,
             onClick = {
               isMuted = !isMuted
-              try {
-                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                audioManager.isMicrophoneMute = isMuted
-                Toast.makeText(context, if (isMuted) "🎤 Microphone Muted" else "🎤 Microphone Active", Toast.LENGTH_SHORT).show()
-              } catch (e: Exception) {
-                e.printStackTrace()
-              }
+              CallManager.setMuted(isMuted)
+              Toast.makeText(context, if (isMuted) "🎤 Microphone Muted" else "🎤 Microphone Active", Toast.LENGTH_SHORT).show()
             },
             isDarkTheme = isDarkTheme
           )
@@ -2037,30 +2040,8 @@ fun ActiveCallScreen(
             isActive = isSpeakerOn,
             onClick = {
               isSpeakerOn = !isSpeakerOn
-              try {
-                val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
-                audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-                
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                  val devices = audioManager.availableCommunicationDevices
-                  val speakerDevice = devices.find { it.type == android.media.AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
-                  if (speakerDevice != null) {
-                    if (isSpeakerOn) {
-                      audioManager.setCommunicationDevice(speakerDevice)
-                    } else {
-                      audioManager.clearCommunicationDevice()
-                    }
-                  } else {
-                    audioManager.isSpeakerphoneOn = isSpeakerOn
-                  }
-                } else {
-                  audioManager.isSpeakerphoneOn = isSpeakerOn
-                }
-                
-                Toast.makeText(context, if (isSpeakerOn) "🔊 Speakerphone On" else "🔈 Speakerphone Off", Toast.LENGTH_SHORT).show()
-              } catch (e: Exception) {
-                e.printStackTrace()
-              }
+              CallManager.setSpeaker(isSpeakerOn)
+              Toast.makeText(context, if (isSpeakerOn) "🔊 Speakerphone On" else "🔈 Speakerphone Off", Toast.LENGTH_SHORT).show()
             },
             isDarkTheme = isDarkTheme
           )
@@ -2077,27 +2058,23 @@ fun ActiveCallScreen(
             isActive = isOnHold,
             onClick = {
               isOnHold = !isOnHold
+              CallManager.setHold(isOnHold)
               Toast.makeText(context, if (isOnHold) "⏸️ Call placed on hold" else "▶️ Call resumed", Toast.LENGTH_SHORT).show()
             },
             isDarkTheme = isDarkTheme
           )
           InCallButton(
-            icon = "➕",
-            label = "Add Call",
-            isActive = isAddCallDialogOpen,
-            onClick = { isAddCallDialogOpen = true },
-            isDarkTheme = isDarkTheme
-          )
-          InCallButton(
-            icon = "🎙️",
-            label = "Record",
-            isActive = isRecording,
+            icon = "🎧",
+            label = "Bluetooth",
+            isActive = isBluetoothOn,
             onClick = {
-              isRecording = !isRecording
-              Toast.makeText(context, if (isRecording) "🔴 Call recording started..." else "⏹️ Recording saved to CallRecordings", Toast.LENGTH_SHORT).show()
+              isBluetoothOn = !isBluetoothOn
+              CallManager.setBluetooth(isBluetoothOn)
+              Toast.makeText(context, if (isBluetoothOn) "🎧 Bluetooth On" else "🎧 Bluetooth Off", Toast.LENGTH_SHORT).show()
             },
             isDarkTheme = isDarkTheme
           )
+          Spacer(modifier = Modifier.size(60.dp))
         }
 
         // Styled "Quick Decline SMS" text link/button below the 6 main buttons

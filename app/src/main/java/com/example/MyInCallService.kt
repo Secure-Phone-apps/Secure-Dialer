@@ -7,6 +7,7 @@ import android.telecom.InCallService
 class MyInCallService : InCallService() {
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
+        CallManager.inCallService = this
         CallManager.updateCall(call)
         
         // Start the MainActivity to display the incoming/outgoing call screen

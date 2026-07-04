@@ -29,7 +29,9 @@ object CallManager {
         }
     }
 
-    fun updateCall(call: Call?) {
+    var inCallService: android.telecom.InCallService? = null
+
+    fun updateCall(call: android.telecom.Call?) {
         _currentCall.value?.unregisterCallback(callCallback)
         _currentCall.value = call
         if (call != null) {
@@ -42,17 +44,34 @@ object CallManager {
             _callerNumber.value = number
             _callerName.value = "" // Name can be resolved from contacts later in UI
         } else {
-            _callState.value = Call.STATE_DISCONNECTED
+            _callState.value = android.telecom.Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""
+            inCallService = null
         }
     }
 
     fun answer() {
         try {
-            _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY)
+            _currentCall.value?.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    fun setMuted(muted: Boolean) {
+        inCallService?.setMuted(muted)
+    }
+
+    fun setSpeaker(speaker: Boolean) {
+        inCallService?.setAudioRoute(if (speaker) android.telecom.CallAudioState.ROUTE_SPEAKER else android.telecom.CallAudioState.ROUTE_EARPIECE)
+    }
+
+    fun setHold(hold: Boolean) {
+        if (hold) {
+            _currentCall.value?.hold()
+        } else {
+            _currentCall.value?.unhold()
         }
     }
 
@@ -83,5 +102,17 @@ object CallManager {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    fun playDtmf(key: Char) {
+        _currentCall.value?.playDtmfTone(key)
+    }
+
+    fun stopDtmf() {
+        _currentCall.value?.stopDtmfTone()
+    }
+
+    fun setBluetooth(bluetooth: Boolean) {
+        inCallService?.setAudioRoute(if (bluetooth) android.telecom.CallAudioState.ROUTE_BLUETOOTH else android.telecom.CallAudioState.ROUTE_EARPIECE)
     }
 }

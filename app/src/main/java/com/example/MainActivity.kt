@@ -493,13 +493,67 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
+      
+      var dialpadTonesEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("dialpad_tones", true)) }
+      var vibrateOnClickEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("vibrate_on_click", true)) }
+      var preferredSim by rememberSaveable { mutableStateOf(prefs.getString("preferred_sim", "SIM 1") ?: "SIM 1") }
+      var voicemailNumber by rememberSaveable { mutableStateOf(prefs.getString("voicemail_number", "+1 (555) 011-9988") ?: "+1 (555) 011-9988") }
+      
+      val blockedNumbers = remember {
+        val blockedSet = prefs.getStringSet("blocked_numbers", setOf("+1 (555) 019-3847", "911-FAKE"))
+        mutableStateListOf<String>().apply { addAll(blockedSet ?: emptyList()) }
+      }
+      
+      val quickResponses = remember {
+        val savedResponses = prefs.getStringSet("quick_responses", setOf(
+          "In a meeting. Call you later?",
+          "Can't talk right now. What's up?",
+          "On my way, speak soon!",
+          "I'll call you right back."
+        ))
+        mutableStateListOf<String>().apply { addAll(savedResponses ?: emptyList()) }
+      }
+      
+      val speedDialMap = remember {
+        val map = mutableStateMapOf<Int, String>()
+        val savedSpeedDial = prefs.getString("speed_dial", "2:+1 (555) 012-3456,3:+1 (555) 014-2200")
+        savedSpeedDial?.split(",")?.forEach {
+          val parts = it.split(":")
+          if (parts.size == 2) map[parts[0].toInt()] = parts[1]
+        }
+        map
+      }
+
       DialerTheme(isDarkTheme = isDarkTheme) {
         MainScreen(
           isDarkTheme = isDarkTheme,
           onThemeChange = { newVal ->
             isDarkTheme = newVal
             prefs.edit().putBoolean("dark_theme", newVal).apply()
-          }
+          },
+          dialpadTonesEnabled = dialpadTonesEnabled,
+          onTonesChange = {
+            dialpadTonesEnabled = it
+            prefs.edit().putBoolean("dialpad_tones", it).apply()
+          },
+          vibrateOnClickEnabled = vibrateOnClickEnabled,
+          onVibrateChange = {
+            vibrateOnClickEnabled = it
+            prefs.edit().putBoolean("vibrate_on_click", it).apply()
+          },
+          preferredSim = preferredSim,
+          onSimChange = {
+            preferredSim = it
+            prefs.edit().putString("preferred_sim", it).apply()
+          },
+          voicemailNumber = voicemailNumber,
+          onVoicemailChange = {
+            voicemailNumber = it
+            prefs.edit().putString("voicemail_number", it).apply()
+          },
+          blockedNumbers = blockedNumbers,
+          quickResponses = quickResponses,
+          speedDialMap = speedDialMap
         )
       }
     }
@@ -535,7 +589,21 @@ fun DialerTheme(isDarkTheme: Boolean, content: @Composable () -> Unit) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
+fun MainScreen(
+  isDarkTheme: Boolean, 
+  onThemeChange: (Boolean) -> Unit,
+  dialpadTonesEnabled: Boolean,
+  onTonesChange: (Boolean) -> Unit,
+  vibrateOnClickEnabled: Boolean,
+  onVibrateChange: (Boolean) -> Unit,
+  preferredSim: String,
+  onSimChange: (String) -> Unit,
+  voicemailNumber: String,
+  onVoicemailChange: (String) -> Unit,
+  blockedNumbers: MutableList<String>,
+  quickResponses: MutableList<String>,
+  speedDialMap: MutableMap<Int, String>
+) {
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
 
@@ -599,34 +667,7 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
   // Settings State Drawer / Dialog
   var isSettingsVisible by rememberSaveable { mutableStateOf(false) }
 
-  // Settings features
-  var dialpadTonesEnabled by rememberSaveable { mutableStateOf(true) }
-  var vibrateOnClickEnabled by rememberSaveable { mutableStateOf(true) }
-  var preferredSim by rememberSaveable { mutableStateOf("SIM 1") }
-  var voicemailNumber by rememberSaveable { mutableStateOf("+1 (555) 011-9988") }
-
-  // Blocked Numbers
-  val blockedNumbers = remember {
-    mutableStateListOf("+1 (555) 019-3847", "911-FAKE")
-  }
-
-  // Quick Responses
-  val quickResponses = remember {
-    mutableStateListOf(
-      "In a meeting. Call you later?",
-      "Can't talk right now. What's up?",
-      "On my way, speak soon!",
-      "I'll call you right back."
-    )
-  }
-
-  // Speed Dial Configuration (1 to 9 mapped to phone number strings)
-  val speedDialMap = remember {
-    mutableStateMapOf<Int, String>().apply {
-      put(2, "+1 (555) 012-3456") // Mapped to Alex Murphy
-      put(3, "+1 (555) 014-2200") // Mapped to Benji (Home)
-    }
-  }
+  // Settings features are now passed as parameters
 
   // State for Active In-call Screen
   var isCallActive by rememberSaveable { mutableStateOf(false) }
@@ -905,6 +946,7 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
                 val matchedContact = contactsList.find { it.number == number }
                 initiateCall(matchedContact?.name ?: "Speed Dial", number, matchedContact?.label ?: "Mobile")
               },
+              voicemailNumber = voicemailNumber,
               speedDialMap = speedDialMap,
               activePill = currentActiveBluePill,
               searchBg = currentSearchBarBg,
@@ -952,7 +994,8 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
           isDarkTheme = isDarkTheme,
           isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
           contacts = contactsList,
-          activePill = currentActiveBluePill
+          activePill = currentActiveBluePill,
+          callState = systemCallState
         )
       }
 
@@ -967,13 +1010,13 @@ fun MainScreen(isDarkTheme: Boolean, onThemeChange: (Boolean) -> Unit) {
           isDarkTheme = isDarkTheme,
           onThemeChange = onThemeChange,
           dialpadTonesEnabled = dialpadTonesEnabled,
-          onTonesChange = { dialpadTonesEnabled = it },
+          onTonesChange = onTonesChange,
           vibrateOnClickEnabled = vibrateOnClickEnabled,
-          onVibrateChange = { vibrateOnClickEnabled = it },
+          onVibrateChange = onVibrateChange,
           preferredSim = preferredSim,
-          onSimChange = { preferredSim = it },
+          onSimChange = onSimChange,
           voicemailNumber = voicemailNumber,
-          onVoicemailChange = { voicemailNumber = it },
+          onVoicemailChange = onVoicemailChange,
           blockedNumbers = blockedNumbers,
           quickResponses = quickResponses,
           speedDialMap = speedDialMap,
