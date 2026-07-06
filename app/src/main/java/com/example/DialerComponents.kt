@@ -147,7 +147,7 @@ fun HeaderSearchBar(
       ) {
         if (searchQuery.isEmpty()) {
           Text(
-            text = "Search contacts & places",
+            text = "search contacts & numbers",
             color = grayTextColor,
             fontSize = 15.sp
           )
@@ -478,6 +478,13 @@ fun RecentsTabContent(
                   fontWeight = FontWeight.Medium,
                   color = primaryText
                 )
+                if (record.number.isNotEmpty()) {
+                  Text(
+                    text = record.number,
+                    fontSize = 14.sp,
+                    color = secondaryText
+                  )
+                }
                 Row(
                   verticalAlignment = Alignment.CenterVertically,
                   horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -584,15 +591,14 @@ fun RecentsTabContent(
                     }
 
                     Text(
-                      text = "Duration: ${if (subRecord.type == CallType.MISSED) "0s (Missed)" else "2 mins 45 secs"}",
+                      text = "Duration: ${if (subRecord.type == CallType.MISSED) "0s (Missed)" else "${subRecord.duration / 60} mins ${subRecord.duration % 60} secs"}",
                       fontSize = 12.sp,
                       color = secondaryText,
                       modifier = Modifier.padding(start = 18.dp, bottom = 4.dp)
                     )
 
                     // Show voicemail player if this specific subRecord is a voicemail
-                    val isVoicemail = subRecord.label == "Voicemail" || subRecord.id >= 101
-                    if (isVoicemail) {
+                    if (subRecord.hasVoicemail) {
                       Card(
                         colors = CardDefaults.cardColors(containerColor = secondaryText.copy(alpha = 0.08f)),
                         shape = RoundedCornerShape(12.dp),
@@ -1170,7 +1176,8 @@ fun DialpadTabContent(
   activePill: Color,
   searchBg: Color,
   primaryText: Color,
-  grayText: Color
+  grayText: Color,
+  contactsList: List<Contact>
 ) {
   val context = LocalContext.current
 
@@ -1486,8 +1493,8 @@ fun DialpadOverlay(
                     onClick = { onValueChange(inputValue + key.first) },
                     onLongClick = {
                       if (key.first == "1") {
-                        Toast.makeText(context, "📞 Calling Voicemail: $voicemailNumber", Toast.LENGTH_SHORT).show()
-                        onSpeedDialCall(voicemailNumber)
+                        Toast.makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT).show()
+                        // onSpeedDialCall(voicemailNumber)
                       } else if (key.third != -1) {
                         val speedNum = speedDialMap[key.third]
                         if (speedNum != null) {

@@ -129,7 +129,8 @@ fun loadRealCallLog(context: Context): List<CallRecord> {
         CallLog.Calls.CACHED_NAME,
         CallLog.Calls.TYPE,
         CallLog.Calls.DATE,
-        CallLog.Calls.CACHED_NUMBER_TYPE
+        CallLog.Calls.CACHED_NUMBER_TYPE,
+        CallLog.Calls.DURATION
       ),
       null,
       null,
@@ -146,6 +147,7 @@ fun loadRealCallLog(context: Context): List<CallRecord> {
       val typeCol = it.getColumnIndex(CallLog.Calls.TYPE)
       val dateCol = it.getColumnIndex(CallLog.Calls.DATE)
       val numTypeCol = it.getColumnIndex(CallLog.Calls.CACHED_NUMBER_TYPE)
+      val durationCol = it.getColumnIndex(CallLog.Calls.DURATION)
 
       while (it.moveToNext()) {
         val id = if (idCol != -1) it.getInt(idCol) else 0
@@ -154,6 +156,9 @@ fun loadRealCallLog(context: Context): List<CallRecord> {
         val typeInt = if (typeCol != -1) it.getInt(typeCol) else CallLog.Calls.INCOMING_TYPE
         val dateMs = if (dateCol != -1) it.getLong(dateCol) else 0L
         val numType = if (numTypeCol != -1) it.getInt(numTypeCol) else -1
+
+        val duration = if (durationCol != -1) it.getLong(durationCol) else 0L
+        val isVoicemail = typeInt == CallLog.Calls.VOICEMAIL_TYPE
 
         val name = nameRaw?.takeIf { it.isNotBlank() } ?: "Unknown"
 
@@ -198,7 +203,9 @@ fun loadRealCallLog(context: Context): List<CallRecord> {
             type = type,
             avatarText = avatarText,
             avatarBg = avatarBg,
-            avatarTextColor = avatarTextColor
+            avatarTextColor = avatarTextColor,
+            duration = duration,
+            hasVoicemail = isVoicemail
           )
         )
       }
@@ -451,7 +458,9 @@ data class CallRecord(
   val type: CallType,
   val avatarText: String,
   val avatarBg: Color,
-  val avatarTextColor: Color
+  val avatarTextColor: Color,
+  val duration: Long,
+  val hasVoicemail: Boolean
 )
 
 enum class CallType {
@@ -470,6 +479,15 @@ data class Contact(
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    
+    // Support showing over lock screen
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        setShowWhenLocked(true)
+        setTurnScreenOn(true)
+    } else {
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+    }
+    
     enableEdgeToEdge()
     val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
@@ -680,27 +698,14 @@ fun MainScreen(
   var newContactNumber by rememberSaveable { mutableStateOf("") }
   var newContactLabel by rememberSaveable { mutableStateOf("Mobile") }
 
-  // Mock call history state
+  // Mock call history state (initialized empty)
   val callHistory = remember {
-    mutableStateListOf(
-      CallRecord(1, "Alex Murphy", "+1 (555) 012-3456", "Mobile", "12:45 PM", CallType.MISSED, "AM", AvatarOrange, AvatarOrangeText),
-      CallRecord(101, "Unknown Caller", "+1 (555) 011-9988", "Voicemail", "June 28", CallType.INCOMING, "?", Color.LightGray, Color.DarkGray),
-      CallRecord(2, "Sarah Jenkins", "+1 (555) 018-9821", "Work", "Yesterday", CallType.OUTGOING, "S", AvatarBlue, AvatarBlueText),
-      CallRecord(102, "David Miller", "+1 (555) 013-1122", "Voicemail", "June 25", CallType.INCOMING, "D", AvatarBlue, AvatarBlueText),
-      CallRecord(3, "Benji (Home)", "+1 (555) 014-2200", "Landline", "Monday", CallType.INCOMING, "B", AvatarGreen, AvatarGreenText)
-    )
+    mutableStateListOf<CallRecord>()
   }
 
-  // Mock contacts list
+  // Mock contacts list (initialized empty)
   val contactsList = remember {
-    mutableStateListOf(
-      Contact("Alex Murphy", "+1 (555) 012-3456", "Mobile", true, AvatarOrange, AvatarOrangeText),
-      Contact("Benji (Home)", "+1 (555) 014-2200", "Landline", false, AvatarGreen, AvatarGreenText),
-      Contact("Charlie Davis", "+1 (555) 019-3847", "Mobile", false, AvatarOrange, AvatarOrangeText),
-      Contact("David Miller", "+1 (555) 013-1122", "Work", true, AvatarBlue, AvatarBlueText),
-      Contact("Elena Rostova", "+1 (555) 017-4499", "Mobile", true, AvatarGreen, AvatarGreenText),
-      Contact("Sarah Jenkins", "+1 (555) 018-9821", "Work", false, AvatarBlue, AvatarBlueText)
-    )
+    mutableStateListOf<Contact>()
   }
 
   // Synchronize UI Call state reactively with the real OS Telecom Call Manager
@@ -776,8 +781,8 @@ fun MainScreen(
   // Voicemail state
   val voicemailRecords = remember {
     mutableStateListOf(
-      CallRecord(101, "Unknown Caller", "+1 (555) 011-9988", "Voicemail", "June 28", CallType.INCOMING, "?", Color.LightGray, Color.DarkGray),
-      CallRecord(102, "David Miller", "+1 (555) 013-1122", "Voicemail", "June 25", CallType.INCOMING, "D", AvatarBlue, AvatarBlueText)
+      CallRecord(101, "Unknown Caller", "+1 (555) 011-9988", "Voicemail", "June 28", CallType.INCOMING, "?", Color.LightGray, Color.DarkGray, 0L, true),
+      CallRecord(102, "David Miller", "+1 (555) 013-1122", "Voicemail", "June 25", CallType.INCOMING, "D", AvatarBlue, AvatarBlueText, 0L, true)
     )
   }
 
@@ -804,7 +809,9 @@ fun MainScreen(
         type = CallType.OUTGOING,
         avatarText = if (name.length >= 2) name.substring(0, 2).uppercase() else name.take(1).uppercase(),
         avatarBg = AvatarBlue,
-        avatarTextColor = AvatarBlueText
+        avatarTextColor = AvatarBlueText,
+        duration = 0L,
+        hasVoicemail = false
       )
     )
 
@@ -951,7 +958,8 @@ fun MainScreen(
               activePill = currentActiveBluePill,
               searchBg = currentSearchBarBg,
               primaryText = currentPrimaryDarkText,
-              grayText = currentGrayText
+              grayText = currentGrayText,
+              contactsList = contactsList
             )
           }
         }
