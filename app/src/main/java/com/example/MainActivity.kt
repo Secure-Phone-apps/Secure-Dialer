@@ -42,6 +42,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.List
@@ -52,6 +56,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -122,308 +127,15 @@ import androidx.compose.material3.CardDefaults
 import android.os.Build
 import android.telecom.TelecomManager
 
-// CallLog Helpers for Android OS Call Log Database
-fun loadRealCallLog(context: Context): List<CallRecord> {
-  val list = mutableListOf<CallRecord>()
-  try {
-    val cursor = context.contentResolver.query(
-      CallLog.Calls.CONTENT_URI,
-      arrayOf(
-        CallLog.Calls._ID,
-        CallLog.Calls.NUMBER,
-        CallLog.Calls.CACHED_NAME,
-        CallLog.Calls.TYPE,
-        CallLog.Calls.DATE,
-        CallLog.Calls.CACHED_NUMBER_TYPE,
-        CallLog.Calls.DURATION
-      ),
-      null,
-      null,
-      CallLog.Calls.DATE + " DESC"
-    )
+import com.example.model.CallRecord
+import com.example.model.CallType
+import com.example.model.Contact
+import com.example.ui.components.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.ui.viewmodel.DialerViewModel
 
-    val colors = listOf(AvatarOrange, AvatarBlue, AvatarGreen)
-    val textColors = listOf(AvatarOrangeText, AvatarBlueText, AvatarGreenText)
 
-    cursor?.use {
-      val idCol = it.getColumnIndex(CallLog.Calls._ID)
-      val numCol = it.getColumnIndex(CallLog.Calls.NUMBER)
-      val nameCol = it.getColumnIndex(CallLog.Calls.CACHED_NAME)
-      val typeCol = it.getColumnIndex(CallLog.Calls.TYPE)
-      val dateCol = it.getColumnIndex(CallLog.Calls.DATE)
-      val numTypeCol = it.getColumnIndex(CallLog.Calls.CACHED_NUMBER_TYPE)
-      val durationCol = it.getColumnIndex(CallLog.Calls.DURATION)
-
-      while (it.moveToNext()) {
-        val id = if (idCol != -1) it.getInt(idCol) else 0
-        val number = if (numCol != -1) it.getString(numCol) ?: "" else ""
-        val nameRaw = if (nameCol != -1) it.getString(nameCol) else null
-        val typeInt = if (typeCol != -1) it.getInt(typeCol) else CallLog.Calls.INCOMING_TYPE
-        val dateMs = if (dateCol != -1) it.getLong(dateCol) else 0L
-        val numType = if (numTypeCol != -1) it.getInt(numTypeCol) else -1
-
-        val duration = if (durationCol != -1) it.getLong(durationCol) else 0L
-        val isVoicemail = typeInt == CallLog.Calls.VOICEMAIL_TYPE
-
-        val name = nameRaw?.takeIf { it.isNotBlank() } ?: "Unknown"
-
-        val label = when (numType) {
-          ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Home"
-          ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> "Mobile"
-          ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> "Work"
-          else -> "Other"
-        }
-
-        val type = when (typeInt) {
-          CallLog.Calls.MISSED_TYPE -> CallType.MISSED
-          CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
-          else -> CallType.INCOMING
-        }
-
-        val timestamp = if (dateMs > 0) {
-          DateFormat.format("MMM dd, h:mm a", Date(dateMs)).toString()
-        } else {
-          "Unknown"
-        }
-
-        val avatarText = if (name != "Unknown" && name.isNotEmpty()) {
-          if (name.length >= 2) name.substring(0, 2).uppercase() else name.take(1).uppercase()
-        } else {
-          "?"
-        }
-
-        val hashCodeVal = name.hashCode()
-        val posHashCode = if (hashCodeVal < 0) -hashCodeVal else hashCodeVal
-        val colorIdx = posHashCode % colors.size
-        val avatarBg = colors[colorIdx]
-        val avatarTextColor = textColors[colorIdx]
-
-        list.add(
-          CallRecord(
-            id = id,
-            name = name,
-            number = number,
-            label = label,
-            timestamp = timestamp,
-            type = type,
-            avatarText = avatarText,
-            avatarBg = avatarBg,
-            avatarTextColor = avatarTextColor,
-            duration = duration,
-            hasVoicemail = isVoicemail
-          )
-        )
-      }
-    }
-  } catch (e: Exception) {
-    e.printStackTrace()
-  }
-  return list
-}
-
-// Contact CRUD Helpers for Android OS Contacts Database
-fun loadRealContacts(context: Context): List<Contact> {
-  val list = mutableListOf<Contact>()
-  try {
-    val contentResolver = context.contentResolver
-    val cursor = contentResolver.query(
-      ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-      arrayOf(
-        ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
-        ContactsContract.CommonDataKinds.Phone.NUMBER,
-        ContactsContract.CommonDataKinds.Phone.TYPE,
-        ContactsContract.CommonDataKinds.Phone.LABEL,
-        ContactsContract.CommonDataKinds.Phone.STARRED
-      ),
-      null,
-      null,
-      ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " ASC"
-    )
-
-    val colors = listOf(AvatarOrange, AvatarBlue, AvatarGreen)
-    val textColors = listOf(AvatarOrangeText, AvatarBlueText, AvatarGreenText)
-
-    cursor?.use {
-      val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
-      val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
-      val typeIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)
-      val labelIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL)
-      val starredIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.STARRED)
-
-      while (it.moveToNext()) {
-        val name = if (nameIndex != -1) it.getString(nameIndex) ?: "Unknown" else "Unknown"
-        val number = if (numberIndex != -1) it.getString(numberIndex) ?: "" else ""
-        val type = if (typeIndex != -1) it.getInt(typeIndex) else -1
-        val labelStr = if (labelIndex != -1) it.getString(labelIndex) ?: "" else ""
-        val favorite = if (starredIndex != -1) it.getInt(starredIndex) == 1 else false
-
-        val label = when (type) {
-          ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Home"
-          ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE -> "Mobile"
-          ContactsContract.CommonDataKinds.Phone.TYPE_WORK -> "Work"
-          else -> if (labelStr.isNotEmpty()) labelStr else "Mobile"
-        }
-
-        if (number.isNotEmpty() && list.none { it.number == number && it.name == name }) {
-          val colorIdx = (name.hashCode() and 0x7FFFFFFF) % colors.size
-          list.add(
-            Contact(
-              name = name,
-              number = number,
-              label = label,
-              favorite = favorite,
-              avatarBg = colors[colorIdx],
-              avatarTextColor = textColors[colorIdx]
-            )
-          )
-        }
-      }
-    }
-  } catch (e: Exception) {
-    e.printStackTrace()
-  }
-  return list
-}
-
-fun addRealContact(context: Context, name: String, number: String, label: String): Boolean {
-  return try {
-    val ops = arrayListOf<ContentProviderOperation>()
-
-    ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
-      .withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
-      .withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
-      .build())
-
-    ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-      .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-      .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-      .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
-      .build())
-
-    val type = when (label.lowercase()) {
-      "home" -> ContactsContract.CommonDataKinds.Phone.TYPE_HOME
-      "work" -> ContactsContract.CommonDataKinds.Phone.TYPE_WORK
-      else -> ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
-    }
-
-    ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-      .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-      .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-      .withValue(ContactsContract.CommonDataKinds.Phone.NUMBER, number)
-      .withValue(ContactsContract.CommonDataKinds.Phone.TYPE, type)
-      .build())
-
-    context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
-    true
-  } catch (e: Exception) {
-    e.printStackTrace()
-    false
-  }
-}
-
-fun deleteRealContact(context: Context, name: String): Boolean {
-  return try {
-    val resolver = context.contentResolver
-    resolver.delete(
-      ContactsContract.RawContacts.CONTENT_URI,
-      "${ContactsContract.RawContacts.DISPLAY_NAME_PRIMARY} = ?",
-      arrayOf(name)
-    )
-    true
-  } catch (e: Exception) {
-    e.printStackTrace()
-    false
-  }
-}
-
-fun updateRealContact(context: Context, oldName: String, newName: String, newNumber: String, newLabel: String): Boolean {
-  return try {
-    val resolver = context.contentResolver
-
-    val cursor = resolver.query(
-      ContactsContract.Data.CONTENT_URI,
-      arrayOf(ContactsContract.Data.RAW_CONTACT_ID),
-      "${ContactsContract.Data.DISPLAY_NAME} = ?",
-      arrayOf(oldName),
-      null
-    )
-    var rawContactId: Long? = null
-    cursor?.use {
-      if (it.moveToFirst()) {
-        rawContactId = it.getLong(0)
-      }
-    }
-
-    if (rawContactId == null) return false
-
-    val nameValues = ContentValues().apply {
-      put(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, newName)
-    }
-    resolver.update(
-      ContactsContract.Data.CONTENT_URI,
-      nameValues,
-      "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
-      arrayOf(rawContactId.toString(), ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-    )
-
-    val phoneValues = ContentValues().apply {
-      put(ContactsContract.CommonDataKinds.Phone.NUMBER, newNumber)
-      val type = when (newLabel.lowercase()) {
-        "home" -> ContactsContract.CommonDataKinds.Phone.TYPE_HOME
-        "work" -> ContactsContract.CommonDataKinds.Phone.TYPE_WORK
-        else -> ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE
-      }
-      put(ContactsContract.CommonDataKinds.Phone.TYPE, type)
-    }
-    resolver.update(
-      ContactsContract.Data.CONTENT_URI,
-      phoneValues,
-      "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
-      arrayOf(rawContactId.toString(), ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE)
-    )
-
-    true
-  } catch (e: Exception) {
-    e.printStackTrace()
-    false
-  }
-}
-
-fun toggleRealContactFavorite(context: Context, name: String, isFavorite: Boolean): Boolean {
-  return try {
-    val resolver = context.contentResolver
-
-    val cursor = resolver.query(
-      ContactsContract.Contacts.CONTENT_URI,
-      arrayOf(ContactsContract.Contacts._ID),
-      "${ContactsContract.Contacts.DISPLAY_NAME} = ?",
-      arrayOf(name),
-      null
-    )
-    var contactId: Long? = null
-    cursor?.use {
-      if (it.moveToFirst()) {
-        contactId = it.getLong(0)
-      }
-    }
-
-    if (contactId == null) return false
-
-    val values = ContentValues().apply {
-      put(ContactsContract.Contacts.STARRED, if (isFavorite) 1 else 0)
-    }
-    resolver.update(
-      ContactsContract.Contacts.CONTENT_URI,
-      values,
-      "${ContactsContract.Contacts._ID} = ?",
-      arrayOf(contactId.toString())
-    )
-    true
-  } catch (e: Exception) {
-    e.printStackTrace()
-    false
-  }
-}
+// Helper functions moved to com.example.data.DialerRepository
 
 // Professional Polish Theme Colors
 val BrandBlueLight = Color(0xFF0B57D0)
@@ -453,33 +165,8 @@ val AvatarBlueText = Color(0xFF001D36)
 val AvatarGreen = Color(0xFFD9E7CB)
 val AvatarGreenText = Color(0xFF141E0D)
 
-// Data Classes
-data class CallRecord(
-  val id: Int,
-  val name: String,
-  val number: String,
-  val label: String,
-  val timestamp: String,
-  val type: CallType,
-  val avatarText: String,
-  val avatarBg: Color,
-  val avatarTextColor: Color,
-  val duration: Long,
-  val hasVoicemail: Boolean
-)
 
-enum class CallType {
-  MISSED, OUTGOING, INCOMING
-}
-
-data class Contact(
-  val name: String,
-  val number: String,
-  val label: String,
-  val favorite: Boolean = false,
-  val avatarBg: Color,
-  val avatarTextColor: Color
-)
+// Data Classes moved to com.example.model.DialerModels
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -515,6 +202,7 @@ class MainActivity : ComponentActivity() {
     }
 
     setContent {
+      val viewModel: DialerViewModel = viewModel()
       var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
       var showRestrictedSettingsDialog by remember { mutableStateOf(false) }
       
@@ -578,36 +266,9 @@ class MainActivity : ComponentActivity() {
         map
       }
 
-      DialerTheme(isDarkTheme = isDarkTheme) {
+      DialerTheme(isDarkTheme = viewModel.isDarkTheme.value) {
         MainScreen(
-          isDarkTheme = isDarkTheme,
-          onThemeChange = { newVal ->
-            isDarkTheme = newVal
-            prefs.edit().putBoolean("dark_theme", newVal).apply()
-          },
-          dialpadTonesEnabled = dialpadTonesEnabled,
-          onTonesChange = {
-            dialpadTonesEnabled = it
-            prefs.edit().putBoolean("dialpad_tones", it).apply()
-          },
-          vibrateOnClickEnabled = vibrateOnClickEnabled,
-          onVibrateChange = {
-            vibrateOnClickEnabled = it
-            prefs.edit().putBoolean("vibrate_on_click", it).apply()
-          },
-          preferredSim = preferredSim,
-          onSimChange = {
-            preferredSim = it
-            prefs.edit().putString("preferred_sim", it).apply()
-          },
-          voicemailNumber = voicemailNumber,
-          onVoicemailChange = {
-            voicemailNumber = it
-            prefs.edit().putString("voicemail_number", it).apply()
-          },
-          blockedNumbers = blockedNumbers,
-          quickResponses = quickResponses,
-          speedDialMap = speedDialMap,
+          viewModel = viewModel,
           onShowRestrictedSettings = { showRestrictedSettingsDialog = true },
           isDefaultDialer = roleHeld
         )
@@ -646,22 +307,19 @@ fun DialerTheme(isDarkTheme: Boolean, content: @Composable () -> Unit) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainScreen(
-  isDarkTheme: Boolean, 
-  onThemeChange: (Boolean) -> Unit,
-  dialpadTonesEnabled: Boolean,
-  onTonesChange: (Boolean) -> Unit,
-  vibrateOnClickEnabled: Boolean,
-  onVibrateChange: (Boolean) -> Unit,
-  preferredSim: String,
-  onSimChange: (String) -> Unit,
-  voicemailNumber: String,
-  onVoicemailChange: (String) -> Unit,
-  blockedNumbers: MutableList<String>,
-  quickResponses: MutableList<String>,
-  speedDialMap: MutableMap<Int, String>,
+  viewModel: DialerViewModel,
   onShowRestrictedSettings: () -> Unit,
   isDefaultDialer: Boolean
 ) {
+  val isDarkTheme by viewModel.isDarkTheme
+  val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
+  val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
+  val preferredSim by viewModel.preferredSim
+  val voicemailNumber by viewModel.voicemailNumber
+  val blockedNumbers = viewModel.blockedNumbers
+  val quickResponses = viewModel.quickResponses
+  val speedDialMap = viewModel.speedDialMap
+  
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
 
@@ -713,40 +371,36 @@ fun MainScreen(
   }
 
   // Navigation tabs state
-  var selectedTab by rememberSaveable { mutableIntStateOf(0) } // Default to "Recents"
+  var selectedTab by viewModel.selectedTab
 
   // Search state
-  var searchQuery by rememberSaveable { mutableStateOf("") }
+  var searchQuery by viewModel.searchQuery
 
   // State for Dialpad Overlay
-  var isDialpadVisible by rememberSaveable { mutableStateOf(false) }
-  var dialpadInput by rememberSaveable { mutableStateOf("") }
+  var isDialpadVisible by viewModel.isDialpadVisible
+  var dialpadInput by viewModel.dialpadInput
 
   // Settings State Drawer / Dialog
-  var isSettingsVisible by rememberSaveable { mutableStateOf(false) }
+  var isSettingsVisible by viewModel.isSettingsVisible
 
   // Settings features are now passed as parameters
 
   // State for Active In-call Screen
-  var isCallActive by rememberSaveable { mutableStateOf(false) }
-  var callingContactName by rememberSaveable { mutableStateOf("") }
-  var callingContactNumber by rememberSaveable { mutableStateOf("") }
+  var isCallActive by viewModel.isCallActive
+  var callingContactName by viewModel.callingContactName
+  var callingContactNumber by viewModel.callingContactNumber
 
   // State for Add Contact Dialog
-  var isAddContactDialogVisible by rememberSaveable { mutableStateOf(false) }
-  var newContactName by rememberSaveable { mutableStateOf("") }
-  var newContactNumber by rememberSaveable { mutableStateOf("") }
-  var newContactLabel by rememberSaveable { mutableStateOf("Mobile") }
+  var isAddContactDialogVisible by viewModel.isAddContactDialogVisible
+  var newContactName by viewModel.newContactName
+  var newContactNumber by viewModel.newContactNumber
+  var newContactLabel by viewModel.newContactLabel
 
   // Mock call history state (initialized empty)
-  val callHistory = remember {
-    mutableStateListOf<CallRecord>()
-  }
+  val callHistory = viewModel.callHistory
 
   // Mock contacts list (initialized empty)
-  val contactsList = remember {
-    mutableStateListOf<Contact>()
-  }
+  val contactsList = viewModel.contactsList
 
   // Synchronize UI Call state reactively with the real OS Telecom Call Manager
   LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, contactsList) {
@@ -769,9 +423,9 @@ fun MainScreen(
   }
 
   // Contact & Call Log Permission and Database Loading State
-  var hasContactsPermission by remember { mutableStateOf(false) }
-  var hasCallLogPermission by remember { mutableStateOf(false) }
-  var isLoadingPermissions by remember { mutableStateOf(true) }
+  var hasContactsPermission by viewModel.hasContactsPermission
+  var hasCallLogPermission by viewModel.hasCallLogPermission
+  var isLoadingPermissions by viewModel.isLoadingPermissions
 
   val permissionLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -814,11 +468,11 @@ fun MainScreen(
   }
 
   // State for Edit Contact Dialog
-  var isEditContactDialogVisible by remember { mutableStateOf(false) }
-  var oldContactToEdit by remember { mutableStateOf<Contact?>(null) }
-  var editContactName by remember { mutableStateOf("") }
-  var editContactNumber by remember { mutableStateOf("") }
-  var editContactLabel by remember { mutableStateOf("Mobile") }
+  var isEditContactDialogVisible by viewModel.isEditContactDialogVisible
+  var oldContactToEdit by viewModel.oldContactToEdit
+  var editContactName by viewModel.editContactName
+  var editContactNumber by viewModel.editContactNumber
+  var editContactLabel by viewModel.editContactLabel
 
   // Voicemail state
   val voicemailRecords = remember {
@@ -883,10 +537,35 @@ fun MainScreen(
       Column(modifier = Modifier.fillMaxSize()) {
         if (!isDefaultDialer) {
             Card(
-                modifier = Modifier.fillMaxWidth().padding(16.dp).clickable { onShowRestrictedSettings() },
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .semantics(mergeDescendants = true) {
+                        role = Role.Button
+                        contentDescription = "Set as default dialer to enable all features. Click to open settings."
+                    }
+                    .clickable { onShowRestrictedSettings() },
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text("Not set as default. Click to fix.", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Warning,
+                        contentDescription = "Action Required",
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        text = "Set as default dialer to enable all features.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
         // 1. Search Bar Header with Settings Menu Option
@@ -1067,20 +746,7 @@ fun MainScreen(
         modifier = Modifier.fillMaxSize()
       ) {
         SettingsPanel(
-          isDarkTheme = isDarkTheme,
-          onThemeChange = onThemeChange,
-          dialpadTonesEnabled = dialpadTonesEnabled,
-          onTonesChange = onTonesChange,
-          vibrateOnClickEnabled = vibrateOnClickEnabled,
-          onVibrateChange = onVibrateChange,
-          preferredSim = preferredSim,
-          onSimChange = onSimChange,
-          voicemailNumber = voicemailNumber,
-          onVoicemailChange = onVoicemailChange,
-          blockedNumbers = blockedNumbers,
-          quickResponses = quickResponses,
-          speedDialMap = speedDialMap,
-          contacts = contactsList,
+          viewModel = viewModel,
           onClose = { isSettingsVisible = false },
           primaryText = currentPrimaryDarkText,
           secondaryText = currentGrayText,

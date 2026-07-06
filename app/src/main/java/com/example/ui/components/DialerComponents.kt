@@ -1,4 +1,4 @@
-package com.example
+package com.example.ui.components
 
 import android.content.Context
 import android.media.AudioManager
@@ -106,6 +106,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+
+import com.example.model.CallRecord
+import com.example.model.CallType
+import com.example.model.Contact
+import com.example.ui.viewmodel.DialerViewModel
+import com.example.*
 
 // 1. HEADER / SEARCH BAR
 @Composable
@@ -2394,20 +2400,7 @@ fun InCallButton(
 // 10. FULL-FEATURED SETTINGS PANEL
 @Composable
 fun SettingsPanel(
-  isDarkTheme: Boolean,
-  onThemeChange: (Boolean) -> Unit,
-  dialpadTonesEnabled: Boolean,
-  onTonesChange: (Boolean) -> Unit,
-  vibrateOnClickEnabled: Boolean,
-  onVibrateChange: (Boolean) -> Unit,
-  preferredSim: String,
-  onSimChange: (String) -> Unit,
-  voicemailNumber: String,
-  onVoicemailChange: (String) -> Unit,
-  blockedNumbers: MutableList<String>,
-  quickResponses: MutableList<String>,
-  speedDialMap: MutableMap<Int, String>,
-  contacts: List<Contact>,
+  viewModel: DialerViewModel,
   onClose: () -> Unit,
   primaryText: Color,
   secondaryText: Color,
@@ -2416,6 +2409,20 @@ fun SettingsPanel(
   brandBlue: Color,
   activePill: Color
 ) {
+  val isDarkTheme by viewModel.isDarkTheme
+  val onThemeChange = { newVal: Boolean -> viewModel.isDarkTheme.value = newVal }
+  val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
+  val onTonesChange = { newVal: Boolean -> viewModel.dialpadTonesEnabled.value = newVal }
+  val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
+  val onVibrateChange = { newVal: Boolean -> viewModel.vibrateOnClickEnabled.value = newVal }
+  val preferredSim by viewModel.preferredSim
+  val onSimChange = { newVal: String -> viewModel.preferredSim.value = newVal }
+  val voicemailNumber by viewModel.voicemailNumber
+  val onVoicemailChange = { newVal: String -> viewModel.voicemailNumber.value = newVal }
+  val blockedNumbers = viewModel.blockedNumbers
+  val quickResponses = viewModel.quickResponses
+  val speedDialMap = viewModel.speedDialMap
+  val contacts = viewModel.contactsList
   var activeTab by remember { mutableStateOf(0) } // 0: Settings, 1: Block List, 2: Speed Dial, 3: Quick Responses
   var newBlockedInput by remember { mutableStateOf("") }
   var newQuickRespInput by remember { mutableStateOf("") }
