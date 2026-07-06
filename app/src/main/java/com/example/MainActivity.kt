@@ -714,9 +714,9 @@ fun MainScreen(
       isCallActive = true
       if (systemCallerNumber.isNotEmpty()) {
         callingContactNumber = systemCallerNumber
-        val cleanCallerNumber = systemCallerNumber.replace("\\s|-|\\(|\\)".toRegex(), "")
+        val cleanCallerNumber = systemCallerNumber.filter { it.isDigit() }.takeLast(10)
         val matched = contactsList.find { 
-          it.number.replace("\\s|-|\\(|\\)".toRegex(), "") == cleanCallerNumber 
+          it.number.filter { it.isDigit() }.takeLast(10) == cleanCallerNumber 
         }
         callingContactName = matched?.name ?: systemCallerNumber
       } else {
@@ -731,12 +731,14 @@ fun MainScreen(
   // Contact & Call Log Permission and Database Loading State
   var hasContactsPermission by remember { mutableStateOf(false) }
   var hasCallLogPermission by remember { mutableStateOf(false) }
+  var isLoadingPermissions by remember { mutableStateOf(true) }
 
   val permissionLauncher = rememberLauncherForActivityResult(
     contract = ActivityResultContracts.RequestMultiplePermissions()
   ) { permissions ->
     hasContactsPermission = permissions[Manifest.permission.READ_CONTACTS] ?: false
     hasCallLogPermission = permissions[Manifest.permission.READ_CALL_LOG] ?: false
+    isLoadingPermissions = false
   }
 
   fun refreshContacts() {
@@ -867,6 +869,7 @@ fun MainScreen(
               activePill = currentActiveBluePill,
               brandBlue = currentBrandBlue,
               hasPermission = hasCallLogPermission,
+              isLoading = isLoadingPermissions,
               onRequestPermission = {
                 permissionLauncher.launch(
                   arrayOf(
@@ -901,6 +904,7 @@ fun MainScreen(
               activePill = currentActiveBluePill,
               brandBlue = currentBrandBlue,
               hasPermission = hasContactsPermission,
+              isLoading = isLoadingPermissions,
               onRequestPermission = {
                 permissionLauncher.launch(
                   arrayOf(

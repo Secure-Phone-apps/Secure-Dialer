@@ -14,7 +14,10 @@ class MyInCallService : InCallService() {
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
         CallManager.inCallService = this
-        CallManager.updateCall(call)
+        // Only update if no active call exists, or handle incoming call specifically
+        if (CallManager.currentCall.value == null) {
+            CallManager.updateCall(call)
+        }
         
         showIncomingCallNotification(call)
 
@@ -58,10 +61,17 @@ class MyInCallService : InCallService() {
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
+        // If the removed call was the current call, try to see if there's another
         if (CallManager.currentCall.value == call) {
-            CallManager.updateCall(null)
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(1)
+            // Check if there are other calls available
+            val otherCall = getCalls().firstOrNull { it != call }
+            if (otherCall != null) {
+                CallManager.updateCall(otherCall)
+            } else {
+                CallManager.updateCall(null)
+                val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.cancel(1)
+            }
         }
     }
 }

@@ -314,6 +314,7 @@ fun RecentsTabContent(
   activePill: Color,
   brandBlue: Color,
   hasPermission: Boolean = true,
+  isLoading: Boolean = false,
   onRequestPermission: () -> Unit = {}
 ) {
   var expandedRecordId by remember { mutableStateOf<Int?>(null) }
@@ -376,7 +377,7 @@ fun RecentsTabContent(
       )
     }
 
-    if (!hasPermission) {
+    if (!hasPermission && !isLoading) {
       androidx.compose.material3.Card(
         modifier = Modifier
           .fillMaxWidth()
@@ -388,7 +389,7 @@ fun RecentsTabContent(
           modifier = Modifier.padding(16.dp),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text("🔒 Offline Simulation Mode", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
+          Text("Permissions Required", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
           Spacer(modifier = Modifier.height(4.dp))
           Text(
             text = "To access, load, and call the real call history on your phone, please enable the Call Log Permission.",
@@ -736,6 +737,7 @@ fun ContactsTabContent(
   activePill: Color,
   brandBlue: Color,
   hasPermission: Boolean = true,
+  isLoading: Boolean = false,
   onRequestPermission: () -> Unit = {},
   onEditContact: (Contact) -> Unit = {},
   onDeleteContact: (Contact) -> Unit = {}
@@ -745,7 +747,7 @@ fun ContactsTabContent(
       .fillMaxSize()
       .padding(16.dp)
   ) {
-    if (!hasPermission) {
+    if (!hasPermission && !isLoading) {
       Card(
         modifier = Modifier
           .fillMaxWidth()
@@ -757,7 +759,7 @@ fun ContactsTabContent(
           modifier = Modifier.padding(16.dp),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text("🔒 Offline Simulation Mode", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
+          Text("Permissions Required", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
           Spacer(modifier = Modifier.height(4.dp))
           Text(
             text = "To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.",
