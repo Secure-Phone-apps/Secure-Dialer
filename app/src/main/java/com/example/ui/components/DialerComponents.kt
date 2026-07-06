@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Bundle
@@ -2409,6 +2411,7 @@ fun SettingsPanel(
   brandBlue: Color,
   activePill: Color
 ) {
+  val context = LocalContext.current
   val isDarkTheme by viewModel.isDarkTheme
   val onThemeChange = { newVal: Boolean -> viewModel.isDarkTheme.value = newVal }
   val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
@@ -2588,6 +2591,35 @@ fun SettingsPanel(
                 label = { Text("Voicemail Retrieval Number") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
+              )
+            }
+            item {
+              HorizontalDivider(color = secondaryText.copy(alpha = 0.2f))
+              Spacer(modifier = Modifier.height(8.dp))
+              Text("About & Privacy", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = brandBlue)
+              Spacer(modifier = Modifier.height(8.dp))
+              SettingsRowNav(
+                title = "About Me",
+                subtitle = "Information about this app",
+                onClick = {
+                  val intent = Intent(context, com.example.ui.AboutActivity::class.java)
+                  context.startActivity(intent)
+                },
+                primaryText = primaryText,
+                secondaryText = secondaryText,
+                activePill = activePill
+              )
+              Spacer(modifier = Modifier.height(12.dp))
+              SettingsRowNav(
+                title = "Privacy Policy",
+                subtitle = "View our data handling practices",
+                onClick = {
+                  val intent = Intent(context, com.example.ui.PrivacyPolicyActivity::class.java)
+                  context.startActivity(intent)
+                },
+                primaryText = primaryText,
+                secondaryText = secondaryText,
+                activePill = activePill
               )
             }
           }

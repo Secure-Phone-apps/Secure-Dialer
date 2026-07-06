@@ -57,6 +57,9 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".ui.PrivacyPolicyActivity" android:exported="false" />
+        <activity android:name=".ui.AboutActivity" android:exported="false" />
+
         <service
             android:name=".MyInCallService"
             android:permission="android.permission.BIND_INCALL_SERVICE"
