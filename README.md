@@ -20,6 +20,7 @@ Your data belongs to you. **Secure Dialer requires no internet permissions.** It
 
 ### 📱 Getting Started
 This app interacts directly with your Android system's call logs and contacts. Upon first launch, please grant the necessary permissions when prompted to allow the dialer to function correctly.
+**(License: MIT License)**
 
 ---
 
