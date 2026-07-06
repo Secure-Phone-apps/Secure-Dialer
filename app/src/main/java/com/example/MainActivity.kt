@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.filled.List
@@ -53,8 +54,6 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
@@ -114,6 +113,12 @@ import java.util.Date
 import android.content.Intent
 import android.net.Uri
 import android.app.role.RoleManager
+import android.provider.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+
 import android.os.Build
 import android.telecom.TelecomManager
 
@@ -511,6 +516,37 @@ class MainActivity : ComponentActivity() {
 
     setContent {
       var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
+      var showRestrictedSettingsDialog by remember { mutableStateOf(false) }
+      
+      val roleHeld = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+          val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+          roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
+        } else {
+          val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+          telecomManager.defaultDialerPackage == packageName
+        }
+      }
+      
+      if (showRestrictedSettingsDialog) {
+          AlertDialog(
+              onDismissRequest = { showRestrictedSettingsDialog = false },
+              title = { Text("Restricted Settings") },
+              text = { Text("To use this app as your default dialer, you may need to manually enable it. Go to System Settings > Apps > [Our App Name] > Advanced > Allow Restricted Settings, then try again.") },
+              confirmButton = {
+                  TextButton(onClick = { 
+                      showRestrictedSettingsDialog = false
+                      val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                          data = Uri.fromParts("package", packageName, null)
+                      }
+                      startActivity(intent)
+                  }) { Text("Open Settings") }
+              },
+              dismissButton = {
+                  TextButton(onClick = { showRestrictedSettingsDialog = false }) { Text("Cancel") }
+              }
+          )
+      }
       
       var dialpadTonesEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("dialpad_tones", true)) }
       var vibrateOnClickEnabled by rememberSaveable { mutableStateOf(prefs.getBoolean("vibrate_on_click", true)) }
@@ -571,7 +607,9 @@ class MainActivity : ComponentActivity() {
           },
           blockedNumbers = blockedNumbers,
           quickResponses = quickResponses,
-          speedDialMap = speedDialMap
+          speedDialMap = speedDialMap,
+          onShowRestrictedSettings = { showRestrictedSettingsDialog = true },
+          isDefaultDialer = roleHeld
         )
       }
     }
@@ -620,7 +658,9 @@ fun MainScreen(
   onVoicemailChange: (String) -> Unit,
   blockedNumbers: MutableList<String>,
   quickResponses: MutableList<String>,
-  speedDialMap: MutableMap<Int, String>
+  speedDialMap: MutableMap<Int, String>,
+  onShowRestrictedSettings: () -> Unit,
+  isDefaultDialer: Boolean
 ) {
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
@@ -841,6 +881,14 @@ fun MainScreen(
         .padding(paddingValues)
     ) {
       Column(modifier = Modifier.fillMaxSize()) {
+        if (!isDefaultDialer) {
+            Card(
+                modifier = Modifier.fillMaxWidth().padding(16.dp).clickable { onShowRestrictedSettings() },
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Text("Not set as default. Click to fix.", modifier = Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+        }
         // 1. Search Bar Header with Settings Menu Option
         HeaderSearchBar(
           searchQuery = searchQuery,
