@@ -21,7 +21,9 @@ import com.example.model.AvatarGreenText
 // CallLog Helpers for Android OS Call Log Database
 fun getContactNameFromNumber(context: Context, number: String): String? {
     if (number.isEmpty()) return null
-    val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+    // Normalize: Remove spaces and dashes for better matching
+    val normalizedNumber = number.replace(Regex("[\\s-]"), "")
+    val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(normalizedNumber))
     val cursor = context.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)
     cursor?.use {
         if (it.moveToFirst()) {

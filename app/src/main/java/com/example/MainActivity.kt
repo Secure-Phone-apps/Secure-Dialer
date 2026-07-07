@@ -403,16 +403,12 @@ fun MainScreen(
   val contactsList = viewModel.contactsList
 
   // Synchronize UI Call state reactively with the real OS Telecom Call Manager
-  LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, contactsList) {
+  LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber) {
     if (systemActiveCall != null) {
       isCallActive = true
       if (systemCallerNumber.isNotEmpty()) {
         callingContactNumber = systemCallerNumber
-        val cleanCallerNumber = systemCallerNumber.filter { it.isDigit() }.takeLast(10)
-        val matched = contactsList.find { 
-          it.number.filter { it.isDigit() }.takeLast(10) == cleanCallerNumber 
-        }
-        callingContactName = matched?.name ?: systemCallerNumber
+        callingContactName = getContactNameFromNumber(context, systemCallerNumber) ?: systemCallerNumber
       } else {
         callingContactNumber = "Unknown"
         callingContactName = "Unknown"
