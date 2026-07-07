@@ -3,6 +3,7 @@ package com.example
 import android.content.ContentProviderOperation
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.provider.CallLog
 import android.provider.ContactsContract
 import android.text.format.DateFormat
@@ -18,6 +19,19 @@ import com.example.model.AvatarBlueText
 import com.example.model.AvatarGreenText
 
 // CallLog Helpers for Android OS Call Log Database
+fun getContactNameFromNumber(context: Context, number: String): String? {
+    if (number.isEmpty()) return null
+    val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+    val cursor = context.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)
+    cursor?.use {
+        if (it.moveToFirst()) {
+            val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+            if (nameIndex != -1) return it.getString(nameIndex)
+        }
+    }
+    return null
+}
+
 fun loadRealCallLog(context: Context): List<CallRecord> {
     val list = mutableListOf<CallRecord>()
     try {
@@ -53,14 +67,13 @@ fun loadRealCallLog(context: Context): List<CallRecord> {
                 val id = if (idCol != -1) it.getInt(idCol) else 0
                 val number = if (numCol != -1) it.getString(numCol) ?: "" else ""
                 val nameRaw = if (nameCol != -1) it.getString(nameCol) else null
+                val name = nameRaw?.takeIf { it.isNotBlank() } ?: getContactNameFromNumber(context, number) ?: "Unknown"
                 val typeInt = if (typeCol != -1) it.getInt(typeCol) else CallLog.Calls.INCOMING_TYPE
                 val dateMs = if (dateCol != -1) it.getLong(dateCol) else 0L
                 val numType = if (numTypeCol != -1) it.getInt(numTypeCol) else -1
 
                 val duration = if (durationCol != -1) it.getLong(durationCol) else 0L
                 val isVoicemail = typeInt == CallLog.Calls.VOICEMAIL_TYPE
-
-                val name = nameRaw?.takeIf { it.isNotBlank() } ?: "Unknown"
 
                 val label = when (numType) {
                     ContactsContract.CommonDataKinds.Phone.TYPE_HOME -> "Home"
