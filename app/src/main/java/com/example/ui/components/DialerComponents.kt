@@ -98,6 +98,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import com.example.ui.theme.*
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -291,7 +292,7 @@ fun FavoritesTabContent(
               Icon(
                 imageVector = Icons.Default.Star,
                 contentDescription = "Unstar",
-                tint = Color(0xFFEAB308) // Nice Material yellow
+                tint = MaterialTheme.colorScheme.primary
               )
             }
 
@@ -500,9 +501,9 @@ fun RecentsTabContent(
                   horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                   val (arrow, arrowColor) = when (record.type) {
-                    CallType.MISSED -> "↙" to Color.Red
-                    CallType.OUTGOING -> "↗" to Color(0xFF16A34A)
-                    CallType.INCOMING -> "↔" to Color.Gray
+                    CallType.MISSED -> "↙" to MaterialTheme.colorScheme.onSurfaceVariant
+                    CallType.OUTGOING -> "↗" to MaterialTheme.colorScheme.primary
+                    CallType.INCOMING -> "↔" to MaterialTheme.colorScheme.onSurfaceVariant
                   }
                   Text(text = arrow, color = arrowColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                   Text(
@@ -569,9 +570,9 @@ fun RecentsTabContent(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                       ) {
                         val (arrow, arrowColor) = when (subRecord.type) {
-                          CallType.MISSED -> "↙" to Color.Red
-                          CallType.OUTGOING -> "↗" to Color(0xFF16A34A)
-                          CallType.INCOMING -> "↔" to Color.Gray
+                          CallType.MISSED -> "↙" to MaterialTheme.colorScheme.onSurfaceVariant
+                          CallType.OUTGOING -> "↗" to MaterialTheme.colorScheme.primary
+                          CallType.INCOMING -> "↔" to MaterialTheme.colorScheme.onSurfaceVariant
                         }
                         Text(text = arrow, color = arrowColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         Text(
@@ -1318,7 +1319,7 @@ fun DialpadTabContent(
         modifier = Modifier
           .size(68.dp)
           .clip(CircleShape)
-          .background(Color(0xFF16A34A))
+          .background(MaterialTheme.colorScheme.primary)
           .clickable { onCallClick(inputValue) }
           .testTag("dialpad_call_button"),
         contentAlignment = Alignment.Center
@@ -1549,7 +1550,7 @@ fun DialpadOverlay(
         modifier = Modifier
           .size(64.dp)
           .clip(CircleShape)
-          .background(Color(0xFF16A34A))
+          .background(MaterialTheme.colorScheme.primary)
           .clickable { onCallClick(inputValue) }
           .testTag("dialpad_call_button"),
         contentAlignment = Alignment.Center
@@ -1867,7 +1868,7 @@ fun ActiveCallScreen(
             }
             Spacer(modifier = Modifier.height(10.dp))
             TextButton(onClick = { isInCallDialpadOpen = false }) {
-              Text("Close Keypad", color = if (isDarkTheme) Color(0xFFA8C7FA) else Color(0xFF0B57D0))
+              Text("Close Keypad", color = MaterialTheme.colorScheme.primary)
             }
           }
         }
@@ -1928,9 +1929,9 @@ fun ActiveCallScreen(
                 singleLine = true,
                 shape = RoundedCornerShape(12.dp),
                 colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                  focusedBorderColor = if (isDarkTheme) Color(0xFFA8C7FA) else Color(0xFF0B57D0),
+                  focusedBorderColor = MaterialTheme.colorScheme.primary,
                   unfocusedBorderColor = subTextColor.copy(alpha = 0.5f),
-                  focusedLabelColor = if (isDarkTheme) Color(0xFFA8C7FA) else Color(0xFF0B57D0)
+                  focusedLabelColor = MaterialTheme.colorScheme.primary
                 ),
                 modifier = Modifier.fillMaxWidth()
               )
@@ -2024,9 +2025,9 @@ fun ActiveCallScreen(
                       Toast.makeText(context, "Please select or enter a valid number", Toast.LENGTH_SHORT).show()
                     }
                   },
-                  colors = ButtonDefaults.buttonColors(containerColor = if (isDarkTheme) Color(0xFFA8C7FA) else Color(0xFF0B57D0))
+                  colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                  Text("Add & Merge", color = if (isDarkTheme) Color.Black else Color.White)
+                  Text("Add & Merge", color = MaterialTheme.colorScheme.onPrimary)
                 }
               }
             }
@@ -2145,7 +2146,7 @@ fun ActiveCallScreen(
             modifier = Modifier
               .size(72.dp)
               .clip(CircleShape)
-              .background(Color(0xFF16A34A))
+              .background(MaterialTheme.colorScheme.primary)
               .clickable { onAnswer() }
               .testTag("answer_button"),
             contentAlignment = Alignment.Center
@@ -2164,7 +2165,7 @@ fun ActiveCallScreen(
           modifier = Modifier
             .size(72.dp)
             .clip(CircleShape)
-            .background(Color(0xFFDC2626))
+            .background(MaterialTheme.colorScheme.onSurface)
             .clickable { onHangUp() }
             .testTag("hangup_button"),
           contentAlignment = Alignment.Center
@@ -2424,7 +2425,11 @@ fun SettingsPanel(
 ) {
   val context = LocalContext.current
   val isDarkTheme by viewModel.isDarkTheme
-  val onThemeChange = { newVal: Boolean -> viewModel.isDarkTheme.value = newVal }
+  val onThemeChange = { newVal: Boolean -> 
+      viewModel.isDarkTheme.value = newVal
+      context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+             .edit().putBoolean("is_dark_theme", newVal).apply()
+  }
   val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
   val onTonesChange = { newVal: Boolean -> viewModel.dialpadTonesEnabled.value = newVal }
   val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
@@ -2466,7 +2471,7 @@ fun SettingsPanel(
             },
           contentAlignment = Alignment.Center
         ) {
-          Text("←", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = brandBlue)
+          Text("←", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isDarkTheme) Color.Black else Color.White)
         }
         Spacer(modifier = Modifier.width(16.dp))
         Text(
@@ -2543,7 +2548,8 @@ fun SettingsPanel(
                 onClick = { activeTab = 2 },
                 primaryText = primaryText,
                 secondaryText = secondaryText,
-                activePill = activePill
+                activePill = activePill,
+                isDarkTheme = isDarkTheme
               )
               Spacer(modifier = Modifier.height(12.dp))
               SettingsRowNav(
@@ -2552,7 +2558,8 @@ fun SettingsPanel(
                 onClick = { activeTab = 1 },
                 primaryText = primaryText,
                 secondaryText = secondaryText,
-                activePill = activePill
+                activePill = activePill,
+                isDarkTheme = isDarkTheme
               )
               Spacer(modifier = Modifier.height(12.dp))
               SettingsRowNav(
@@ -2561,7 +2568,8 @@ fun SettingsPanel(
                 onClick = { activeTab = 3 },
                 primaryText = primaryText,
                 secondaryText = secondaryText,
-                activePill = activePill
+                activePill = activePill,
+                isDarkTheme = isDarkTheme
               )
             }
 
@@ -2618,7 +2626,8 @@ fun SettingsPanel(
                 },
                 primaryText = primaryText,
                 secondaryText = secondaryText,
-                activePill = activePill
+                activePill = activePill,
+                isDarkTheme = isDarkTheme
               )
               Spacer(modifier = Modifier.height(12.dp))
               SettingsRowNav(
@@ -2630,7 +2639,8 @@ fun SettingsPanel(
                 },
                 primaryText = primaryText,
                 secondaryText = secondaryText,
-                activePill = activePill
+                activePill = activePill,
+                isDarkTheme = isDarkTheme
               )
             }
           }
@@ -2894,7 +2904,7 @@ fun SettingsRowToggle(
       onCheckedChange = onCheckedChange,
       colors = SwitchDefaults.colors(
         checkedThumbColor = Color.White,
-        checkedTrackColor = BrandBlueLight
+        checkedTrackColor = LightBlue
       )
     )
   }
@@ -2907,7 +2917,8 @@ fun SettingsRowNav(
   onClick: () -> Unit,
   primaryText: Color,
   secondaryText: Color,
-  activePill: Color
+  activePill: Color,
+  isDarkTheme: Boolean
 ) {
   Row(
     modifier = Modifier
@@ -2927,7 +2938,7 @@ fun SettingsRowNav(
         .background(activePill),
       contentAlignment = Alignment.Center
     ) {
-      Text("➔", fontSize = 12.sp, color = BrandBlueLight, fontWeight = FontWeight.Bold)
+      Text("➔", fontSize = 12.sp, color = if (isDarkTheme) Color.Black else Color.White, fontWeight = FontWeight.Bold)
     }
   }
 }
@@ -2953,7 +2964,7 @@ fun AddContactDialog(
   androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss) {
     Surface(
       shape = RoundedCornerShape(24.dp),
-      color = softBlueBg,
+      color = MaterialTheme.colorScheme.surface,
       modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)

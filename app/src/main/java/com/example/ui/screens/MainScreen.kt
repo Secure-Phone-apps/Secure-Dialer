@@ -23,7 +23,7 @@ fun MainScreen(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color(0xFFF1F4F9),
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.safeDrawing
     ) { paddingValues ->
         Box(

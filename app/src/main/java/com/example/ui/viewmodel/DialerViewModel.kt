@@ -32,6 +32,7 @@ class DialerViewModel : ViewModel() {
     var isCallActive = mutableStateOf(false)
     var callingContactName = mutableStateOf("")
     var callingContactNumber = mutableStateOf("")
+    var isDefaultDialer = mutableStateOf(false)
     
     // Helper Dialog State
     var isAddContactDialogVisible = mutableStateOf(false)

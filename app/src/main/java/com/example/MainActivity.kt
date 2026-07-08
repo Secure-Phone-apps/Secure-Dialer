@@ -1,5 +1,6 @@
 package com.example
 
+import android.content.SharedPreferences
 import android.content.Context
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -133,42 +134,17 @@ import com.example.model.Contact
 import com.example.ui.components.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.ui.theme.*
 
 
 // Helper functions moved to com.example.data.DialerRepository
 
-// Professional Polish Theme Colors
-val BrandBlueLight = Color(0xFF0B57D0)
-val SoftBlueBgLight = Color(0xFFF7F9FF)
-val ActiveBluePillLight = Color(0xFFD3E3FD)
-val SearchBarBgLight = Color(0xFFE9EEF6)
-val GrayTextLight = Color(0xFF44474E)
-val PrimaryDarkTextLight = Color(0xFF191C20)
-val NavBgLight = Color(0xFFF3F6FC)
-val NavBorderLight = Color(0xFFDDE3EA)
-
-// Dark Theme Variants
-val BrandBlueDark = Color(0xFFA8C7FA)
-val SoftBlueBgDark = Color(0xFF111318)
-val ActiveBluePillDark = Color(0xFF004A77)
-val SearchBarBgDark = Color(0xFF282A2F)
-val GrayTextDark = Color(0xFFC4C6D0)
-val PrimaryDarkTextDark = Color(0xFFE2E2E9)
-val NavBgDark = Color(0xFF1E2025)
-val NavBorderDark = Color(0xFF44474E)
-
-// Avatar Colors
-val AvatarOrange = Color(0xFFFFDBCB)
-val AvatarOrangeText = Color(0xFF311300)
-val AvatarBlue = Color(0xFFD1E4FF)
-val AvatarBlueText = Color(0xFF001D36)
-val AvatarGreen = Color(0xFFD9E7CB)
-val AvatarGreenText = Color(0xFF141E0D)
 
 
 // Data Classes moved to com.example.model.DialerModels
 
 class MainActivity : ComponentActivity() {
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
@@ -182,7 +158,7 @@ class MainActivity : ComponentActivity() {
     
     enableEdgeToEdge()
     val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-
+    
     // Check and request default dialer role on startup
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
       val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
@@ -202,37 +178,42 @@ class MainActivity : ComponentActivity() {
     }
 
     setContent {
+      val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+      val onThemeChanged = remember {
+          { isDark: Boolean ->
+            prefs.edit().putBoolean("is_dark_theme", isDark).apply()
+          }
+      }
+      val context = LocalContext.current
       val viewModel: DialerViewModel = viewModel()
-      var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
       var showRestrictedSettingsDialog by remember { mutableStateOf(false) }
       
-      var roleHeld by remember {
-        mutableStateOf(
-          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+      // Reactive check for default dialer
+      fun checkDefaultDialer(context: Context) {
+        viewModel.isDefaultDialer.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = context.getSystemService(Context.ROLE_SERVICE) as RoleManager
             roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
-          } else {
-            val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            telecomManager.defaultDialerPackage == packageName
-          }
-        )
+        } else {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            telecomManager.defaultDialerPackage == context.packageName
+        }
       }
-
+      
       val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
       androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
           if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-            roleHeld = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
-                roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
-            } else {
-                val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-                telecomManager.defaultDialerPackage == packageName
-            }
+            checkDefaultDialer(context)
           }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+      }
+      
+      // Initialize on startup
+      LaunchedEffect(Unit) {
+          checkDefaultDialer(context)
+          viewModel.isDarkTheme.value = prefs.getBoolean("is_dark_theme", true)
       }
       
       if (showRestrictedSettingsDialog) {
@@ -285,43 +266,17 @@ class MainActivity : ComponentActivity() {
         map
       }
 
-      DialerTheme(isDarkTheme = viewModel.isDarkTheme.value) {
+      MyApplicationTheme(darkTheme = viewModel.isDarkTheme.value, dynamicColor = false) {
         MainScreen(
           viewModel = viewModel,
           onShowRestrictedSettings = { showRestrictedSettingsDialog = true },
-          isDefaultDialer = roleHeld
+          isDefaultDialer = viewModel.isDefaultDialer.value
         )
       }
     }
   }
 }
 
-@Composable
-fun DialerTheme(isDarkTheme: Boolean, content: @Composable () -> Unit) {
-  val colors = if (isDarkTheme) {
-    darkColorScheme(
-      primary = BrandBlueDark,
-      background = SoftBlueBgDark,
-      surface = SoftBlueBgDark,
-      onPrimary = Color.Black,
-      onBackground = PrimaryDarkTextDark,
-      onSurface = PrimaryDarkTextDark
-    )
-  } else {
-    lightColorScheme(
-      primary = BrandBlueLight,
-      background = SoftBlueBgLight,
-      surface = SoftBlueBgLight,
-      onPrimary = Color.White,
-      onBackground = PrimaryDarkTextLight,
-      onSurface = PrimaryDarkTextLight
-    )
-  }
-  MaterialTheme(
-    colorScheme = colors,
-    content = content
-  )
-}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -347,15 +302,15 @@ fun MainScreen(
   val systemCallState by CallManager.callState.collectAsState()
   val systemCallerNumber by CallManager.callerNumber.collectAsState()
 
-  // Theme-aware styles
-  val currentBrandBlue = if (isDarkTheme) BrandBlueDark else BrandBlueLight
-  val currentSoftBlueBg = if (isDarkTheme) SoftBlueBgDark else SoftBlueBgLight
-  val currentActiveBluePill = if (isDarkTheme) ActiveBluePillDark else ActiveBluePillLight
-  val currentSearchBarBg = if (isDarkTheme) SearchBarBgDark else SearchBarBgLight
-  val currentGrayText = if (isDarkTheme) GrayTextDark else GrayTextLight
-  val currentPrimaryDarkText = if (isDarkTheme) PrimaryDarkTextDark else PrimaryDarkTextLight
-  val currentNavBg = if (isDarkTheme) NavBgDark else NavBgLight
-  val currentNavBorder = if (isDarkTheme) NavBorderDark else NavBorderLight
+  // Theme-aware styles mapped to MaterialTheme
+  val currentBrandBlue = MaterialTheme.colorScheme.primary
+  val currentSoftBlueBg = MaterialTheme.colorScheme.background
+  val currentActiveBluePill = MaterialTheme.colorScheme.tertiary
+  val currentSearchBarBg = MaterialTheme.colorScheme.surfaceVariant
+  val currentGrayText = MaterialTheme.colorScheme.onSurfaceVariant
+  val currentPrimaryDarkText = MaterialTheme.colorScheme.onSurface
+  val currentNavBg = MaterialTheme.colorScheme.surface
+  val currentNavBorder = MaterialTheme.colorScheme.outline
 
   // DTMF Tone Generator
   val toneGenerator = remember {
