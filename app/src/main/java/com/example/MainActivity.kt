@@ -206,14 +206,33 @@ class MainActivity : ComponentActivity() {
       var isDarkTheme by remember { mutableStateOf(prefs.getBoolean("dark_theme", false)) }
       var showRestrictedSettingsDialog by remember { mutableStateOf(false) }
       
-      val roleHeld = remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-          val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
-          roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
-        } else {
-          val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-          telecomManager.defaultDialerPackage == packageName
+      var roleHeld by remember {
+        mutableStateOf(
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+            roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
+          } else {
+            val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+            telecomManager.defaultDialerPackage == packageName
+          }
+        )
+      }
+
+      val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+      androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+          if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+            roleHeld = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
+                roleManager.isRoleHeld(RoleManager.ROLE_DIALER)
+            } else {
+                val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+                telecomManager.defaultDialerPackage == packageName
+            }
+          }
         }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
       }
       
       if (showRestrictedSettingsDialog) {
