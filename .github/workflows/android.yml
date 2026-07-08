@@ -70,11 +70,13 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
       run: gradle :app:assembleRelease
+    - name: Rename APK
+      run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
     - name: Create Release and Upload
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.event.inputs.release_version }}
         name: Release ${{ github.event.inputs.release_version }}
         generate_release_notes: true
-        files: app/build/outputs/apk/release/app-release.apk
+        files: app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
 
