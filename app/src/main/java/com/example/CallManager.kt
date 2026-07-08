@@ -13,6 +13,9 @@ object CallManager {
     private val _callState = MutableStateFlow<Int>(Call.STATE_DISCONNECTED)
     val callState: StateFlow<Int> = _callState
 
+    private val _audioState = MutableStateFlow<android.telecom.CallAudioState?>(null)
+    val audioState: StateFlow<android.telecom.CallAudioState?> = _audioState
+
     private val _callerNumber = MutableStateFlow<String>("")
     val callerNumber: StateFlow<String> = _callerNumber
 
@@ -45,10 +48,15 @@ object CallManager {
             _callerName.value = "" // Name can be resolved from contacts later in UI
         } else {
             _callState.value = android.telecom.Call.STATE_DISCONNECTED
+            _audioState.value = null
             _callerNumber.value = ""
             _callerName.value = ""
             inCallService = null
         }
+    }
+
+    fun updateAudioState(audioState: android.telecom.CallAudioState?) {
+        _audioState.value = audioState
     }
 
     fun answer() {

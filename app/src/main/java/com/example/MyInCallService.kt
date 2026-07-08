@@ -74,5 +74,10 @@ class MyInCallService : InCallService() {
             }
         }
     }
+
+    override fun onCallAudioStateChanged(audioState: android.telecom.CallAudioState?) {
+        super.onCallAudioStateChanged(audioState)
+        CallManager.updateAudioState(audioState)
+    }
 }
 

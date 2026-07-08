@@ -80,6 +80,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -1587,6 +1588,16 @@ fun ActiveCallScreen(
   var isSpeakerOn by remember { mutableStateOf(false) }
   var isBluetoothOn by remember { mutableStateOf(false) }
   var isOnHold by remember { mutableStateOf(false) }
+  
+  // Observe audio state for UI synchronization
+  val audioState by CallManager.audioState.collectAsStateWithLifecycle()
+  LaunchedEffect(audioState) {
+    audioState?.let {
+      isBluetoothOn = (it.route == android.telecom.CallAudioState.ROUTE_BLUETOOTH)
+      isSpeakerOn = (it.route == android.telecom.CallAudioState.ROUTE_SPEAKER)
+    }
+  }
+  
   var isQuickDeclineMenuOpen by remember { mutableStateOf(false) }
   var isInCallDialpadOpen by remember { mutableStateOf(false) }
   var inCallDialpadInput by remember { mutableStateOf("") }
