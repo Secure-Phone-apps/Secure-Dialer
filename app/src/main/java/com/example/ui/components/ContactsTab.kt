@@ -10,6 +10,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -36,10 +39,6 @@ fun ContactsTabContent(
     onCallClick: (Contact) -> Unit,
     onAddContactClick: () -> Unit,
     onToggleFavorite: (Contact) -> Unit,
-    primaryText: Color,
-    secondaryText: Color,
-    activePill: Color,
-    brandBlue: Color,
     hasPermission: Boolean = true,
     isLoading: Boolean = false,
     onRequestPermission: () -> Unit = {},
@@ -49,37 +48,40 @@ fun ContactsTabContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
-        // ... (Permissions card remains same)
         if (!hasPermission && !isLoading) {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                colors = CardDefaults.cardColors(containerColor = activePill.copy(alpha = 0.25f)),
+                    .padding(vertical = 12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Permissions Required", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
+                    Text(
+                        text = "Permissions Required",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.",
-                        fontSize = 11.sp,
-                        color = secondaryText,
+                        style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = onRequestPermission,
-                        colors = ButtonDefaults.buttonColors(containerColor = brandBlue),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(40.dp)
                     ) {
-                        Text("Enable Phone Contacts", fontSize = 11.sp, color = Color.White)
+                        Text("Enable Phone Contacts")
                     }
                 }
             }
@@ -88,29 +90,25 @@ fun ContactsTabContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp, start = 4.dp),
+                .padding(vertical = 12.dp, horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Contacts",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = secondaryText
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Button(
                 onClick = onAddContactClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = activePill,
-                    contentColor = if (activePill == Color(0xFF004A77)) Color.White else Color(0xFF041E49)
-                ),
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
                 modifier = Modifier
-                    .height(32.dp)
+                    .height(36.dp)
                     .testTag("add_contact_button")
             ) {
-                Text("+ Add New", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Icon(Icons.Default.Call, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Add New", style = MaterialTheme.typography.labelLarge)
             }
         }
 
@@ -121,15 +119,14 @@ fun ContactsTabContent(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("👥", fontSize = 48.sp, modifier = Modifier.padding(bottom = 8.dp))
-                    Text("No contacts found", fontWeight = FontWeight.Medium, color = secondaryText)
-                    Text("Tap '+ Add New' to create a contact", fontSize = 12.sp, color = secondaryText)
-                }
+                EmptyStateIllustration(
+                    title = "No contacts found",
+                    subtitle = "Tap 'Add New' to create a contact"
+                )
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
@@ -144,10 +141,7 @@ fun ContactsTabContent(
                             onCallClick = onCallClick,
                             onToggleFavorite = onToggleFavorite,
                             onEditContact = onEditContact,
-                            onDeleteContact = onDeleteContact,
-                            primaryText = primaryText,
-                            secondaryText = secondaryText,
-                            activePill = activePill
+                            onDeleteContact = onDeleteContact
                         )
                     }
                 }
@@ -170,106 +164,88 @@ fun ContactRow(
     onCallClick: (Contact) -> Unit,
     onToggleFavorite: (Contact) -> Unit,
     onEditContact: (Contact) -> Unit,
-    onDeleteContact: (Contact) -> Unit,
-    primaryText: Color,
-    secondaryText: Color,
-    activePill: Color
+    onDeleteContact: (Contact) -> Unit
 ) {
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onCallClick(contact) }
-            .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { onCallClick(contact) },
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(contact.avatarBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = contact.avatarTextColor
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = contact.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = primaryText
-            )
-            Text(
-                text = "${contact.label} • ${contact.number}",
-                fontSize = 13.sp,
-                color = secondaryText
-            )
-        }
-
-        IconButton(
-            onClick = { onToggleFavorite(contact) },
-            modifier = Modifier.width(36.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Favorite Toggle",
-                tint = if (contact.favorite) Color(0xFFEAB308) else Color.LightGray
-            )
-        }
-
-        var menuExpanded by remember { mutableStateOf(false) }
-        Box(modifier = Modifier.padding(horizontal = 0.dp)) {
-            IconButton(
-                onClick = { menuExpanded = true },
-                modifier = Modifier.width(30.dp)
-            ) {
-                Text("⋮", fontSize = 18.sp, color = secondaryText, fontWeight = FontWeight.Bold)
-            }
-            DropdownMenu(
-                expanded = menuExpanded,
-                onDismissRequest = { menuExpanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = { Text("✏️ Edit Contact") },
-                    onClick = {
-                        menuExpanded = false
-                        onEditContact(contact)
-                    }
+        ListItem(
+            headlineContent = {
+                Text(
+                    text = contact.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium
                 )
-                DropdownMenuItem(
-                    text = { Text("🗑️ Delete Contact") },
-                    onClick = {
-                        menuExpanded = false
-                        onDeleteContact(contact)
-                    }
+            },
+            supportingContent = {
+                Text(
+                    text = "${contact.label} • ${contact.number}",
+                    style = MaterialTheme.typography.bodySmall
                 )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(activePill)
-                .clickable { onCallClick(contact) },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Call,
-                contentDescription = "Call",
-                tint = if (activePill == Color(0xFF004A77)) Color.White else Color(0xFF041E49),
-                modifier = Modifier.size(18.dp)
-            )
-        }
+            },
+            leadingContent = {
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                    color = contact.avatarBg
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = contact.avatarTextColor
+                        )
+                    }
+                }
+            },
+            trailingContent = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { onToggleFavorite(contact) }) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Favorite",
+                            tint = if (contact.favorite) Color(0xFFEAB308) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        )
+                    }
+                    var menuExpanded by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "More"
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Edit") },
+                                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEditContact(contact)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Delete") },
+                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDeleteContact(contact)
+                                }
+                            )
+                        }
+                    }
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
     }
 }
-
 
 @Composable
 fun AddContactDialog(
@@ -280,104 +256,68 @@ fun AddContactDialog(
     label: String,
     onLabelChange: (String) -> Unit,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
-    softBlueBg: Color,
-    activeBluePill: Color,
-    searchBarBg: Color,
-    primaryDarkText: Color,
-    brandBlue: Color,
-    grayText: Color
+    onConfirm: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(24.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Create Contact",
+                style = MaterialTheme.typography.headlineSmall
+            )
+        },
+        text = {
             Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.Start
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(
-                    text = "Create Contact",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = primaryDarkText,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
                 OutlinedTextField(
                     value = name,
                     onValueChange = onNameChange,
                     label = { Text("Name") },
                     singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                        .testTag("dialog_name_input")
+                    modifier = Modifier.fillMaxWidth().testTag("dialog_name_input")
                 )
-
                 OutlinedTextField(
                     value = number,
                     onValueChange = onNumberChange,
                     label = { Text("Phone Number") },
                     singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 12.dp)
-                        .testTag("dialog_phone_input")
+                    modifier = Modifier.fillMaxWidth().testTag("dialog_phone_input")
                 )
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("Mobile", "Work", "Home").forEach { option ->
-                        val isSelected = label == option
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(36.dp)
-                                .clip(RoundedCornerShape(18.dp))
-                                .background(if (isSelected) activeBluePill else searchBarBg)
-                                .clickable { onLabelChange(option) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = option,
-                                fontSize = 12.sp,
-                                color = if (isSelected) brandBlue else grayText,
-                                fontWeight = FontWeight.Bold
+                Column {
+                    Text(
+                        text = "Label",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        listOf("Mobile", "Work", "Home").forEach { option ->
+                            FilterChip(
+                                selected = label == option,
+                                onClick = { onLabelChange(option) },
+                                label = { Text(option) },
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Text("Cancel", color = brandBlue, fontWeight = FontWeight.Bold)
-                    }
-
-                    Button(
-                        onClick = onConfirm,
-                        colors = ButtonDefaults.buttonColors(containerColor = brandBlue)
-                    ) {
-                        Text("Save", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                }
             }
-        }
-    }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        },
+        shape = RoundedCornerShape(28.dp)
+    )
 }

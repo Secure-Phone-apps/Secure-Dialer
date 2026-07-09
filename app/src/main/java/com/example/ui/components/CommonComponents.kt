@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,11 +15,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 
 @Composable
@@ -31,14 +36,13 @@ fun HeaderSearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(28.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        tonalElevation = 2.dp
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        shape = RoundedCornerShape(32.dp),
+        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .padding(horizontal = 16.dp, vertical = 8.dp)
                 .height(48.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -47,22 +51,33 @@ fun HeaderSearchBar(
                 contentDescription = "Search",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(16.dp))
             Box(modifier = Modifier.weight(1.0f)) {
                 if (searchQuery.isEmpty()) {
                     Text(
-                        text = "search contacts & numbers",
+                        text = "Search contacts & numbers",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                BasicTextFieldDisplay(
+                BasicTextField(
                     value = searchQuery,
                     onValueChange = onQueryChange,
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
-                    )
+                    ),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
+            }
+            if (searchQuery.isNotEmpty()) {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Clear",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             IconButton(onClick = onProfileClick) {
                 Icon(
@@ -80,21 +95,6 @@ fun HeaderSearchBar(
             }
         }
     }
-}
-
-@Composable
-fun BasicTextFieldDisplay(
-    value: String,
-    onValueChange: (String) -> Unit,
-    textStyle: TextStyle
-) {
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        textStyle = textStyle,
-        singleLine = true,
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 @Composable
@@ -130,5 +130,42 @@ fun BottomNavBar(
                 )
             )
         }
+    }
+}
+
+@Composable
+fun EmptyStateIllustration(
+    title: String,
+    subtitle: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.img_empty_state_dialer_1783587369431),
+            contentDescription = null,
+            modifier = Modifier
+                .size(240.dp)
+                .clip(RoundedCornerShape(24.dp)),
+            contentScale = ContentScale.Fit
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = subtitle,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
     }
 }

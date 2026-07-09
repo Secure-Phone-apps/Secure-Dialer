@@ -32,10 +32,6 @@ fun RecentsTabContent(
     callRecordsPaged: LazyPagingItems<CallRecord>,
     onCallClick: (CallRecord) -> Unit,
     onDeleteRecord: (Int) -> Unit,
-    primaryText: Color,
-    secondaryText: Color,
-    activePill: Color,
-    brandBlue: Color,
     hasPermission: Boolean = true,
     isLoading: Boolean = false,
     onRequestPermission: () -> Unit = {}
@@ -43,20 +39,19 @@ fun RecentsTabContent(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp, start = 4.dp),
+                .padding(vertical = 12.dp, horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Recents",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = secondaryText,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("recents_header")
             )
         }
@@ -65,30 +60,34 @@ fun RecentsTabContent(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
-                colors = CardDefaults.cardColors(containerColor = activePill.copy(alpha = 0.25f)),
+                    .padding(vertical = 12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                ),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Permissions Required", fontWeight = FontWeight.Bold, color = brandBlue, fontSize = 14.sp)
+                    Text(
+                        text = "Permissions Required",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = "To access, load, and call the real call history on your phone, please enable the Call Log Permission.",
-                        fontSize = 11.sp,
-                        color = secondaryText,
+                        style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = onRequestPermission,
-                        colors = ButtonDefaults.buttonColors(containerColor = brandBlue),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.height(32.dp)
+                        modifier = Modifier.height(40.dp)
                     ) {
-                        Text("Enable Call Log", fontSize = 11.sp, color = Color.White)
+                        Text("Enable Call Log")
                     }
                 }
             }
@@ -101,15 +100,14 @@ fun RecentsTabContent(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("🕒", fontSize = 48.sp, modifier = Modifier.padding(bottom = 8.dp))
-                    Text("Your call log is empty", fontWeight = FontWeight.Medium, color = secondaryText)
-                    Text("Recent calls will show up here", fontSize = 12.sp, color = secondaryText)
-                }
+                EmptyStateIllustration(
+                    title = "Your call log is empty",
+                    subtitle = "Recent calls will show up here"
+                )
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(
@@ -122,10 +120,7 @@ fun RecentsTabContent(
                         RecentCallRow(
                             record = record,
                             onCallClick = { onCallClick(record) },
-                            onDeleteRecord = { onDeleteRecord(record.id) },
-                            primaryText = primaryText,
-                            secondaryText = secondaryText,
-                            activePill = activePill
+                            onDeleteRecord = { onDeleteRecord(record.id) }
                         )
                     }
                 }
@@ -146,86 +141,65 @@ fun RecentsTabContent(
 fun RecentCallRow(
     record: CallRecord,
     onCallClick: () -> Unit,
-    onDeleteRecord: () -> Unit,
-    primaryText: Color,
-    secondaryText: Color,
-    activePill: Color
+    onDeleteRecord: () -> Unit
 ) {
-    Row(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onCallClick() }
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .clickable { onCallClick() },
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
-        Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .background(record.avatarBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = record.avatarText,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = record.avatarTextColor
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = record.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = primaryText
-            )
-            if (record.number.isNotEmpty()) {
+        ListItem(
+            headlineContent = {
                 Text(
-                    text = record.number,
-                    fontSize = 14.sp,
-                    color = secondaryText
+                    text = record.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
-            }
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                val (arrow, arrowColor) = when (record.type) {
-                    CallType.MISSED -> "↙" to Color.Red
-                    CallType.OUTGOING -> "↗" to Color(0xFF10B981) // Green
-                    CallType.INCOMING -> "↔" to Color.Gray
+            },
+            supportingContent = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    val (arrow, arrowColor) = when (record.type) {
+                        CallType.MISSED -> "↙" to MaterialTheme.colorScheme.error
+                        CallType.OUTGOING -> "↗" to Color(0xFF4CAF50)
+                        CallType.INCOMING -> "↔" to MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    Text(text = arrow, color = arrowColor, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = "${record.label} • ${record.timestamp}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
-                Text(text = arrow, color = arrowColor, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                Text(
-                    text = "${record.label} • ${record.timestamp}",
-                    fontSize = 13.sp,
-                    color = secondaryText
-                )
-            }
-        }
-
-        IconButton(onClick = onDeleteRecord) {
-            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color.Red.copy(alpha = 0.5f), modifier = Modifier.size(20.dp))
-        }
-
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(activePill)
-                .clickable { onCallClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Call,
-                contentDescription = "Call",
-                tint = if (activePill == Color(0xFF004A77)) Color.White else Color(0xFF041E49),
-                modifier = Modifier.size(18.dp)
-            )
-        }
+            },
+            leadingContent = {
+                Surface(
+                    modifier = Modifier.size(44.dp),
+                    shape = CircleShape,
+                    color = record.avatarBg
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = record.avatarText,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = record.avatarTextColor
+                        )
+                    }
+                }
+            },
+            trailingContent = {
+                IconButton(onClick = onDeleteRecord) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    )
+                }
+            },
+            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+        )
     }
 }

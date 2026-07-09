@@ -102,15 +102,6 @@ fun MainScreen(
     val systemCallState by CallManager.callState.collectAsState()
     val systemCallerNumber by CallManager.callerNumber.collectAsState()
 
-    // Theme-aware styles
-    val currentBrandBlue = MaterialTheme.colorScheme.primary
-    val currentSoftBlueBg = MaterialTheme.colorScheme.background
-    val currentActiveBluePill = MaterialTheme.colorScheme.tertiary
-    val currentSearchBarBg = MaterialTheme.colorScheme.surfaceVariant
-    val currentGrayText = MaterialTheme.colorScheme.onSurfaceVariant
-    val currentPrimaryDarkText = MaterialTheme.colorScheme.onSurface
-    val currentNavBg = MaterialTheme.colorScheme.surface
-
     // DTMF Tone Generator
     val toneGenerator = remember {
         try { ToneGenerator(AudioManager.STREAM_DTMF, 80) } catch (e: Exception) { null }
@@ -203,7 +194,7 @@ fun MainScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = currentSoftBlueBg,
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.safeDrawing
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
@@ -229,45 +220,44 @@ fun MainScreen(
                 )
 
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    when (selectedTab) {
-                        0 -> RecentsTabContent(
-                            callRecordsPaged = callHistoryPaged,
-                            onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
-                            onDeleteRecord = { id -> viewModel.deleteContact(id.toString()) }, // This should be deleteCallLog but VM needs update
-                            primaryText = currentPrimaryDarkText, secondaryText = currentGrayText,
-                            activePill = currentActiveBluePill, brandBlue = currentBrandBlue,
-                            hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
-                            onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
-                        )
-                        1 -> ContactsTabContent(
-                            contactsPaged = contactsPaged,
-                            onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
-                            onAddContactClick = { isAddContactDialogVisible = true },
-                            onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
-                            primaryText = currentPrimaryDarkText, secondaryText = currentGrayText,
-                            activePill = currentActiveBluePill, brandBlue = currentBrandBlue,
-                            hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
-                            onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
-                            onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
-                            onDeleteContact = { it -> viewModel.deleteContact(it.number) }
-                        )
-                        2 -> DialpadTabContent(
-                            inputValue = dialpadInput,
-                            onValueChange = {
-                                if (it.length > dialpadInput.length) {
-                                    if (dialpadTonesEnabled) playDtmf(it.last().toString())
-                                    if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                }
-                                dialpadInput = it
-                                viewModel.onSearchQueryChange(it) // T9 Search trigger
-                            },
-                            onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
-                            onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
-                            voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
-                            activePill = currentActiveBluePill, searchBg = currentSearchBarBg,
-                            primaryText = currentPrimaryDarkText, grayText = currentGrayText, 
-                            contactsPaged = contactsPaged
-                        )
+                    androidx.compose.animation.Crossfade(
+                        targetState = selectedTab,
+                        label = "tab_transition"
+                    ) { tabIndex ->
+                        when (tabIndex) {
+                            0 -> RecentsTabContent(
+                                callRecordsPaged = callHistoryPaged,
+                                onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
+                                onDeleteRecord = { id -> viewModel.deleteContact(id.toString()) },
+                                hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
+                                onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
+                            )
+                            1 -> ContactsTabContent(
+                                contactsPaged = contactsPaged,
+                                onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
+                                onAddContactClick = { isAddContactDialogVisible = true },
+                                onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
+                                hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
+                                onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
+                                onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
+                                onDeleteContact = { it -> viewModel.deleteContact(it.number) }
+                            )
+                            2 -> DialpadTabContent(
+                                inputValue = dialpadInput,
+                                onValueChange = {
+                                    if (it.length > dialpadInput.length) {
+                                        if (dialpadTonesEnabled) playDtmf(it.last().toString())
+                                        if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                    dialpadInput = it
+                                    viewModel.onSearchQueryChange(it)
+                                },
+                                onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
+                                onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
+                                voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
+                                contactsPaged = contactsPaged
+                            )
+                        }
                     }
                 }
 
@@ -283,16 +273,14 @@ fun MainScreen(
                     onHangUp = { CallManager.disconnect(); isCallActive = false },
                     onAnswer = { CallManager.answer() },
                     onQuickDecline = { CallManager.disconnect(); isCallActive = false },
-                    isDarkTheme = isDarkTheme, isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
-                    contacts = emptyList(), activePill = currentActiveBluePill, callState = systemCallState
+                    isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
+                    contacts = emptyList(), callState = systemCallState
                 )
             }
 
             AnimatedVisibility(visible = isSettingsVisible, enter = slideInVertically { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut()) {
                 SettingsPanel(
-                    viewModel = viewModel, onClose = { isSettingsVisible = false },
-                    primaryText = currentPrimaryDarkText, secondaryText = currentGrayText,
-                    navBg = currentNavBg, searchBg = currentSearchBarBg, brandBlue = currentBrandBlue, activePill = currentActiveBluePill
+                    viewModel = viewModel, onClose = { isSettingsVisible = false }
                 )
             }
 
@@ -305,10 +293,7 @@ fun MainScreen(
                     onConfirm = {
                         viewModel.addContact(newContactName, newContactNumber, newContactLabel)
                         isAddContactDialogVisible = false
-                    },
-                    softBlueBg = currentSoftBlueBg, activeBluePill = currentActiveBluePill,
-                    searchBarBg = currentSearchBarBg, primaryDarkText = currentPrimaryDarkText,
-                    brandBlue = currentBrandBlue, grayText = currentGrayText
+                    }
                 )
             }
 
@@ -323,10 +308,7 @@ fun MainScreen(
                         viewModel.deleteContact(oldContactToEdit!!.number)
                         viewModel.addContact(editContactName, editContactNumber, editContactLabel)
                         isEditContactDialogVisible = false
-                    },
-                    softBlueBg = currentSoftBlueBg, activeBluePill = currentActiveBluePill,
-                    searchBarBg = currentSearchBarBg, primaryDarkText = currentPrimaryDarkText,
-                    brandBlue = currentBrandBlue, grayText = currentGrayText
+                    }
                 )
             }
         }

@@ -9,7 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -17,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -36,43 +39,43 @@ fun DialpadTabContent(
     onSpeedDialCall: (String) -> Unit,
     voicemailNumber: String,
     speedDialMap: Map<Int, String>,
-    activePill: Color,
-    searchBg: Color,
-    primaryText: Color,
-    grayText: Color,
     contactsPaged: LazyPagingItems<Contact>
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // T9 Results Preview
         if (inputValue.isNotEmpty()) {
             Text(
                 text = "T9 Search",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                color = grayText,
-                modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.Start).padding(start = 8.dp, top = 8.dp)
             )
             
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(80.dp)
-                    .background(searchBg.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                    .height(88.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                     .padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (contactsPaged.itemCount == 0) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No matches", fontSize = 12.sp, color = grayText)
+                        Text(
+                            "No matches",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 } else {
                     for (i in 0 until minOf(contactsPaged.itemCount, 3)) {
@@ -81,23 +84,28 @@ fun DialpadTabContent(
                             Column(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .clickable { onCallClick(contact.number) }
-                                    .padding(4.dp),
+                                    .padding(8.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Box(
-                                    modifier = Modifier.size(32.dp).clip(CircleShape).background(contact.avatarBg),
+                                    modifier = Modifier.size(40.dp).clip(CircleShape).background(contact.avatarBg),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(contact.avatarText, fontSize = 12.sp, color = contact.avatarTextColor)
+                                    Text(
+                                        contact.avatarText,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = contact.avatarTextColor
+                                    )
                                 }
+                                Spacer(Modifier.height(4.dp))
                                 Text(
                                     text = contact.name,
-                                    fontSize = 11.sp,
+                                    style = MaterialTheme.typography.labelSmall,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
-                                    color = primaryText
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -107,12 +115,11 @@ fun DialpadTabContent(
         } else {
             Text(
                 text = "Dial Pad",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = grayText,
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier
                     .align(Alignment.Start)
-                    .padding(bottom = 4.dp, start = 4.dp)
+                    .padding(bottom = 4.dp, start = 4.dp, top = 8.dp)
             )
         }
 
@@ -120,16 +127,15 @@ fun DialpadTabContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(72.dp)
+                .height(80.dp)
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
                 text = inputValue.ifEmpty { "Enter Number" },
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Light,
-                color = if (inputValue.isEmpty()) Color.Gray.copy(alpha = 0.6f) else primaryText,
+                style = MaterialTheme.typography.displayMedium,
+                color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
@@ -157,7 +163,7 @@ fun DialpadTabContent(
 
         Column(
             modifier = Modifier.width(280.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             for (i in 0 until 4) {
                 Row(
@@ -169,12 +175,16 @@ fun DialpadTabContent(
                         val key = keys[index]
                         Box(
                             modifier = Modifier
-                                .size(64.dp)
+                                .size(72.dp)
                                 .clip(CircleShape)
-                                .background(searchBg)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                 .combinedClickable(
-                                    onClick = { onValueChange(inputValue + key.first) },
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onValueChange(inputValue + key.first)
+                                    },
                                     onLongClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         if (key.third != -1) {
                                             val speedNum = speedDialMap[key.third]
                                             if (speedNum != null) {
@@ -204,15 +214,15 @@ fun DialpadTabContent(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     text = key.first,
-                                    fontSize = 22.sp,
+                                    style = MaterialTheme.typography.headlineMedium,
                                     fontWeight = FontWeight.Medium,
-                                    color = primaryText
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 if (key.second.isNotEmpty()) {
                                     Text(
                                         text = key.second,
-                                        fontSize = 8.sp,
-                                        color = grayText,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
@@ -223,7 +233,7 @@ fun DialpadTabContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Action Row (Call & Backspace inline)
         Row(
@@ -234,43 +244,44 @@ fun DialpadTabContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Empty box for symmetry on the left
-            Box(modifier = Modifier.size(56.dp))
+            Box(modifier = Modifier.size(60.dp))
 
             // Central green call button
-            Box(
+            LargeFloatingActionButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onCallClick(inputValue)
+                },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
-                    .size(68.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .clickable { onCallClick(inputValue) }
-                    .testTag("dialpad_call_button"),
-                contentAlignment = Alignment.Center
+                    .size(80.dp)
+                    .testTag("dialpad_call_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
                     contentDescription = "Place call",
-                    tint = Color.White,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(32.dp)
                 )
             }
 
             // Backspace button on the right
             Box(
-                modifier = Modifier.size(56.dp),
+                modifier = Modifier.size(60.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (inputValue.isNotEmpty()) {
                     IconButton(
-                        onClick = { onValueChange(inputValue.dropLast(1)) },
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .background(searchBg)
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            onValueChange(inputValue.dropLast(1))
+                        }
                     ) {
                         Text(
                             text = "⌫",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryText
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -283,20 +294,20 @@ fun DialpadTabContent(
 
 @Composable
 fun FloatingDialpadButton(
-    onClick: () -> Unit,
-    activePillColor: Color
+    onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(activePillColor)
-            .shadow(elevation = 6.dp, shape = RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .testTag("dialpad_fab"),
-        contentAlignment = Alignment.Center
+    FloatingActionButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(16.dp),
+        containerColor = MaterialTheme.colorScheme.primaryContainer,
+        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+        modifier = Modifier.testTag("dialpad_fab")
     ) {
-        Text(text = "⌨️", fontSize = 24.sp)
+        Icon(
+            imageVector = Icons.Default.Call,
+            contentDescription = "Open Dialpad",
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 
@@ -308,56 +319,35 @@ fun DialpadOverlay(
     onClose: () -> Unit,
     onCallClick: (String) -> Unit,
     onSpeedDialCall: (String) -> Unit,
-    speedDialMap: Map<Int, String>,
-    navBg: Color,
-    activePill: Color,
-    searchBg: Color,
-    primaryText: Color,
-    grayText: Color,
-    brandBlue: Color
+    speedDialMap: Map<Int, String>
 ) {
     val context = LocalContext.current
 
-    Box(
+    Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .background(navBg, shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .shadow(16.dp, shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
-            .padding(horizontal = 24.dp, vertical = 12.dp)
+            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Swipe down handle
-            Row(
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .width(40.dp)
+                    .height(4.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.outlineVariant)
+                    .padding(vertical = 12.dp)
                     .clickable { onClose() }
-                    .padding(vertical = 12.dp, horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(modifier = Modifier.width(36.dp))
-                Box(
-                    modifier = Modifier
-                        .width(64.dp)
-                        .height(6.dp)
-                        .clip(CircleShape)
-                        .background(Color.LightGray.copy(alpha = 0.8f))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(activePill)
-                        .clickable { onClose() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("▼", fontSize = 12.sp, color = brandBlue, fontWeight = FontWeight.Bold)
-                }
-            }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Input Display Screen
             Row(
@@ -370,9 +360,8 @@ fun DialpadOverlay(
             ) {
                 Text(
                     text = inputValue.ifEmpty { "Enter Number" },
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Light,
-                    color = if (inputValue.isEmpty()) Color.Gray else primaryText,
+                    style = MaterialTheme.typography.displaySmall,
+                    color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     modifier = Modifier.weight(1f),
                     textAlign = TextAlign.Center
@@ -380,12 +369,16 @@ fun DialpadOverlay(
 
                 if (inputValue.isNotEmpty()) {
                     IconButton(onClick = { onValueChange(inputValue.dropLast(1)) }) {
-                        Text("⌫", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = grayText)
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Backspace",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Dialer Grid
             val keys = listOf(
@@ -405,7 +398,7 @@ fun DialpadOverlay(
 
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 for (i in 0 until 4) {
                     Row(
@@ -420,7 +413,7 @@ fun DialpadOverlay(
                                     .weight(1f)
                                     .height(64.dp)
                                     .clip(RoundedCornerShape(32.dp))
-                                    .background(searchBg)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                     .combinedClickable(
                                         onClick = { onValueChange(inputValue + key.first) },
                                         onLongClick = {
@@ -428,7 +421,6 @@ fun DialpadOverlay(
                                                 Toast
                                                     .makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT)
                                                     .show()
-                                                // onSpeedDialCall(voicemailNumber)
                                             } else if (key.third != -1) {
                                                 val speedNum = speedDialMap[key.third]
                                                 if (speedNum != null) {
@@ -458,15 +450,15 @@ fun DialpadOverlay(
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
                                         text = key.first,
-                                        fontSize = 22.sp,
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = primaryText
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     if (key.second.isNotEmpty()) {
                                         Text(
                                             text = key.second,
-                                            fontSize = 9.sp,
-                                            color = grayText,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
@@ -477,27 +469,26 @@ fun DialpadOverlay(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Green Call Action Button
-            Box(
+            // Call Action Button
+            LargeFloatingActionButton(
+                onClick = { onCallClick(inputValue) },
+                shape = CircleShape,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primary)
-                    .clickable { onCallClick(inputValue) }
-                    .testTag("dialpad_call_button"),
-                contentAlignment = Alignment.Center
+                    .size(72.dp)
+                    .testTag("dialpad_call_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
                     contentDescription = "Place call",
-                    tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

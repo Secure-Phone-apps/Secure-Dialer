@@ -7,6 +7,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,23 +24,18 @@ import com.example.model.CallRecord
 @Composable
 fun VoicemailTabContent(
     voicemailRecords: List<CallRecord>,
-    onPlayClick: (CallRecord) -> Unit,
-    primaryText: Color,
-    secondaryText: Color,
-    activePill: Color,
-    navBg: Color
+    onPlayClick: (CallRecord) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
         Text(
             text = "Voicemail",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = secondaryText,
-            modifier = Modifier.padding(bottom = 12.dp, start = 4.dp)
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(vertical = 16.dp)
         )
 
         if (voicemailRecords.isEmpty()) {
@@ -49,60 +46,92 @@ fun VoicemailTabContent(
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("📼", fontSize = 48.sp, modifier = Modifier.padding(bottom = 8.dp))
-                    Text("No voicemails", fontWeight = FontWeight.Medium, color = secondaryText)
-                    Text("You are all caught up", fontSize = 12.sp, color = secondaryText)
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow, // Using PlayArrow as a surrogate for Voicemail icon
+                        contentDescription = null,
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "No voicemails",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "You're all caught up",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 80.dp)
             ) {
                 items(voicemailRecords, key = { it.id }) { record ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp)),
-                        colors = CardDefaults.cardColors(containerColor = navBg)
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(20.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(CircleShape)
-                                        .background(record.avatarBg),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(record.avatarText, fontWeight = FontWeight.Bold, color = record.avatarTextColor)
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(record.name, fontWeight = FontWeight.Medium, color = primaryText)
-                                    Text("${record.timestamp} • 0:24 mins", fontSize = 12.sp, color = secondaryText)
-                                }
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(activePill)
-                                        .clickable { onPlayClick(record) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("▶️", fontSize = 16.sp)
-                                }
-                            }
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        record.name,
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                },
+                                supportingContent = {
+                                    Text(
+                                        "${record.timestamp} • 0:24",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                },
+                                leadingContent = {
+                                    Surface(
+                                        modifier = Modifier.size(40.dp),
+                                        shape = CircleShape,
+                                        color = record.avatarBg
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text(
+                                                record.avatarText,
+                                                style = MaterialTheme.typography.titleSmall,
+                                                color = record.avatarTextColor
+                                            )
+                                        }
+                                    }
+                                },
+                                trailingContent = {
+                                    FilledIconButton(
+                                        onClick = { onPlayClick(record) },
+                                        shape = CircleShape
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.PlayArrow,
+                                            contentDescription = "Play"
+                                        )
+                                    }
+                                },
+                                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                            )
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 8.dp),
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
 
                             Text(
-                                text = "Transcript: \"Hey, just calling to catch up. Let me know when you're free this evening! Standard billing rates may apply.\"",
-                                fontSize = 12.sp,
-                                color = secondaryText,
-                                lineHeight = 16.sp,
+                                text = "Transcript: \"Hey, just calling to catch up. Let me know when you're free this evening!\"",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 2,
-                                overflow = TextOverflow.Ellipsis
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.padding(horizontal = 4.dp)
                             )
                         }
                     }
