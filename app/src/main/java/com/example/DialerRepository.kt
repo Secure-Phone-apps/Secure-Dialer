@@ -38,6 +38,20 @@ class DialerRepository(private val context: Context) {
 
     // --- Sync Logic ---
 
+    fun startObservingChanges(onChanged: () -> Unit) {
+        try {
+            val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+                override fun onChange(selfChange: Boolean) {
+                    onChanged()
+                }
+            }
+            context.contentResolver.registerContentObserver(ContactsContract.Contacts.CONTENT_URI, true, observer)
+            context.contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI, true, observer)
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
+    }
+
     suspend fun syncContacts() {
         val systemContacts = fetchSystemContacts()
         dao.insertContacts(systemContacts)
@@ -51,17 +65,21 @@ class DialerRepository(private val context: Context) {
     private fun fetchSystemContacts(): List<Contact> {
         val contacts = mutableListOf<Contact>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
-        context.contentResolver.query(Phone.CONTENT_URI, arrayOf(Phone.DISPLAY_NAME, Phone.NUMBER, Phone.STARRED), null, null, "${Phone.DISPLAY_NAME} ASC")?.use { cursor ->
-            val nameIdx = cursor.getColumnIndex(Phone.DISPLAY_NAME)
-            val numIdx = cursor.getColumnIndex(Phone.NUMBER)
-            val favIdx = cursor.getColumnIndex(Phone.STARRED)
-            while (cursor.moveToNext()) {
-                val name = cursor.getString(nameIdx) ?: "Unknown"
-                val num = cursor.getString(numIdx) ?: ""
-                val fav = cursor.getInt(favIdx) == 1
-                val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                contacts.add(Contact(num, name, "Mobile", fav, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name)))
+        try {
+            context.contentResolver.query(Phone.CONTENT_URI, arrayOf(Phone.DISPLAY_NAME, Phone.NUMBER, Phone.STARRED), null, null, "${Phone.DISPLAY_NAME} ASC")?.use { cursor ->
+                val nameIdx = cursor.getColumnIndex(Phone.DISPLAY_NAME)
+                val numIdx = cursor.getColumnIndex(Phone.NUMBER)
+                val favIdx = cursor.getColumnIndex(Phone.STARRED)
+                while (cursor.moveToNext()) {
+                    val name = cursor.getString(nameIdx) ?: "Unknown"
+                    val num = cursor.getString(numIdx) ?: ""
+                    val fav = cursor.getInt(favIdx) == 1
+                    val pair = colors[Math.abs(name.hashCode()) % colors.size]
+                    contacts.add(Contact(num, name, "Mobile", fav, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name)))
+                }
             }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         }
         return contacts.distinctBy { it.number }
     }
@@ -70,18 +88,22 @@ class DialerRepository(private val context: Context) {
         val logs = mutableListOf<CallRecord>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
         val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
-        context.contentResolver.query(CallLog.Calls.CONTENT_URI, arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION), null, null, "${CallLog.Calls.DATE} DESC")?.use { cursor ->
-            while (cursor.moveToNext()) {
-                val num = cursor.getString(2) ?: ""
-                val name = cursor.getString(1) ?: num
-                val type = when (cursor.getInt(3)) {
-                    CallLog.Calls.MISSED_TYPE -> CallType.MISSED
-                    CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
-                    else -> CallType.INCOMING
+        try {
+            context.contentResolver.query(CallLog.Calls.CONTENT_URI, arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION), null, null, "${CallLog.Calls.DATE} DESC")?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val num = cursor.getString(2) ?: ""
+                    val name = cursor.getString(1) ?: num
+                    val type = when (cursor.getInt(3)) {
+                        CallLog.Calls.MISSED_TYPE -> CallType.MISSED
+                        CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
+                        else -> CallType.INCOMING
+                    }
+                    val pair = colors[Math.abs(name.hashCode()) % colors.size]
+                    logs.add(CallRecord(cursor.getInt(0), name, num, "Mobile", sdf.format(Date(cursor.getLong(4))), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), cursor.getLong(5), false))
                 }
-                val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                logs.add(CallRecord(cursor.getInt(0), name, num, "Mobile", sdf.format(Date(cursor.getLong(4))), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), cursor.getLong(5), false))
             }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         }
         return logs
     }

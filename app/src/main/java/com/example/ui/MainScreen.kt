@@ -150,7 +150,7 @@ fun MainScreen(
         }
         isLoadingPermissions = false
         if (hasContactsPermission || hasCallLogPermission) {
-            viewModel.syncData()
+            viewModel.startDataSyncAndObservation()
         }
     }
 
@@ -163,7 +163,7 @@ fun MainScreen(
         }
         
         if (hasContactsPermission || hasCallLogPermission) {
-            viewModel.syncData()
+            viewModel.startDataSyncAndObservation()
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

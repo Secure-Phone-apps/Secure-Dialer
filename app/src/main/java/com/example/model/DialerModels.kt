@@ -3,7 +3,10 @@ package com.example.model
 import androidx.compose.ui.graphics.Color
 import androidx.room.*
 
-@Entity(tableName = "call_history")
+@Entity(
+    tableName = "call_history",
+    indices = [Index(value = ["number"]), Index(value = ["timestamp"])]
+)
 data class CallRecord(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
@@ -25,7 +28,10 @@ enum class CallType {
     MISSED, OUTGOING, INCOMING
 }
 
-@Entity(tableName = "contacts")
+@Entity(
+    tableName = "contacts",
+    indices = [Index(value = ["number"], unique = true), Index(value = ["name"]), Index(value = ["t9Mapping"])]
+)
 data class Contact(
     @PrimaryKey val number: String,
     val name: String,

@@ -66,9 +66,19 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var editContactNumber = mutableStateOf("")
     var editContactLabel = mutableStateOf("Mobile")
 
-    init {
+    private var isObserving = false
+
+    fun startDataSyncAndObservation() {
+        if (isObserving) return
+        isObserving = true
+        
         // Initial sync
         syncData()
+        
+        // Real-time sync observation
+        repository.startObservingChanges {
+            syncData()
+        }
     }
 
     fun syncData() {
