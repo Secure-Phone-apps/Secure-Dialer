@@ -2,9 +2,7 @@ package com.example.data
 
 import android.content.Context
 import androidx.room.*
-import com.example.model.CallRecord
-import com.example.model.CallType
-import com.example.model.Contact
+import com.example.model.*
 
 class Converters {
     @TypeConverter
@@ -14,7 +12,18 @@ class Converters {
     fun toCallType(value: String): CallType = CallType.valueOf(value)
 }
 
-@Database(entities = [Contact::class, CallRecord::class], version = 1, exportSchema = false)
+@Database(
+    entities = [
+        Contact::class,
+        CallRecord::class,
+        BlockedNumber::class,
+        SpeedDial::class,
+        QuickResponse::class,
+        AppSetting::class
+    ],
+    version = 2,
+    exportSchema = false
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun dialerDao(): DialerDao
@@ -29,7 +38,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "dialer_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 instance
             }

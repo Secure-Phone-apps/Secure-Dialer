@@ -70,9 +70,16 @@ fun MainScreen(
     val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
     val preferredSim by viewModel.preferredSim
     val voicemailNumber by viewModel.voicemailNumber
-    val blockedNumbers = viewModel.blockedNumbers
-    val quickResponses = viewModel.quickResponses
-    val speedDialMap = viewModel.speedDialMap
+    
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+    val blockedNumbers = remember(blockedNumbersEntities) { blockedNumbersEntities.map { it.number } }
+    
+    val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
+    val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
+    
+    val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+    val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
+
     var selectedTab by viewModel.selectedTab
     val searchQuery by viewModel.searchQuery
     var isDialpadVisible by viewModel.isDialpadVisible
@@ -189,7 +196,7 @@ fun MainScreen(
         callingContactName = name
         callingContactNumber = number
         isCallActive = true
-        CallManager.placeCall(context, number)
+        CallManager.placeCall(context, number, preferredSim)
     }
 
     Scaffold(
@@ -228,7 +235,7 @@ fun MainScreen(
                             0 -> RecentsTabContent(
                                 callRecordsPaged = callHistoryPaged,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
-                                onDeleteRecord = { id -> viewModel.deleteContact(id.toString()) },
+                                onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
                                 hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
                                 onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
                             )

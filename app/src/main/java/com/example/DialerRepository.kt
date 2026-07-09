@@ -142,11 +142,36 @@ class DialerRepository(private val context: Context) {
         dao.getContactByNumber(number)?.let { dao.deleteContact(it) }
     }
 
+    suspend fun deleteCallLog(id: Int) {
+        dao.deleteCallLog(id)
+    }
+
     suspend fun toggleFavorite(number: String, isFavorite: Boolean) {
         val values = ContentValues().apply { put(ContactsContract.Contacts.STARRED, if (isFavorite) 1 else 0) }
         context.contentResolver.update(ContactsContract.Contacts.CONTENT_URI, values, "${Phone.NUMBER} = ?", arrayOf(number))
         dao.getContactByNumber(number)?.let { dao.updateContact(it.copy(favorite = isFavorite)) }
     }
+
+    // --- Settings Persistence ---
+
+    fun getBlockedNumbers(): Flow<List<BlockedNumber>> = dao.getBlockedNumbersFlow()
+    suspend fun addBlockedNumber(number: String) = dao.insertBlockedNumber(BlockedNumber(number))
+    suspend fun removeBlockedNumber(number: String) = dao.deleteBlockedNumber(BlockedNumber(number))
+    suspend fun isBlocked(number: String): Boolean = dao.isBlocked(number)
+
+    fun getSpeedDial(): Flow<List<SpeedDial>> = dao.getSpeedDialFlow()
+    suspend fun saveSpeedDial(key: Int, number: String, name: String) = dao.insertSpeedDial(SpeedDial(key, number, name))
+    suspend fun deleteSpeedDial(key: Int) = dao.deleteSpeedDial(key)
+
+    fun getQuickResponses(): Flow<List<QuickResponse>> = dao.getQuickResponsesFlow()
+    suspend fun addQuickResponse(message: String) = dao.insertQuickResponse(QuickResponse(message = message))
+    suspend fun deleteQuickResponse(response: QuickResponse) = dao.deleteQuickResponse(response)
+
+    suspend fun getVoicemailNumber(): String = dao.getSetting("voicemail_number") ?: ""
+    suspend fun saveVoicemailNumber(number: String) = dao.insertSetting(AppSetting("voicemail_number", number))
+
+    suspend fun getPreferredSim(): String = dao.getSetting("preferred_sim") ?: "Ask"
+    suspend fun savePreferredSim(sim: String) = dao.insertSetting(AppSetting("preferred_sim", sim))
 }
 
 // Keep these for simple lookups if needed, but repository should be preferred

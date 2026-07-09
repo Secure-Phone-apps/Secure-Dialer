@@ -37,6 +37,9 @@ import com.example.CallManager
 import com.example.model.Contact
 import kotlinx.coroutines.delay
 
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+
 @Composable
 fun ActiveCallScreen(
     contactName: String,
@@ -50,6 +53,7 @@ fun ActiveCallScreen(
     onAnswer: () -> Unit = {},
     callState: Int = android.telecom.Call.STATE_DISCONNECTED
 ) {
+    val haptic = LocalHapticFeedback.current
     var callDuration by remember { mutableStateOf(0) }
     var isMuted by remember { mutableStateOf(false) }
     var isSpeakerOn by remember { mutableStateOf(false) }
@@ -190,7 +194,16 @@ fun ActiveCallScreen(
                                 OutlinedCard(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .clickable { onQuickDecline(resp) }
+                                        .clickable {
+                                            try {
+                                                val smsManager = context.getSystemService(android.telephony.SmsManager::class.java)
+                                                smsManager.sendTextMessage(contactNumber, null, resp, null, null)
+                                                Toast.makeText(context, "SMS Sent", Toast.LENGTH_SHORT).show()
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Failed to send SMS", Toast.LENGTH_SHORT).show()
+                                            }
+                                            onQuickDecline(resp)
+                                        }
                                 ) {
                                     Text(
                                         resp,
@@ -407,13 +420,17 @@ fun ActiveCallScreen(
                         icon = "⌨️",
                         label = "Keypad",
                         isActive = isInCallDialpadOpen,
-                        onClick = { isInCallDialpadOpen = !isInCallDialpadOpen }
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            isInCallDialpadOpen = !isInCallDialpadOpen
+                        }
                     )
                     InCallButton(
                         icon = "🔇",
                         label = "Mute",
                         isActive = isMuted,
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isMuted = !isMuted
                             CallManager.setMuted(isMuted)
                             Toast.makeText(context, if (isMuted) "Microphone Muted" else "Microphone Active", Toast.LENGTH_SHORT).show()
@@ -424,6 +441,7 @@ fun ActiveCallScreen(
                         label = "Speaker",
                         isActive = isSpeakerOn,
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isSpeakerOn = !isSpeakerOn
                             CallManager.setSpeaker(isSpeakerOn)
                             Toast.makeText(context, if (isSpeakerOn) "Speaker On" else "Speaker Off", Toast.LENGTH_SHORT).show()
@@ -441,6 +459,7 @@ fun ActiveCallScreen(
                         label = "Hold",
                         isActive = isOnHold,
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isOnHold = !isOnHold
                             CallManager.setHold(isOnHold)
                             Toast.makeText(context, if (isOnHold) "Call on hold" else "Call resumed", Toast.LENGTH_SHORT).show()
@@ -451,6 +470,7 @@ fun ActiveCallScreen(
                         label = "Bluetooth",
                         isActive = isBluetoothOn,
                         onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isBluetoothOn = !isBluetoothOn
                             CallManager.setBluetooth(isBluetoothOn)
                             Toast.makeText(context, if (isBluetoothOn) "Bluetooth On" else "Bluetooth Off", Toast.LENGTH_SHORT).show()
@@ -490,7 +510,10 @@ fun ActiveCallScreen(
                 if (isIncoming) {
                     // Green Answer Button
                     LargeFloatingActionButton(
-                        onClick = onAnswer,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onAnswer()
+                        },
                         containerColor = Color(0xFF4CAF50),
                         contentColor = Color.White,
                         shape = CircleShape,
@@ -507,16 +530,19 @@ fun ActiveCallScreen(
 
                 // Red Hang Up / Decline Button
                 LargeFloatingActionButton(
-                    onClick = onHangUp,
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onHangUp()
+                    },
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
                     shape = CircleShape,
                     modifier = Modifier.testTag("hangup_button")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Call,
+                        imageVector = Icons.Default.CallEnd,
                         contentDescription = "Hang up",
-                        modifier = Modifier.size(32.dp) // Icons.Default.Call looks like a phone, rotated in M3 for hangup is common
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }

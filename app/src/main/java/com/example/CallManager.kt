@@ -83,14 +83,25 @@ object CallManager {
         }
     }
 
-    fun placeCall(context: Context, number: String) {
+    fun placeCall(context: Context, number: String, preferredSim: String = "Ask") {
         try {
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
             if (telecomManager != null) {
                 val uri = android.net.Uri.fromParts("tel", number, null)
                 val extras = android.os.Bundle()
+                
+                if (preferredSim != "Ask") {
+                    val accounts = telecomManager.callCapablePhoneAccounts
+                    val index = if (preferredSim == "SIM 1") 0 else 1
+                    if (index < accounts.size) {
+                        extras.putParcelable(android.telecom.TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, accounts[index])
+                    }
+                }
+                
                 telecomManager.placeCall(uri, extras)
             }
+        } catch (e: SecurityException) {
+            e.printStackTrace()
         } catch (e: Exception) {
             e.printStackTrace()
         }

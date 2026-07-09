@@ -55,6 +55,68 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var callingContactNumber = mutableStateOf("")
     var isDefaultDialer = mutableStateOf(false)
     
+    // Settings Flow observation
+    val blockedNumbersFlow: StateFlow<List<BlockedNumber>> = repository.getBlockedNumbers()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val speedDialFlow: StateFlow<List<SpeedDial>> = repository.getSpeedDial()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val quickResponsesFlow: StateFlow<List<QuickResponse>> = repository.getQuickResponses()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    init {
+        viewModelScope.launch {
+            preferredSim.value = repository.getPreferredSim()
+            voicemailNumber.value = repository.getVoicemailNumber()
+            
+            // Add default quick responses if empty
+            val currentResponses = repository.getQuickResponses().first()
+            if (currentResponses.isEmpty()) {
+                listOf(
+                    "Can't talk right now. I'll call you later.",
+                    "I'm in a meeting. What's up?",
+                    "I'm driving. I'll get back to you shortly.",
+                    "Sorry, I'm busy. Can I call you back?"
+                ).forEach { repository.addQuickResponse(it) }
+            }
+        }
+    }
+
+    fun updatePreferredSim(sim: String) {
+        preferredSim.value = sim
+        viewModelScope.launch { repository.savePreferredSim(sim) }
+    }
+
+    fun updateVoicemailNumber(num: String) {
+        voicemailNumber.value = num
+        viewModelScope.launch { repository.saveVoicemailNumber(num) }
+    }
+
+    fun addBlockedNumber(num: String) {
+        viewModelScope.launch { repository.addBlockedNumber(num) }
+    }
+
+    fun removeBlockedNumber(num: String) {
+        viewModelScope.launch { repository.removeBlockedNumber(num) }
+    }
+
+    fun saveSpeedDial(key: Int, num: String, name: String) {
+        viewModelScope.launch { repository.saveSpeedDial(key, num, name) }
+    }
+
+    fun deleteSpeedDial(key: Int) {
+        viewModelScope.launch { repository.deleteSpeedDial(key) }
+    }
+
+    fun addQuickResponse(msg: String) {
+        viewModelScope.launch { repository.addQuickResponse(msg) }
+    }
+
+    fun deleteQuickResponse(resp: QuickResponse) {
+        viewModelScope.launch { repository.deleteQuickResponse(resp) }
+    }
+    
     // Helper Dialog State
     var isAddContactDialogVisible = mutableStateOf(false)
     var isEditContactDialogVisible = mutableStateOf(false)
@@ -97,6 +159,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun deleteContact(number: String) {
         viewModelScope.launch {
             repository.deleteContact(number)
+        }
+    }
+
+    fun deleteCallLog(id: Int) {
+        viewModelScope.launch {
+            repository.deleteCallLog(id)
         }
     }
 

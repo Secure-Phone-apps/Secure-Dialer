@@ -45,3 +45,27 @@ data class Contact(
     @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
     @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
 }
+
+@Entity(tableName = "blocked_numbers")
+data class BlockedNumber(
+    @PrimaryKey val number: String
+)
+
+@Entity(tableName = "speed_dial")
+data class SpeedDial(
+    @PrimaryKey val key: Int, // 2-9
+    val number: String,
+    val name: String
+)
+
+@Entity(tableName = "quick_responses")
+data class QuickResponse(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val message: String
+)
+
+@Entity(tableName = "app_settings")
+data class AppSetting(
+    @PrimaryKey val key: String,
+    val value: String
+)

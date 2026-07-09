@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.viewmodel.DialerViewModel
 
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsPanel(
@@ -33,6 +36,7 @@ fun SettingsPanel(
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
     val isDarkTheme by viewModel.isDarkTheme
     val onThemeChange = { newVal: Boolean ->
         viewModel.isDarkTheme.value = newVal
@@ -44,13 +48,20 @@ fun SettingsPanel(
     val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
     val onVibrateChange = { newVal: Boolean -> viewModel.vibrateOnClickEnabled.value = newVal }
     val preferredSim by viewModel.preferredSim
-    val onSimChange = { newVal: String -> viewModel.preferredSim.value = newVal }
+    val onSimChange = { newVal: String -> viewModel.updatePreferredSim(newVal) }
     val voicemailNumber by viewModel.voicemailNumber
-    val onVoicemailChange = { newVal: String -> viewModel.voicemailNumber.value = newVal }
-    val blockedNumbers = viewModel.blockedNumbers
-    val quickResponses = viewModel.quickResponses
-    val speedDialMap = viewModel.speedDialMap
-    var activeTab by remember { mutableStateOf(0) } // 0: Settings, 1: Block List, 2: Speed Dial, 3: Quick Responses
+    val onVoicemailChange = { newVal: String -> viewModel.updateVoicemailNumber(newVal) }
+    
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+    val blockedNumbers = remember(blockedNumbersEntities) { blockedNumbersEntities.map { it.number } }
+    
+    val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
+    val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
+    
+    val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+    val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
+    
+    var activeTab by remember { mutableStateOf(0) }
     var newBlockedInput by remember { mutableStateOf("") }
     var newQuickRespInput by remember { mutableStateOf("") }
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
@@ -157,7 +168,10 @@ fun SettingsPanel(
                                             val sel = preferredSim == op
                                             FilterChip(
                                                 selected = sel,
-                                                onClick = { onSimChange(op) },
+                                                onClick = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onSimChange(op)
+                                                },
                                                 label = { Text(op) }
                                             )
                                         }
@@ -215,7 +229,8 @@ fun SettingsPanel(
                             Button(
                                 onClick = {
                                     if (newBlockedInput.isNotBlank()) {
-                                        blockedNumbers.add(newBlockedInput.trim())
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        viewModel.addBlockedNumber(newBlockedInput.trim())
                                         newBlockedInput = ""
                                     }
                                 }
@@ -252,7 +267,10 @@ fun SettingsPanel(
                                             style = MaterialTheme.typography.bodyLarge,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
-                                        IconButton(onClick = { blockedNumbers.remove(num) }) {
+                                        IconButton(onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            viewModel.removeBlockedNumber(num)
+                                        }) {
                                             Icon(
                                                 imageVector = Icons.Default.Delete,
                                                 contentDescription = "Unblock",
@@ -310,7 +328,7 @@ fun SettingsPanel(
                                         Button(
                                             onClick = {
                                                 if (speedNumInput.isNotBlank()) {
-                                                    speedDialMap[targetSpeedDialKey] = speedNumInput.trim()
+                                                    viewModel.saveSpeedDial(targetSpeedDialKey, speedNumInput.trim(), "Speed Dial")
                                                     targetSpeedDialKey = -1
                                                 }
                                             }
@@ -376,7 +394,7 @@ fun SettingsPanel(
                                                     )
                                                 }
                                                 if (assignedNum != null) {
-                                                    IconButton(onClick = { speedDialMap.remove(digit) }) {
+                                                    IconButton(onClick = { viewModel.deleteSpeedDial(digit) }) {
                                                         Icon(
                                                             imageVector = Icons.Default.Delete,
                                                             contentDescription = "Clear",
@@ -415,7 +433,7 @@ fun SettingsPanel(
                             Button(
                                 onClick = {
                                     if (newQuickRespInput.isNotBlank()) {
-                                        quickResponses.add(newQuickRespInput.trim())
+                                        viewModel.addQuickResponse(newQuickRespInput.trim())
                                         newQuickRespInput = ""
                                     }
                                 }
@@ -453,7 +471,11 @@ fun SettingsPanel(
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.weight(1f)
                                         )
-                                        IconButton(onClick = { quickResponses.remove(resp) }) {
+                                        IconButton(onClick = { 
+                                            quickResponsesEntities.find { it.message == resp }?.let { 
+                                                viewModel.deleteQuickResponse(it)
+                                            }
+                                        }) {
                                             Icon(
                                                 imageVector = Icons.Default.Delete,
                                                 contentDescription = "Delete response",
@@ -540,9 +562,13 @@ fun SettingsRowToggle(
             { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
         } else null,
         trailingContent = {
+            val haptic = LocalHapticFeedback.current
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onCheckedChange(it)
+                }
             )
         }
     )
@@ -555,8 +581,12 @@ fun SettingsRowNav(
     onClick: () -> Unit,
     icon: ImageVector? = null
 ) {
+    val haptic = LocalHapticFeedback.current
     ListItem(
-        modifier = Modifier.clickable { onClick() },
+        modifier = Modifier.clickable {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         headlineContent = { Text(title) },
         supportingContent = { Text(subtitle) },
         leadingContent = if (icon != null) {

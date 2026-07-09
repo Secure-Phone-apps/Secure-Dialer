@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.WRITE_CALL_LOG" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
 
     <attribution android:tag="dialer" android:label="@string/app_name" />
     <attribution android:tag="attributionTag" android:label="@string/app_name" />
@@ -75,6 +76,15 @@
                 android:value="true" />
             <intent-filter>
                 <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name=".CallBlockerService"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>
         </service>
     </application>

@@ -319,9 +319,11 @@ fun DialpadOverlay(
     onClose: () -> Unit,
     onCallClick: (String) -> Unit,
     onSpeedDialCall: (String) -> Unit,
-    speedDialMap: Map<Int, String>
+    speedDialMap: Map<Int, String>,
+    voicemailNumber: String
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
 
     Surface(
         modifier = Modifier
@@ -344,7 +346,10 @@ fun DialpadOverlay(
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.outlineVariant)
                     .padding(vertical = 12.dp)
-                    .clickable { onClose() }
+                    .clickable {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onClose()
+                    }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -368,7 +373,10 @@ fun DialpadOverlay(
                 )
 
                 if (inputValue.isNotEmpty()) {
-                    IconButton(onClick = { onValueChange(inputValue.dropLast(1)) }) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        onValueChange(inputValue.dropLast(1))
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Backspace",
@@ -415,12 +423,19 @@ fun DialpadOverlay(
                                     .clip(RoundedCornerShape(32.dp))
                                     .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                     .combinedClickable(
-                                        onClick = { onValueChange(inputValue + key.first) },
+                                        onClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            onValueChange(inputValue + key.first)
+                                        },
                                         onLongClick = {
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             if (key.first == "1") {
-                                                Toast
-                                                    .makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT)
-                                                    .show()
+                                                if (voicemailNumber.isNotBlank()) {
+                                                    Toast.makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT).show()
+                                                    onSpeedDialCall(voicemailNumber)
+                                                } else {
+                                                    Toast.makeText(context, "Voicemail number not set. Configure in Settings!", Toast.LENGTH_SHORT).show()
+                                                }
                                             } else if (key.third != -1) {
                                                 val speedNum = speedDialMap[key.third]
                                                 if (speedNum != null) {
@@ -473,7 +488,10 @@ fun DialpadOverlay(
 
             // Call Action Button
             LargeFloatingActionButton(
-                onClick = { onCallClick(inputValue) },
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onCallClick(inputValue)
+                },
                 shape = CircleShape,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,

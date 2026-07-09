@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -143,10 +145,14 @@ fun RecentCallRow(
     onCallClick: () -> Unit,
     onDeleteRecord: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCallClick() },
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onCallClick()
+            },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         ListItem(
@@ -191,7 +197,10 @@ fun RecentCallRow(
                 }
             },
             trailingContent = {
-                IconButton(onClick = onDeleteRecord) {
+                IconButton(onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onDeleteRecord()
+                }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete",

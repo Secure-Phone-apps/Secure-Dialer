@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -166,10 +168,14 @@ fun ContactRow(
     onEditContact: (Contact) -> Unit,
     onDeleteContact: (Contact) -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCallClick(contact) },
+            .clickable {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                onCallClick(contact)
+            },
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         ListItem(
@@ -203,7 +209,10 @@ fun ContactRow(
             },
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { onToggleFavorite(contact) }) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onToggleFavorite(contact)
+                    }) {
                         Icon(
                             imageVector = Icons.Default.Star,
                             contentDescription = "Favorite",
@@ -212,7 +221,10 @@ fun ContactRow(
                     }
                     var menuExpanded by remember { mutableStateOf(false) }
                     Box {
-                        IconButton(onClick = { menuExpanded = true }) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            menuExpanded = true
+                        }) {
                             Icon(
                                 imageVector = Icons.Default.MoreVert,
                                 contentDescription = "More"
@@ -226,6 +238,7 @@ fun ContactRow(
                                 text = { Text("Edit") },
                                 leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
                                 onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     menuExpanded = false
                                     onEditContact(contact)
                                 }
@@ -234,6 +247,7 @@ fun ContactRow(
                                 text = { Text("Delete") },
                                 leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
                                 onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     menuExpanded = false
                                     onDeleteContact(contact)
                                 }
