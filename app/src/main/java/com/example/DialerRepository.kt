@@ -156,6 +156,10 @@ class DialerRepository(private val context: Context) {
         dao.deleteCallLog(id)
     }
 
+    suspend fun getCallHistoryByNumber(number: String): List<CallRecord> {
+        return dao.getCallHistoryByNumber(number)
+    }
+
     suspend fun toggleFavorite(number: String, isFavorite: Boolean) {
         val values = ContentValues().apply { put(ContactsContract.Contacts.STARRED, if (isFavorite) 1 else 0) }
         context.contentResolver.update(ContactsContract.Contacts.CONTENT_URI, values, "${Phone.NUMBER} = ?", arrayOf(number))

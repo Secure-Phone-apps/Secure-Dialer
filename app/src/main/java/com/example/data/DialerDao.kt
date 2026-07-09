@@ -42,6 +42,9 @@ interface DialerDao {
     @Query("DELETE FROM call_history WHERE id = :id")
     suspend fun deleteCallLog(id: Int)
 
+    @Query("SELECT * FROM call_history WHERE number = :number ORDER BY id DESC")
+    suspend fun getCallHistoryByNumber(number: String): List<CallRecord>
+
     // Blocked Numbers
     @Query("SELECT * FROM blocked_numbers")
     fun getBlockedNumbersFlow(): Flow<List<BlockedNumber>>

@@ -233,6 +233,7 @@ fun MainScreen(
                     ) { tabIndex ->
                         when (tabIndex) {
                             0 -> RecentsTabContent(
+                                viewModel = viewModel,
                                 callRecordsPaged = callHistoryPaged,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
                                 onDeleteRecord = { id -> viewModel.deleteCallLog(id) },

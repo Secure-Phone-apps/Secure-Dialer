@@ -63,10 +63,12 @@ fun ActiveCallScreen(
     var addCallNumberInput by remember { mutableStateOf("") }
     var selectedAddCallContactName by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(1000)
-            callDuration++
+    LaunchedEffect(callState) {
+        if (callState == android.telecom.Call.STATE_ACTIVE) {
+            while (true) {
+                delay(1000)
+                callDuration++
+            }
         }
     }
 
@@ -112,12 +114,13 @@ fun ActiveCallScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(top = 40.dp)
             ) {
-                val displayHeader = if (isOnHold) {
-                    "Call on hold"
-                } else if (participants.size > 1) {
-                    "Conference call via $preferredSim"
-                } else {
-                    "Ongoing call via $preferredSim"
+                val displayHeader = when {
+                    isOnHold || callState == android.telecom.Call.STATE_HOLDING -> "Call on hold"
+                    callState == android.telecom.Call.STATE_DIALING -> "Dialing..."
+                    callState == android.telecom.Call.STATE_RINGING -> "Incoming call..."
+                    callState == android.telecom.Call.STATE_CONNECTING -> "Connecting..."
+                    participants.size > 1 -> "Conference call via $preferredSim"
+                    else -> "Ongoing call via $preferredSim"
                 }
 
                 Text(

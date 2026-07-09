@@ -180,4 +180,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             repository.toggleFavorite(number, isFavorite)
         }
     }
+
+    suspend fun getCallHistoryByNumber(number: String): List<CallRecord> {
+        return repository.getCallHistoryByNumber(number)
+    }
 }

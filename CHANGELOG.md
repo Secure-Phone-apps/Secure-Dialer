@@ -5,18 +5,23 @@ All notable changes to this project will be documented in this file.
 ## [1.0.1] - 2026-07-09
 
 ### Fixed
+- **Call History Details**: Implemented expandable call log items in the Recents tab, allowing users to view full history for specific contacts including timestamps and call durations.
+- **Call Timer Accuracy**: Corrected the call timer logic to only start incrementing once the call is officially answered (`STATE_ACTIVE`), preventing the timer from starting during dialing or ringing states.
 - **Recents Tab Visibility**: Resolved an issue where phone numbers were not appearing in the call history for unknown contacts by implementing robust name-to-number fallbacks.
 - **Enhanced Data Display**: Added explicit phone number visibility in the Recents list subtext for better identification of callers.
 - **Privacy Audit Compliance**: Standardized attribution context usage across `DialerViewModel`, `CallBlockerService`, and `MyInCallService` to resolve `attributionTag` manifest errors.
 - **Manifest Integrity**: Restored missing closing tags in `AndroidManifest.xml` following privacy tag cleanup.
 
 ### Changed
+- **Improved Call Screen Feedback**: Updated the active call header to provide real-time status updates (e.g., "Dialing...", "Incoming call...", "Connecting...") based on the exact Telecom state.
+- **Interactive Call Log**: Re-engineered the Recents tab to use an expandable card system, balancing primary call actions with deep dive history access.
 - **Refined Dialpad UI**: Modularized dial button components and adjusted layout spacing (300dp width) for improved tap precision.
 - **Enhanced Active Call Screen**: Updated call duration typography to `displaySmall` with primary coloring and added a subtle elevation surface tint.
 - **Iconography Update**: Replaced text-based backspace with `AutoMirrored.Filled.Backspace` icon.
 
 ### Added
 - **Automated Release Notes**: Integrated a custom extraction script in the CI pipeline to generate human-readable changelogs from this file during GitHub releases.
+- **On-Demand History Fetching**: Optimized data usage by fetching detailed call histories only when requested via UI expansion.
 
 ## [1.0.0] - 2026-07-09
 
