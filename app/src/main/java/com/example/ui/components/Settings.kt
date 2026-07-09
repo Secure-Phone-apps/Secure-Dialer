@@ -53,7 +53,6 @@ fun SettingsPanel(
     val blockedNumbers = viewModel.blockedNumbers
     val quickResponses = viewModel.quickResponses
     val speedDialMap = viewModel.speedDialMap
-    val contacts = viewModel.contactsList
     var activeTab by remember { mutableStateOf(0) } // 0: Settings, 1: Block List, 2: Speed Dial, 3: Quick Responses
     var newBlockedInput by remember { mutableStateOf("") }
     var newQuickRespInput by remember { mutableStateOf("") }
@@ -321,58 +320,45 @@ fun SettingsPanel(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         if (targetSpeedDialKey != -1) {
-                            // Show assignment dialog / contact picker list
+                            var speedNumInput by remember { mutableStateOf("") }
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = searchBg),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        "Select Contact for Speed Dial Key $targetSpeedDialKey:",
+                                        "Assign Number to Speed Dial Key $targetSpeedDialKey:",
                                         fontWeight = FontWeight.Bold,
                                         color = primaryText
                                     )
                                     Spacer(modifier = Modifier.height(12.dp))
-
-                                    LazyColumn(
-                                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                                        modifier = Modifier.height(260.dp)
-                                    ) {
-                                        items(contacts, key = { "speed_dial_${it.name}_${it.number}" }) { contact ->
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .clickable {
-                                                        speedDialMap[targetSpeedDialKey] = contact.number
-                                                        targetSpeedDialKey = -1
-                                                    }
-                                                    .padding(8.dp),
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(32.dp)
-                                                        .clip(CircleShape)
-                                                        .background(contact.avatarBg),
-                                                    contentAlignment = Alignment.Center
-                                                ) {
-                                                    Text(contact.name.take(1).uppercase(), fontSize = 12.sp, color = contact.avatarTextColor)
-                                                }
-                                                Spacer(modifier = Modifier.width(12.dp))
-                                                Column {
-                                                    Text(contact.name, color = primaryText, fontSize = 14.sp)
-                                                    Text(contact.number, color = secondaryText, fontSize = 12.sp)
-                                                }
-                                            }
-                                        }
-                                    }
+                                    OutlinedTextField(
+                                        value = speedNumInput,
+                                        onValueChange = { speedNumInput = it },
+                                        label = { Text("Phone Number") },
+                                        singleLine = true,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    Button(
-                                        onClick = { targetSpeedDialKey = -1 },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
-                                    ) {
-                                        Text("Cancel Picker", color = brandBlue)
+                                    Row {
+                                        Button(
+                                            onClick = {
+                                                if (speedNumInput.isNotBlank()) {
+                                                    speedDialMap[targetSpeedDialKey] = speedNumInput.trim()
+                                                    targetSpeedDialKey = -1
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = brandBlue)
+                                        ) {
+                                            Text("Assign", color = Color.White)
+                                        }
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Button(
+                                            onClick = { targetSpeedDialKey = -1 },
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
+                                        ) {
+                                            Text("Cancel", color = brandBlue)
+                                        }
                                     }
                                 }
                             }
@@ -380,7 +366,6 @@ fun SettingsPanel(
                             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 items((1..9).toList(), key = { it }) { digit ->
                                     val assignedNum = speedDialMap[digit]
-                                    val assignedName = contacts.find { it.number == assignedNum }?.name ?: assignedNum
 
                                     Row(
                                         modifier = Modifier
@@ -404,12 +389,12 @@ fun SettingsPanel(
                                             Spacer(modifier = Modifier.width(16.dp))
                                             Column {
                                                 Text(
-                                                    text = assignedName ?: "Unassigned Speed Key",
+                                                    text = assignedNum ?: "Unassigned",
                                                     color = primaryText,
                                                     fontWeight = FontWeight.Bold
                                                 )
                                                 Text(
-                                                    text = if (assignedNum != null) "Long press $digit on Dialer to trigger call" else "Tap setup icon to map a contact",
+                                                    text = if (assignedNum != null) "Long press $digit on Dialer to call" else "Tap gear to assign",
                                                     fontSize = 12.sp,
                                                     color = secondaryText
                                                 )
@@ -422,7 +407,7 @@ fun SettingsPanel(
                                             }
                                             if (assignedNum != null) {
                                                 IconButton(onClick = { speedDialMap.remove(digit) }) {
-                                                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Clear Speed dial key", tint = Color.Red.copy(alpha = 0.7f))
+                                                    Icon(imageVector = Icons.Default.Delete, contentDescription = "Clear", tint = Color.Red.copy(alpha = 0.7f))
                                                 }
                                             }
                                         }

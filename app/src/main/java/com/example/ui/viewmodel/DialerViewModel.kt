@@ -1,16 +1,36 @@
 package com.example.ui.viewmodel
 
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.ViewModel
-import com.example.model.CallRecord
-import com.example.model.Contact
+import android.app.Application
+import androidx.compose.runtime.*
+import androidx.lifecycle.*
+import androidx.paging.*
+import com.example.DialerRepository
+import com.example.model.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-class DialerViewModel : ViewModel() {
-    // State moved from MainActivity
+class DialerViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository = DialerRepository(application)
+
+    // Search Query
     var searchQuery = mutableStateOf("")
+    private val _searchQueryFlow = MutableStateFlow("")
+
+    fun onSearchQueryChange(newQuery: String) {
+        searchQuery.value = newQuery
+        _searchQueryFlow.value = newQuery
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val contactsPaged: Flow<PagingData<Contact>> = _searchQueryFlow
+        .flatMapLatest { query -> repository.getContactsPaged(query) }
+        .cachedIn(viewModelScope)
+
+    val callHistoryPaged: Flow<PagingData<CallRecord>> = repository.getCallHistoryPaged()
+        .cachedIn(viewModelScope)
+
+    // UI State
     var isDialpadVisible = mutableStateOf(false)
     var dialpadInput = mutableStateOf("")
     var isSettingsVisible = mutableStateOf(false)
@@ -45,7 +65,34 @@ class DialerViewModel : ViewModel() {
     var editContactName = mutableStateOf("")
     var editContactNumber = mutableStateOf("")
     var editContactLabel = mutableStateOf("Mobile")
-    
-    val callHistory = mutableStateListOf<CallRecord>()
-    val contactsList = mutableStateListOf<Contact>()
+
+    init {
+        // Initial sync
+        syncData()
+    }
+
+    fun syncData() {
+        viewModelScope.launch {
+            repository.syncContacts()
+            repository.syncCallLogs()
+        }
+    }
+
+    fun addContact(name: String, number: String, label: String) {
+        viewModelScope.launch {
+            repository.addContact(name, number, label)
+        }
+    }
+
+    fun deleteContact(number: String) {
+        viewModelScope.launch {
+            repository.deleteContact(number)
+        }
+    }
+
+    fun toggleFavorite(number: String, isFavorite: Boolean) {
+        viewModelScope.launch {
+            repository.toggleFavorite(number, isFavorite)
+        }
+    }
 }

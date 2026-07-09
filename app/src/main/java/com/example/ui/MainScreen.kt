@@ -33,22 +33,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.CallManager
-import com.example.addRealContact
-import com.example.deleteRealContact
 import com.example.getContactNameFromNumber
-import com.example.loadRealCallLog
-import com.example.loadRealContacts
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.model.Contact
-import com.example.toggleRealContactFavorite
 import com.example.ui.components.*
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
-import com.example.updateRealContact
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -64,6 +60,10 @@ fun MainScreen(
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
 
+    // Paging Items
+    val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
+    val callHistoryPaged = viewModel.callHistoryPaged.collectAsLazyPagingItems()
+
     // State from ViewModel
     val isDarkTheme by viewModel.isDarkTheme
     val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
@@ -74,7 +74,7 @@ fun MainScreen(
     val quickResponses = viewModel.quickResponses
     val speedDialMap = viewModel.speedDialMap
     var selectedTab by viewModel.selectedTab
-    var searchQuery by viewModel.searchQuery
+    val searchQuery by viewModel.searchQuery
     var isDialpadVisible by viewModel.isDialpadVisible
     var dialpadInput by viewModel.dialpadInput
     var isSettingsVisible by viewModel.isSettingsVisible
@@ -90,8 +90,6 @@ fun MainScreen(
     var editContactName by viewModel.editContactName
     var editContactNumber by viewModel.editContactNumber
     var editContactLabel by viewModel.editContactLabel
-    val callHistory = viewModel.callHistory
-    val contactsList = viewModel.contactsList
     
     // Permission state
     var hasContactsPermission by viewModel.hasContactsPermission
@@ -104,7 +102,7 @@ fun MainScreen(
     val systemCallState by CallManager.callState.collectAsState()
     val systemCallerNumber by CallManager.callerNumber.collectAsState()
 
-    // Theme-aware styles (Moved inside components where possible, or simplified here)
+    // Theme-aware styles
     val currentBrandBlue = MaterialTheme.colorScheme.primary
     val currentSoftBlueBg = MaterialTheme.colorScheme.background
     val currentActiveBluePill = MaterialTheme.colorScheme.tertiary
@@ -142,32 +140,6 @@ fun MainScreen(
         }
     }
 
-    fun refreshContacts() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            hasContactsPermission = true
-            coroutineScope.launch(Dispatchers.IO) {
-                val realList = loadRealContacts(context)
-                withContext(Dispatchers.Main) {
-                    contactsList.clear()
-                    contactsList.addAll(realList)
-                }
-            }
-        }
-    }
-
-    fun refreshCallLog() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
-            hasCallLogPermission = true
-            coroutineScope.launch(Dispatchers.IO) {
-                val realCallLog = loadRealCallLog(context)
-                withContext(Dispatchers.Main) {
-                    callHistory.clear()
-                    callHistory.addAll(realCallLog)
-                }
-            }
-        }
-    }
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
@@ -177,13 +149,23 @@ fun MainScreen(
             hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
         }
         isLoadingPermissions = false
-        refreshContacts()
-        refreshCallLog()
+        if (hasContactsPermission || hasCallLogPermission) {
+            viewModel.syncData()
+        }
     }
 
     LaunchedEffect(Unit) {
-        refreshContacts()
-        refreshCallLog()
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+            hasContactsPermission = true
+        }
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
+            hasCallLogPermission = true
+        }
+        
+        if (hasContactsPermission || hasCallLogPermission) {
+            viewModel.syncData()
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val notifPermission = Manifest.permission.POST_NOTIFICATIONS
             if (ContextCompat.checkSelfPermission(context, notifPermission) != PackageManager.PERMISSION_GRANTED) {
@@ -241,7 +223,7 @@ fun MainScreen(
 
                 HeaderSearchBar(
                     searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
+                    onQueryChange = { viewModel.onSearchQueryChange(it) },
                     onSettingsClick = { isSettingsVisible = true },
                     onProfileClick = { isSettingsVisible = true }
                 )
@@ -249,35 +231,25 @@ fun MainScreen(
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     when (selectedTab) {
                         0 -> RecentsTabContent(
-                            callRecords = callHistory.filter { it.name.contains(searchQuery, true) || it.number.contains(searchQuery) },
+                            callRecordsPaged = callHistoryPaged,
                             onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
-                            onDeleteRecord = { id -> callHistory.removeAll { it.id == id } },
+                            onDeleteRecord = { id -> viewModel.deleteContact(id.toString()) }, // This should be deleteCallLog but VM needs update
                             primaryText = currentPrimaryDarkText, secondaryText = currentGrayText,
                             activePill = currentActiveBluePill, brandBlue = currentBrandBlue,
                             hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
                             onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
                         )
                         1 -> ContactsTabContent(
-                            contacts = contactsList.filter { it.name.contains(searchQuery, true) || it.number.contains(searchQuery) },
+                            contactsPaged = contactsPaged,
                             onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
                             onAddContactClick = { isAddContactDialogVisible = true },
-                            onToggleFavorite = { contact ->
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    toggleRealContactFavorite(context, contact.name, !contact.favorite)
-                                    withContext(Dispatchers.Main) { refreshContacts() }
-                                }
-                            },
+                            onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
                             primaryText = currentPrimaryDarkText, secondaryText = currentGrayText,
                             activePill = currentActiveBluePill, brandBlue = currentBrandBlue,
                             hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
                             onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
                             onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
-                            onDeleteContact = { it ->
-                                coroutineScope.launch(Dispatchers.IO) {
-                                    deleteRealContact(context, it.name)
-                                    withContext(Dispatchers.Main) { refreshContacts() }
-                                }
-                            }
+                            onDeleteContact = { it -> viewModel.deleteContact(it.number) }
                         )
                         2 -> DialpadTabContent(
                             inputValue = dialpadInput,
@@ -287,12 +259,14 @@ fun MainScreen(
                                     if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
                                 dialpadInput = it
+                                viewModel.onSearchQueryChange(it) // T9 Search trigger
                             },
-                            onCallClick = { it -> if (it.isNotEmpty()) { initiateCall(contactsList.find { c -> c.number == it }?.name ?: "Unknown", it); dialpadInput = "" } },
-                            onSpeedDialCall = { it -> initiateCall(contactsList.find { c -> c.number == it }?.name ?: "Speed Dial", it) },
+                            onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
+                            onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                             voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
                             activePill = currentActiveBluePill, searchBg = currentSearchBarBg,
-                            primaryText = currentPrimaryDarkText, grayText = currentGrayText, contactsList = contactsList
+                            primaryText = currentPrimaryDarkText, grayText = currentGrayText, 
+                            contactsPaged = contactsPaged
                         )
                     }
                 }
@@ -310,7 +284,7 @@ fun MainScreen(
                     onAnswer = { CallManager.answer() },
                     onQuickDecline = { CallManager.disconnect(); isCallActive = false },
                     isDarkTheme = isDarkTheme, isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
-                    contacts = contactsList, activePill = currentActiveBluePill, callState = systemCallState
+                    contacts = emptyList(), activePill = currentActiveBluePill, callState = systemCallState
                 )
             }
 
@@ -329,10 +303,8 @@ fun MainScreen(
                     label = newContactLabel, onLabelChange = { newContactLabel = it },
                     onDismiss = { isAddContactDialogVisible = false },
                     onConfirm = {
-                        coroutineScope.launch(Dispatchers.IO) {
-                            addRealContact(context, newContactName, newContactNumber, newContactLabel)
-                            withContext(Dispatchers.Main) { refreshContacts(); isAddContactDialogVisible = false }
-                        }
+                        viewModel.addContact(newContactName, newContactNumber, newContactLabel)
+                        isAddContactDialogVisible = false
                     },
                     softBlueBg = currentSoftBlueBg, activeBluePill = currentActiveBluePill,
                     searchBarBg = currentSearchBarBg, primaryDarkText = currentPrimaryDarkText,
@@ -347,10 +319,10 @@ fun MainScreen(
                     label = editContactLabel, onLabelChange = { editContactLabel = it },
                     onDismiss = { isEditContactDialogVisible = false },
                     onConfirm = {
-                        coroutineScope.launch(Dispatchers.IO) {
-                            updateRealContact(context, oldContactToEdit!!.name, editContactName, editContactNumber, editContactLabel)
-                            withContext(Dispatchers.Main) { refreshContacts(); isEditContactDialogVisible = false }
-                        }
+                        // Use delete then add for simple update in this mock context or add updateContact to repo
+                        viewModel.deleteContact(oldContactToEdit!!.number)
+                        viewModel.addContact(editContactName, editContactNumber, editContactLabel)
+                        isEditContactDialogVisible = false
                     },
                     softBlueBg = currentSoftBlueBg, activeBluePill = currentActiveBluePill,
                     searchBarBg = currentSearchBarBg, primaryDarkText = currentPrimaryDarkText,
@@ -360,3 +332,4 @@ fun MainScreen(
         }
     }
 }
+

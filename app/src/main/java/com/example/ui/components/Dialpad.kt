@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Contact
+import androidx.paging.compose.LazyPagingItems
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -39,7 +40,7 @@ fun DialpadTabContent(
     searchBg: Color,
     primaryText: Color,
     grayText: Color,
-    contactsList: List<Contact>
+    contactsPaged: LazyPagingItems<Contact>
 ) {
     val context = LocalContext.current
 
@@ -50,15 +51,70 @@ fun DialpadTabContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Text(
-            text = "Dial Pad",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = grayText,
-            modifier = Modifier
-                .align(Alignment.Start)
-                .padding(bottom = 4.dp, start = 4.dp)
-        )
+        // T9 Results Preview
+        if (inputValue.isNotEmpty()) {
+            Text(
+                text = "T9 Search",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = grayText,
+                modifier = Modifier.align(Alignment.Start).padding(start = 8.dp)
+            )
+            
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .background(searchBg.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                    .padding(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (contactsPaged.itemCount == 0) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No matches", fontSize = 12.sp, color = grayText)
+                    }
+                } else {
+                    for (i in 0 until minOf(contactsPaged.itemCount, 3)) {
+                        val contact = contactsPaged[i]
+                        if (contact != null) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .clickable { onCallClick(contact.number) }
+                                    .padding(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier.size(32.dp).clip(CircleShape).background(contact.avatarBg),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(contact.avatarText, fontSize = 12.sp, color = contact.avatarTextColor)
+                                }
+                                Text(
+                                    text = contact.name,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = primaryText
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            Text(
+                text = "Dial Pad",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = grayText,
+                modifier = Modifier
+                    .align(Alignment.Start)
+                    .padding(bottom = 4.dp, start = 4.dp)
+            )
+        }
 
         // Elegant Display Screen
         Row(

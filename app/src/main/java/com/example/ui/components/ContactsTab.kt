@@ -24,11 +24,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import com.example.model.Contact
 
 @Composable
 fun ContactsTabContent(
-    contacts: List<Contact>,
+    contactsPaged: LazyPagingItems<Contact>,
     onCallClick: (Contact) -> Unit,
     onAddContactClick: () -> Unit,
     onToggleFavorite: (Contact) -> Unit,
@@ -47,6 +51,7 @@ fun ContactsTabContent(
             .fillMaxSize()
             .padding(16.dp)
     ) {
+        // ... (Permissions card remains same)
         if (!hasPermission && !isLoading) {
             Card(
                 modifier = Modifier
@@ -109,7 +114,7 @@ fun ContactsTabContent(
             }
         }
 
-        if (contacts.isEmpty()) {
+        if (contactsPaged.itemCount == 0 && contactsPaged.loadState.refresh is LoadState.NotLoading) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,173 +128,34 @@ fun ContactsTabContent(
                 }
             }
         } else {
-            val favorites = contacts.filter { it.favorite }
-
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                if (favorites.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "⭐ Favorites",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = secondaryText,
-                            modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp)
-                        )
-                        LazyRow(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp, horizontal = 4.dp)
-                        ) {
-                            items(favorites, key = { "${it.name}_${it.number}" }) { contact ->
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier
-                                        .width(72.dp)
-                                        .clickable { onCallClick(contact) }
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .background(contact.avatarBg),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = contact.avatarTextColor
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = contact.name.split(" ").firstOrNull() ?: contact.name,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        color = primaryText,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-                        }
-                        HorizontalDivider(
-                            color = secondaryText.copy(alpha = 0.12f),
-                            thickness = 1.dp,
-                            modifier = Modifier.padding(top = 12.dp, bottom = 8.dp)
+                items(
+                    count = contactsPaged.itemCount,
+                    key = contactsPaged.itemKey { it.number },
+                    contentType = contactsPaged.itemContentType { "contact" }
+                ) { index ->
+                    val contact = contactsPaged[index]
+                    if (contact != null) {
+                        ContactRow(
+                            contact = contact,
+                            onCallClick = onCallClick,
+                            onToggleFavorite = onToggleFavorite,
+                            onEditContact = onEditContact,
+                            onDeleteContact = onDeleteContact,
+                            primaryText = primaryText,
+                            secondaryText = secondaryText,
+                            activePill = activePill
                         )
                     }
                 }
 
-                item {
-                    Text(
-                        text = "All Contacts",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = secondaryText,
-                        modifier = Modifier.padding(vertical = 4.dp, horizontal = 4.dp)
-                    )
-                }
-
-                items(contacts, key = { "${it.name}_${it.number}" }) { contact ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable { onCallClick(contact) }
-                            .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(contact.avatarBg),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = contact.avatarTextColor
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = contact.name,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = primaryText
-                            )
-                            Text(
-                                text = "${contact.label} • ${contact.number}",
-                                fontSize = 13.sp,
-                                color = secondaryText
-                            )
-                        }
-
-                        // Star/Unstar toggle
-                        IconButton(
-                            onClick = { onToggleFavorite(contact) },
-                            modifier = Modifier.width(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Star,
-                                contentDescription = "Favorite Toggle",
-                                tint = if (contact.favorite) Color(0xFFEAB308) else Color.LightGray
-                            )
-                        }
-
-                        // More options dropdown
-                        var menuExpanded by remember { mutableStateOf(false) }
-                        Box(modifier = Modifier.padding(horizontal = 0.dp)) {
-                            IconButton(
-                                onClick = { menuExpanded = true },
-                                modifier = Modifier.width(30.dp)
-                            ) {
-                                Text("⋮", fontSize = 18.sp, color = secondaryText, fontWeight = FontWeight.Bold)
-                            }
-                            DropdownMenu(
-                                expanded = menuExpanded,
-                                onDismissRequest = { menuExpanded = false }
-                            ) {
-                                DropdownMenuItem(
-                                    text = { Text("✏️ Edit Contact") },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onEditContact(contact)
-                                    }
-                                )
-                                DropdownMenuItem(
-                                    text = { Text("🗑️ Delete Contact") },
-                                    onClick = {
-                                        menuExpanded = false
-                                        onDeleteContact(contact)
-                                    }
-                                )
-                            }
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .clip(CircleShape)
-                                .background(activePill)
-                                .clickable { onCallClick(contact) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Call,
-                                contentDescription = "Call",
-                                tint = if (activePill == Color(0xFF004A77)) Color.White else Color(0xFF041E49),
-                                modifier = Modifier.size(18.dp)
-                            )
+                if (contactsPaged.loadState.append is LoadState.Loading) {
+                    item {
+                        Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
                         }
                     }
                 }
@@ -297,6 +163,113 @@ fun ContactsTabContent(
         }
     }
 }
+
+@Composable
+fun ContactRow(
+    contact: Contact,
+    onCallClick: (Contact) -> Unit,
+    onToggleFavorite: (Contact) -> Unit,
+    onEditContact: (Contact) -> Unit,
+    onDeleteContact: (Contact) -> Unit,
+    primaryText: Color,
+    secondaryText: Color,
+    activePill: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onCallClick(contact) }
+            .padding(start = 8.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(contact.avatarBg),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = contact.avatarTextColor
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = contact.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = primaryText
+            )
+            Text(
+                text = "${contact.label} • ${contact.number}",
+                fontSize = 13.sp,
+                color = secondaryText
+            )
+        }
+
+        IconButton(
+            onClick = { onToggleFavorite(contact) },
+            modifier = Modifier.width(36.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Favorite Toggle",
+                tint = if (contact.favorite) Color(0xFFEAB308) else Color.LightGray
+            )
+        }
+
+        var menuExpanded by remember { mutableStateOf(false) }
+        Box(modifier = Modifier.padding(horizontal = 0.dp)) {
+            IconButton(
+                onClick = { menuExpanded = true },
+                modifier = Modifier.width(30.dp)
+            ) {
+                Text("⋮", fontSize = 18.sp, color = secondaryText, fontWeight = FontWeight.Bold)
+            }
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("✏️ Edit Contact") },
+                    onClick = {
+                        menuExpanded = false
+                        onEditContact(contact)
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("🗑️ Delete Contact") },
+                    onClick = {
+                        menuExpanded = false
+                        onDeleteContact(contact)
+                    }
+                )
+            }
+        }
+
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(activePill)
+                .clickable { onCallClick(contact) },
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Call,
+                contentDescription = "Call",
+                tint = if (activePill == Color(0xFF004A77)) Color.White else Color(0xFF041E49),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+
 
 @Composable
 fun AddContactDialog(
