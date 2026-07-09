@@ -71,8 +71,13 @@ class DialerRepository(private val context: Context) {
                 val numIdx = cursor.getColumnIndex(Phone.NUMBER)
                 val favIdx = cursor.getColumnIndex(Phone.STARRED)
                 while (cursor.moveToNext()) {
-                    val name = cursor.getString(nameIdx) ?: "Unknown"
+                    val rawName = cursor.getString(nameIdx)
                     val num = cursor.getString(numIdx) ?: ""
+                    val name = if (rawName.isNullOrBlank()) {
+                        if (num.isBlank()) "Unknown" else num
+                    } else {
+                        rawName
+                    }
                     val fav = cursor.getInt(favIdx) == 1
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
                     contacts.add(Contact(num, name, "Mobile", fav, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name)))
@@ -92,7 +97,12 @@ class DialerRepository(private val context: Context) {
             context.contentResolver.query(CallLog.Calls.CONTENT_URI, arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION), null, null, "${CallLog.Calls.DATE} DESC")?.use { cursor ->
                 while (cursor.moveToNext()) {
                     val num = cursor.getString(2) ?: ""
-                    val name = cursor.getString(1) ?: num
+                    val cachedName = cursor.getString(1)
+                    val name = if (cachedName.isNullOrBlank()) {
+                        if (num.isBlank()) "Unknown" else num
+                    } else {
+                        cachedName
+                    }
                     val type = when (cursor.getInt(3)) {
                         CallLog.Calls.MISSED_TYPE -> CallType.MISSED
                         CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING

@@ -175,8 +175,13 @@ fun RecentCallRow(
                         CallType.INCOMING -> "↔" to MaterialTheme.colorScheme.onSurfaceVariant
                     }
                     Text(text = arrow, color = arrowColor, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                    val displayDetails = if (record.name != record.number && record.number.isNotBlank()) {
+                        "${record.number} • ${record.label} • ${record.timestamp}"
+                    } else {
+                        "${record.label} • ${record.timestamp}"
+                    }
                     Text(
-                        text = "${record.label} • ${record.timestamp}",
+                        text = displayDetails,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }

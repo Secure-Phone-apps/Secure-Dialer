@@ -4,14 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [1.0.1] - 2026-07-09
 
+### Fixed
+- **Recents Tab Visibility**: Resolved an issue where phone numbers were not appearing in the call history for unknown contacts by implementing robust name-to-number fallbacks.
+- **Enhanced Data Display**: Added explicit phone number visibility in the Recents list subtext for better identification of callers.
+- **Privacy Audit Compliance**: Standardized attribution context usage across `DialerViewModel`, `CallBlockerService`, and `MyInCallService` to resolve `attributionTag` manifest errors.
+- **Manifest Integrity**: Restored missing closing tags in `AndroidManifest.xml` following privacy tag cleanup.
+
 ### Changed
 - **Refined Dialpad UI**: Modularized dial button components and adjusted layout spacing (300dp width) for improved tap precision.
 - **Enhanced Active Call Screen**: Updated call duration typography to `displaySmall` with primary coloring and added a subtle elevation surface tint.
 - **Iconography Update**: Replaced text-based backspace with `AutoMirrored.Filled.Backspace` icon.
-
-### Fixed
-- **Privacy Audit Compliance**: Standardized attribution context usage across `DialerViewModel`, `CallBlockerService`, and `MyInCallService` to resolve `attributionTag` manifest errors.
-- **Manifest Integrity**: Restored missing closing tags in `AndroidManifest.xml` following privacy tag cleanup.
 
 ### Added
 - **Automated Release Notes**: Integrated a custom extraction script in the CI pipeline to generate human-readable changelogs from this file during GitHub releases.
