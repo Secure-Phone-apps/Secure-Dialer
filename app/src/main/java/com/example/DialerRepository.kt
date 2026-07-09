@@ -18,19 +18,40 @@ import com.example.model.AvatarOrangeText
 import com.example.model.AvatarBlueText
 import com.example.model.AvatarGreenText
 
+import java.util.concurrent.ConcurrentHashMap
+
+private val contactNameCache = ConcurrentHashMap<String, String>()
+
 // CallLog Helpers for Android OS Call Log Database
 fun getContactNameFromNumber(context: Context, number: String): String? {
     if (number.isEmpty()) return null
     // Normalize: Remove spaces and dashes for better matching
     val normalizedNumber = number.replace(Regex("[\\s-]"), "")
+    
+    // Return cached result if available to prevent redundant database queries
+    contactNameCache[normalizedNumber]?.let { return if (it == "NULL") null else it }
+
     val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(normalizedNumber))
-    val cursor = context.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)
-    cursor?.use {
-        if (it.moveToFirst()) {
-            val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
-            if (nameIndex != -1) return it.getString(nameIndex)
+    try {
+        val cursor = context.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val nameIndex = it.getColumnIndex(ContactsContract.PhoneLookup.DISPLAY_NAME)
+                if (nameIndex != -1) {
+                    val foundName = it.getString(nameIndex)
+                    if (foundName != null) {
+                        contactNameCache[normalizedNumber] = foundName
+                        return foundName
+                    }
+                }
+            }
         }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
+    
+    // Cache miss or not found, cache "NULL" placeholder to prevent future lookup attempts
+    contactNameCache[normalizedNumber] = "NULL"
     return null
 }
 
@@ -65,7 +86,9 @@ fun loadRealCallLog(context: Context): List<CallRecord> {
             val numTypeCol = it.getColumnIndex(CallLog.Calls.CACHED_NUMBER_TYPE)
             val durationCol = it.getColumnIndex(CallLog.Calls.DURATION)
 
-            while (it.moveToNext()) {
+            var loadedCount = 0
+            while (it.moveToNext() && loadedCount < 500) {
+                loadedCount++
                 val id = if (idCol != -1) it.getInt(idCol) else 0
                 val number = if (numCol != -1) it.getString(numCol) ?: "" else ""
                 val nameRaw = if (nameCol != -1) it.getString(nameCol) else null
@@ -153,6 +176,7 @@ fun loadRealContacts(context: Context): List<Contact> {
         val colors = listOf(AvatarOrange, AvatarBlue, AvatarGreen)
         val textColors = listOf(AvatarOrangeText, AvatarBlueText, AvatarGreenText)
 
+        val seen = HashSet<String>()
         cursor?.use {
             val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
             val numberIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
@@ -174,7 +198,8 @@ fun loadRealContacts(context: Context): List<Contact> {
                     else -> if (labelStr.isNotEmpty()) labelStr else "Mobile"
                 }
 
-                if (number.isNotEmpty() && list.none { it.number == number && it.name == name }) {
+                val key = "$name|$number"
+                if (number.isNotEmpty() && seen.add(key)) {
                     val colorIdx = (name.hashCode() and 0x7FFFFFFF) % colors.size
                     list.add(
                         Contact(

@@ -21,6 +21,33 @@ class MyInCallService : InCallService() {
         
         showIncomingCallNotification(call)
 
+        // Register callback to track call status and show missed call notifications if applicable
+        call.registerCallback(object : Call.Callback() {
+            private var wasRinging = (call.state == Call.STATE_RINGING)
+
+            override fun onStateChanged(c: Call, state: Int) {
+                super.onStateChanged(c, state)
+                if (state == Call.STATE_RINGING) {
+                    wasRinging = true
+                }
+                if (state == Call.STATE_ACTIVE || state == Call.STATE_DISCONNECTED) {
+                    // Cancel incoming call notification when call becomes active or disconnects
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.cancel(1)
+                }
+                if (state == Call.STATE_DISCONNECTED) {
+                    val isIncoming = c.details?.callDirection == Call.Details.DIRECTION_INCOMING
+                    if (isIncoming && wasRinging) {
+                        showMissedCallNotification(c)
+                    }
+                    c.unregisterCallback(this)
+                }
+                if (state == Call.STATE_ACTIVE) {
+                    wasRinging = false
+                }
+            }
+        })
+
         // Start the MainActivity to display the incoming/outgoing call screen
         try {
             val intent = Intent(this, MainActivity::class.java).apply {
@@ -57,6 +84,43 @@ class MyInCallService : InCallService() {
             .build()
 
         notificationManager.notify(1, notification)
+    }
+
+    private fun showMissedCallNotification(call: Call) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "missed_call_channel"
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, "Missed Calls", NotificationManager.IMPORTANCE_DEFAULT)
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val handle = call.details?.handle
+        val number = handle?.schemeSpecificPart ?: "Unknown"
+        val name = getContactNameFromNumber(this, number) ?: number
+
+        val intent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            putExtra("SHOW_CALL_LOG", true)
+        }
+        val pendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
+
+        val callBackIntent = Intent(Intent.ACTION_CALL).apply {
+            data = android.net.Uri.parse("tel:$number")
+        }
+        val callBackPendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt() + 1, callBackIntent, PendingIntent.FLAG_IMMUTABLE)
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.sym_call_missed)
+            .setContentTitle("Missed Call")
+            .setContentText("Missed call from $name")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .addAction(android.R.drawable.sym_action_call, "Call Back", callBackPendingIntent)
+            .build()
+
+        notificationManager.notify(2, notification)
     }
 
     override fun onCallRemoved(call: Call) {

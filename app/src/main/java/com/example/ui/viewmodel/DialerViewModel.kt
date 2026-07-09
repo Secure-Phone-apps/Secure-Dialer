@@ -27,6 +27,7 @@ class DialerViewModel : ViewModel() {
     
     var hasContactsPermission = mutableStateOf(false)
     var hasCallLogPermission = mutableStateOf(false)
+    var hasNotificationPermission = mutableStateOf(false)
     var isLoadingPermissions = mutableStateOf(true)
 
     var isCallActive = mutableStateOf(false)

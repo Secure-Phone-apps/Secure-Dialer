@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -42,7 +43,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.clickable
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -78,6 +78,7 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -105,6 +106,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.rememberCoroutineScope
 import android.provider.ContactsContract
 import android.content.ContentProviderOperation
 import android.content.ContentValues
@@ -145,6 +150,8 @@ import com.example.ui.theme.*
 
 class MainActivity : ComponentActivity() {
 
+  private val viewModel: DialerViewModel by viewModels()
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     
@@ -177,6 +184,8 @@ class MainActivity : ComponentActivity() {
       }
     }
 
+    handleIntent(intent)
+
     setContent {
       val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
       val onThemeChanged = remember {
@@ -185,7 +194,7 @@ class MainActivity : ComponentActivity() {
           }
       }
       val context = LocalContext.current
-      val viewModel: DialerViewModel = viewModel()
+      val viewModel = this@MainActivity.viewModel
       var showRestrictedSettingsDialog by remember { mutableStateOf(false) }
       
       // Reactive check for default dialer
@@ -275,6 +284,18 @@ class MainActivity : ComponentActivity() {
       }
     }
   }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    setIntent(intent)
+    handleIntent(intent)
+  }
+
+  private fun handleIntent(intent: Intent?) {
+    if (intent != null && intent.getBooleanExtra("SHOW_CALL_LOG", false)) {
+      viewModel.selectedTab.value = 0
+    }
+  }
 }
 
 
@@ -296,6 +317,7 @@ fun MainScreen(
   
   val context = LocalContext.current
   val haptic = LocalHapticFeedback.current
+  val coroutineScope = rememberCoroutineScope()
 
   // Real-time Telecom Call observers
   val systemActiveCall by CallManager.currentCall.collectAsState()
@@ -318,6 +340,17 @@ fun MainScreen(
       ToneGenerator(AudioManager.STREAM_DTMF, 80)
     } catch (e: Exception) {
       null
+    }
+  }
+
+  // Release ToneGenerator on dispose to prevent native audio resource leaks
+  DisposableEffect(Unit) {
+    onDispose {
+      try {
+        toneGenerator?.release()
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
     }
   }
 
@@ -395,6 +428,7 @@ fun MainScreen(
   // Contact & Call Log Permission and Database Loading State
   var hasContactsPermission by viewModel.hasContactsPermission
   var hasCallLogPermission by viewModel.hasCallLogPermission
+  var hasNotificationPermission by viewModel.hasNotificationPermission
   var isLoadingPermissions by viewModel.isLoadingPermissions
 
   val permissionLauncher = rememberLauncherForActivityResult(
@@ -402,6 +436,9 @@ fun MainScreen(
   ) { permissions ->
     hasContactsPermission = permissions[Manifest.permission.READ_CONTACTS] ?: false
     hasCallLogPermission = permissions[Manifest.permission.READ_CALL_LOG] ?: false
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
+    }
     isLoadingPermissions = false
   }
 
@@ -409,9 +446,13 @@ fun MainScreen(
     val readGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
     hasContactsPermission = readGranted
     if (readGranted) {
-      val realList = loadRealContacts(context)
-      contactsList.clear()
-      contactsList.addAll(realList)
+      coroutineScope.launch(Dispatchers.IO) {
+        val realList = loadRealContacts(context)
+        withContext(Dispatchers.Main) {
+          contactsList.clear()
+          contactsList.addAll(realList)
+        }
+      }
     }
   }
 
@@ -419,10 +460,12 @@ fun MainScreen(
     val callLogGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
     hasCallLogPermission = callLogGranted
     if (callLogGranted) {
-      val realCallLog = loadRealCallLog(context)
-      if (realCallLog.isNotEmpty()) {
-        callHistory.clear()
-        callHistory.addAll(realCallLog)
+      coroutineScope.launch(Dispatchers.IO) {
+        val realCallLog = loadRealCallLog(context)
+        withContext(Dispatchers.Main) {
+          callHistory.clear()
+          callHistory.addAll(realCallLog)
+        }
       }
     }
   }
@@ -435,6 +478,23 @@ fun MainScreen(
   LaunchedEffect(Unit) {
     refreshContacts()
     refreshCallLog()
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      val notifPermission = Manifest.permission.POST_NOTIFICATIONS
+      val granted = ContextCompat.checkSelfPermission(context, notifPermission) == PackageManager.PERMISSION_GRANTED
+      hasNotificationPermission = granted
+      if (!granted) {
+        permissionLauncher.launch(
+          arrayOf(
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.WRITE_CALL_LOG,
+            Manifest.permission.CALL_PHONE,
+            notifPermission
+          )
+        )
+      }
+    }
   }
 
   // State for Edit Contact Dialog
@@ -584,11 +644,15 @@ fun MainScreen(
               onAddContactClick = { isAddContactDialogVisible = true },
               onToggleFavorite = { contact ->
                 if (hasContactsPermission) {
-                  val success = toggleRealContactFavorite(context, contact.name, !contact.favorite)
-                  if (success) {
-                    Toast.makeText(context, "Star toggled successfully", Toast.LENGTH_SHORT).show()
+                  coroutineScope.launch(Dispatchers.IO) {
+                    val success = toggleRealContactFavorite(context, contact.name, !contact.favorite)
+                    withContext(Dispatchers.Main) {
+                      if (success) {
+                        Toast.makeText(context, "Star toggled successfully", Toast.LENGTH_SHORT).show()
+                      }
+                      refreshContacts()
+                    }
                   }
-                  refreshContacts()
                 } else {
                   val index = contactsList.indexOfFirst { it.name == contact.name && it.number == contact.number }
                   if (index != -1) {
@@ -619,13 +683,17 @@ fun MainScreen(
               },
               onDeleteContact = { contact ->
                 if (hasContactsPermission) {
-                  val success = deleteRealContact(context, contact.name)
-                  if (success) {
-                    Toast.makeText(context, "🗑️ Contact deleted: ${contact.name}", Toast.LENGTH_SHORT).show()
-                  } else {
-                    Toast.makeText(context, "Failed to delete contact", Toast.LENGTH_SHORT).show()
+                  coroutineScope.launch(Dispatchers.IO) {
+                    val success = deleteRealContact(context, contact.name)
+                    withContext(Dispatchers.Main) {
+                      if (success) {
+                        Toast.makeText(context, "🗑️ Contact deleted: ${contact.name}", Toast.LENGTH_SHORT).show()
+                      } else {
+                        Toast.makeText(context, "Failed to delete contact", Toast.LENGTH_SHORT).show()
+                      }
+                      refreshContacts()
+                    }
                   }
-                  refreshContacts()
                 } else {
                   contactsList.removeAll { it.name == contact.name && it.number == contact.number }
                   Toast.makeText(context, "🗑️ Sim-Contact deleted: ${contact.name}", Toast.LENGTH_SHORT).show()
@@ -744,13 +812,20 @@ fun MainScreen(
           onConfirm = {
             if (newContactName.isNotBlank() && newContactNumber.isNotBlank()) {
               if (hasContactsPermission) {
-                val success = addRealContact(context, newContactName, newContactNumber, newContactLabel)
-                if (success) {
-                  Toast.makeText(context, "Contact saved successfully", Toast.LENGTH_SHORT).show()
-                } else {
-                  Toast.makeText(context, "Failed to save contact", Toast.LENGTH_SHORT).show()
+                val nameToSave = newContactName
+                val numberToSave = newContactNumber
+                val labelToSave = newContactLabel
+                coroutineScope.launch(Dispatchers.IO) {
+                  val success = addRealContact(context, nameToSave, numberToSave, labelToSave)
+                  withContext(Dispatchers.Main) {
+                    if (success) {
+                      Toast.makeText(context, "Contact saved successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                      Toast.makeText(context, "Failed to save contact", Toast.LENGTH_SHORT).show()
+                    }
+                    refreshContacts()
+                  }
                 }
-                refreshContacts()
               } else {
                 contactsList.add(
                   Contact(
@@ -794,13 +869,21 @@ fun MainScreen(
             val old = oldContactToEdit
             if (old != null && editContactName.isNotBlank() && editContactNumber.isNotBlank()) {
               if (hasContactsPermission) {
-                val success = updateRealContact(context, old.name, editContactName, editContactNumber, editContactLabel)
-                if (success) {
-                  Toast.makeText(context, "Contact updated successfully", Toast.LENGTH_SHORT).show()
-                } else {
-                  Toast.makeText(context, "Failed to update contact", Toast.LENGTH_SHORT).show()
+                val oldName = old.name
+                val nameToSave = editContactName
+                val numberToSave = editContactNumber
+                val labelToSave = editContactLabel
+                coroutineScope.launch(Dispatchers.IO) {
+                  val success = updateRealContact(context, oldName, nameToSave, numberToSave, labelToSave)
+                  withContext(Dispatchers.Main) {
+                    if (success) {
+                      Toast.makeText(context, "Contact updated successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                      Toast.makeText(context, "Failed to update contact", Toast.LENGTH_SHORT).show()
+                    }
+                    refreshContacts()
+                  }
                 }
-                refreshContacts()
               } else {
                 val index = contactsList.indexOfFirst { it.name == old.name && it.number == old.number }
                 if (index != -1) {

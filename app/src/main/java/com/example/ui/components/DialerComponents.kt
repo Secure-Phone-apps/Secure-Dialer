@@ -1643,6 +1643,17 @@ fun ActiveCallScreen(
     }
   }
 
+  // Release ToneGenerator on dispose to prevent native audio resource leaks
+  DisposableEffect(Unit) {
+    onDispose {
+      try {
+        inCallToneGenerator?.release()
+      } catch (e: Exception) {
+        e.printStackTrace()
+      }
+    }
+  }
+
   fun playInCallDtmf(key: String) {
     inCallToneGenerator?.let {
       val tone = when (key) {
