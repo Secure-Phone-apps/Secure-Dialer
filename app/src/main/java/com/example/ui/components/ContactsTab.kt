@@ -35,6 +35,11 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.model.Contact
 
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import kotlinx.coroutines.launch
+
 @Composable
 fun ContactsTabContent(
     contactsPaged: LazyPagingItems<Contact>,
@@ -47,113 +52,177 @@ fun ContactsTabContent(
     onEditContact: (Contact) -> Unit = {},
     onDeleteContact: (Contact) -> Unit = {}
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        if (!hasPermission && !isLoading) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                ),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Permissions Required",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.",
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onRequestPermission,
-                        modifier = Modifier.height(40.dp)
-                    ) {
-                        Text("Enable Phone Contacts")
-                    }
-                }
-            }
-        }
+    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val alphabet = ('A'..'Z').toList() + '#'
 
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
         ) {
-            Text(
-                text = "Contacts",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Button(
-                onClick = onAddContactClick,
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                modifier = Modifier
-                    .height(36.dp)
-                    .testTag("add_contact_button")
-            ) {
-                Icon(Icons.Default.Call, null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Add New", style = MaterialTheme.typography.labelLarge)
-            }
-        }
-
-        if (contactsPaged.itemCount == 0 && contactsPaged.loadState.refresh is LoadState.NotLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                EmptyStateIllustration(
-                    title = "No contacts found",
-                    subtitle = "Tap 'Add New' to create a contact"
-                )
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
-                items(
-                    count = contactsPaged.itemCount,
-                    key = contactsPaged.itemKey { it.number },
-                    contentType = contactsPaged.itemContentType { "contact" }
-                ) { index ->
-                    val contact = contactsPaged[index]
-                    if (contact != null) {
-                        ContactRow(
-                            contact = contact,
-                            onCallClick = onCallClick,
-                            onToggleFavorite = onToggleFavorite,
-                            onEditContact = onEditContact,
-                            onDeleteContact = onDeleteContact
+            if (!hasPermission && !isLoading) {
+                // ... (keep permission card)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Permissions Required",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                }
-
-                if (contactsPaged.loadState.append is LoadState.Loading) {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.",
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onRequestPermission,
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Text("Enable Phone Contacts")
                         }
                     }
+                }
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp, horizontal = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Contacts",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Button(
+                    onClick = onAddContactClick,
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    modifier = Modifier
+                        .height(36.dp)
+                        .testTag("add_contact_button")
+                ) {
+                    Icon(Icons.Default.Call, null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Add New", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+
+            if (contactsPaged.itemCount == 0 && contactsPaged.loadState.refresh is LoadState.NotLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyStateIllustration(
+                        title = "No contacts found",
+                        subtitle = "Tap 'Add New' to create a contact"
+                    )
+                }
+            } else {
+                LazyColumn(
+                    state = listState,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.fillMaxSize().padding(end = 24.dp)
+                ) {
+                    items(
+                        count = contactsPaged.itemCount,
+                        key = contactsPaged.itemKey { it.number },
+                        contentType = contactsPaged.itemContentType { "contact" }
+                    ) { index ->
+                        val contact = contactsPaged[index]
+                        if (contact != null) {
+                            ContactRow(
+                                contact = contact,
+                                onCallClick = onCallClick,
+                                onToggleFavorite = onToggleFavorite,
+                                onEditContact = onEditContact,
+                                onDeleteContact = onDeleteContact
+                            )
+                        }
+                    }
+
+                    if (contactsPaged.loadState.append is LoadState.Loading) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // A-Z Scroller Rail
+        if (contactsPaged.itemCount > 0) {
+            val haptic = LocalHapticFeedback.current
+            Column(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .fillMaxHeight()
+                    .width(32.dp)
+                    .padding(vertical = 60.dp)
+                    .pointerInput(Unit) {
+                        detectVerticalDragGestures { change, _ ->
+                            val index = (change.position.y / size.height * alphabet.size)
+                                .toInt()
+                                .coerceIn(0, alphabet.size - 1)
+                            val letter = alphabet[index].toString()
+                            
+                            // Find first contact starting with this letter
+                            for (i in 0 until contactsPaged.itemCount) {
+                                val c = contactsPaged[i]
+                                if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
+                                    coroutineScope.launch {
+                                        listState.scrollToItem(i)
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceEvenly
+            ) {
+                alphabet.forEach { char ->
+                    Text(
+                        text = char.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        modifier = Modifier.clickable {
+                            val letter = char.toString()
+                            for (i in 0 until contactsPaged.itemCount) {
+                                val c = contactsPaged[i]
+                                if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(i)
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    )
                 }
             }
         }

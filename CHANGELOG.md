@@ -13,6 +13,9 @@ All notable changes to this project will be documented in this file.
 - **Manifest Integrity**: Restored missing closing tags in `AndroidManifest.xml` following privacy tag cleanup.
 
 ### Changed
+- **Smart Call Grouping**: Organized the Recents tab into logical date buckets ("Today", "Yesterday", "Older") with sticky-style headers for faster scanning.
+- **Missed Call Filtering**: Added M3 Filter Chips to the Recents screen, allowing users to instantly toggle between full history and missed calls only.
+- **A-Z Fast Scroller**: Integrated a high-performance alphabet rail in the Contacts list with haptic-linked vertical drag for rapid navigation.
 - **Improved Call Screen Feedback**: Updated the active call header to provide real-time status updates (e.g., "Dialing...", "Incoming call...", "Connecting...") based on the exact Telecom state.
 - **Interactive Call Log**: Re-engineered the Recents tab to use an expandable card system, balancing primary call actions with deep dive history access.
 - **Refined Dialpad UI**: Modularized dial button components and adjusted layout spacing (300dp width) for improved tap precision.

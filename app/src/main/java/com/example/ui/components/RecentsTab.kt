@@ -8,9 +8,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,6 +41,8 @@ fun RecentsTabContent(
     isLoading: Boolean = false,
     onRequestPermission: () -> Unit = {}
 ) {
+    var filterByMissed by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -56,6 +60,35 @@ fun RecentsTabContent(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("recents_header")
+            )
+        }
+
+        // Filter Chips
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            FilterChip(
+                selected = !filterByMissed,
+                onClick = { filterByMissed = false },
+                label = { Text("All") },
+                leadingIcon = if (!filterByMissed) {
+                    { Icon(Icons.Default.Done, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else null
+            )
+            FilterChip(
+                selected = filterByMissed,
+                onClick = { filterByMissed = true },
+                label = { Text("Missed") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedLabelColor = MaterialTheme.colorScheme.error,
+                    selectedLeadingIconColor = MaterialTheme.colorScheme.error
+                ),
+                leadingIcon = if (filterByMissed) {
+                    { Icon(Icons.Default.Done, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
+                } else null
             )
         }
 
@@ -110,17 +143,38 @@ fun RecentsTabContent(
                 )
             }
         } else {
+            val recordsSnapshot = callRecordsPaged.itemSnapshotList
+            val filteredAndGrouped = remember(recordsSnapshot, filterByMissed) {
+                recordsSnapshot.items
+                    .filter { if (filterByMissed) it.type == CallType.MISSED else true }
+                    .groupBy { record ->
+                        when {
+                            record.timestamp.contains("Today", ignoreCase = true) -> "Today"
+                            record.timestamp.contains("Yesterday", ignoreCase = true) -> "Yesterday"
+                            else -> "Older"
+                        }
+                    }
+            }
+
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(4.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(
-                    count = callRecordsPaged.itemCount,
-                    key = callRecordsPaged.itemKey { it.id },
-                    contentType = callRecordsPaged.itemContentType { "call_record" }
-                ) { index ->
-                    val record = callRecordsPaged[index]
-                    if (record != null) {
+                filteredAndGrouped.forEach { (dateGroup, groupRecords) ->
+                    item(key = "header_$dateGroup") {
+                        Text(
+                            text = dateGroup,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 4.dp)
+                        )
+                    }
+
+                    items(
+                        items = groupRecords,
+                        key = { it.id }
+                    ) { record ->
                         RecentCallRow(
                             record = record,
                             onCallClick = { onCallClick(record) },
