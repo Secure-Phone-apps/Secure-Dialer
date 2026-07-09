@@ -1,5 +1,6 @@
 package com.example
 
+import android.os.Build
 import android.telecom.Call
 import android.telecom.CallScreeningService
 import com.example.data.AppDatabase
@@ -10,7 +11,12 @@ import kotlinx.coroutines.launch
 class CallBlockerService : CallScreeningService() {
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle?.schemeSpecificPart ?: ""
-        val db = AppDatabase.getDatabase(this)
+        val context = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            createAttributionContext("dialer")
+        } else {
+            this
+        }
+        val db = AppDatabase.getDatabase(context)
         val dao = db.dialerDao()
 
         CoroutineScope(Dispatchers.IO).launch {

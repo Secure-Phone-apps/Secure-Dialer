@@ -11,9 +11,7 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SEND_SMS" />
-
     <attribution android:tag="dialer" android:label="@string/app_name" />
-    <attribution android:tag="attributionTag" android:label="@string/app_name" />
     <attribution android:tag="contacts" android:label="@string/app_name" />
     <attribution android:tag="call_log" android:label="@string/app_name" />
 
@@ -88,7 +86,5 @@
             </intent-filter>
         </service>
     </application>
-
-    <attribution android:tag="com.example.app" android:label="@string/app_name" />
 
 </manifest>

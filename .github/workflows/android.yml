@@ -72,11 +72,20 @@ jobs:
       run: gradle :app:assembleRelease
     - name: Rename APK
       run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
+    - name: Extract Release Notes
+      run: |
+        # Extract the latest entry from CHANGELOG.md (everything between the first and second H2 headers)
+        sed -n '/## \[/,/## \[/p' CHANGELOG.md | sed '1d;$d' > release_notes.md
+        if [ ! -s release_notes.md ]; then
+          # Fallback if extraction fails or it's the first entry
+          grep -A 1000 "## \[" CHANGELOG.md | sed '1d' > release_notes.md
+        fi
     - name: Create Release and Upload
       uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.event.inputs.release_version }}
         name: Release ${{ github.event.inputs.release_version }}
-        generate_release_notes: true
+        body_path: release_notes.md
+        generate_release_notes: false
         files: app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
 

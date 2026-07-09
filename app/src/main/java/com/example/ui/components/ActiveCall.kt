@@ -76,7 +76,8 @@ fun ActiveCallScreen(
         "%02d:%02d".format(mins, secs)
     }
 
-    // Observe audio state for UI synchronization
+    // Dynamic Surface Color based on state
+    val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
     val audioState by CallManager.audioState.collectAsStateWithLifecycle()
     LaunchedEffect(audioState) {
         audioState?.let {
@@ -96,7 +97,7 @@ fun ActiveCallScreen(
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+        color = surfaceColor
     ) {
         Column(
             modifier = Modifier
@@ -169,9 +170,9 @@ fun ActiveCallScreen(
 
                 Text(
                     text = formattedTime,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Medium
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -433,7 +434,6 @@ fun ActiveCallScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isMuted = !isMuted
                             CallManager.setMuted(isMuted)
-                            Toast.makeText(context, if (isMuted) "Microphone Muted" else "Microphone Active", Toast.LENGTH_SHORT).show()
                         }
                     )
                     InCallButton(
@@ -444,7 +444,6 @@ fun ActiveCallScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isSpeakerOn = !isSpeakerOn
                             CallManager.setSpeaker(isSpeakerOn)
-                            Toast.makeText(context, if (isSpeakerOn) "Speaker On" else "Speaker Off", Toast.LENGTH_SHORT).show()
                         }
                     )
                 }
@@ -462,7 +461,6 @@ fun ActiveCallScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isOnHold = !isOnHold
                             CallManager.setHold(isOnHold)
-                            Toast.makeText(context, if (isOnHold) "Call on hold" else "Call resumed", Toast.LENGTH_SHORT).show()
                         }
                     )
                     InCallButton(
@@ -473,7 +471,6 @@ fun ActiveCallScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             isBluetoothOn = !isBluetoothOn
                             CallManager.setBluetooth(isBluetoothOn)
-                            Toast.makeText(context, if (isBluetoothOn) "Bluetooth On" else "Bluetooth Off", Toast.LENGTH_SHORT).show()
                         }
                     )
                     Spacer(modifier = Modifier.size(64.dp))

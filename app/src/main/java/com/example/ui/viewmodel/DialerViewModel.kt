@@ -1,6 +1,7 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.os.Build
 import androidx.compose.runtime.*
 import androidx.lifecycle.*
 import androidx.paging.*
@@ -11,7 +12,13 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DialerViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = DialerRepository(application)
+    private val repository = DialerRepository(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            application.createAttributionContext("dialer")
+        } else {
+            application
+        }
+    )
 
     // Search Query
     var searchQuery = mutableStateOf("")

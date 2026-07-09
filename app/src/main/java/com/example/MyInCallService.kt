@@ -97,7 +97,12 @@ class MyInCallService : InCallService() {
 
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: "Unknown"
-        val name = getContactNameFromNumber(this, number) ?: number
+        val context = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            createAttributionContext("dialer")
+        } else {
+            this
+        }
+        val name = getContactNameFromNumber(context, number) ?: number
 
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)

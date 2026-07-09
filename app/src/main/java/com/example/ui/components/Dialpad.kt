@@ -25,10 +25,26 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Contact
 import androidx.paging.compose.LazyPagingItems
+
+private val DIALPAD_KEYS = listOf(
+    Triple("1", "Voicemail", 1),
+    Triple("2", "A B C", 2),
+    Triple("3", "D E F", 3),
+    Triple("4", "G H I", 4),
+    Triple("5", "J K L", 5),
+    Triple("6", "M N O", 6),
+    Triple("7", "P Q R S", 7),
+    Triple("8", "T U V", 8),
+    Triple("9", "W X Y Z", 9),
+    Triple("*", "", -1),
+    Triple("0", "+", 0),
+    Triple("#", "", -1)
+)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -146,24 +162,9 @@ fun DialpadTabContent(
         Spacer(modifier = Modifier.height(12.dp))
 
         // Dialer Grid
-        val keys = listOf(
-            Triple("1", "Voicemail", 1),
-            Triple("2", "A B C", 2),
-            Triple("3", "D E F", 3),
-            Triple("4", "G H I", 4),
-            Triple("5", "J K L", 5),
-            Triple("6", "M N O", 6),
-            Triple("7", "P Q R S", 7),
-            Triple("8", "T U V", 8),
-            Triple("9", "W X Y Z", 9),
-            Triple("*", "", -1),
-            Triple("0", "+", 0),
-            Triple("#", "", -1)
-        )
-
         Column(
-            modifier = Modifier.width(280.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            modifier = Modifier.width(300.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             for (i in 0 until 4) {
                 Row(
@@ -172,62 +173,15 @@ fun DialpadTabContent(
                 ) {
                     for (j in 0 until 3) {
                         val index = i * 3 + j
-                        val key = keys[index]
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                                .combinedClickable(
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        onValueChange(inputValue + key.first)
-                                    },
-                                    onLongClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        if (key.third != -1) {
-                                            val speedNum = speedDialMap[key.third]
-                                            if (speedNum != null) {
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        "📞 Calling Speed Dial mapped to key ${key.first}!",
-                                                        Toast.LENGTH_SHORT
-                                                    )
-                                                    .show()
-                                                onSpeedDialCall(speedNum)
-                                            } else {
-                                                Toast
-                                                    .makeText(
-                                                        context,
-                                                        "Speed dial not assigned for key ${key.first}. Assign in Settings!",
-                                                        Toast.LENGTH_SHORT
-                                                    )
-                                                    .show()
-                                            }
-                                        }
-                                    }
-                                )
-                                .testTag("dialpad_key_${key.first}"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = key.first,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                if (key.second.isNotEmpty()) {
-                                    Text(
-                                        text = key.second,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
-                        }
+                        val key = DIALPAD_KEYS[index]
+                        DialButton(
+                            key = key,
+                            inputValue = inputValue,
+                            onValueChange = onValueChange,
+                            onSpeedDialCall = onSpeedDialCall,
+                            speedDialMap = speedDialMap,
+                            voicemailNumber = voicemailNumber
+                        )
                     }
                 }
             }
@@ -278,10 +232,10 @@ fun DialpadTabContent(
                             onValueChange(inputValue.dropLast(1))
                         }
                     ) {
-                        Text(
-                            text = "⌫",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Backspace,
+                            contentDescription = "Backspace",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -389,24 +343,9 @@ fun DialpadOverlay(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Dialer Grid
-            val keys = listOf(
-                Triple("1", "Voicemail", 1),
-                Triple("2", "A B C", 2),
-                Triple("3", "D E F", 3),
-                Triple("4", "G H I", 4),
-                Triple("5", "J K L", 5),
-                Triple("6", "M N O", 6),
-                Triple("7", "P Q R S", 7),
-                Triple("8", "T U V", 8),
-                Triple("9", "W X Y Z", 9),
-                Triple("*", "", -1),
-                Triple("0", "+", 0),
-                Triple("#", "", -1)
-            )
-
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 for (i in 0 until 4) {
                     Row(
@@ -415,70 +354,16 @@ fun DialpadOverlay(
                     ) {
                         for (j in 0 until 3) {
                             val index = i * 3 + j
-                            val key = keys[index]
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(64.dp)
-                                    .clip(RoundedCornerShape(32.dp))
-                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                                    .combinedClickable(
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            onValueChange(inputValue + key.first)
-                                        },
-                                        onLongClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            if (key.first == "1") {
-                                                if (voicemailNumber.isNotBlank()) {
-                                                    Toast.makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT).show()
-                                                    onSpeedDialCall(voicemailNumber)
-                                                } else {
-                                                    Toast.makeText(context, "Voicemail number not set. Configure in Settings!", Toast.LENGTH_SHORT).show()
-                                                }
-                                            } else if (key.third != -1) {
-                                                val speedNum = speedDialMap[key.third]
-                                                if (speedNum != null) {
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            "📞 Calling Speed Dial mapped to key ${key.first}!",
-                                                            Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                                    onSpeedDialCall(speedNum)
-                                                } else {
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            "Speed dial not assigned for key ${key.first}. Assign in Settings!",
-                                                            Toast.LENGTH_SHORT
-                                                        )
-                                                        .show()
-                                                }
-                                            }
-                                        }
-                                    )
-                                    .testTag("dialpad_key_${key.first}"),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = key.first,
-                                        style = MaterialTheme.typography.titleLarge,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    if (key.second.isNotEmpty()) {
-                                        Text(
-                                            text = key.second,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
-                            }
+                            val key = DIALPAD_KEYS[index]
+                            DialButton(
+                                key = key,
+                                inputValue = inputValue,
+                                onValueChange = onValueChange,
+                                onSpeedDialCall = onSpeedDialCall,
+                                speedDialMap = speedDialMap,
+                                voicemailNumber = voicemailNumber,
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }
@@ -507,6 +392,77 @@ fun DialpadOverlay(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DialButton(
+    key: Triple<String, String, Int>,
+    inputValue: String,
+    onValueChange: (String) -> Unit,
+    onSpeedDialCall: (String) -> Unit,
+    speedDialMap: Map<Int, String>,
+    voicemailNumber: String,
+    modifier: Modifier = Modifier
+) {
+    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+
+    Surface(
+        modifier = modifier
+            .size(if (modifier == Modifier) 72.dp else Dp.Unspecified)
+            .heightIn(min = 64.dp)
+            .clip(CircleShape)
+            .combinedClickable(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onValueChange(inputValue + key.first)
+                },
+                onLongClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (key.first == "1") {
+                        if (voicemailNumber.isNotBlank()) {
+                            Toast.makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT).show()
+                            onSpeedDialCall(voicemailNumber)
+                        } else {
+                            Toast.makeText(context, "Voicemail number not set. Configure in Settings!", Toast.LENGTH_SHORT).show()
+                        }
+                    } else if (key.third != -1) {
+                        val speedNum = speedDialMap[key.third]
+                        if (speedNum != null) {
+                            Toast.makeText(context, "📞 Calling Speed Dial mapped to key ${key.first}!", Toast.LENGTH_SHORT).show()
+                            onSpeedDialCall(speedNum)
+                        } else {
+                            Toast.makeText(context, "Speed dial not assigned for key ${key.first}. Assign in Settings!", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            )
+            .testTag("dialpad_key_${key.first}"),
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+        tonalElevation = 2.dp
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = key.first,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            if (key.second.isNotEmpty()) {
+                Text(
+                    text = key.second,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
     }
 }
