@@ -66,6 +66,13 @@ fun SettingsPanel(
     var newQuickRespInput by remember { mutableStateOf("") }
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
 
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val cardBgColor = if (isDark) {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -121,10 +128,9 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                                    containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp),
-                                border = CardDefaults.outlinedCardBorder()
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column {
                                     SettingsRowToggle(
@@ -149,10 +155,9 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                                    containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp),
-                                border = CardDefaults.outlinedCardBorder()
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column {
                                     SettingsRowToggle(
@@ -187,10 +192,9 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                                    containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp),
-                                border = CardDefaults.outlinedCardBorder()
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column {
                                     SettingsRowNav(
@@ -232,10 +236,9 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                                    containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp),
-                                border = CardDefaults.outlinedCardBorder()
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column {
                                     ListItem(
@@ -321,10 +324,9 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+                                    containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp),
-                                border = CardDefaults.outlinedCardBorder()
+                                shape = RoundedCornerShape(16.dp)
                             ) {
                                 Column {
                                     SettingsRowNav(
@@ -429,11 +431,10 @@ fun SettingsPanel(
                                 items(blockedNumbers, key = { it }) { num ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(16.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                                        ),
-                                        border = CardDefaults.outlinedCardBorder()
+                                            containerColor = cardBgColor
+                                        )
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -576,9 +577,8 @@ fun SettingsPanel(
                                         modifier = Modifier.fillMaxWidth(),
                                         shape = RoundedCornerShape(16.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                                        ),
-                                        border = CardDefaults.outlinedCardBorder()
+                                            containerColor = cardBgColor
+                                        )
                                     ) {
                                         Row(
                                             modifier = Modifier
@@ -719,11 +719,10 @@ fun SettingsPanel(
                                 items(quickResponses, key = { it }) { resp ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = RoundedCornerShape(16.dp),
                                         colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                                        ),
-                                        border = CardDefaults.outlinedCardBorder()
+                                            containerColor = cardBgColor
+                                        )
                                     ) {
                                         Row(
                                             modifier = Modifier

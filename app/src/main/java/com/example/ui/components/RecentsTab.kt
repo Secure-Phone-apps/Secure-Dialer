@@ -154,20 +154,9 @@ fun RecentsTabContent(
                 val baseFiltered = callRecordsPaged.itemSnapshotList.items
                     .filter { if (filterByMissed) it.type == CallType.MISSED else true }
                 
-                val consolidated = mutableListOf<CallGroup>()
-                if (baseFiltered.isNotEmpty()) {
-                    var currentGroup = mutableListOf(baseFiltered[0])
-                    for (i in 1 until baseFiltered.size) {
-                        if (baseFiltered[i].number == currentGroup.last().number) {
-                            currentGroup.add(baseFiltered[i])
-                        } else {
-                            consolidated.add(CallGroup(currentGroup[0], currentGroup.toList()))
-                            currentGroup = mutableListOf(baseFiltered[i])
-                        }
-                    }
-                    consolidated.add(CallGroup(currentGroup[0], currentGroup.toList()))
+                baseFiltered.groupBy { it.number }.map { (_, records) ->
+                    CallGroup(records.first(), records)
                 }
-                consolidated
             }
 
             LazyColumn(
@@ -235,11 +224,6 @@ fun RecentCallRow(
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
         }
     }
-    val borderColor = if (isDark) {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
-    } else {
-        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
-    }
 
     Card(
         modifier = Modifier
@@ -251,11 +235,7 @@ fun RecentCallRow(
         colors = CardDefaults.cardColors(
             containerColor = containerColor
         ),
-        shape = RoundedCornerShape(16.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 1.dp,
-            color = borderColor
-        )
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column {
             ListItem(
