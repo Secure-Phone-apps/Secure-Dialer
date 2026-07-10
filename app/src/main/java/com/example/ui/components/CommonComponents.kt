@@ -1,7 +1,9 @@
 package com.example.ui.components
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,8 +32,7 @@ import com.example.ui.viewmodel.DialerViewModel
 fun HeaderSearchBar(
     searchQuery: String,
     onQueryChange: (String) -> Unit,
-    onSettingsClick: () -> Unit,
-    onProfileClick: () -> Unit
+    onSettingsClick: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -78,13 +79,6 @@ fun HeaderSearchBar(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-            IconButton(onClick = onProfileClick) {
-                Icon(
-                    imageVector = Icons.Default.Mic,
-                    contentDescription = "Voice Search",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
             IconButton(onClick = onSettingsClick) {
                 Icon(

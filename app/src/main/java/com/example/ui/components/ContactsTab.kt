@@ -34,6 +34,14 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.model.Contact
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Person
 
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -150,6 +158,19 @@ fun ContactsTabContent(
                     ) { index ->
                         val contact = contactsPaged[index]
                         if (contact != null) {
+                            val firstLetter = contact.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
+                            val prevContact = if (index > 0) contactsPaged[index - 1] else null
+                            val prevLetter = prevContact?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: ""
+                            
+                            if (firstLetter != prevLetter) {
+                                Text(
+                                    text = firstLetter,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+                                )
+                            }
                             ContactRow(
                                 contact = contact,
                                 onCallClick = onCallClick,
@@ -238,46 +259,51 @@ fun ContactRow(
     onDeleteContact: (Contact) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    var isExpanded by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                onCallClick(contact)
+                isExpanded = !isExpanded
             },
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isExpanded) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f) else Color.Transparent
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        ListItem(
-            headlineContent = {
-                Text(
-                    text = contact.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            },
-            supportingContent = {
-                Text(
-                    text = "${contact.label} • ${contact.number}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            },
-            leadingContent = {
-                Surface(
-                    modifier = Modifier.size(44.dp),
-                    shape = CircleShape,
-                    color = contact.avatarBg
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Text(
-                            text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = contact.avatarTextColor
-                        )
+        Column {
+            ListItem(
+                headlineContent = {
+                    Text(
+                        text = contact.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        text = "${contact.label} • ${contact.number}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                },
+                leadingContent = {
+                    Surface(
+                        modifier = Modifier.size(44.dp),
+                        shape = CircleShape,
+                        color = contact.avatarBg
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = contact.avatarTextColor
+                            )
+                        }
                     }
-                }
-            },
-            trailingContent = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                },
+                trailingContent = {
                     IconButton(onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onToggleFavorite(contact)
@@ -288,64 +314,192 @@ fun ContactRow(
                             tint = if (contact.favorite) Color(0xFFEAB308) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                         )
                     }
-                    var menuExpanded by remember { mutableStateOf(false) }
-                    Box {
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            menuExpanded = true
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.MoreVert,
-                                contentDescription = "More"
-                            )
-                        }
-                        DropdownMenu(
-                            expanded = menuExpanded,
-                            onDismissRequest = { menuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Edit") },
-                                leadingIcon = { Icon(Icons.Default.Edit, contentDescription = null) },
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    menuExpanded = false
-                                    onEditContact(contact)
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
+
+            if (isExpanded) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    thickness = 0.5.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val context = LocalContext.current
+                    ContactActionItem(
+                        icon = Icons.Default.Call,
+                        label = "Call",
+                        onClick = { onCallClick(contact) },
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    ContactActionItem(
+                        icon = Icons.Default.Email,
+                        label = "Message",
+                        onClick = {
+                            try {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("smsto:${contact.number}")
                                 }
-                            )
-                            DropdownMenuItem(
-                                text = { Text("Delete") },
-                                leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    menuExpanded = false
-                                    onDeleteContact(contact)
-                                }
-                            )
-                        }
-                    }
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "Could not open messages", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                    ContactActionItem(
+                        icon = Icons.Default.Edit,
+                        label = "Edit",
+                        onClick = { onEditContact(contact) },
+                        tint = MaterialTheme.colorScheme.tertiary
+                    )
+                    ContactActionItem(
+                        icon = Icons.Default.Delete,
+                        label = "Delete",
+                        onClick = { onDeleteContact(contact) },
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
-            },
-            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-        )
+            }
+        }
     }
 }
 
 @Composable
-fun AddContactDialog(
-    name: String,
-    onNameChange: (String) -> Unit,
-    number: String,
-    onNumberChange: (String) -> Unit,
+fun ContactActionItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    onLabelChange: (String) -> Unit,
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onClick: () -> Unit,
+    tint: Color
 ) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(8.dp)
+            .width(64.dp)
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = tint,
+            modifier = Modifier.size(24.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = tint
+        )
+    }
+}
+
+data class Country(val code: String, val name: String, val prefix: String, val flag: String)
+
+val COUNTRIES = listOf(
+    Country("IN", "India", "+91", "🇮🇳"),
+    Country("US", "United States", "+1", "🇺🇸"),
+    Country("GB", "United Kingdom", "+44", "🇬🇧"),
+    Country("CA", "Canada", "+1", "🇨🇦"),
+    Country("AU", "Australia", "+61", "🇦🇺"),
+    Country("DE", "Germany", "+49", "🇩🇪"),
+    Country("FR", "France", "+33", "🇫🇷"),
+    Country("IT", "Italy", "+39", "🇮🇹"),
+    Country("ES", "Spain", "+34", "🇪🇸"),
+    Country("JP", "Japan", "+81", "🇯🇵"),
+    Country("CN", "China", "+86", "🇨🇳"),
+    Country("BR", "Brazil", "+55", "🇧🇷"),
+    Country("RU", "Russia", "+7", "🇷🇺"),
+    Country("ZA", "South Africa", "+27", "🇿🇦"),
+    Country("SG", "Singapore", "+65", "🇸🇬"),
+    Country("MY", "Malaysia", "+60", "🇲🇾"),
+    Country("ID", "Indonesia", "+62", "🇮🇩"),
+    Country("AE", "United Arab Emirates", "+971", "🇦🇪"),
+    Country("SA", "Saudi Arabia", "+966", "🇸🇦"),
+    Country("PK", "Pakistan", "+92", "🇵🇰"),
+    Country("BD", "Bangladesh", "+880", "🇧🇩"),
+    Country("LK", "Sri Lanka", "+94", "🇱🇰"),
+    Country("NP", "Nepal", "+977", "🇳🇵"),
+    Country("MX", "Mexico", "+52", "🇲🇽"),
+    Country("NZ", "New Zealand", "+64", "🇳🇿"),
+    Country("NL", "Netherlands", "+31", "🇳🇱"),
+    Country("CH", "Switzerland", "+41", "🇨🇭"),
+    Country("SE", "Sweden", "+46", "🇸🇪"),
+    Country("NO", "Norway", "+47", "🇳🇴")
+)
+
+@Composable
+fun AddContactDialog(
+    initialName: String,
+    initialNumber: String,
+    initialLabel: String,
+    onDismiss: () -> Unit,
+    onConfirm: (name: String, number: String, label: String) -> Unit
+) {
+    val context = LocalContext.current
+    val countryIso = remember {
+        try {
+            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
+            tm?.networkCountryIso?.uppercase() ?: tm?.simCountryIso?.uppercase() ?: java.util.Locale.getDefault().country.uppercase()
+        } catch (e: Exception) {
+            java.util.Locale.getDefault().country.uppercase()
+        }
+    }
+    
+    val defaultCountry = remember(countryIso) {
+        COUNTRIES.firstOrNull { it.code == countryIso } ?: COUNTRIES.first { it.code == "IN" }
+    }
+
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var selectedCountry by remember { mutableStateOf<Country?>(null) }
+    var rawNumberInput by remember { mutableStateOf("") }
+    var selectedLabel by remember { mutableStateOf(initialLabel) }
+
+    LaunchedEffect(initialName) {
+        val trimmed = initialName.trim()
+        if (trimmed.isNotEmpty()) {
+            val parts = trimmed.split("\\s+".toRegex())
+            if (parts.isNotEmpty()) {
+                firstName = parts[0]
+                if (parts.size > 1) {
+                    lastName = parts.subList(1, parts.size).joinToString(" ")
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(initialNumber) {
+        if (initialNumber.startsWith("+")) {
+            val matchingCountry = COUNTRIES
+                .filter { initialNumber.startsWith(it.prefix) }
+                .maxByOrNull { it.prefix.length }
+            if (matchingCountry != null) {
+                selectedCountry = matchingCountry
+                rawNumberInput = initialNumber.substring(matchingCountry.prefix.length)
+            } else {
+                selectedCountry = defaultCountry
+                rawNumberInput = initialNumber
+            }
+        } else {
+            selectedCountry = defaultCountry
+            rawNumberInput = initialNumber
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Create Contact",
+                text = if (initialName.isEmpty()) "Create Contact" else "Edit Contact",
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -354,20 +508,92 @@ fun AddContactDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = onNameChange,
-                    label = { Text("Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("dialog_name_input")
-                )
-                OutlinedTextField(
-                    value = number,
-                    onValueChange = onNumberChange,
-                    label = { Text("Phone Number") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth().testTag("dialog_phone_input")
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = firstName,
+                        onValueChange = { firstName = it },
+                        label = { Text("First Name") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f).testTag("dialog_first_name_input"),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    OutlinedTextField(
+                        value = lastName,
+                        onValueChange = { lastName = it },
+                        label = { Text("Last Name") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f).testTag("dialog_last_name_input"),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    var expandedCountryMenu by remember { mutableStateOf(false) }
+                    
+                    Box {
+                        OutlinedButton(
+                            onClick = { expandedCountryMenu = true },
+                            modifier = Modifier.height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp)
+                        ) {
+                            Text(
+                                text = "${selectedCountry?.flag ?: "🌐"} ${selectedCountry?.prefix ?: ""}",
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Select Country",
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        
+                        DropdownMenu(
+                            expanded = expandedCountryMenu,
+                            onDismissRequest = { expandedCountryMenu = false },
+                            modifier = Modifier.heightIn(max = 300.dp)
+                        ) {
+                            COUNTRIES.forEach { country ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(country.flag)
+                                            Text(country.name)
+                                            Spacer(modifier = Modifier.weight(1f))
+                                            Text(country.prefix, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+                                    },
+                                    onClick = {
+                                        selectedCountry = country
+                                        expandedCountryMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    
+                    OutlinedTextField(
+                        value = rawNumberInput,
+                        onValueChange = { rawNumberInput = it },
+                        label = { Text("Phone Number") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f).testTag("dialog_phone_input"),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+
                 Column {
                     Text(
                         text = "Label",
@@ -381,8 +607,8 @@ fun AddContactDialog(
                     ) {
                         listOf("Mobile", "Work", "Home").forEach { option ->
                             FilterChip(
-                                selected = label == option,
-                                onClick = { onLabelChange(option) },
+                                selected = selectedLabel == option,
+                                onClick = { selectedLabel = option },
                                 label = { Text(option) },
                                 modifier = Modifier.weight(1f)
                             )
@@ -392,7 +618,19 @@ fun AddContactDialog(
             }
         },
         confirmButton = {
-            Button(onClick = onConfirm) {
+            Button(
+                onClick = {
+                    val finalName = "${firstName.trim()} ${lastName.trim()}".trim()
+                    val prefix = selectedCountry?.prefix ?: ""
+                    val finalNumber = if (rawNumberInput.startsWith("+")) {
+                        rawNumberInput.trim()
+                    } else {
+                        "$prefix${rawNumberInput.trim()}"
+                    }
+                    onConfirm(finalName, finalNumber, selectedLabel)
+                },
+                enabled = firstName.trim().isNotEmpty() && rawNumberInput.trim().isNotEmpty()
+            ) {
                 Text("Save")
             }
         },

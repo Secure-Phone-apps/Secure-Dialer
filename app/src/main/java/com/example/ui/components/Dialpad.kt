@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Contact
 import androidx.paging.compose.LazyPagingItems
+import androidx.compose.foundation.lazy.LazyColumn
 
 private val DIALPAD_KEYS = listOf(
     Triple("1", "Voicemail", 1),
@@ -67,76 +68,95 @@ fun DialpadTabContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // T9 Results Preview
+        // T9 Results Preview (Vertical list occupying remaining top space)
         if (inputValue.isNotEmpty()) {
-            Text(
-                text = "T9 Search",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.Start).padding(start = 8.dp, top = 8.dp)
-            )
-            
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(88.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(16.dp))
-                    .padding(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .weight(1f)
+                    .padding(vertical = 4.dp)
             ) {
                 if (contactsPaged.itemCount == 0) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "No matches",
-                            style = MaterialTheme.typography.bodySmall,
+                            "No matching contacts",
+                            style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 } else {
-                    for (i in 0 until minOf(contactsPaged.itemCount, 3)) {
-                        val contact = contactsPaged[i]
-                        if (contact != null) {
-                            Column(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .clickable { onCallClick(contact.number) }
-                                    .padding(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Box(
-                                    modifier = Modifier.size(40.dp).clip(CircleShape).background(contact.avatarBg),
-                                    contentAlignment = Alignment.Center
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(
+                            count = minOf(contactsPaged.itemCount, 5) // Show top 5 best matches
+                        ) { index ->
+                            val contact = contactsPaged[index]
+                            if (contact != null) {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onCallClick(contact.number) },
+                                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
                                 ) {
-                                    Text(
-                                        contact.avatarText,
-                                        style = MaterialTheme.typography.titleSmall,
-                                        color = contact.avatarTextColor
+                                    ListItem(
+                                        headlineContent = {
+                                            Text(
+                                                text = contact.name,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                fontWeight = FontWeight.Medium
+                                            )
+                                        },
+                                        supportingContent = {
+                                            Text(
+                                                text = "${contact.label} • ${contact.number}",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        },
+                                        leadingContent = {
+                                            Surface(
+                                                modifier = Modifier.size(40.dp),
+                                                shape = CircleShape,
+                                                color = contact.avatarBg.copy(alpha = 0.8f)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        color = contact.avatarTextColor,
+                                                        fontWeight = FontWeight.SemiBold
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        trailingContent = {
+                                            IconButton(
+                                                onClick = {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    onCallClick(contact.number)
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Call,
+                                                    contentDescription = "Call",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                            }
+                                        },
+                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                                     )
                                 }
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    text = contact.name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
                             }
                         }
                     }
                 }
             }
         } else {
-            Text(
-                text = "Dial Pad",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(bottom = 4.dp, start = 4.dp, top = 8.dp)
-            )
+            // Push dialpad down when there is no input
+            Spacer(modifier = Modifier.weight(1f))
         }
 
         // Elegant Display Screen

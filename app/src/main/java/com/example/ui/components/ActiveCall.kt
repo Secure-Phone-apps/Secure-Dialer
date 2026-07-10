@@ -37,6 +37,10 @@ import com.example.CallManager
 import com.example.model.Contact
 import kotlinx.coroutines.delay
 
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
@@ -96,11 +100,65 @@ fun ActiveCallScreen(
     }
 
     val context = LocalContext.current
+    var isNear by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = surfaceColor
-    ) {
+    DisposableEffect(context) {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+        val proximitySensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PROXIMITY)
+        
+        val listener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event != null && event.sensor.type == Sensor.TYPE_PROXIMITY) {
+                    val distance = event.values[0]
+                    isNear = distance < event.sensor.maximumRange && distance < 5f
+                }
+            }
+
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+
+        if (sensorManager != null && proximitySensor != null) {
+            sensorManager.registerListener(
+                listener,
+                proximitySensor,
+                SensorManager.SENSOR_DELAY_NORMAL
+            )
+        }
+
+        onDispose {
+            sensorManager?.unregisterListener(listener)
+        }
+    }
+
+    val activity = context as? android.app.Activity
+    LaunchedEffect(isNear) {
+        activity?.window?.let { window ->
+            val params = window.attributes
+            if (isNear) {
+                params.screenBrightness = 0.01f
+            } else {
+                params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            }
+            window.attributes = params
+        }
+    }
+
+    // Ensure screen brightness resets to default when the active call screen is exited
+    DisposableEffect(Unit) {
+        onDispose {
+            activity?.window?.let { window ->
+                val params = window.attributes
+                params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                window.attributes = params
+            }
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = surfaceColor
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -546,6 +604,20 @@ fun ActiveCallScreen(
                     )
                 }
             }
+        }
+        }
+
+        if (isNear) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black)
+                    .clickable(
+                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                        indication = null,
+                        onClick = { /* Consume clicks to prevent accidental touch */ }
+                    )
+            )
         }
     }
 }

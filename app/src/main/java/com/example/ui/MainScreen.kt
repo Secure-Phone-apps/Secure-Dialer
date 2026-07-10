@@ -219,12 +219,13 @@ fun MainScreen(
                     }
                 }
 
-                HeaderSearchBar(
-                    searchQuery = searchQuery,
-                    onQueryChange = { viewModel.onSearchQueryChange(it) },
-                    onSettingsClick = { isSettingsVisible = true },
-                    onProfileClick = { isSettingsVisible = true }
-                )
+                if (selectedTab != 2) {
+                    HeaderSearchBar(
+                        searchQuery = searchQuery,
+                        onQueryChange = { viewModel.onSearchQueryChange(it) },
+                        onSettingsClick = { isSettingsVisible = true }
+                    )
+                }
 
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     androidx.compose.animation.Crossfade(
@@ -294,12 +295,12 @@ fun MainScreen(
 
             if (isAddContactDialogVisible) {
                 AddContactDialog(
-                    name = newContactName, onNameChange = { newContactName = it },
-                    number = newContactNumber, onNumberChange = { newContactNumber = it },
-                    label = newContactLabel, onLabelChange = { newContactLabel = it },
+                    initialName = "",
+                    initialNumber = "",
+                    initialLabel = "Mobile",
                     onDismiss = { isAddContactDialogVisible = false },
-                    onConfirm = {
-                        viewModel.addContact(newContactName, newContactNumber, newContactLabel)
+                    onConfirm = { name, number, label ->
+                        viewModel.addContact(name, number, label)
                         isAddContactDialogVisible = false
                     }
                 )
@@ -307,14 +308,14 @@ fun MainScreen(
 
             if (isEditContactDialogVisible && oldContactToEdit != null) {
                 AddContactDialog(
-                    name = editContactName, onNameChange = { editContactName = it },
-                    number = editContactNumber, onNumberChange = { editContactNumber = it },
-                    label = editContactLabel, onLabelChange = { editContactLabel = it },
+                    initialName = oldContactToEdit!!.name,
+                    initialNumber = oldContactToEdit!!.number,
+                    initialLabel = oldContactToEdit!!.label,
                     onDismiss = { isEditContactDialogVisible = false },
-                    onConfirm = {
-                        // Use delete then add for simple update in this mock context or add updateContact to repo
+                    onConfirm = { name, number, label ->
+                        // Use delete then add for simple update in this context
                         viewModel.deleteContact(oldContactToEdit!!.number)
-                        viewModel.addContact(editContactName, editContactNumber, editContactLabel)
+                        viewModel.addContact(name, number, label)
                         isEditContactDialogVisible = false
                     }
                 )
