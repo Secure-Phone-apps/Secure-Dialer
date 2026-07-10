@@ -148,7 +148,7 @@ fun ContactsTabContent(
             } else {
                 LazyColumn(
                     state = listState,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize().padding(end = 24.dp)
                 ) {
                     items(
@@ -261,6 +261,26 @@ fun ContactRow(
     val haptic = LocalHapticFeedback.current
     var isExpanded by remember { mutableStateOf(false) }
 
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val containerColor = if (isExpanded) {
+        if (isDark) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+        }
+    } else {
+        if (isDark) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
+        }
+    }
+    val borderColor = if (isDark) {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+    } else {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -269,28 +289,40 @@ fun ContactRow(
                 isExpanded = !isExpanded
             },
         colors = CardDefaults.cardColors(
-            containerColor = if (isExpanded) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f) else Color.Transparent
+            containerColor = containerColor
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = borderColor
+        )
     ) {
         Column {
             ListItem(
                 headlineContent = {
-                    Text(
-                        text = contact.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Column(
+                        modifier = Modifier.offset(x = (-8).dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = contact.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            lineHeight = 18.sp
+                        )
+                        Text(
+                            text = "${contact.label} • ${contact.number}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 },
-                supportingContent = {
-                    Text(
-                        text = "${contact.label} • ${contact.number}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                },
+                supportingContent = null,
                 leadingContent = {
                     Surface(
-                        modifier = Modifier.size(44.dp),
+                        modifier = Modifier
+                            .offset(x = (-8).dp)
+                            .size(44.dp),
                         shape = CircleShape,
                         color = contact.avatarBg
                     ) {

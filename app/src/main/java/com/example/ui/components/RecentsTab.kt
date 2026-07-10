@@ -150,69 +150,42 @@ fun RecentsTabContent(
                 )
             }
         } else {
-            val filteredAndGrouped = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed) {
+            val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed) {
                 val baseFiltered = callRecordsPaged.itemSnapshotList.items
                     .filter { if (filterByMissed) it.type == CallType.MISSED else true }
                 
-                val dateGrouped = baseFiltered.groupBy { record ->
-                    when {
-                        record.timestamp.contains("Today", ignoreCase = true) -> "Today"
-                        record.timestamp.contains("Yesterday", ignoreCase = true) -> "Yesterday"
-                        else -> "Older"
-                    }
-                }
-
-                // Further group consecutive calls from the same number within each date group
-                dateGrouped.mapValues { (_, records) ->
-                    val consolidated = mutableListOf<CallGroup>()
-                    if (records.isNotEmpty()) {
-                        var currentGroup = mutableListOf(records[0])
-                        for (i in 1 until records.size) {
-                            if (records[i].number == currentGroup.last().number) {
-                                currentGroup.add(records[i])
-                            } else {
-                                consolidated.add(CallGroup(currentGroup[0], currentGroup.toList()))
-                                currentGroup = mutableListOf(records[i])
-                            }
+                val consolidated = mutableListOf<CallGroup>()
+                if (baseFiltered.isNotEmpty()) {
+                    var currentGroup = mutableListOf(baseFiltered[0])
+                    for (i in 1 until baseFiltered.size) {
+                        if (baseFiltered[i].number == currentGroup.last().number) {
+                            currentGroup.add(baseFiltered[i])
+                        } else {
+                            consolidated.add(CallGroup(currentGroup[0], currentGroup.toList()))
+                            currentGroup = mutableListOf(baseFiltered[i])
                         }
-                        consolidated.add(CallGroup(currentGroup[0], currentGroup.toList()))
                     }
-                    consolidated
+                    consolidated.add(CallGroup(currentGroup[0], currentGroup.toList()))
                 }
+                consolidated
             }
 
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                modifier = Modifier.fillMaxSize()
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(vertical = 4.dp)
             ) {
-                filteredAndGrouped.forEach { (dateGroup, consolidatedGroups) ->
-                    stickyHeader(key = "header_$dateGroup") {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                        ) {
-                            Text(
-                                text = dateGroup.uppercase(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 8.dp),
-                                letterSpacing = 1.sp
-                            )
-                        }
-                    }
-
-                    items(
-                        items = consolidatedGroups,
-                        key = { it.primary.id }
-                    ) { group ->
-                        RecentCallRow(
-                            group = group,
-                            onCallClick = { onCallClick(group.primary) },
-                            onDeleteRecord = { onDeleteRecord(group.primary.id) },
-                            getHistory = { viewModel.getCallHistoryByNumber(it) }
-                        )
-                    }
+                items(
+                    items = consolidatedRecords,
+                    key = { it.primary.id }
+                ) { group ->
+                    RecentCallRow(
+                        group = group,
+                        onCallClick = { onCallClick(group.primary) },
+                        onDeleteRecord = { onDeleteRecord(group.primary.id) },
+                        getHistory = { viewModel.getCallHistoryByNumber(it) }
+                    )
                 }
 
                 if (callRecordsPaged.loadState.append is LoadState.Loading) {
@@ -248,65 +221,97 @@ fun RecentCallRow(
         }
     }
 
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val containerColor = if (isExpanded) {
+        if (isDark) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
+        }
+    } else {
+        if (isDark) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
+        } else {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
+        }
+    }
+    val borderColor = if (isDark) {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+    } else {
+        MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 isExpanded = !isExpanded
             },
         colors = CardDefaults.cardColors(
-            containerColor = if (isExpanded) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f) else Color.Transparent
+            containerColor = containerColor
+        ),
+        shape = RoundedCornerShape(16.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 1.dp,
+            color = borderColor
         )
     ) {
         Column {
             ListItem(
                 headlineContent = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = record.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
-                        )
-                        if (group.calls.size > 1) {
+                    Column(
+                        modifier = Modifier.offset(x = (-8).dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = " (${group.calls.size})",
-                                style = MaterialTheme.typography.bodyMedium,
+                                text = record.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = FontWeight.Medium,
+                                lineHeight = 18.sp,
+                                color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f, fill = false)
+                            )
+                            if (group.calls.size > 1) {
+                                Text(
+                                    text = " (${group.calls.size})",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            val (icon, iconColor) = when (record.type) {
+                                CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
+                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF4CAF50)
+                                CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = iconColor,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            
+                            val label = if (record.label.isNotBlank()) "${record.label} • " else ""
+                            Text(
+                                text = "$label${record.timestamp}",
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
                 },
-                supportingContent = {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        val (icon, iconColor) = when (record.type) {
-                            CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-                            CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF4CAF50)
-                            CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
-                        }
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = null,
-                            tint = iconColor,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        
-                        val label = if (record.label.isNotBlank()) "${record.label} • " else ""
-                        Text(
-                            text = "$label${record.timestamp}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                },
+                supportingContent = null,
                 leadingContent = {
                     Surface(
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier
+                            .offset(x = (-8).dp)
+                            .size(40.dp),
                         shape = CircleShape,
                         color = record.avatarBg.copy(alpha = 0.8f)
                     ) {
