@@ -141,26 +141,28 @@ fun MainScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        hasContactsPermission = permissions[Manifest.permission.READ_CONTACTS] ?: false
-        hasCallLogPermission = permissions[Manifest.permission.READ_CALL_LOG] ?: false
+        val contactsGranted = permissions[Manifest.permission.READ_CONTACTS] ?: false
+        val callLogGranted = permissions[Manifest.permission.READ_CALL_LOG] ?: false
+        hasContactsPermission = contactsGranted
+        hasCallLogPermission = callLogGranted
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             hasNotificationPermission = permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
         }
         isLoadingPermissions = false
-        if (hasContactsPermission || hasCallLogPermission) {
+        if (contactsGranted || callLogGranted) {
             viewModel.startDataSyncAndObservation()
         }
     }
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
-            hasContactsPermission = true
-        }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
-            hasCallLogPermission = true
-        }
+        val contactsGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+        val callLogGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
         
-        if (hasContactsPermission || hasCallLogPermission) {
+        hasContactsPermission = contactsGranted
+        hasCallLogPermission = callLogGranted
+        isLoadingPermissions = false
+        
+        if (contactsGranted || callLogGranted) {
             viewModel.startDataSyncAndObservation()
         }
 

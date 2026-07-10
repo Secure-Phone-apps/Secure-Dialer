@@ -150,9 +150,8 @@ fun RecentsTabContent(
                 )
             }
         } else {
-            val recordsSnapshot = callRecordsPaged.itemSnapshotList
-            val filteredAndGrouped = remember(recordsSnapshot, filterByMissed) {
-                val baseFiltered = recordsSnapshot.items
+            val filteredAndGrouped = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed) {
+                val baseFiltered = callRecordsPaged.itemSnapshotList.items
                     .filter { if (filterByMissed) it.type == CallType.MISSED else true }
                 
                 val dateGrouped = baseFiltered.groupBy { record ->
