@@ -161,9 +161,42 @@ class DialerRepository(private val context: Context) {
     }
 
     suspend fun toggleFavorite(number: String, isFavorite: Boolean) {
-        val values = ContentValues().apply { put(ContactsContract.Contacts.STARRED, if (isFavorite) 1 else 0) }
-        context.contentResolver.update(ContactsContract.Contacts.CONTENT_URI, values, "${Phone.NUMBER} = ?", arrayOf(number))
+        try {
+            val contactId = getContactIdFromNumber(number)
+            if (contactId != null) {
+                val values = ContentValues().apply { put(ContactsContract.Contacts.STARRED, if (isFavorite) 1 else 0) }
+                context.contentResolver.update(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    values,
+                    "${ContactsContract.Contacts._ID} = ?",
+                    arrayOf(contactId)
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         dao.getContactByNumber(number)?.let { dao.updateContact(it.copy(favorite = isFavorite)) }
+    }
+
+    private fun getContactIdFromNumber(number: String): String? {
+        try {
+            val uri = Uri.withAppendedPath(
+                ContactsContract.PhoneLookup.CONTENT_FILTER_URI,
+                Uri.encode(number)
+            )
+            val projection = arrayOf(ContactsContract.PhoneLookup._ID)
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val idIndex = cursor.getColumnIndex(ContactsContract.PhoneLookup._ID)
+                    if (idIndex >= 0) {
+                        return cursor.getString(idIndex)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 
     // --- Settings Persistence ---

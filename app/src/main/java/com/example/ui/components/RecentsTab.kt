@@ -172,7 +172,7 @@ fun RecentsTabContent(
                     RecentCallRow(
                         group = group,
                         onCallClick = { onCallClick(group.primary) },
-                        onDeleteRecord = { onDeleteRecord(group.primary.id) },
+                        onDeleteRecord = { id -> onDeleteRecord(id) },
                         getHistory = { viewModel.getCallHistoryByNumber(it) }
                     )
                 }
@@ -193,7 +193,7 @@ fun RecentsTabContent(
 fun RecentCallRow(
     group: CallGroup,
     onCallClick: () -> Unit,
-    onDeleteRecord: () -> Unit,
+    onDeleteRecord: (Int) -> Unit,
     getHistory: suspend (String) -> List<CallRecord>
 ) {
     val record = group.primary
@@ -333,33 +333,6 @@ fun RecentCallRow(
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
                     
-                    // Primary Actions Row
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        ActionItem(
-                            icon = Icons.Default.Call,
-                            label = "Call",
-                            onClick = onCallClick,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        ActionItem(
-                            icon = Icons.Default.Delete,
-                            label = "Delete",
-                            onClick = onDeleteRecord,
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-
                     if (isLoadingHistory) {
                         LinearProgressIndicator(
                             modifier = Modifier.fillMaxWidth().height(2.dp).padding(horizontal = 16.dp)
@@ -368,7 +341,13 @@ fun RecentCallRow(
 
                     Column {
                         history.take(5).forEach { historyRecord ->
-                            HistorySubItem(historyRecord)
+                            HistorySubItem(
+                                record = historyRecord,
+                                onDeleteClick = {
+                                    onDeleteRecord(historyRecord.id)
+                                    history = history.filter { it.id != historyRecord.id }
+                                }
+                            )
                         }
                         
                         if (history.size > 5) {
@@ -377,6 +356,39 @@ fun RecentCallRow(
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 modifier = Modifier.padding(start = 72.dp, top = 8.dp)
+                            )
+                        }
+                    }
+
+                    if (history.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Button(
+                            onClick = {
+                                history.forEach { r -> onDeleteRecord(r.id) }
+                                history = emptyList()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                                .height(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Delete All Call History",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -417,7 +429,7 @@ fun ActionItem(
 }
 
 @Composable
-fun HistorySubItem(record: CallRecord) {
+fun HistorySubItem(record: CallRecord, onDeleteClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -464,6 +476,15 @@ fun HistorySubItem(record: CallRecord) {
                 text = "$typeText$durationText",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        IconButton(onClick = onDeleteClick) {
+            Icon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = "Delete call log entry",
+                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
+                modifier = Modifier.size(20.dp)
             )
         }
     }
