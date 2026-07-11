@@ -1,0 +1,14 @@
+A lightweight, fast, and privacy-first Android phone dialer built with Jetpack Compose. 100% offline with zero internet permissions.
+
+In an era of digital surveillance, monetization of telemetry, and commercialization of personal interactions, Secure Dialer is built with an absolute, unbreakable promise: your contacts, call logs, and phone calls are strictly your own business.
+
+Secure Dialer avoids wrapping heavy, untrusted third-party SDKs that bleed telemetry. Instead, it interacts directly and safely with the native Android Operating System. The result is a lightning-fast, privacy-hardened app that respects your system resources, preserves your battery, and guarantees that your data stays on your device.
+
+Key Features:
+- 📱 Complete offline design with absolutely zero Internet permission requested.
+- 🎨 Material 3 design with dark mode and dynamic color support.
+- 📞 Full-featured dialer with search, speed dial, and custom call blocking.
+- 🗂️ Local contact management and detailed recent logs grouped by date.
+- ⭐ Quick-access Favorites tab to call your starred contacts in a single tap.
+- 🔒 Highly optimized active call handling utilizing native Android Telecom APIs.
+- ⚡ Privacy-hardened architecture with fine-grained attribution tags for auditing.

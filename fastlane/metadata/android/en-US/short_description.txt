@@ -1,0 +1,1 @@
+Lightweight, fast, and privacy-first Android dialer. 100% offline.

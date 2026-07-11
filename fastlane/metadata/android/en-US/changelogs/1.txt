@@ -1,0 +1,5 @@
+- Initial release of Secure Dialer.
+- Privacy-first design with 100% offline functionality.
+- Material 3 theme and dynamic colors.
+- Expandable call logs, smart grouping, and A-Z fast scroller.
+- Robust call screening and permission-attribution tracking.

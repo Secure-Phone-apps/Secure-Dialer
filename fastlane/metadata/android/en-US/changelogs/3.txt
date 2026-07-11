@@ -1,0 +1,5 @@
+- Added a dedicated Favorites tab in bottom navigation.
+- Added Material 3 cards for starred contacts.
+- Fixed call type identification in notifications (ringing state triggers).
+- Corrected missed call notification triggers to ignore outgoing/local rejects.
+- Fixed call log deletion to properly sync with system CallLog.
