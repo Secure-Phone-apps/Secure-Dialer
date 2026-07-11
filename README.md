@@ -1,6 +1,6 @@
 # Secure Dialer 📞 
 
-[![GitHub license](https://img.shields.io/github/license/securephoneapps/securedialer?color=blue&style=flat-square)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-purple?style=flat-square&logo=kotlin)](https://kotlinlang.org/)
 [![Android SDK](https://img.shields.io/badge/Android-SDK%2024%20to%2036-green?style=flat-square&logo=android)](https://developer.android.com)
 [![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Compatible-brightgreen?style=flat-square&logo=f-droid)](https://f-droid.org)
@@ -15,7 +15,7 @@
 
 In an era of digital surveillance, monetization of telemetry, and commercialization of personal interactions, **Secure Dialer** is built with an absolute, unbreakable promise: **your contacts, call logs, and phone calls are strictly your own business.**
 
-As the flagship application of the **[secure-phone-apps](https://github.com/securephoneapps)** ecosystem, Secure Dialer avoids wrapping heavy, untrusted third-party SDKs that bleed telemetry. Instead, it interacts directly and safely with the native Android Operating System. 
+As the flagship application of the **[secure-phone-apps](https://github.com/secure-phone-apps)** ecosystem, Secure Dialer avoids wrapping heavy, untrusted third-party SDKs that bleed telemetry. Instead, it interacts directly and safely with the native Android Operating System. 
 
 The result is a lightning-fast, privacy-hardened app that respects your system resources, preserves your battery, and guarantees that your data stays on your device.
 
@@ -67,7 +67,7 @@ Secure Dialer is crafted with clean, modern development patterns:
 ### Build Instructions
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/securephoneapps/securedialer.git
+   git clone https://github.com/secure-phone-apps/secure-dialer.git
    ```
 2. **Open the project** in Android Studio and let Gradle synchronize.
 3. **Build the Debug APK:**
@@ -83,7 +83,7 @@ Secure Dialer is crafted with clean, modern development patterns:
 
 We welcome open-source contributions to make the secure mobile ecosystem stronger! Before contributing, please review our [Security Policy](.github/SECURITY.md).
 
-* **Bug Reports & Features:** Please use our standardized templates when opening an [issue](https://github.com/securephoneapps/securedialer/issues).
+* **Bug Reports & Features:** Please use our standardized templates when opening an [issue](https://github.com/secure-phone-apps/secure-dialer/issues).
 * **Vulnerability Disclosure:** Please report security issues privately via GitHub Security Advisories or by emailing `movstore.online@gmail.com`.
 
 ---
@@ -94,4 +94,4 @@ This project is licensed under the **MIT License**. It is fully open-source, per
 
 ---
 
-*Secure Dialer is built and maintained by **[Secure Phone Apps](https://github.com/securephoneapps)**. Simple, transparent, offline utility apps for Android.*
+*Secure Dialer is built and maintained by **[Secure Phone Apps](https://github.com/secure-phone-apps)**. Simple, transparent, offline utility apps for Android.*
