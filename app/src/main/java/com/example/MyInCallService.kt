@@ -19,7 +19,9 @@ class MyInCallService : InCallService() {
             CallManager.updateCall(call)
         }
         
-        showIncomingCallNotification(call)
+        if (call.state == Call.STATE_RINGING) {
+            showIncomingCallNotification(call)
+        }
 
         // Register callback to track call status and show missed call notifications if applicable
         call.registerCallback(object : Call.Callback() {
@@ -36,9 +38,12 @@ class MyInCallService : InCallService() {
                     notificationManager.cancel(1)
                 }
                 if (state == Call.STATE_DISCONNECTED) {
-                    val isIncoming = c.details?.callDirection == Call.Details.DIRECTION_INCOMING
-                    if (isIncoming && wasRinging) {
-                        showMissedCallNotification(c)
+                    if (wasRinging) {
+                        val causeCode = c.details?.disconnectCause?.code
+                        if (causeCode != android.telecom.DisconnectCause.REJECTED &&
+                            causeCode != android.telecom.DisconnectCause.LOCAL) {
+                            showMissedCallNotification(c)
+                        }
                     }
                     c.unregisterCallback(this)
                 }

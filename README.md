@@ -1,70 +1,90 @@
-# Secure Dialer 📞
+# Secure Dialer 📞 
+
+[![GitHub license](https://img.shields.io/github/license/securephoneapps/securedialer?color=blue&style=flat-square)](LICENSE)
+[![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-purple?style=flat-square&logo=kotlin)](https://kotlinlang.org/)
+[![Android SDK](https://img.shields.io/badge/Android-SDK%2024%20to%2036-green?style=flat-square&logo=android)](https://developer.android.com)
+[![F-Droid Compatible](https://img.shields.io/badge/F--Droid-Compatible-brightgreen?style=flat-square&logo=f-droid)](https://f-droid.org)
+[![Security Rating](https://img.shields.io/badge/Security-Privacy--First-darkgreen?style=flat-square&logo=shield)](.github/SECURITY.md)
 
 > **Trust, Clarity, and Uncompromising Privacy.**  
-> A lightweight, modern, and secure calling assistant built with Jetpack Compose and native Android components.
+> A lightweight, modern, and offline-first phone dialer built with Jetpack Compose, Material 3, and native Android Framework components.
 
 ---
 
-## 🌟 The Philosophy
+## 🌟 The Philosophy of Secure Phone Apps
 
-In a world where digital communication is increasingly monitored and commoditized, **Secure Dialer** is built with a singular, unyielding promise: **your conversations, contacts, and call histories belong exclusively to you.** 
+In an era of digital surveillance, monetization of telemetry, and commercialization of personal interactions, **Secure Dialer** is built with an absolute, unbreakable promise: **your contacts, call logs, and phone calls are strictly your own business.**
 
-Rather than wrapping heavy, speculative third-party libraries that bleed data, Secure Dialer acts as a direct, elegant window into native Android framework layers. The result is an incredibly fast, secure, and privacy-first application that respects your device, your battery, and your peace of mind.
+As the flagship application of the **[secure-phone-apps](https://github.com/securephoneapps)** ecosystem, Secure Dialer avoids wrapping heavy, untrusted third-party SDKs that bleed telemetry. Instead, it interacts directly and safely with the native Android Operating System. 
 
----
-
-## ✨ Key Features
-
-### 🔒 1. Uncompromising Privacy & Security
-* **On-Device Only:** Your contacts, call logs, and calling analytics never leave your device. There are no background server syncs, no telemetry tracker SDKs, and no analytics engines.
-* **On-Demand Permission Consent:** Android runtime permissions (like `CALL_PHONE` and `READ_CONTACTS`) are requested strictly on-demand, with clear, high-contrast visual cues so you remain in absolute control of your data.
-* **AppOps Attribution Auditing:** Fully configured with native Android `attribution` tagging, ensuring transparent data access that is easily auditable by the system.
-
-### ⚡ 2. High-Performance Native Integration
-* **Telecom Framework Integration:** By using native Android `TelecomManager` and `InCallService` APIs instead of bloated custom engines, Secure Dialer ensures perfect reliability for incoming/outgoing calls, background service handling, and carrier network handshakes.
-* **Native Contacts Contract:** Direct synchronization with standard system contacts (`ContactsContract`) ensures memory-efficiency, fluid searches, and zero redundant storage.
-
-### 🎨 3. Elegant Jetpack Compose UI (Material 3)
-* **Fluid Layouts:** A beautiful, responsive interface styled following Material Design 3 guidelines.
-* **Dynamic Dark/Light Mode:** Seamless adaptive colors that react perfectly to system preferences, reducing eye strain and saving battery.
-* **Touch-Target Precision:** Follows strict accessibility standards with large, touch-safe dialer keys (minimum 48dp x 48dp) and readable headings.
-
-### 🧹 4. Extremely Lightweight Codebase
-* Streamlined and optimized using clean **MVVM architecture**.
-* Redundant logic, useless boilerplate, and legacy wrappers have been ruthlessly eliminated for lightning-fast application launches and minimal APK footprint.
+The result is a lightning-fast, privacy-hardened app that respects your system resources, preserves your battery, and guarantees that your data stays on your device.
 
 ---
 
-## 🛠️ Technical Highlights
+## 🔒 Complete Offline & Zero-Internet Guarantee (Auditable)
 
-* **Language:** Kotlin (100%)
-* **UI Framework:** Jetpack Compose (Material Design 3)
-* **Default Dialer Role:** Fully integrates with Android's `RoleManager` (`RoleManager.ROLE_DIALER`) for API 29+ devices, and falls back gracefully to `ACTION_CHANGE_DEFAULT_DIALER` on older devices.
-* **State Management:** Reactive architecture using `ViewModel` and `MutableStateFlow` to guarantee a completely lag-free user experience.
+Unlike standard dialers or commercial caller-ID apps that require full network privileges to function, **Secure Dialer does not request the Android Internet Permission (`android.permission.INTERNET`)**.
+
+This simple, verifiable design makes it **physically impossible** for the app to:
+* Transmit your dial history or caller IDs to remote cloud servers.
+* Leak contact cards, address details, or user notes.
+* Run background advertising SDKs or tracking beacons.
+* Participate in shadow profiling.
+
+### How to Verify:
+Open [app/src/main/AndroidManifest.xml](app/src/main/AndroidManifest.xml) and inspect the declared permissions. You will find standard telephony permissions, but **absolutely no** `<uses-permission android:name="android.permission.INTERNET" />`.
+
+---
+
+## ✨ Features
+
+* **🛡️ Default Dialer Role:** Seamlessly integrates as the system default call handler via Android's `RoleManager` (API 29+) or legacy system intents.
+* **📱 Call Blocking & Screening:** Robust incoming call screening to automatically filter out spam, unknown callers, and blocked contacts on-device without exposing your blocklist to external services.
+* **🌟 Smart Favorites:** Easily favorite and toggle key contacts on your dashboard.
+* **🕰️ Transactional Call History:** Manage Recents with a granular transactional history layout. Tap any recent caller to view their historical calls and easily delete any single transition or clear everything.
+* **🎨 Material 3 Edge-to-Edge Design:** Fully optimized with dynamic light/dark schemas, comfortable 48dp+ accessibility touch-targets, and responsive, fluid Jetpack Compose layouts.
+* **📂 Local Address Book Sync:** Integrates directly with standard Android `ContactsContract` using memory-efficient cursors.
+
+---
+
+## 📐 Architecture & Security
+
+Secure Dialer is crafted with clean, modern development patterns:
+* **UI Layer:** Jetpack Compose (Material Design 3) following edge-to-edge system insets.
+* **Architecture:** Model-View-ViewModel (MVVM) for modular state flows.
+* **Persistence:** Android Local Room database to track custom configuration parameters, call blocking, and offline preferences securely.
+* **Framework APIs:** Uses direct native Android `TelecomManager`, `InCallService`, and `CallScreeningService` pipelines for standard phone calling operations, avoiding custom, untested background handlers.
 
 ---
 
 ## 🚀 How to Build and Run
 
 ### Prerequisites
-1. **Android Studio** (Koala or newer recommended).
-2. **Android SDK 34** or higher.
-3. Gradle Kotlin DSL.
+* **Android Studio** (Koala or newer recommended)
+* **JDK 17**
+* **Android SDK 24** (Minimum) to **SDK 36** (Target)
 
-### Steps
-1. Clone the repository to your local workspace.
-2. Open the project in Android Studio.
-3. Wait for the Gradle sync to finish.
-4. Run the `:app` configuration on your physical device or emulator.
-5. Set **Secure Dialer** as your system's default dialer when prompted to unlock full call-handling functionality!
+### Build Instructions
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/securephoneapps/securedialer.git
+   ```
+2. **Open the project** in Android Studio and let Gradle synchronize.
+3. **Build the Debug APK:**
+   ```bash
+   ./gradlew assembleDebug
+   ```
+4. **Deploy** to your physical Android device.
+5. Set **Secure Dialer** as your default calling app to activate background screening, interactive calling overlays, and logs management.
 
 ---
 
-## 🤝 Connected and Trusted
+## 🤝 Contributing & Security Reports
 
-Secure Dialer is more than just another utility—it is a commitment to a clean, stress-free mobile experience. By treating permission prompts, user inputs, and screen layouts with absolute visual transparency, we aim to deliver an experience where technology serves you, and only you.
+We welcome open-source contributions to make the secure mobile ecosystem stronger! Before contributing, please review our [Security Policy](.github/SECURITY.md).
 
-We believe that great software is defined not by how much code is written, but by how much unnecessary code is **cut**. 
+* **Bug Reports & Features:** Please use our standardized templates when opening an [issue](https://github.com/securephoneapps/securedialer/issues).
+* **Vulnerability Disclosure:** Please report security issues privately via GitHub Security Advisories or by emailing `movstore.online@gmail.com`.
 
 ---
 
@@ -74,4 +94,4 @@ This project is licensed under the **MIT License**. It is fully open-source, per
 
 ---
 
-*Made with 💙 and 🛡️ for Android.*
+*Secure Dialer is built and maintained by **[Secure Phone Apps](https://github.com/securephoneapps)**. Simple, transparent, offline utility apps for Android.*

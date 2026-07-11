@@ -11,6 +11,9 @@ interface DialerDao {
     @Query("SELECT * FROM contacts ORDER BY name ASC")
     fun getContactsPaged(): PagingSource<Int, Contact>
 
+    @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name ASC")
+    fun getFavoriteContacts(): Flow<List<Contact>>
+
     @Query("SELECT * FROM contacts WHERE name LIKE :query OR number LIKE :query OR t9Mapping LIKE :query ORDER BY name ASC")
     fun searchContacts(query: String): PagingSource<Int, Contact>
 

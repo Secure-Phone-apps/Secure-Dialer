@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.getBooleanExtra("SHOW_CALL_LOG", false) == true) {
-            viewModel.selectedTab.value = 0
+            viewModel.selectedTab.value = 1
         }
     }
 

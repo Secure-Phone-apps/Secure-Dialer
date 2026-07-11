@@ -37,6 +37,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val callHistoryPaged: Flow<PagingData<CallRecord>> = repository.getCallHistoryPaged()
         .cachedIn(viewModelScope)
 
+    val favoriteContacts: StateFlow<List<Contact>> = repository.getFavoriteContacts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // UI State
     var isDialpadVisible = mutableStateOf(false)
     var dialpadInput = mutableStateOf("")

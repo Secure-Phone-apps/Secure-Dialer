@@ -101,9 +101,10 @@ fun BottomNavBar(
         tonalElevation = 0.dp
     ) {
         val items = listOf(
-            Triple(0, "Recents", Icons.Default.History),
-            Triple(1, "Contacts", Icons.Default.Person),
-            Triple(2, "Dialpad", Icons.Default.Call)
+            Triple(0, "Favorites", Icons.Default.Star),
+            Triple(1, "Recents", Icons.Default.History),
+            Triple(2, "Contacts", Icons.Default.Person),
+            Triple(3, "Dialpad", Icons.Default.Call)
         )
 
         items.forEach { (index, label, icon) ->

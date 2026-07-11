@@ -29,6 +29,10 @@ class DialerRepository(private val context: Context) {
         ).flow
     }
 
+    fun getFavoriteContacts(): Flow<List<Contact>> {
+        return dao.getFavoriteContacts()
+    }
+
     fun getCallHistoryPaged(): Flow<PagingData<CallRecord>> {
         return Pager(
             config = PagingConfig(pageSize = 50, enablePlaceholders = false),
@@ -154,6 +158,17 @@ class DialerRepository(private val context: Context) {
 
     suspend fun deleteCallLog(id: Int) {
         dao.deleteCallLog(id)
+        try {
+            context.contentResolver.delete(
+                CallLog.Calls.CONTENT_URI,
+                "${CallLog.Calls._ID} = ?",
+                arrayOf(id.toString())
+            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     suspend fun getCallHistoryByNumber(number: String): List<CallRecord> {

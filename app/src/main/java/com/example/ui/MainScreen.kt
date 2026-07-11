@@ -80,6 +80,8 @@ fun MainScreen(
     val speedDialEntities by viewModel.speedDialFlow.collectAsState()
     val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
 
+    val favoriteContacts by viewModel.favoriteContacts.collectAsState()
+
     var selectedTab by viewModel.selectedTab
     val searchQuery by viewModel.searchQuery
     var isDialpadVisible by viewModel.isDialpadVisible
@@ -221,7 +223,7 @@ fun MainScreen(
                     }
                 }
 
-                if (selectedTab != 2) {
+                if (selectedTab != 3) {
                     HeaderSearchBar(
                         searchQuery = searchQuery,
                         onQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -235,7 +237,12 @@ fun MainScreen(
                         label = "tab_transition"
                     ) { tabIndex ->
                         when (tabIndex) {
-                            0 -> RecentsTabContent(
+                            0 -> FavoritesTabContent(
+                                contacts = favoriteContacts,
+                                onCallClick = { name, number -> initiateCall(name, number) },
+                                onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) }
+                            )
+                            1 -> RecentsTabContent(
                                 viewModel = viewModel,
                                 callRecordsPaged = callHistoryPaged,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
@@ -243,7 +250,7 @@ fun MainScreen(
                                 hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
                                 onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
                             )
-                            1 -> ContactsTabContent(
+                            2 -> ContactsTabContent(
                                 contactsPaged = contactsPaged,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
                                 onAddContactClick = { isAddContactDialogVisible = true },
@@ -253,7 +260,7 @@ fun MainScreen(
                                 onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
                                 onDeleteContact = { it -> viewModel.deleteContact(it.number) }
                             )
-                            2 -> DialpadTabContent(
+                            3 -> DialpadTabContent(
                                 inputValue = dialpadInput,
                                 onValueChange = {
                                     if (it.length > dialpadInput.length) {
