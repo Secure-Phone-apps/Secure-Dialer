@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2026-07-10
+
+### Added
+- **Favorites Tab**: Implemented a dedicated "Favorites" tab in the bottom navigation bar to directly view and call your starred contacts.
+- **Polished Visuals for Favorites**: Added elegant Material 3 background card containers with proper spacing, color accents, and a streamlined layout that matches the Contacts and Recents tab.
+
+### Fixed
+- **Call Type Identification in Notifications**: Fixed an issue where all calls showed up as "Incoming call" in active notifications by correctly filtering active call notification triggers to only fire during `STATE_RINGING`.
+- **Missed Call Notification Triggering**: Restored missed call notifications to prompt only for actual missed incoming calls, ignoring local rejections or completed outgoing calls.
+- **Persistent Call Log Deletion**: Fixed an issue where deleted recent calls reappeared on app restart by correctly deleting them from both the internal SQLite Room database and the Android system content resolver (`CallLog.Calls`).
+
 ## [1.0.1] - 2026-07-09
 
 ### Fixed

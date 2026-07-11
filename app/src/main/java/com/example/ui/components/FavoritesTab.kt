@@ -73,31 +73,47 @@ fun FavoritesTabContent(
                 contentPadding = PaddingValues(bottom = 80.dp) // Space for Dialpad overlay
             ) {
                 items(contacts, key = { "${it.name}_${it.number}" }) { contact ->
+                    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+                    val containerColor = if (isDark) {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
+                    }
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onCallClick(contact.name, contact.number) },
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                            containerColor = containerColor
                         ),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         ListItem(
                             headlineContent = {
-                                Text(
-                                    text = contact.name,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
+                                Column(
+                                    modifier = Modifier.offset(x = (-8).dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        text = contact.name,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
+                                        lineHeight = 18.sp
+                                    )
+                                    Text(
+                                        text = "${contact.label} • ${contact.number}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             },
-                            supportingContent = {
-                                Text(
-                                    text = "${contact.label} • ${contact.number}",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            },
+                            supportingContent = null,
                             leadingContent = {
                                 Surface(
-                                    modifier = Modifier.size(48.dp),
+                                    modifier = Modifier
+                                        .offset(x = (-8).dp)
+                                        .size(44.dp),
                                     shape = CircleShape,
                                     color = contact.avatarBg
                                 ) {
@@ -111,12 +127,15 @@ fun FavoritesTabContent(
                                 }
                             },
                             trailingContent = {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
                                     IconButton(onClick = { onToggleFavorite(contact) }) {
                                         Icon(
                                             imageVector = Icons.Default.Star,
                                             contentDescription = "Unstar",
-                                            tint = MaterialTheme.colorScheme.primary
+                                            tint = Color(0xFFEAB308)
                                         )
                                     }
                                     IconButton(
@@ -124,15 +143,18 @@ fun FavoritesTabContent(
                                         colors = IconButtonDefaults.filledIconButtonColors(
                                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
+                                        ),
+                                        modifier = Modifier.size(36.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Call,
-                                            contentDescription = "Call"
+                                            contentDescription = "Call",
+                                            modifier = Modifier.size(18.dp)
                                         )
                                     }
                                 }
-                            }
+                            },
+                            colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                         )
                     }
                 }
