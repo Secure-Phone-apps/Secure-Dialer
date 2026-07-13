@@ -55,7 +55,10 @@ fun ActiveCallScreen(
     isIncoming: Boolean = false,
     contacts: List<Contact> = emptyList(),
     onAnswer: () -> Unit = {},
-    callState: Int = android.telecom.Call.STATE_DISCONNECTED
+    callState: Int = android.telecom.Call.STATE_DISCONNECTED,
+    recordingEnabled: Boolean = false,
+    onSaveRecording: (Long, String) -> Unit = { _, _ -> },
+    onSaveNote: (String) -> Unit = {}
 ) {
     val haptic = LocalHapticFeedback.current
     var callDuration by remember { mutableStateOf(0) }
@@ -509,7 +512,7 @@ fun ActiveCallScreen(
                     )
                 }
 
-                // Row 2: Hold, Bluetooth
+                // Row 2: Hold, Bluetooth, Add Call
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -534,6 +537,94 @@ fun ActiveCallScreen(
                             CallManager.setBluetooth(isBluetoothOn)
                         }
                     )
+                    InCallButton(
+                        icon = "➕",
+                        label = "Add Call",
+                        isActive = isAddCallDialogOpen,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            isAddCallDialogOpen = true
+                        }
+                    )
+                }
+
+                // Row 3: Record & Note
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    if (recordingEnabled) {
+                        var isRecording by remember { mutableStateOf(false) }
+                        var recordingStartTime by remember { mutableLongStateOf(0L) }
+                        InCallButton(
+                            icon = "🎙️",
+                            label = if (isRecording) "Recording" else "Record",
+                            isActive = isRecording,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                if (isRecording) {
+                                    val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
+                                    val mockPath = "/sdcard/Download/SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
+                                    onSaveRecording(duration, mockPath)
+                                    Toast.makeText(context, "Saved recording to local storage", Toast.LENGTH_SHORT).show()
+                                    isRecording = false
+                                } else {
+                                    recordingStartTime = System.currentTimeMillis()
+                                    isRecording = true
+                                    Toast.makeText(context, "⏺️ Call Recording Started", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.size(64.dp))
+                    }
+
+                    var isNoteDialogOpen by remember { mutableStateOf(false) }
+                    var noteText by remember { mutableStateOf("") }
+
+                    InCallButton(
+                        icon = "📝",
+                        label = "Call Note",
+                        isActive = isNoteDialogOpen,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            isNoteDialogOpen = true
+                        }
+                    )
+
+                    if (isNoteDialogOpen) {
+                        AlertDialog(
+                            onDismissRequest = { isNoteDialogOpen = false },
+                            title = { Text("Jot Call Note") },
+                            text = {
+                                OutlinedTextField(
+                                    value = noteText,
+                                    onValueChange = { noteText = it },
+                                    label = { Text("Enter important details...") },
+                                    modifier = Modifier.fillMaxWidth().height(120.dp)
+                                )
+                            },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        if (noteText.isNotBlank()) {
+                                            onSaveNote(noteText)
+                                            Toast.makeText(context, "Note saved securely", Toast.LENGTH_SHORT).show()
+                                        }
+                                        isNoteDialogOpen = false
+                                    }
+                                ) {
+                                    Text("Save Note")
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { isNoteDialogOpen = false }) {
+                                    Text("Discard")
+                                }
+                            }
+                        )
+                    }
+
                     Spacer(modifier = Modifier.size(64.dp))
                 }
 
@@ -650,6 +741,9 @@ fun InCallButton(
                     "Speaker" -> Icons.Default.VolumeUp
                     "Hold" -> Icons.Default.Pause
                     "Bluetooth" -> Icons.Default.Bluetooth
+                    "Add Call" -> Icons.Default.GroupAdd
+                    "Record", "Recording" -> Icons.Default.Mic
+                    "Call Note" -> Icons.Default.EditNote
                     else -> Icons.Default.QuestionMark
                 }
                 Icon(

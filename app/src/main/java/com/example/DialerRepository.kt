@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.flow.Flow
 
-class DialerRepository(private val context: Context) {
+class DialerRepository(val context: Context) {
     private val db = AppDatabase.getDatabase(context)
     private val dao = db.dialerDao()
 
@@ -31,6 +31,10 @@ class DialerRepository(private val context: Context) {
 
     fun getFavoriteContacts(): Flow<List<Contact>> {
         return dao.getFavoriteContacts()
+    }
+
+    fun getAllContactsFlow(): Flow<List<Contact>> {
+        return dao.getAllContactsFlow()
     }
 
     fun getCallHistoryPaged(): Flow<PagingData<CallRecord>> {
@@ -69,11 +73,41 @@ class DialerRepository(private val context: Context) {
     private fun fetchSystemContacts(): List<Contact> {
         val contacts = mutableListOf<Contact>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
+        
+        val emailMap = mutableMapOf<String, String>()
         try {
-            context.contentResolver.query(Phone.CONTENT_URI, arrayOf(Phone.DISPLAY_NAME, Phone.NUMBER, Phone.STARRED), null, null, "${Phone.DISPLAY_NAME} ASC")?.use { cursor ->
+            context.contentResolver.query(
+                ContactsContract.CommonDataKinds.Email.CONTENT_URI,
+                arrayOf(ContactsContract.CommonDataKinds.Email.CONTACT_ID, ContactsContract.CommonDataKinds.Email.ADDRESS),
+                null, null, null
+            )?.use { cursor ->
+                val idIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
+                val addrIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
+                while (cursor.moveToNext()) {
+                    if (idIdx != -1 && addrIdx != -1) {
+                        val cid = cursor.getString(idIdx) ?: ""
+                        val email = cursor.getString(addrIdx) ?: ""
+                        if (cid.isNotEmpty() && email.isNotEmpty()) {
+                            emailMap[cid] = email
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
+            context.contentResolver.query(
+                Phone.CONTENT_URI,
+                arrayOf(Phone.DISPLAY_NAME, Phone.NUMBER, Phone.STARRED, Phone.PHOTO_THUMBNAIL_URI, Phone.CONTACT_ID),
+                null, null, "${Phone.DISPLAY_NAME} ASC"
+            )?.use { cursor ->
                 val nameIdx = cursor.getColumnIndex(Phone.DISPLAY_NAME)
                 val numIdx = cursor.getColumnIndex(Phone.NUMBER)
                 val favIdx = cursor.getColumnIndex(Phone.STARRED)
+                val photoIdx = cursor.getColumnIndex(Phone.PHOTO_THUMBNAIL_URI)
+                val cidIdx = cursor.getColumnIndex(Phone.CONTACT_ID)
                 while (cursor.moveToNext()) {
                     val rawName = cursor.getString(nameIdx)
                     val num = cursor.getString(numIdx) ?: ""
@@ -83,8 +117,11 @@ class DialerRepository(private val context: Context) {
                         rawName
                     }
                     val fav = cursor.getInt(favIdx) == 1
+                    val photoUri = if (photoIdx != -1) cursor.getString(photoIdx) ?: "" else ""
+                    val contactId = if (cidIdx != -1) cursor.getString(cidIdx) ?: "" else ""
+                    val email = emailMap[contactId] ?: ""
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                    contacts.add(Contact(num, name, "Mobile", fav, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name)))
+                    contacts.add(Contact(num, name, "Mobile", fav, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name), email, photoUri))
                 }
             }
         } catch (e: SecurityException) {
@@ -142,11 +179,19 @@ class DialerRepository(private val context: Context) {
 
     // --- Actions ---
 
-    suspend fun addContact(name: String, number: String, label: String) {
+    suspend fun addContact(name: String, number: String, label: String, email: String = "") {
         val ops = arrayListOf<ContentProviderOperation>()
         ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build())
         ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build())
         ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE).withValue(Phone.NUMBER, number).withValue(Phone.TYPE, Phone.TYPE_MOBILE).build())
+        if (email.isNotEmpty()) {
+            ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email)
+                .withValue(ContactsContract.CommonDataKinds.Email.TYPE, ContactsContract.CommonDataKinds.Email.TYPE_HOME)
+                .build())
+        }
         try { context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops) } catch (e: Exception) { e.printStackTrace() }
         syncContacts() // Update local cache
     }
@@ -234,6 +279,17 @@ class DialerRepository(private val context: Context) {
 
     suspend fun getPreferredSim(): String = dao.getSetting("preferred_sim") ?: "Ask"
     suspend fun savePreferredSim(sim: String) = dao.insertSetting(AppSetting("preferred_sim", sim))
+
+    // --- Call Notes ---
+    suspend fun getCallNote(number: String): CallNote? = dao.getCallNote(number)
+    fun getAllCallNotes(): Flow<List<CallNote>> = dao.getAllCallNotesFlow()
+    suspend fun saveCallNote(number: String, note: String) = dao.insertCallNote(CallNote(number, note))
+    suspend fun deleteCallNote(number: String) = dao.deleteCallNote(number)
+
+    // --- Call Recordings ---
+    fun getAllCallRecordings(): Flow<List<CallRecording>> = dao.getAllCallRecordingsFlow()
+    suspend fun saveCallRecording(recording: CallRecording) = dao.insertCallRecording(recording)
+    suspend fun deleteCallRecording(id: Int) = dao.deleteCallRecording(id)
 }
 
 // Keep these for simple lookups if needed, but repository should be preferred

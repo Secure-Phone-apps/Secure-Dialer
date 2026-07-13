@@ -11,6 +11,9 @@ interface DialerDao {
     @Query("SELECT * FROM contacts ORDER BY name ASC")
     fun getContactsPaged(): PagingSource<Int, Contact>
 
+    @Query("SELECT * FROM contacts ORDER BY name ASC")
+    fun getAllContactsFlow(): Flow<List<Contact>>
+
     @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name ASC")
     fun getFavoriteContacts(): Flow<List<Contact>>
 
@@ -87,4 +90,27 @@ interface DialerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSetting(setting: AppSetting)
+
+    // Call Notes
+    @Query("SELECT * FROM call_notes WHERE number = :number LIMIT 1")
+    suspend fun getCallNote(number: String): CallNote?
+
+    @Query("SELECT * FROM call_notes")
+    fun getAllCallNotesFlow(): Flow<List<CallNote>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCallNote(callNote: CallNote)
+
+    @Query("DELETE FROM call_notes WHERE number = :number")
+    suspend fun deleteCallNote(number: String)
+
+    // Call Recordings
+    @Query("SELECT * FROM call_recordings ORDER BY id DESC")
+    fun getAllCallRecordingsFlow(): Flow<List<CallRecording>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCallRecording(recording: CallRecording)
+
+    @Query("DELETE FROM call_recordings WHERE id = :id")
+    suspend fun deleteCallRecording(id: Int)
 }

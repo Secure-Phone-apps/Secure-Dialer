@@ -67,7 +67,9 @@ class MainActivity : ComponentActivity() {
                 )
             }
 
-            MyApplicationTheme(darkTheme = isDarkTheme, dynamicColor = false) {
+            val currentThemeColor by viewModel.themeColor
+
+            MyApplicationTheme(darkTheme = isDarkTheme, dynamicColor = false, themeColor = currentThemeColor) {
                 MainScreen(
                     viewModel = viewModel,
                     onShowRestrictedSettings = { showRestrictedSettingsDialog = true },

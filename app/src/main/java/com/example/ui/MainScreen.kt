@@ -19,6 +19,8 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
@@ -81,9 +83,21 @@ fun MainScreen(
     val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
 
     val favoriteContacts by viewModel.favoriteContacts.collectAsState()
+    val allContacts by viewModel.allContactsFlow.collectAsState()
 
     var selectedTab by viewModel.selectedTab
     val searchQuery by viewModel.searchQuery
+
+    val filteredFavorites = remember(favoriteContacts, searchQuery) {
+        if (searchQuery.isBlank()) {
+            favoriteContacts
+        } else {
+            favoriteContacts.filter { contact ->
+                contact.name.contains(searchQuery, ignoreCase = true) ||
+                contact.number.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }
     var isDialpadVisible by viewModel.isDialpadVisible
     var dialpadInput by viewModel.dialpadInput
     var isSettingsVisible by viewModel.isSettingsVisible
@@ -231,14 +245,26 @@ fun MainScreen(
                     )
                 }
 
+                val pagerState = rememberPagerState(initialPage = selectedTab) { 4 }
+                LaunchedEffect(selectedTab) {
+                    if (pagerState.currentPage != selectedTab) {
+                        pagerState.animateScrollToPage(selectedTab)
+                    }
+                }
+                LaunchedEffect(pagerState.currentPage) {
+                    if (selectedTab != pagerState.currentPage) {
+                        selectedTab = pagerState.currentPage
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    androidx.compose.animation.Crossfade(
-                        targetState = selectedTab,
-                        label = "tab_transition"
-                    ) { tabIndex ->
-                        when (tabIndex) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (page) {
                             0 -> FavoritesTabContent(
-                                contacts = favoriteContacts,
+                                contacts = filteredFavorites,
                                 onCallClick = { name, number -> initiateCall(name, number) },
                                 onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) }
                             )
@@ -292,7 +318,22 @@ fun MainScreen(
                     onAnswer = { CallManager.answer() },
                     onQuickDecline = { CallManager.disconnect(); isCallActive = false },
                     isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
-                    contacts = emptyList(), callState = systemCallState
+                    contacts = allContacts, callState = systemCallState,
+                    recordingEnabled = viewModel.recordingEnabled.value,
+                    onSaveRecording = { duration, filePath ->
+                        viewModel.saveCallRecording(
+                            com.example.model.CallRecording(
+                                name = callingContactName,
+                                number = callingContactNumber,
+                                timestamp = System.currentTimeMillis().toString(),
+                                duration = duration,
+                                filePath = filePath
+                            )
+                        )
+                    },
+                    onSaveNote = { content ->
+                        viewModel.saveCallNote(callingContactNumber, content)
+                    }
                 )
             }
 
@@ -302,33 +343,35 @@ fun MainScreen(
                 )
             }
 
-            if (isAddContactDialogVisible) {
-                AddContactDialog(
-                    initialName = "",
-                    initialNumber = "",
-                    initialLabel = "Mobile",
-                    onDismiss = { isAddContactDialogVisible = false },
-                    onConfirm = { name, number, label ->
-                        viewModel.addContact(name, number, label)
-                        isAddContactDialogVisible = false
-                    }
-                )
-            }
+        if (isAddContactDialogVisible) {
+            AddContactDialog(
+                initialName = "",
+                initialNumber = "",
+                initialLabel = "Mobile",
+                initialEmail = "",
+                onDismiss = { isAddContactDialogVisible = false },
+                onConfirm = { name, number, label, email ->
+                    viewModel.addContact(name, number, label, email)
+                    isAddContactDialogVisible = false
+                }
+            )
+        }
 
-            if (isEditContactDialogVisible && oldContactToEdit != null) {
-                AddContactDialog(
-                    initialName = oldContactToEdit!!.name,
-                    initialNumber = oldContactToEdit!!.number,
-                    initialLabel = oldContactToEdit!!.label,
-                    onDismiss = { isEditContactDialogVisible = false },
-                    onConfirm = { name, number, label ->
-                        // Use delete then add for simple update in this context
-                        viewModel.deleteContact(oldContactToEdit!!.number)
-                        viewModel.addContact(name, number, label)
-                        isEditContactDialogVisible = false
-                    }
-                )
-            }
+        if (isEditContactDialogVisible && oldContactToEdit != null) {
+            AddContactDialog(
+                initialName = oldContactToEdit!!.name,
+                initialNumber = oldContactToEdit!!.number,
+                initialLabel = oldContactToEdit!!.label,
+                initialEmail = oldContactToEdit!!.email,
+                onDismiss = { isEditContactDialogVisible = false },
+                onConfirm = { name, number, label, email ->
+                    // Use delete then add for simple update in this context
+                    viewModel.deleteContact(oldContactToEdit!!.number)
+                    viewModel.addContact(name, number, label, email)
+                    isEditContactDialogVisible = false
+                }
+            )
+        }
         }
     }
 }

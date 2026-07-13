@@ -150,37 +150,60 @@ fun RecentsTabContent(
                 )
             }
         } else {
-            val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed) {
+            val query by viewModel.searchQuery
+            val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed, query) {
                 val baseFiltered = callRecordsPaged.itemSnapshotList.items
                     .filter { if (filterByMissed) it.type == CallType.MISSED else true }
+                    .filter { record ->
+                        if (query.isBlank()) {
+                            true
+                        } else {
+                            record.name.contains(query, ignoreCase = true) ||
+                            record.number.contains(query, ignoreCase = true)
+                        }
+                    }
                 
                 baseFiltered.groupBy { it.number }.map { (_, records) ->
                     CallGroup(records.first(), records)
                 }
             }
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(vertical = 4.dp)
-            ) {
-                items(
-                    items = consolidatedRecords,
-                    key = { it.primary.id }
-                ) { group ->
-                    RecentCallRow(
-                        group = group,
-                        onCallClick = { onCallClick(group.primary) },
-                        onDeleteRecord = { id -> onDeleteRecord(id) },
-                        getHistory = { viewModel.getCallHistoryByNumber(it) }
+            if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyStateIllustration(
+                        title = "No results found",
+                        subtitle = "No matching calls for \"$query\""
                     )
                 }
+            } else {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(vertical = 4.dp)
+                ) {
+                    items(
+                        items = consolidatedRecords,
+                        key = { it.primary.id }
+                    ) { group ->
+                        RecentCallRow(
+                            group = group,
+                            onCallClick = { onCallClick(group.primary) },
+                            onDeleteRecord = { id -> onDeleteRecord(id) },
+                            getHistory = { viewModel.getCallHistoryByNumber(it) }
+                        )
+                    }
 
-                if (callRecordsPaged.loadState.append is LoadState.Loading) {
-                    item {
-                        Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    if (callRecordsPaged.loadState.append is LoadState.Loading) {
+                        item {
+                            Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                            }
                         }
                     }
                 }

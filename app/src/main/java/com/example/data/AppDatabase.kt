@@ -19,9 +19,11 @@ class Converters {
         BlockedNumber::class,
         SpeedDial::class,
         QuickResponse::class,
-        AppSetting::class
+        AppSetting::class,
+        CallNote::class,
+        CallRecording::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

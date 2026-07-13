@@ -40,11 +40,30 @@ data class Contact(
     val avatarText: String,
     val avatarBgValue: Long,
     val avatarTextColorValue: Long,
-    val t9Mapping: String = ""
+    val t9Mapping: String = "",
+    val email: String = "",
+    val photoUri: String = ""
 ) {
     @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
     @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
 }
+
+@Entity(tableName = "call_notes")
+data class CallNote(
+    @PrimaryKey val number: String,
+    val note: String,
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "call_recordings")
+data class CallRecording(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val number: String,
+    val name: String,
+    val timestamp: String,
+    val duration: Long, // in seconds
+    val filePath: String
+)
 
 @Entity(tableName = "blocked_numbers")
 data class BlockedNumber(

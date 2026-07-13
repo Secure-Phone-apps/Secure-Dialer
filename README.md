@@ -81,7 +81,7 @@ Secure Dialer is crafted with clean, modern development patterns:
 
 ## 🤝 Contributing & Security Reports
 
-We welcome open-source contributions to make the secure mobile ecosystem stronger! Before contributing, please review our [Security Policy](.github/SECURITY.md).
+We welcome open-source contributions to make the secure mobile ecosystem stronger! Before contributing, please review our **[Contributing Guidelines](CONTRIBUTING.md)** and our [Security Policy](.github/SECURITY.md).
 
 * **Bug Reports & Features:** Please use our standardized templates when opening an [issue](https://github.com/secure-phone-apps/secure-dialer/issues).
 * **Vulnerability Disclosure:** Please report security issues privately via GitHub Security Advisories or by emailing `movstore.online@gmail.com`.

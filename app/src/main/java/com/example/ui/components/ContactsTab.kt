@@ -464,8 +464,9 @@ fun AddContactDialog(
     initialName: String,
     initialNumber: String,
     initialLabel: String,
+    initialEmail: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (name: String, number: String, label: String) -> Unit
+    onConfirm: (name: String, number: String, label: String, email: String) -> Unit
 ) {
     val context = LocalContext.current
     val countryIso = remember {
@@ -486,6 +487,7 @@ fun AddContactDialog(
     var selectedCountry by remember { mutableStateOf<Country?>(null) }
     var rawNumberInput by remember { mutableStateOf("") }
     var selectedLabel by remember { mutableStateOf(initialLabel) }
+    var emailInput by remember { mutableStateOf(initialEmail) }
 
     LaunchedEffect(initialName) {
         val trimmed = initialName.trim()
@@ -617,6 +619,16 @@ fun AddContactDialog(
                     )
                 }
 
+                OutlinedTextField(
+                    value = emailInput,
+                    onValueChange = { emailInput = it },
+                    label = { Text("Email Address") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("dialog_email_input"),
+                    shape = RoundedCornerShape(12.dp),
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") }
+                )
+
                 Column {
                     Text(
                         text = "Label",
@@ -650,7 +662,7 @@ fun AddContactDialog(
                     } else {
                         "$prefix${rawNumberInput.trim()}"
                     }
-                    onConfirm(finalName, finalNumber, selectedLabel)
+                    onConfirm(finalName, finalNumber, selectedLabel, emailInput.trim())
                 },
                 enabled = firstName.trim().isNotEmpty() && rawNumberInput.trim().isNotEmpty()
             ) {

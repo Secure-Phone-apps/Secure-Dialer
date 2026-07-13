@@ -1,6 +1,7 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import android.os.Build
 import androidx.compose.runtime.*
 import androidx.lifecycle.*
@@ -40,11 +41,18 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val favoriteContacts: StateFlow<List<Contact>> = repository.getFavoriteContacts()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allContactsFlow: StateFlow<List<Contact>> = repository.getAllContactsFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // UI State
     var isDialpadVisible = mutableStateOf(false)
     var dialpadInput = mutableStateOf("")
     var isSettingsVisible = mutableStateOf(false)
     var isDarkTheme = mutableStateOf(false)
+    var themeColor = mutableStateOf("classic_slate")
+    var defaultTab = mutableIntStateOf(0)
+    var callWaitingEnabled = mutableStateOf(true)
+    var recordingEnabled = mutableStateOf(false)
     var selectedTab = mutableIntStateOf(0)
     var dialpadTonesEnabled = mutableStateOf(true)
     var vibrateOnClickEnabled = mutableStateOf(true)
@@ -75,8 +83,21 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val quickResponsesFlow: StateFlow<List<QuickResponse>> = repository.getQuickResponses()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    val recordingsFlow: StateFlow<List<CallRecording>> = repository.getAllCallRecordings()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val notesFlow: StateFlow<List<CallNote>> = repository.getAllCallNotes()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     init {
         viewModelScope.launch {
+            val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+            themeColor.value = prefs.getString("theme_color", "classic_slate") ?: "classic_slate"
+            defaultTab.intValue = prefs.getInt("default_tab", 0)
+            selectedTab.intValue = defaultTab.intValue
+            callWaitingEnabled.value = prefs.getBoolean("call_waiting_enabled", true)
+            recordingEnabled.value = prefs.getBoolean("recording_enabled", false)
+
             preferredSim.value = repository.getPreferredSim()
             voicemailNumber.value = repository.getVoicemailNumber()
             
@@ -96,6 +117,38 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updatePreferredSim(sim: String) {
         preferredSim.value = sim
         viewModelScope.launch { repository.savePreferredSim(sim) }
+    }
+
+    fun updateThemeColor(color: String) {
+        themeColor.value = color
+        viewModelScope.launch {
+            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                .edit().putString("theme_color", color).apply()
+        }
+    }
+
+    fun updateDefaultTab(tab: Int) {
+        defaultTab.intValue = tab
+        viewModelScope.launch {
+            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                .edit().putInt("default_tab", tab).apply()
+        }
+    }
+
+    fun updateCallWaitingEnabled(enabled: Boolean) {
+        callWaitingEnabled.value = enabled
+        viewModelScope.launch {
+            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                .edit().putBoolean("call_waiting_enabled", enabled).apply()
+        }
+    }
+
+    fun updateRecordingEnabled(enabled: Boolean) {
+        recordingEnabled.value = enabled
+        viewModelScope.launch {
+            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                .edit().putBoolean("recording_enabled", enabled).apply()
+        }
     }
 
     fun updateVoicemailNumber(num: String) {
@@ -133,10 +186,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var newContactName = mutableStateOf("")
     var newContactNumber = mutableStateOf("")
     var newContactLabel = mutableStateOf("Mobile")
+    var newContactEmail = mutableStateOf("")
     var oldContactToEdit = mutableStateOf<Contact?>(null)
     var editContactName = mutableStateOf("")
     var editContactNumber = mutableStateOf("")
     var editContactLabel = mutableStateOf("Mobile")
+    var editContactEmail = mutableStateOf("")
 
     private var isObserving = false
 
@@ -160,9 +215,37 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun addContact(name: String, number: String, label: String) {
+    fun addContact(name: String, number: String, label: String, email: String = "") {
         viewModelScope.launch {
-            repository.addContact(name, number, label)
+            repository.addContact(name, number, label, email)
+        }
+    }
+
+    fun saveCallNote(number: String, note: String) {
+        viewModelScope.launch {
+            repository.saveCallNote(number, note)
+        }
+    }
+
+    suspend fun getCallNote(number: String): CallNote? {
+        return repository.getCallNote(number)
+    }
+
+    fun deleteCallNote(number: String) {
+        viewModelScope.launch {
+            repository.deleteCallNote(number)
+        }
+    }
+
+    fun saveCallRecording(recording: CallRecording) {
+        viewModelScope.launch {
+            repository.saveCallRecording(recording)
+        }
+    }
+
+    fun deleteCallRecording(id: Int) {
+        viewModelScope.launch {
+            repository.deleteCallRecording(id)
         }
     }
 
