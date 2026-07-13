@@ -6,9 +6,13 @@ import android.telecom.CallScreeningService
 import com.example.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class CallBlockerService : CallScreeningService() {
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle?.schemeSpecificPart ?: ""
         val context = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -19,7 +23,7 @@ class CallBlockerService : CallScreeningService() {
         val db = AppDatabase.getDatabase(context)
         val dao = db.dialerDao()
 
-        CoroutineScope(Dispatchers.IO).launch {
+        serviceScope.launch {
             val isBlocked = dao.isBlocked(number)
             if (isBlocked) {
                 val response = CallResponse.Builder()
@@ -34,4 +38,10 @@ class CallBlockerService : CallScreeningService() {
             }
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        serviceScope.cancel()
+    }
 }
+
