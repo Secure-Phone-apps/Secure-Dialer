@@ -154,6 +154,7 @@ fun SettingsPanel(
                                         currentSelected = viewModel.themeColor.value,
                                         onColorSelected = { viewModel.updateThemeColor(it) }
                                     )
+
                                 }
                             }
                         }
@@ -348,17 +349,36 @@ fun SettingsPanel(
                                     val tabs = listOf("Favorites", "Recents", "Contacts", "Dialpad")
                                     val currentTabSelected = viewModel.defaultTab.intValue
                                     Row(
-                                        modifier = Modifier.fillMaxWidth(),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                            .padding(4.dp),
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
                                         tabs.forEachIndexed { idx, title ->
                                             val isSel = currentTabSelected == idx
-                                            FilterChip(
-                                                selected = isSel,
-                                                onClick = { viewModel.updateDefaultTab(idx) },
-                                                label = { Text(title, style = MaterialTheme.typography.bodySmall) },
-                                                modifier = Modifier.weight(1f)
-                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .background(
+                                                        if (isSel) MaterialTheme.colorScheme.primary
+                                                        else Color.Transparent
+                                                    )
+                                                    .clickable { viewModel.updateDefaultTab(idx) }
+                                                    .padding(vertical = 10.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = title,
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                                    color = if (isSel) MaterialTheme.colorScheme.onPrimary
+                                                            else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -1432,6 +1452,8 @@ fun ThemeColorPicker(
         }
     }
 }
+
+
 
 
 

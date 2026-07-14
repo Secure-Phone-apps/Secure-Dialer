@@ -44,16 +44,18 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val allContactsFlow: StateFlow<List<Contact>> = repository.getAllContactsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+
     // UI State
     var isDialpadVisible = mutableStateOf(false)
     var dialpadInput = mutableStateOf("")
     var isSettingsVisible = mutableStateOf(false)
-    var isDarkTheme = mutableStateOf(false)
-    var themeColor = mutableStateOf("classic_slate")
-    var defaultTab = mutableIntStateOf(0)
-    var callWaitingEnabled = mutableStateOf(true)
-    var recordingEnabled = mutableStateOf(false)
-    var selectedTab = mutableIntStateOf(0)
+    var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
+    var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
+    var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0))
+    var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
+    var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
+    var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0))
     var dialpadTonesEnabled = mutableStateOf(true)
     var vibrateOnClickEnabled = mutableStateOf(true)
     var preferredSim = mutableStateOf("SIM 1")
@@ -91,13 +93,6 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-            themeColor.value = prefs.getString("theme_color", "classic_slate") ?: "classic_slate"
-            defaultTab.intValue = prefs.getInt("default_tab", 0)
-            selectedTab.intValue = defaultTab.intValue
-            callWaitingEnabled.value = prefs.getBoolean("call_waiting_enabled", true)
-            recordingEnabled.value = prefs.getBoolean("recording_enabled", false)
-
             preferredSim.value = repository.getPreferredSim()
             voicemailNumber.value = repository.getVoicemailNumber()
             

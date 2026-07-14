@@ -50,8 +50,6 @@ class MainActivity : ComponentActivity() {
             }
 
             LaunchedEffect(Unit) {
-                val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                viewModel.isDarkTheme.value = prefs.getBoolean("is_dark_theme", true)
                 updateDefaultDialerStatus(context)
             }
 

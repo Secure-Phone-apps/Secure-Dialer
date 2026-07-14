@@ -1,8 +1,10 @@
 package com.example.ui
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -19,8 +21,14 @@ class AboutActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        
+        val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        val isDarkTheme = prefs.getBoolean("is_dark_theme", true)
+        val themeColor = prefs.getString("theme_color", "classic_slate") ?: "classic_slate"
+
         setContent {
-            MyApplicationTheme {
+            MyApplicationTheme(darkTheme = isDarkTheme, dynamicColor = false, themeColor = themeColor) {
                 Scaffold(
                     topBar = {
                         TopAppBar(
