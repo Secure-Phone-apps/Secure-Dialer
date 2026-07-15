@@ -173,7 +173,7 @@ fun ActiveCallScreen(
             // Top Status Info
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 40.dp)
+                modifier = Modifier.padding(top = 8.dp)
             ) {
                 val displayHeader = when {
                     isOnHold || callState == android.telecom.Call.STATE_HOLDING -> "Call on hold"
@@ -190,7 +190,7 @@ fun ActiveCallScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 val displayName = if (participants.size > 1) {
                     if (participants.size == 2) {
@@ -209,7 +209,7 @@ fun ActiveCallScreen(
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 val displaySubtitle = if (participants.size > 1) {
                     if (participants.size > 2) {
@@ -230,11 +230,11 @@ fun ActiveCallScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = formattedTime,
-                    style = MaterialTheme.typography.displaySmall,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -338,7 +338,7 @@ fun ActiveCallScreen(
                 }
             } else {
                 Surface(
-                    modifier = Modifier.size(160.dp),
+                    modifier = Modifier.size(120.dp),
                     shape = CircleShape,
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
@@ -474,7 +474,7 @@ fun ActiveCallScreen(
             // Call Option buttons: keypad, mute, speaker, hold, bluetooth
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Row 1: Keypad, Mute, Speaker
                 Row(
@@ -652,7 +652,7 @@ fun ActiveCallScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 32.dp),
+                    .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {

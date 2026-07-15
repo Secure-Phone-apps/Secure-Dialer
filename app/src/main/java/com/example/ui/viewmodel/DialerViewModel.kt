@@ -116,34 +116,22 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateThemeColor(color: String) {
         themeColor.value = color
-        viewModelScope.launch {
-            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                .edit().putString("theme_color", color).apply()
-        }
+        prefs.edit().putString("theme_color", color).apply()
     }
 
     fun updateDefaultTab(tab: Int) {
         defaultTab.intValue = tab
-        viewModelScope.launch {
-            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                .edit().putInt("default_tab", tab).apply()
-        }
+        prefs.edit().putInt("default_tab", tab).apply()
     }
 
     fun updateCallWaitingEnabled(enabled: Boolean) {
         callWaitingEnabled.value = enabled
-        viewModelScope.launch {
-            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                .edit().putBoolean("call_waiting_enabled", enabled).apply()
-        }
+        prefs.edit().putBoolean("call_waiting_enabled", enabled).apply()
     }
 
     fun updateRecordingEnabled(enabled: Boolean) {
         recordingEnabled.value = enabled
-        viewModelScope.launch {
-            repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                .edit().putBoolean("recording_enabled", enabled).apply()
-        }
+        prefs.edit().putBoolean("recording_enabled", enabled).apply()
     }
 
     fun updateVoicemailNumber(num: String) {

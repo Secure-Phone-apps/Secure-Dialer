@@ -31,7 +31,6 @@
             android:theme="@style/Theme.MyApplication">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
@@ -61,9 +60,6 @@
                 <data android:scheme="tel" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".ui.PrivacyPolicyActivity" android:exported="false" />
-        <activity android:name=".ui.AboutActivity" android:exported="false" />
 
         <service
             android:name=".MyInCallService"

@@ -109,13 +109,9 @@ class DialerRepository(val context: Context) {
                 val photoIdx = cursor.getColumnIndex(Phone.PHOTO_THUMBNAIL_URI)
                 val cidIdx = cursor.getColumnIndex(Phone.CONTACT_ID)
                 while (cursor.moveToNext()) {
-                    val rawName = cursor.getString(nameIdx)
                     val num = cursor.getString(numIdx) ?: ""
-                    val name = if (rawName.isNullOrBlank()) {
-                        if (num.isBlank()) "Unknown" else num
-                    } else {
-                        rawName
-                    }
+                    val rawName = cursor.getString(nameIdx)
+                    val name = if (rawName.isNullOrBlank()) (if (num.isBlank()) "Unknown" else num) else rawName
                     val fav = cursor.getInt(favIdx) == 1
                     val photoUri = if (photoIdx != -1) cursor.getString(photoIdx) ?: "" else ""
                     val contactId = if (cidIdx != -1) cursor.getString(cidIdx) ?: "" else ""
@@ -164,14 +160,14 @@ class DialerRepository(val context: Context) {
     private fun nameToT9(name: String): String {
         return name.uppercase().map { char ->
             when (char) {
-                'A', 'B', 'C' -> '2'
-                'D', 'E', 'F' -> '3'
-                'G', 'H', 'I' -> '4'
-                'J', 'K', 'L' -> '5'
-                'M', 'N', 'O' -> '6'
-                'P', 'Q', 'R', 'S' -> '7'
-                'T', 'U', 'V' -> '8'
-                'W', 'X', 'Y', 'Z' -> '9'
+                in 'A'..'C' -> '2'
+                in 'D'..'F' -> '3'
+                in 'G'..'I' -> '4'
+                in 'J'..'L' -> '5'
+                in 'M'..'O' -> '6'
+                in 'P'..'S' -> '7'
+                in 'T'..'V' -> '8'
+                in 'W'..'Z' -> '9'
                 else -> char
             }
         }.joinToString("")

@@ -33,6 +33,12 @@ object CallManager {
     }
 
     var inCallService: android.telecom.InCallService? = null
+        set(value) {
+            field = value
+            if (value == null) {
+                _audioState.value = null
+            }
+        }
 
     fun updateCall(call: android.telecom.Call?) {
         _currentCall.value?.unregisterCallback(callCallback)
@@ -41,14 +47,11 @@ object CallManager {
             _callState.value = call.state
             call.registerCallback(callCallback)
             
-            // Extract phone number from call details
-            val handle = call.details?.handle
-            val number = handle?.schemeSpecificPart ?: ""
-            _callerNumber.value = number
-            _callerName.value = "" // Name can be resolved from contacts later in UI
+            // Extract phone number
+            _callerNumber.value = call.details?.handle?.schemeSpecificPart ?: ""
+            _callerName.value = "" 
         } else {
             _callState.value = android.telecom.Call.STATE_DISCONNECTED
-            _audioState.value = null
             _callerNumber.value = ""
             _callerName.value = ""
             inCallService = null

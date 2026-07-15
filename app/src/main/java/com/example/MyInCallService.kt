@@ -66,12 +66,11 @@ class MyInCallService : InCallService() {
     }
 
     private fun showIncomingCallNotification(call: Call) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "incoming_call_channel"
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
+            nm.createNotificationChannel(NotificationChannel(channelId, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH))
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -88,7 +87,7 @@ class MyInCallService : InCallService() {
             .setAutoCancel(true)
             .build()
 
-        notificationManager.notify(1, notification)
+        nm.notify(1, notification)
     }
 
     private fun showMissedCallNotification(call: Call) {

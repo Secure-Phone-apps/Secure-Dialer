@@ -7,6 +7,8 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -67,6 +69,8 @@ fun SettingsPanel(
     val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
     
     var activeTab by remember { mutableStateOf(0) }
+    var showAboutDialog by remember { mutableStateOf(false) }
+    var showPrivacyDialog by remember { mutableStateOf(false) }
     var newBlockedInput by remember { mutableStateOf("") }
     var newQuickRespInput by remember { mutableStateOf("") }
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
@@ -457,9 +461,7 @@ fun SettingsPanel(
                                     SettingsRowNav(
                                         title = "About",
                                         subtitle = "Version and developer info",
-                                        onClick = {
-                                            context.startActivity(Intent(context, com.example.ui.AboutActivity::class.java))
-                                        },
+                                        onClick = { showAboutDialog = true },
                                         icon = Icons.Default.Info,
                                         iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
                                         iconTint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -468,9 +470,7 @@ fun SettingsPanel(
                                     SettingsRowNav(
                                         title = "Privacy Policy",
                                         subtitle = "How we handle your data",
-                                        onClick = {
-                                            context.startActivity(Intent(context, com.example.ui.PrivacyPolicyActivity::class.java))
-                                        },
+                                        onClick = { showPrivacyDialog = true },
                                         icon = Icons.Default.Security,
                                         iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
                                         iconTint = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1233,6 +1233,14 @@ fun SettingsPanel(
             }
         }
     }
+
+    if (showAboutDialog) {
+        AboutDialog(onDismiss = { showAboutDialog = false })
+    }
+
+    if (showPrivacyDialog) {
+        PrivacyDialog(onDismiss = { showPrivacyDialog = false })
+    }
 }
 
 @Composable
@@ -1451,6 +1459,50 @@ fun ThemeColorPicker(
             }
         }
     }
+}
+
+@Composable
+fun AboutDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("About", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Secure Dialer", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text("Version 1.0.2", style = MaterialTheme.typography.bodySmall)
+                Text("Secure Dialer is a privacy-focused communication tool designed to put you in control of your data. All functions occur exclusively on your device.")
+                Text("Our Mission", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("To provide a simple, reliable, and secure dialer experience without compromising user privacy.")
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
+}
+
+@Composable
+fun PrivacyDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Privacy Policy", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("At Secure Dialer, we prioritize your privacy.", style = MaterialTheme.typography.bodyLarge)
+                Text("1. Local Data Processing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Your contacts, call logs, and personal history are never transmitted to our servers.")
+                Text("2. Data Usage", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("Information is used only for core dialer functions: Contacts mapping, Call history display, and Microphone access during calls.")
+                Text("3. Data Sharing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text("We do not share your data with any third parties.")
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+    )
 }
 
 
