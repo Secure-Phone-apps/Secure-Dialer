@@ -1,5 +1,7 @@
 # Secure Dialer 📞 — Pure, Private, & Offline-First Android Dialer
 
+![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-purple?style=flat-square&logo=kotlin)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android)](https://developer.android.com/jetpack/compose)
@@ -12,6 +14,16 @@ Welcome to **Secure Dialer**, your trustworthy, lightning-fast, and open-source 
 If you are looking for a reliable, modern, and offline-first dialer that can fully replace your phone's pre-installed application, you have found it. Secure Dialer is engineered to provide a secure alternative to commercial caller-ID dialers, stock system apps, and closed-source tools. 
 
 Whether you are looking to replace **Fossify Dialer**, **Simple Dialer**, **Ever Dialer**, **Truecaller**, or standard **Google Dialer**, our application provides a secure, lightweight, and offline experience that respects your communication boundaries.
+
+---
+
+## 📱 Visual Preview
+
+| Dialpad & Contacts | Active Calling | Call History |
+| :---: | :---: | :---: |
+| ![Dialpad Placeholder](assets/screenshots/dialpad.png) | ![Active Call Placeholder](assets/screenshots/active_call.png) | ![Recents Placeholder](assets/screenshots/recents.png) |
+
+*Note: Screenshots are representative of the Material 3 "Cosmic Slate" theme.*
 
 ---
 
