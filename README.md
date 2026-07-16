@@ -21,7 +21,7 @@ Whether you are looking to replace **Fossify Dialer**, **Simple Dialer**, **Ever
 
 | Dialpad & Contacts | Active Calling | Call History |
 | :---: | :---: | :---: |
-| ![Dialpad Placeholder](assets/screenshots/dialpad.png) | ![Active Call Placeholder](assets/screenshots/active_call.png) | ![Recents Placeholder](assets/screenshots/recents.png) |
+| ![Dialpad](assets/screenshots/dialpad.jpg) | ![Active Call](assets/screenshots/active_call.jpg) | ![Recents](assets/screenshots/recents.jpg) |
 
 *Note: Screenshots are representative of the Material 3 "Cosmic Slate" theme.*
 
