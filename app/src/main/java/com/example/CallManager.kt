@@ -10,6 +10,12 @@ object CallManager {
     private val _currentCall = MutableStateFlow<Call?>(null)
     val currentCall: StateFlow<Call?> = _currentCall
 
+    private val _waitingCall = MutableStateFlow<Call?>(null)
+    val waitingCall: StateFlow<Call?> = _waitingCall
+
+    private val _calls = MutableStateFlow<List<Call>>(emptyList())
+    val calls: StateFlow<List<Call>> = _calls
+
     private val _callState = MutableStateFlow<Int>(Call.STATE_DISCONNECTED)
     val callState: StateFlow<Int> = _callState
 
@@ -25,9 +31,15 @@ object CallManager {
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
-            _callState.value = state
-            if (state == Call.STATE_DISCONNECTED) {
-                updateCall(null)
+            val list = _calls.value.toList()
+            _calls.value = list // force emit
+            if (call == _currentCall.value) {
+                _callState.value = state
+                if (state == Call.STATE_DISCONNECTED) {
+                    removeCall(call)
+                }
+            } else if (call == _waitingCall.value && state == Call.STATE_DISCONNECTED) {
+                updateWaitingCall(null)
             }
         }
     }
@@ -40,13 +52,40 @@ object CallManager {
             }
         }
 
+    fun addCall(call: Call) {
+        val currentList = _calls.value.toMutableList()
+        if (!currentList.contains(call)) {
+            currentList.add(call)
+            _calls.value = currentList
+            call.registerCallback(callCallback)
+        }
+        if (_currentCall.value == null) {
+            updateCall(call)
+        } else if (call.state == Call.STATE_RINGING && _currentCall.value != call) {
+            updateWaitingCall(call)
+        }
+    }
+
+    fun removeCall(call: Call) {
+        val currentList = _calls.value.toMutableList()
+        if (currentList.contains(call)) {
+            currentList.remove(call)
+            _calls.value = currentList
+            call.unregisterCallback(callCallback)
+        }
+        if (_currentCall.value == call) {
+            val nextCall = _calls.value.firstOrNull { it.state != Call.STATE_DISCONNECTED }
+            updateCall(nextCall)
+        }
+        if (_waitingCall.value == call) {
+            updateWaitingCall(null)
+        }
+    }
+
     fun updateCall(call: android.telecom.Call?) {
-        _currentCall.value?.unregisterCallback(callCallback)
         _currentCall.value = call
         if (call != null) {
             _callState.value = call.state
-            call.registerCallback(callCallback)
-            
             // Extract phone number
             _callerNumber.value = call.details?.handle?.schemeSpecificPart ?: ""
             _callerName.value = "" 
@@ -54,8 +93,14 @@ object CallManager {
             _callState.value = android.telecom.Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""
-            inCallService = null
+            if (_calls.value.isEmpty()) {
+                inCallService = null
+            }
         }
+    }
+
+    fun updateWaitingCall(call: Call?) {
+        _waitingCall.value = call
     }
 
     fun updateAudioState(audioState: android.telecom.CallAudioState?) {

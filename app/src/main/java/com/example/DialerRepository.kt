@@ -193,8 +193,20 @@ class DialerRepository(val context: Context) {
     }
 
     suspend fun deleteContact(number: String) {
-        context.contentResolver.delete(ContactsContract.RawContacts.CONTENT_URI, "${Phone.NUMBER} = ?", arrayOf(number))
+        try {
+            val contactId = getContactIdFromNumber(number)
+            if (contactId != null) {
+                context.contentResolver.delete(
+                    ContactsContract.RawContacts.CONTENT_URI,
+                    "${ContactsContract.RawContacts.CONTACT_ID} = ?",
+                    arrayOf(contactId)
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         dao.getContactByNumber(number)?.let { dao.deleteContact(it) }
+        syncContacts()
     }
 
     suspend fun deleteCallLog(id: Int) {

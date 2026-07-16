@@ -160,13 +160,18 @@ fun DialpadTabContent(
         }
 
         // Elegant Display Screen
-        Row(
+        var expandedClipboardMenu by remember { mutableStateOf(false) }
+        val clipboardManager = remember { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager }
+
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(80.dp)
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+                .padding(horizontal = 16.dp)
+                .clickable {
+                    expandedClipboardMenu = true
+                },
+            contentAlignment = Alignment.Center
         ) {
             Text(
                 text = inputValue.ifEmpty { "Enter Number" },
@@ -175,8 +180,50 @@ fun DialpadTabContent(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.fillMaxWidth()
             )
+
+            DropdownMenu(
+                expanded = expandedClipboardMenu,
+                onDismissRequest = { expandedClipboardMenu = false }
+            ) {
+                val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
+                if (hasClipboardText) {
+                    val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                    val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                    if (filteredDigits.isNotEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("Paste: $filteredDigits") },
+                            onClick = {
+                                onValueChange(filteredDigits)
+                                expandedClipboardMenu = false
+                            }
+                        )
+                    }
+                }
+                if (inputValue.isNotEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text("Copy Number") },
+                        onClick = {
+                            try {
+                                val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
+                                clipboardManager?.setPrimaryClip(clip)
+                                Toast.makeText(context, "Number copied", Toast.LENGTH_SHORT).show()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                            expandedClipboardMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Clear") },
+                        onClick = {
+                            onValueChange("")
+                            expandedClipboardMenu = false
+                        }
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -329,6 +376,9 @@ fun DialpadOverlay(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Input Display Screen
+            var expandedOverlayClipboardMenu by remember { mutableStateOf(false) }
+            val overlayClipboardManager = remember { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -337,14 +387,64 @@ fun DialpadOverlay(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = inputValue.ifEmpty { "Enter Number" },
-                    style = MaterialTheme.typography.displaySmall,
-                    color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
-                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .clickable { expandedOverlayClipboardMenu = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = inputValue.ifEmpty { "Enter Number" },
+                        style = MaterialTheme.typography.displaySmall,
+                        color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+
+                    DropdownMenu(
+                        expanded = expandedOverlayClipboardMenu,
+                        onDismissRequest = { expandedOverlayClipboardMenu = false }
+                    ) {
+                        val hasClipboardText = overlayClipboardManager?.hasPrimaryClip() == true
+                        if (hasClipboardText) {
+                            val clipText = overlayClipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                            val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                            if (filteredDigits.isNotEmpty()) {
+                                DropdownMenuItem(
+                                    text = { Text("Paste: $filteredDigits") },
+                                    onClick = {
+                                        onValueChange(filteredDigits)
+                                        expandedOverlayClipboardMenu = false
+                                    }
+                                )
+                            }
+                        }
+                        if (inputValue.isNotEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("Copy Number") },
+                                onClick = {
+                                    try {
+                                        val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
+                                        overlayClipboardManager?.setPrimaryClip(clip)
+                                        Toast.makeText(context, "Number copied", Toast.LENGTH_SHORT).show()
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                    expandedOverlayClipboardMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Clear") },
+                                onClick = {
+                                    onValueChange("")
+                                    expandedOverlayClipboardMenu = false
+                                }
+                            )
+                        }
+                    }
+                }
 
                 if (inputValue.isNotEmpty()) {
                     IconButton(onClick = {

@@ -88,6 +88,10 @@ fun ActiveCallScreen(
     // Dynamic Surface Color based on state
     val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
     val audioState by CallManager.audioState.collectAsStateWithLifecycle()
+    val waitingCall by CallManager.waitingCall.collectAsStateWithLifecycle()
+    val allCalls by CallManager.calls.collectAsStateWithLifecycle()
+    val heldCall = remember(allCalls) { allCalls.firstOrNull { it.state == android.telecom.Call.STATE_HOLDING } }
+
     LaunchedEffect(audioState) {
         audioState?.let {
             isBluetoothOn = (it.route == android.telecom.CallAudioState.ROUTE_BLUETOOTH)
@@ -237,6 +241,117 @@ fun ActiveCallScreen(
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
+                )
+
+                if (heldCall != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    val heldNumber = heldCall.details?.handle?.schemeSpecificPart ?: ""
+                    val heldName = remember(heldNumber, contacts) {
+                        contacts.find { it.number == heldNumber }?.name ?: heldNumber
+                    }
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Text("⏸️", fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "On Hold: $heldName",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    if (heldName != heldNumber) {
+                                        Text(
+                                            text = heldNumber,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
+                            }
+                            Button(
+                                onClick = {
+                                    try {
+                                        val activeCall = CallManager.currentCall.value
+                                        activeCall?.hold()
+                                        heldCall.unhold()
+                                        CallManager.updateCall(heldCall)
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                },
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text("Swap", style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (waitingCall != null) {
+                val waitingNumber = waitingCall?.details?.handle?.schemeSpecificPart ?: ""
+                val waitingName = remember(waitingNumber, contacts) {
+                    contacts.find { it.number == waitingNumber }?.name ?: waitingNumber
+                }
+                AlertDialog(
+                    onDismissRequest = { /* Force explicit choice */ },
+                    title = { Text("Call Waiting", fontWeight = FontWeight.Bold) },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("Incoming call from:", style = MaterialTheme.typography.bodyMedium)
+                            Text(waitingName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                            if (waitingName != waitingNumber) {
+                                Text(waitingNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Text("Answering will put your current call on hold.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                try {
+                                    val activeCall = CallManager.currentCall.value
+                                    activeCall?.hold()
+                                    waitingCall?.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
+                                    CallManager.updateCall(waitingCall)
+                                    CallManager.updateWaitingCall(null)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text("Answer & Hold")
+                        }
+                    },
+                    dismissButton = {
+                        Button(
+                            onClick = {
+                                try {
+                                    waitingCall?.reject(false, null)
+                                    CallManager.updateWaitingCall(null)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Text("Decline")
+                        }
+                    }
                 )
             }
 

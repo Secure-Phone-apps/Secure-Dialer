@@ -27,7 +27,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setupWindowFlags()
         enableEdgeToEdge()
         checkDefaultDialerRole()
         handleIntent(intent)
@@ -36,6 +35,11 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             var showRestrictedSettingsDialog by remember { mutableStateOf(false) }
             val isDarkTheme by viewModel.isDarkTheme
+            val isCallActive by viewModel.isCallActive
+
+            LaunchedEffect(isCallActive) {
+                setLockScreenVisibility(isCallActive)
+            }
 
             // Observe lifecycle to refresh default dialer status
             val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -77,13 +81,17 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun setupWindowFlags() {
+    private fun setLockScreenVisibility(show: Boolean) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(true)
-            setTurnScreenOn(true)
+            setShowWhenLocked(show)
+            setTurnScreenOn(show)
         } else {
             @Suppress("DEPRECATION")
-            window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+            if (show) {
+                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+            } else {
+                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+            }
         }
     }
 
@@ -118,8 +126,28 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        if (intent?.getBooleanExtra("SHOW_CALL_LOG", false) == true) {
+        if (intent == null) return
+
+        if (intent.getBooleanExtra("SHOW_CALL_LOG", false)) {
             viewModel.selectedTab.value = 1
+        }
+
+        val action = intent.action
+        val data = intent.data
+        if (action == Intent.ACTION_CALL || action == Intent.ACTION_DIAL || action == Intent.ACTION_VIEW) {
+            val scheme = data?.scheme
+            if (scheme == "tel") {
+                val number = data?.schemeSpecificPart ?: ""
+                if (number.isNotEmpty()) {
+                    if (action == Intent.ACTION_CALL) {
+                        CallManager.placeCall(this, number)
+                    } else {
+                        viewModel.dialpadInput.value = number
+                        viewModel.selectedTab.value = 3
+                        viewModel.isDialpadVisible.value = true
+                    }
+                }
+            }
         }
     }
 
