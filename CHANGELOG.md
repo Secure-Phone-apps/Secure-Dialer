@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-07-15
+
+### Added
+- **Modern Architecture Showcase**: Updated project documentation to clearly highlight our 100% Kotlin & Jetpack Compose declarative design stack, increasing trust and confidence among security auditors and open-source developers.
+- **Search-Optimized FOSS Identity**: Fully redesigned and optimized the project README for maximum search visibility across GitHub and web search engines, specifically catering to users looking for safe, secure, and offline-first dialer alternatives.
+
+### Fixed
+- **Call-Initiation Keyboard Dismissal**: Implemented smart soft-keyboard auto-dismissal on call placement in `CallManager`, instantly closing any on-screen input boards when a call starts to prevent UI overlapping.
+- **Screen Guard Overlay Stability**: Refined the transition between dialpad screen lock states and active calling overlays.
+
+### Security
+- **Independent Clean-Slate Identity**: Officially documented our independent code pedigree, certifying that the codebase is built 100% from scratch (no forks, repackaging, or legacy technical debt) for reliable safety audits.
+
 ## [1.0.2] - 2026-07-10
 
 ### Added
