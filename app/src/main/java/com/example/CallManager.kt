@@ -133,6 +133,17 @@ object CallManager {
 
     fun placeCall(context: Context, number: String, preferredSim: String = "Ask") {
         try {
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+            val activity = context as? android.app.Activity
+            val windowToken = activity?.currentFocus?.windowToken ?: activity?.window?.decorView?.windowToken
+            if (imm != null && windowToken != null) {
+                imm.hideSoftInputFromWindow(windowToken, 0)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
             if (telecomManager != null) {
                 val uri = android.net.Uri.fromParts("tel", number, null)
