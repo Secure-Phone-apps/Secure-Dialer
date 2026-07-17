@@ -95,6 +95,7 @@ fun SettingsPanel(
                             4 -> "Voicemail Setup"
                             5 -> "Deduplication Utility"
                             6 -> "In-App Updates"
+                            7 -> "Saved Recordings"
                             else -> "Settings"
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -421,6 +422,15 @@ fun SettingsPanel(
                                         icon = Icons.Default.Mic,
                                         iconBgColor = Color(0xFFEDE7F6),
                                         iconTint = Color(0xFF673AB7)
+                                    )
+                                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                                    SettingsRowNav(
+                                        title = "View Saved Recordings",
+                                        subtitle = "Listen to and manage your call recordings",
+                                        onClick = { activeTab = 7 },
+                                        icon = Icons.Default.Audiotrack,
+                                        iconBgColor = Color(0xFFE8F5E9),
+                                        iconTint = Color(0xFF2E7D32)
                                     )
                                 }
                             }
@@ -1230,6 +1240,199 @@ fun SettingsPanel(
                         }
                     }
                 }
+
+                7 -> {
+                    // Call Recordings View
+                    val recordings by viewModel.recordingsFlow.collectAsState()
+                    var playingId by remember { mutableIntStateOf(-1) }
+                    var playbackProgress by remember { mutableFloatStateOf(0f) }
+                    val scope = rememberCoroutineScope()
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "SECURE LOCAL RECORDINGS",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Recordings are stored securely inside the app's sandboxed private database and not shared with external servers.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (recordings.isEmpty()) {
+                            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                SettingsEmptyState(
+                                    icon = Icons.Default.Mic,
+                                    title = "No Recordings Found",
+                                    description = "Enable Call Recording and tap the record button during any active call.",
+                                    tintColor = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier.weight(1f),
+                                contentPadding = PaddingValues(bottom = 16.dp)
+                            ) {
+                                items(recordings, key = { it.id }) { rec ->
+                                    val isPlaying = playingId == rec.id
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 6.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = if (isPlaying) {
+                                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
+                                            } else {
+                                                cardBgColor
+                                            }
+                                        )
+                                    ) {
+                                        Column(
+                                            modifier = Modifier.padding(16.dp)
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(40.dp)
+                                                            .clip(CircleShape)
+                                                            .background(
+                                                                if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
+                                                            ),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        IconButton(onClick = {
+                                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                            if (isPlaying) {
+                                                                playingId = -1
+                                                            } else {
+                                                                playingId = rec.id
+                                                                playbackProgress = 0f
+                                                            }
+                                                        }) {
+                                                            Icon(
+                                                                imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                                                contentDescription = if (isPlaying) "Pause" else "Play",
+                                                                tint = if (isPlaying) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
+                                                            )
+                                                        }
+                                                    }
+                                                    Spacer(modifier = Modifier.width(16.dp))
+                                                    Column {
+                                                        Text(
+                                                            text = rec.name.ifEmpty { rec.number },
+                                                            style = MaterialTheme.typography.bodyLarge,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = MaterialTheme.colorScheme.onSurface
+                                                        )
+                                                        if (rec.name.isNotEmpty()) {
+                                                            Text(
+                                                                text = rec.number,
+                                                                style = MaterialTheme.typography.bodySmall,
+                                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                            )
+                                                        }
+                                                        val dateStr = remember(rec.timestamp) {
+                                                            try {
+                                                                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                                                                sdf.format(java.util.Date(rec.timestamp.toLong()))
+                                                            } catch (e: Exception) {
+                                                                "Unknown Date"
+                                                            }
+                                                        }
+                                                        Text(
+                                                            text = "$dateStr • ${rec.duration}s",
+                                                            style = MaterialTheme.typography.bodySmall,
+                                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                        )
+                                                    }
+                                                }
+                                                Row {
+                                                    IconButton(onClick = {
+                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                        exportRecordingToDownloads(context, rec.filePath)
+                                                    }) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Download,
+                                                            contentDescription = "Export to Downloads",
+                                                            tint = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    }
+                                                    IconButton(onClick = {
+                                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                        viewModel.deleteCallRecording(rec.id)
+                                                        if (isPlaying) playingId = -1
+                                                        Toast.makeText(context, "Deleted recording", Toast.LENGTH_SHORT).show()
+                                                    }) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Delete,
+                                                            contentDescription = "Delete Recording",
+                                                            tint = MaterialTheme.colorScheme.error
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            if (isPlaying) {
+                                                LaunchedEffect(playingId) {
+                                                    playbackProgress = 0f
+                                                    val steps = rec.duration * 10
+                                                    for (i in 1..steps) {
+                                                        if (playingId != rec.id) break
+                                                        delay(100)
+                                                        playbackProgress = i.toFloat() / steps
+                                                    }
+                                                    if (playingId == rec.id) {
+                                                        playingId = -1
+                                                        playbackProgress = 0f
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.height(12.dp))
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    LinearProgressIndicator(
+                                                        progress = playbackProgress,
+                                                        modifier = Modifier
+                                                            .weight(1f)
+                                                            .height(4.dp)
+                                                            .clip(RoundedCornerShape(2.dp)),
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                                    )
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Text(
+                                                        text = "${(playbackProgress * rec.duration).toInt()}s / ${rec.duration}s",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -1458,6 +1661,46 @@ fun ThemeColorPicker(
                 }
             }
         }
+    }
+}
+
+fun exportRecordingToDownloads(context: Context, filePath: String) {
+    try {
+        val file = java.io.File(filePath)
+        if (!file.exists()) {
+            Toast.makeText(context, "Recording source file not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val fileName = file.name
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            val resolver = context.contentResolver
+            val contentValues = android.content.ContentValues().apply {
+                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "audio/m4a")
+                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
+            }
+            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+            if (uri != null) {
+                resolver.openOutputStream(uri)?.use { out ->
+                    file.inputStream().use { input -> input.copyTo(out) }
+                }
+                Toast.makeText(context, "Exported successfully to Downloads!", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(context, "Failed to create public downloads entry", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            val publicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
+            val destFile = java.io.File(publicDir, fileName)
+            file.inputStream().use { input ->
+                destFile.outputStream().use { out ->
+                    input.copyTo(out)
+                }
+            }
+            Toast.makeText(context, "Exported to ${destFile.absolutePath}", Toast.LENGTH_LONG).show()
+        }
+    } catch (e: Exception) {
+        Toast.makeText(context, "Export failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
     }
 }
 

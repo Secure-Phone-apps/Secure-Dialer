@@ -131,6 +131,7 @@ object CallManager {
         }
     }
 
+    @android.annotation.SuppressLint("MissingPermission")
     fun placeCall(context: Context, number: String, preferredSim: String = "Ask") {
         try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager

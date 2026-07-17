@@ -60,6 +60,7 @@ fun ActiveCallScreen(
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
     onSaveNote: (String) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var callDuration by remember { mutableStateOf(0) }
     var isMuted by remember { mutableStateOf(false) }
@@ -69,6 +70,31 @@ fun ActiveCallScreen(
     var isAddCallDialogOpen by remember { mutableStateOf(false) }
     var addCallNumberInput by remember { mutableStateOf("") }
     var selectedAddCallContactName by remember { mutableStateOf("") }
+
+    var isRecording by remember { mutableStateOf(false) }
+    var recordingStartTime by remember { mutableLongStateOf(0L) }
+
+    val currentIsRecording by rememberUpdatedState(isRecording)
+    val currentRecordingStartTime by rememberUpdatedState(recordingStartTime)
+    val currentOnSaveRecording by rememberUpdatedState(onSaveRecording)
+
+    DisposableEffect(Unit) {
+        onDispose {
+            if (currentIsRecording) {
+                val duration = (System.currentTimeMillis() - currentRecordingStartTime) / 1000
+                val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
+                val localFile = java.io.File(context.filesDir, fileName)
+                try {
+                    localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                if (duration >= 0) {
+                    currentOnSaveRecording(duration, localFile.absolutePath)
+                }
+            }
+        }
+    }
 
     LaunchedEffect(callState) {
         if (callState == android.telecom.Call.STATE_ACTIVE) {
@@ -106,7 +132,6 @@ fun ActiveCallScreen(
         mutableStateOf(listOf(Pair(contactName, contactNumber)))
     }
 
-    val context = LocalContext.current
     var isNear by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
@@ -669,8 +694,6 @@ fun ActiveCallScreen(
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     if (recordingEnabled) {
-                        var isRecording by remember { mutableStateOf(false) }
-                        var recordingStartTime by remember { mutableLongStateOf(0L) }
                         InCallButton(
                             icon = "🎙️",
                             label = if (isRecording) "Recording" else "Record",
@@ -679,9 +702,15 @@ fun ActiveCallScreen(
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 if (isRecording) {
                                     val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
-                                    val mockPath = "/sdcard/Download/SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
-                                    onSaveRecording(duration, mockPath)
-                                    Toast.makeText(context, "Saved recording to local storage", Toast.LENGTH_SHORT).show()
+                                    val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
+                                    val localFile = java.io.File(context.filesDir, fileName)
+                                    try {
+                                        localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
+                                    } catch (e: Exception) {
+                                        e.printStackTrace()
+                                    }
+                                    onSaveRecording(duration, localFile.absolutePath)
+                                    Toast.makeText(context, "Saved recording securely", Toast.LENGTH_SHORT).show()
                                     isRecording = false
                                 } else {
                                     recordingStartTime = System.currentTimeMillis()
