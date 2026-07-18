@@ -19,7 +19,7 @@ Whether you are looking to replace **Fossify Dialer**, **Simple Dialer**, **Ever
 
 ## 📱 Visual Preview
 
-| Dialpad & Contacts | Active Calling | Call History |
+| Dialpad | Active Calling | Call History |
 | :---: | :---: | :---: |
 | ![Dialpad](assets/screenshots/dialpad.jpg) | ![Active Call](assets/screenshots/active_call.jpg) | ![Recents](assets/screenshots/recents.jpg) |
 
