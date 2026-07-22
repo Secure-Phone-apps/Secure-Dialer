@@ -1,0 +1,151 @@
+<resources>
+    <string name="app_name">Secure Dialer</string>
+
+    <!-- Tabs -->
+    <string name="tab_favorites">お気に入り</string>
+    <string name="tab_recents">履歴</string>
+    <string name="tab_contacts">連絡先</string>
+    <string name="tab_dialpad">ダイヤル</string>
+    <string name="tab_voicemail">留守電</string>
+
+    <!-- Header & Search -->
+    <string name="search_placeholder">連絡先や番号を検索</string>
+    <string name="search_clear">クリア</string>
+    <string name="settings_title">設定</string>
+    <string name="default_dialer_warning">すべての機能を使用するにはデフォルトの通話アプリに設定してください。</string>
+    <string name="warning">警告</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">必要な権限</string>
+    <string name="contacts_perm_desc">電話帳の連絡先を表示・編集・発信するのには、連絡先へのアクセス権限を許可してください。</string>
+    <string name="enable_contacts_perm">連絡先の権限を許可</string>
+    <string name="call_log_perm_desc">通話履歴を表示・発信するのには、通話履歴へのアクセス権限を許可してください。</string>
+    <string name="enable_call_log_perm">通話履歴の権限を許可</string>
+
+    <!-- Contacts -->
+    <string name="contacts_header">連絡先</string>
+    <string name="add_new_contact">新規追加</string>
+    <string name="no_contacts_title">連絡先が見つかりません</string>
+    <string name="no_contacts_subtitle">「新規追加」をタップして作成します</string>
+    <string name="add_contact_dialog_title">連絡先を追加</string>
+    <string name="edit_contact_dialog_title">連絡先を編集</string>
+    <string name="label_name">名前</string>
+    <string name="label_phone_number">電話番号</string>
+    <string name="label_type">種別</string>
+    <string name="label_email">メール</string>
+    <string name="label_mobile">携帯電話</string>
+    <string name="label_work">勤務先</string>
+    <string name="label_home">自宅</string>
+    <string name="label_other">その他</string>
+    <string name="btn_save">保存</string>
+    <string name="btn_cancel">キャンセル</string>
+    <string name="btn_delete">削除</string>
+    <string name="btn_edit">編集</string>
+
+    <!-- Recents -->
+    <string name="recents_header">履歴</string>
+    <string name="filter_all">すべて</string>
+    <string name="filter_missed">着信履歴のみ</string>
+    <string name="no_call_log_title">通話履歴はありません</string>
+    <string name="no_call_log_subtitle">最近の通話がここに表示されます</string>
+    <string name="no_results_title">該当なし</string>
+    <string name="no_results_subtitle">一致する通話履歴がありません</string>
+
+    <!-- Dialpad -->
+    <string name="dialpad_enter_number">番号を入力</string>
+    <string name="dialpad_no_matches">一致する連絡先がありません</string>
+    <string name="dialpad_paste">貼り付け</string>
+    <string name="dialpad_copy">番号をコピー</string>
+    <string name="dialpad_clear">クリア</string>
+
+    <!-- Active Call -->
+    <string name="call_blocked_toast">🚫 着信拒否されました</string>
+    <string name="call_status_hold">保留中</string>
+    <string name="call_status_dialing">発信中...</string>
+    <string name="call_status_ringing">着信中...</string>
+    <string name="call_status_connecting">接続中...</string>
+    <string name="call_status_conference">グループ通話</string>
+    <string name="call_status_ongoing">通話中</string>
+    <string name="on_hold_prefix">保留中:</string>
+    <string name="btn_swap">切り替え</string>
+    <string name="call_waiting_title">割込通話</string>
+    <string name="call_waiting_incoming_from">着信中:</string>
+    <string name="call_waiting_notice">応答すると現在の通話は保留になります。</string>
+    <string name="btn_answer_hold">保留して応答</string>
+    <string name="btn_decline">拒否</string>
+    <string name="quick_responses">クイック返信</string>
+    <string name="sms_sent">SMSを送信しました</string>
+    <string name="sms_failed">SMSの送信に失敗しました</string>
+    <string name="close">閉じる</string>
+    <string name="add_call">通話を追加</string>
+    <string name="add_call_search_hint">連絡先を検索または番号を入力</string>
+    <string name="btn_add_merge">追加して統合</string>
+    <string name="keypad">キーパッド</string>
+    <string name="mute">ミュート</string>
+    <string name="speaker">スピーカー</string>
+    <string name="hold">保留</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="record">録音</string>
+    <string name="recording">録音中</string>
+    <string name="call_note">通話メモ</string>
+    <string name="send_quick_response">💬 クイック返信を送信</string>
+    <string name="btn_answer">応答</string>
+    <string name="btn_hangup">切断</string>
+    <string name="jot_call_note_title">通話メモを作成</string>
+    <string name="note_placeholder">メモを入力...</string>
+    <string name="btn_save_note">メモを保存</string>
+    <string name="btn_discard">破棄</string>
+    <string name="note_saved">メモを安全に保存しました</string>
+    <string name="recording_saved">録音を安全に保存しました</string>
+    <string name="recording_started">⏺️ 通話録音を開始しました</string>
+
+    <!-- Favorites & Voicemail -->
+    <string name="favorites_header">お気に入り</string>
+    <string name="no_favorites_title">お気に入りはまだありません</string>
+    <string name="no_favorites_subtitle">星マークをタップして追加します</string>
+    <string name="voicemail_header">留守番電話</string>
+    <string name="no_voicemails_title">メッセージはありません</string>
+    <string name="no_voicemails_subtitle">新しいメッセージはありません</string>
+
+    <!-- Settings Panel -->
+    <string name="settings_appearance">外観</string>
+    <string name="settings_dark_theme">ダークテーマ</string>
+    <string name="settings_dark_theme_sub">ダークテーマを適用します</string>
+    <string name="settings_accent_color">アクセントカラー</string>
+    <string name="settings_sound_haptics">音とバイブレーション</string>
+    <string name="settings_dialpad_tones">ダイヤル音</string>
+    <string name="settings_dialpad_tones_sub">キー押下時に音を鳴らす</string>
+    <string name="settings_vibrate">タップ時の振動</string>
+    <string name="settings_vibrate_sub">ダイヤル操作時の触覚フィードバック</string>
+    <string name="settings_calls_blocking">通話と着信拒否</string>
+    <string name="settings_speed_dial">スピードダイヤル</string>
+    <string name="settings_speed_dial_sub">短縮キー1-9を割り当てる</string>
+    <string name="settings_blocked_numbers">着信拒否番号</string>
+    <string name="settings_blocked_numbers_sub">拒否リストの管理</string>
+    <string name="settings_quick_responses">クイック返信</string>
+    <string name="settings_quick_responses_sub">SMS拒否メッセージの編集</string>
+    <string name="settings_sim_voicemail">SIMと留守電</string>
+    <string name="settings_preferred_sim">優先SIMカード</string>
+    <string name="settings_preferred_sim_sub">発信に使用するSIMカードを選択</string>
+    <string name="settings_voicemail_num">留守電番号</string>
+    <string name="settings_voicemail_num_sub">スピードダイヤル1番の設定</string>
+    <string name="settings_data_utilities">データとユーティリティ</string>
+    <string name="settings_dedup">重複統合</string>
+    <string name="settings_dedup_sub">重複する連絡先を自動で統合</string>
+    <string name="settings_recordings">保存された録音</string>
+    <string name="settings_recordings_sub">ローカルに保存された通話録音を表示</string>
+    <string name="settings_app_updates">アプリの更新</string>
+    <string name="settings_app_updates_sub">バージョン状態と変更履歴</string>
+    <string name="settings_about_privacy">情報とプライバシー</string>
+    <string name="settings_about">Secure Dialerについて</string>
+    <string name="settings_about_sub">バージョン情報とライセンス</string>
+    <string name="settings_privacy">プライバシーポリシー</string>
+    <string name="settings_privacy_sub">データ収集を行わない方針について</string>
+    <string name="settings_back">戻る</string>
+    <string name="settings_block_list_title">拒否リスト</string>
+    <string name="settings_quick_resp_title">クイック返信</string>
+    <string name="settings_voicemail_setup_title">留守電設定</string>
+    <string name="settings_dedup_title">重複統合</string>
+    <string name="settings_updates_title">アップデート</string>
+    <string name="settings_recordings_title">録音一覧</string>
+</resources>
