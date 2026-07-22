@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import androidx.compose.ui.res.stringResource
 
 @Composable
 fun HeaderSearchBar(
@@ -49,14 +50,14 @@ fun HeaderSearchBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Search,
-                contentDescription = "Search",
+                contentDescription = stringResource(R.string.search_placeholder),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.width(16.dp))
             Box(modifier = Modifier.weight(1.0f)) {
                 if (searchQuery.isEmpty()) {
                     Text(
-                        text = "Search contacts & numbers",
+                        text = stringResource(R.string.search_placeholder),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -75,7 +76,7 @@ fun HeaderSearchBar(
                 IconButton(onClick = { onQueryChange("") }) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Clear",
+                        contentDescription = stringResource(R.string.search_clear),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -83,7 +84,7 @@ fun HeaderSearchBar(
             IconButton(onClick = onSettingsClick) {
                 Icon(
                     imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
+                    contentDescription = stringResource(R.string.settings_title),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -101,10 +102,10 @@ fun BottomNavBar(
         tonalElevation = 0.dp
     ) {
         val items = listOf(
-            Triple(0, "Favorites", Icons.Default.Star),
-            Triple(1, "Recents", Icons.Default.History),
-            Triple(2, "Contacts", Icons.Default.Person),
-            Triple(3, "Dialpad", Icons.Default.Call)
+            Triple(0, stringResource(R.string.tab_favorites), Icons.Default.Star),
+            Triple(1, stringResource(R.string.tab_recents), Icons.Default.History),
+            Triple(2, stringResource(R.string.tab_contacts), Icons.Default.Person),
+            Triple(3, stringResource(R.string.tab_dialpad), Icons.Default.Call)
         )
 
         items.forEach { (index, label, icon) ->

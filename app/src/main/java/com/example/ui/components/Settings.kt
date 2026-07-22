@@ -35,6 +35,8 @@ import kotlinx.coroutines.delay
 
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import com.example.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,15 +90,15 @@ fun SettingsPanel(
                 title = {
                     Text(
                         text = when (activeTab) {
-                            0 -> "Settings"
-                            1 -> "Block List"
-                            2 -> "Speed Dial"
-                            3 -> "Quick Responses"
-                            4 -> "Voicemail Setup"
-                            5 -> "Deduplication Utility"
-                            6 -> "In-App Updates"
-                            7 -> "Saved Recordings"
-                            else -> "Settings"
+                            0 -> stringResource(R.string.settings_title)
+                            1 -> stringResource(R.string.settings_block_list_title)
+                            2 -> stringResource(R.string.settings_speed_dial)
+                            3 -> stringResource(R.string.settings_quick_resp_title)
+                            4 -> stringResource(R.string.settings_voicemail_setup_title)
+                            5 -> stringResource(R.string.settings_dedup_title)
+                            6 -> stringResource(R.string.settings_updates_title)
+                            7 -> stringResource(R.string.settings_recordings_title)
+                            else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
@@ -108,7 +110,7 @@ fun SettingsPanel(
                     }) {
                         Icon(
                             imageVector = if (activeTab != 0) Icons.AutoMirrored.Filled.ArrowBack else Icons.Default.Close,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.settings_back),
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }

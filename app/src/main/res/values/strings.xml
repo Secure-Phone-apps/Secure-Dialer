@@ -1,3 +1,151 @@
 <resources>
     <string name="app_name">Secure Dialer</string>
+
+    <!-- Tabs -->
+    <string name="tab_favorites">Favorites</string>
+    <string name="tab_recents">Recents</string>
+    <string name="tab_contacts">Contacts</string>
+    <string name="tab_dialpad">Dialpad</string>
+    <string name="tab_voicemail">Voicemail</string>
+
+    <!-- Header & Search -->
+    <string name="search_placeholder">Search contacts &amp; numbers</string>
+    <string name="search_clear">Clear</string>
+    <string name="settings_title">Settings</string>
+    <string name="default_dialer_warning">Set as default dialer to enable all features.</string>
+    <string name="warning">Warning</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">Permissions Required</string>
+    <string name="contacts_perm_desc">To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.</string>
+    <string name="enable_contacts_perm">Enable Phone Contacts</string>
+    <string name="call_log_perm_desc">To access, load, and call the real call history on your phone, please enable the Call Log Permission.</string>
+    <string name="enable_call_log_perm">Enable Call Log</string>
+
+    <!-- Contacts -->
+    <string name="contacts_header">Contacts</string>
+    <string name="add_new_contact">Add New</string>
+    <string name="no_contacts_title">No contacts found</string>
+    <string name="no_contacts_subtitle">Tap \'Add New\' to create a contact</string>
+    <string name="add_contact_dialog_title">Add Contact</string>
+    <string name="edit_contact_dialog_title">Edit Contact</string>
+    <string name="label_name">Name</string>
+    <string name="label_phone_number">Phone Number</string>
+    <string name="label_type">Type</string>
+    <string name="label_email">Email</string>
+    <string name="label_mobile">Mobile</string>
+    <string name="label_work">Work</string>
+    <string name="label_home">Home</string>
+    <string name="label_other">Other</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_edit">Edit</string>
+
+    <!-- Recents -->
+    <string name="recents_header">Recents</string>
+    <string name="filter_all">All</string>
+    <string name="filter_missed">Missed</string>
+    <string name="no_call_log_title">Your call log is empty</string>
+    <string name="no_call_log_subtitle">Recent calls will show up here</string>
+    <string name="no_results_title">No results found</string>
+    <string name="no_results_subtitle">No matching calls found</string>
+
+    <!-- Dialpad -->
+    <string name="dialpad_enter_number">Enter Number</string>
+    <string name="dialpad_no_matches">No matching contacts</string>
+    <string name="dialpad_paste">Paste</string>
+    <string name="dialpad_copy">Copy Number</string>
+    <string name="dialpad_clear">Clear</string>
+
+    <!-- Active Call -->
+    <string name="call_blocked_toast">🚫 Call Blocked</string>
+    <string name="call_status_hold">Call on hold</string>
+    <string name="call_status_dialing">Dialing...</string>
+    <string name="call_status_ringing">Incoming call...</string>
+    <string name="call_status_connecting">Connecting...</string>
+    <string name="call_status_conference">Conference call</string>
+    <string name="call_status_ongoing">Ongoing call</string>
+    <string name="on_hold_prefix">On Hold:</string>
+    <string name="btn_swap">Swap</string>
+    <string name="call_waiting_title">Call Waiting</string>
+    <string name="call_waiting_incoming_from">Incoming call from:</string>
+    <string name="call_waiting_notice">Answering will put your current call on hold.</string>
+    <string name="btn_answer_hold">Answer &amp; Hold</string>
+    <string name="btn_decline">Decline</string>
+    <string name="quick_responses">Quick Responses</string>
+    <string name="sms_sent">SMS Sent</string>
+    <string name="sms_failed">Failed to send SMS</string>
+    <string name="close">Close</string>
+    <string name="add_call">Add Call</string>
+    <string name="add_call_search_hint">Search contact or enter number</string>
+    <string name="btn_add_merge">Add &amp; Merge</string>
+    <string name="keypad">Keypad</string>
+    <string name="mute">Mute</string>
+    <string name="speaker">Speaker</string>
+    <string name="hold">Hold</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="record">Record</string>
+    <string name="recording">Recording</string>
+    <string name="call_note">Call Note</string>
+    <string name="send_quick_response">💬 Send Quick Response</string>
+    <string name="btn_answer">Answer</string>
+    <string name="btn_hangup">Hang up</string>
+    <string name="jot_call_note_title">Jot Call Note</string>
+    <string name="note_placeholder">Enter important details...</string>
+    <string name="btn_save_note">Save Note</string>
+    <string name="btn_discard">Discard</string>
+    <string name="note_saved">Note saved securely</string>
+    <string name="recording_saved">Saved recording securely</string>
+    <string name="recording_started">⏺️ Call Recording Started</string>
+
+    <!-- Favorites & Voicemail -->
+    <string name="favorites_header">Favorites</string>
+    <string name="no_favorites_title">No favorites yet</string>
+    <string name="no_favorites_subtitle">Star contacts to find them easily</string>
+    <string name="voicemail_header">Voicemail</string>
+    <string name="no_voicemails_title">No voicemails</string>
+    <string name="no_voicemails_subtitle">You\'re all caught up</string>
+
+    <!-- Settings Panel -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_dark_theme">Dark Theme</string>
+    <string name="settings_dark_theme_sub">Apply dark visual theme to the interface</string>
+    <string name="settings_accent_color">Accent Color</string>
+    <string name="settings_sound_haptics">Sound &amp; Haptics</string>
+    <string name="settings_dialpad_tones">Dialpad Tones</string>
+    <string name="settings_dialpad_tones_sub">Play sounds when dialing keys</string>
+    <string name="settings_vibrate">Vibrate on Click</string>
+    <string name="settings_vibrate_sub">Haptic response on dialpad interactions</string>
+    <string name="settings_calls_blocking">Calls &amp; Blocking</string>
+    <string name="settings_speed_dial">Speed Dial</string>
+    <string name="settings_speed_dial_sub">Assign fast call keys 1-9</string>
+    <string name="settings_blocked_numbers">Blocked Numbers</string>
+    <string name="settings_blocked_numbers_sub">Manage restricted incoming callers</string>
+    <string name="settings_quick_responses">Quick Responses</string>
+    <string name="settings_quick_responses_sub">Edit SMS decline templates</string>
+    <string name="settings_sim_voicemail">SIM &amp; Voicemail</string>
+    <string name="settings_preferred_sim">Preferred SIM</string>
+    <string name="settings_preferred_sim_sub">Select SIM card for outgoing calls</string>
+    <string name="settings_voicemail_num">Voicemail Number</string>
+    <string name="settings_voicemail_num_sub">Configure speed dial 1 target</string>
+    <string name="settings_data_utilities">Data &amp; Utilities</string>
+    <string name="settings_dedup">Deduplication Utility</string>
+    <string name="settings_dedup_sub">Merge duplicate contacts automatically</string>
+    <string name="settings_recordings">Saved Recordings</string>
+    <string name="settings_recordings_sub">Access locally stored call audio</string>
+    <string name="settings_app_updates">In-App Updates</string>
+    <string name="settings_app_updates_sub">Check version status &amp; changelog</string>
+    <string name="settings_about_privacy">About &amp; Privacy</string>
+    <string name="settings_about">About Secure Dialer</string>
+    <string name="settings_about_sub">Version info, licenses, and core tech</string>
+    <string name="settings_privacy">Privacy Policy</string>
+    <string name="settings_privacy_sub">Zero data collection notice</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_block_list_title">Block List</string>
+    <string name="settings_quick_resp_title">Quick Responses</string>
+    <string name="settings_voicemail_setup_title">Voicemail Setup</string>
+    <string name="settings_dedup_title">Deduplication Utility</string>
+    <string name="settings_updates_title">In-App Updates</string>
+    <string name="settings_recordings_title">Saved Recordings</string>
 </resources>

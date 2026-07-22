@@ -23,6 +23,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -208,7 +210,7 @@ fun MainScreen(
 
     fun initiateCall(name: String, number: String, label: String = "Mobile") {
         if (blockedNumbers.contains(number)) {
-            Toast.makeText(context, "🚫 Call Blocked", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
         }
         callingContactName = name
@@ -230,9 +232,9 @@ fun MainScreen(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
                     ) {
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warning, "Warning", tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                            Icon(Icons.Default.Warning, stringResource(R.string.warning), tint = MaterialTheme.colorScheme.onTertiaryContainer)
                             Spacer(Modifier.width(16.dp))
-                            Text("Set as default dialer to enable all features.", color = MaterialTheme.colorScheme.onTertiaryContainer)
+                            Text(stringResource(R.string.default_dialer_warning), color = MaterialTheme.colorScheme.onTertiaryContainer)
                         }
                     }
                 }

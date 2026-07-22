@@ -1,0 +1,151 @@
+<resources>
+    <string name="app_name">Secure Dialer</string>
+
+    <!-- Tabs -->
+    <string name="tab_favorites">Favoritos</string>
+    <string name="tab_recents">Recientes</string>
+    <string name="tab_contacts">Contactos</string>
+    <string name="tab_dialpad">Teclado</string>
+    <string name="tab_voicemail">Buzón de voz</string>
+
+    <!-- Header & Search -->
+    <string name="search_placeholder">Buscar contactos y números</string>
+    <string name="search_clear">Borrar</string>
+    <string name="settings_title">Ajustes</string>
+    <string name="default_dialer_warning">Establecer como teléfono predeterminado para habilitar todas las funciones.</string>
+    <string name="warning">Advertencia</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">Permisos requeridos</string>
+    <string name="contacts_perm_desc">Para acceder, cargar, editar y llamar a los contactos de su teléfono, habilite el permiso de Contactos.</string>
+    <string name="enable_contacts_perm">Habilitar contactos</string>
+    <string name="call_log_perm_desc">Para acceder, cargar y llamar al historial de llamadas real de su teléfono, habilite el permiso del Registro de llamadas.</string>
+    <string name="enable_call_log_perm">Habilitar registro de llamadas</string>
+
+    <!-- Contacts -->
+    <string name="contacts_header">Contactos</string>
+    <string name="add_new_contact">Añadir nuevo</string>
+    <string name="no_contacts_title">No se encontraron contactos</string>
+    <string name="no_contacts_subtitle">Toque \'Añadir nuevo\' para crear un contacto</string>
+    <string name="add_contact_dialog_title">Añadir contacto</string>
+    <string name="edit_contact_dialog_title">Editar contacto</string>
+    <string name="label_name">Nombre</string>
+    <string name="label_phone_number">Número de teléfono</string>
+    <string name="label_type">Tipo</string>
+    <string name="label_email">Correo electrónico</string>
+    <string name="label_mobile">Móvil</string>
+    <string name="label_work">Trabajo</string>
+    <string name="label_home">Casa</string>
+    <string name="label_other">Otro</string>
+    <string name="btn_save">Guardar</string>
+    <string name="btn_cancel">Cancelar</string>
+    <string name="btn_delete">Eliminar</string>
+    <string name="btn_edit">Editar</string>
+
+    <!-- Recents -->
+    <string name="recents_header">Recientes</string>
+    <string name="filter_all">Todas</string>
+    <string name="filter_missed">Perdidas</string>
+    <string name="no_call_log_title">Su registro de llamadas está vacío</string>
+    <string name="no_call_log_subtitle">Las llamadas recientes aparecerán aquí</string>
+    <string name="no_results_title">No se encontraron resultados</string>
+    <string name="no_results_subtitle">No hay llamadas coincidentes</string>
+
+    <!-- Dialpad -->
+    <string name="dialpad_enter_number">Introducir número</string>
+    <string name="dialpad_no_matches">Sin contactos coincidentes</string>
+    <string name="dialpad_paste">Pegar</string>
+    <string name="dialpad_copy">Copiar número</string>
+    <string name="dialpad_clear">Borrar</string>
+
+    <!-- Active Call -->
+    <string name="call_blocked_toast">🚫 Llamada bloqueada</string>
+    <string name="call_status_hold">Llamada en espera</string>
+    <string name="call_status_dialing">Marcando...</string>
+    <string name="call_status_ringing">Llamada entrante...</string>
+    <string name="call_status_connecting">Conectando...</string>
+    <string name="call_status_conference">Llamada en conferencia</string>
+    <string name="call_status_ongoing">Llamada en curso</string>
+    <string name="on_hold_prefix">En espera:</string>
+    <string name="btn_swap">Cambiar</string>
+    <string name="call_waiting_title">Llamada en espera</string>
+    <string name="call_waiting_incoming_from">Llamada entrante de:</string>
+    <string name="call_waiting_notice">Responder pondrá su llamada actual en espera.</string>
+    <string name="btn_answer_hold">Responder y retener</string>
+    <string name="btn_decline">Rechazar</string>
+    <string name="quick_responses">Respuestas rápidas</string>
+    <string name="sms_sent">SMS enviado</string>
+    <string name="sms_failed">Error al enviar SMS</string>
+    <string name="close">Cerrar</string>
+    <string name="add_call">Añadir llamada</string>
+    <string name="add_call_search_hint">Buscar contacto o ingresar número</string>
+    <string name="btn_add_merge">Añadir y combinar</string>
+    <string name="keypad">Teclado</string>
+    <string name="mute">Silenciar</string>
+    <string name="speaker">Altavoz</string>
+    <string name="hold">Retener</string>
+    <string name="bluetooth">Bluetooth</string>
+    <string name="record">Grabar</string>
+    <string name="recording">Grabando</string>
+    <string name="call_note">Nota de llamada</string>
+    <string name="send_quick_response">💬 Enviar respuesta rápida</string>
+    <string name="btn_answer">Responder</string>
+    <string name="btn_hangup">Colgar</string>
+    <string name="jot_call_note_title">Anotar nota de llamada</string>
+    <string name="note_placeholder">Ingresar detalles importantes...</string>
+    <string name="btn_save_note">Guardar nota</string>
+    <string name="btn_discard">Descartar</string>
+    <string name="note_saved">Nota guardada de forma segura</string>
+    <string name="recording_saved">Grabación guardada de forma segura</string>
+    <string name="recording_started">⏺️ Grabación de llamada iniciada</string>
+
+    <!-- Favorites & Voicemail -->
+    <string name="favorites_header">Favoritos</string>
+    <string name="no_favorites_title">Aún no hay favoritos</string>
+    <string name="no_favorites_subtitle">Marque contactos con estrella para encontrarlos fácilmente</string>
+    <string name="voicemail_header">Buzón de voz</string>
+    <string name="no_voicemails_title">Sin mensajes de voz</string>
+    <string name="no_voicemails_subtitle">Está al día</string>
+
+    <!-- Settings Panel -->
+    <string name="settings_appearance">Apariencia</string>
+    <string name="settings_dark_theme">Tema oscuro</string>
+    <string name="settings_dark_theme_sub">Aplicar tema visual oscuro a la interfaz</string>
+    <string name="settings_accent_color">Color de acento</string>
+    <string name="settings_sound_haptics">Sonido y vibración</string>
+    <string name="settings_dialpad_tones">Tonos de teclado</string>
+    <string name="settings_dialpad_tones_sub">Reproducir sonidos al marcar teclas</string>
+    <string name="settings_vibrate">Vibración al pulsar</string>
+    <string name="settings_vibrate_sub">Respuesta háptica en interacciones del teclado</string>
+    <string name="settings_calls_blocking">Llamadas y bloqueo</string>
+    <string name="settings_speed_dial">Marcación rápida</string>
+    <string name="settings_speed_dial_sub">Asignar teclas de llamada rápida 1-9</string>
+    <string name="settings_blocked_numbers">Números bloqueados</string>
+    <string name="settings_blocked_numbers_sub">Gestionar llamadas entrantes restringidas</string>
+    <string name="settings_quick_responses">Respuestas rápidas</string>
+    <string name="settings_quick_responses_sub">Editar plantillas de rechazo SMS</string>
+    <string name="settings_sim_voicemail">SIM y buzón de voz</string>
+    <string name="settings_preferred_sim">SIM preferida</string>
+    <string name="settings_preferred_sim_sub">Seleccionar tarjeta SIM para llamadas salientes</string>
+    <string name="settings_voicemail_num">Número de buzón de voz</string>
+    <string name="settings_voicemail_num_sub">Configurar destino de marcación rápida 1</string>
+    <string name="settings_data_utilities">Datos y utilidades</string>
+    <string name="settings_dedup">Utilidad de desduplicación</string>
+    <string name="settings_dedup_sub">Combinar contactos duplicados automáticamente</string>
+    <string name="settings_recordings">Grabaciones guardadas</string>
+    <string name="settings_recordings_sub">Acceder al audio de llamadas guardado localmente</string>
+    <string name="settings_app_updates">Actualizaciones en la aplicación</string>
+    <string name="settings_app_updates_sub">Comprobar estado de versión y registro de cambios</string>
+    <string name="settings_about_privacy">Acerca de y privacidad</string>
+    <string name="settings_about">Acerca de Secure Dialer</string>
+    <string name="settings_about_sub">Información de versión, licencias y tecnología central</string>
+    <string name="settings_privacy">Política de privacidad</string>
+    <string name="settings_privacy_sub">Aviso de cero recopilación de datos</string>
+    <string name="settings_back">Volver</string>
+    <string name="settings_block_list_title">Lista de bloqueados</string>
+    <string name="settings_quick_resp_title">Respuestas rápidas</string>
+    <string name="settings_voicemail_setup_title">Configuración del buzón de voz</string>
+    <string name="settings_dedup_title">Utilidad de desduplicación</string>
+    <string name="settings_updates_title">Actualizaciones de la app</string>
+    <string name="settings_recordings_title">Grabaciones guardadas</string>
+</resources>

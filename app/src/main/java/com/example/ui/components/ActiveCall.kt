@@ -25,6 +25,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -291,7 +293,7 @@ fun ActiveCallScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "On Hold: $heldName",
+                                        text = "${stringResource(R.string.on_hold_prefix)} $heldName",
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -319,7 +321,7 @@ fun ActiveCallScreen(
                                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                 modifier = Modifier.height(32.dp)
                             ) {
-                                Text("Swap", style = MaterialTheme.typography.labelMedium)
+                                Text(stringResource(R.string.btn_swap), style = MaterialTheme.typography.labelMedium)
                             }
                         }
                     }
@@ -333,15 +335,15 @@ fun ActiveCallScreen(
                 }
                 AlertDialog(
                     onDismissRequest = { /* Force explicit choice */ },
-                    title = { Text("Call Waiting", fontWeight = FontWeight.Bold) },
+                    title = { Text(stringResource(R.string.call_waiting_title), fontWeight = FontWeight.Bold) },
                     text = {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Incoming call from:", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.call_waiting_incoming_from), style = MaterialTheme.typography.bodyMedium)
                             Text(waitingName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                             if (waitingName != waitingNumber) {
                                 Text(waitingNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
-                            Text("Answering will put your current call on hold.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.call_waiting_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                         }
                     },
                     confirmButton = {
@@ -359,7 +361,7 @@ fun ActiveCallScreen(
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Text("Answer & Hold")
+                            Text(stringResource(R.string.btn_answer_hold))
                         }
                     },
                     dismissButton = {
@@ -374,7 +376,7 @@ fun ActiveCallScreen(
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                         ) {
-                            Text("Decline")
+                            Text(stringResource(R.string.btn_decline))
                         }
                     }
                 )

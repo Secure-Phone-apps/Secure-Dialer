@@ -33,6 +33,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.model.CallRecord
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.model.CallType
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -61,7 +63,7 @@ fun RecentsTabContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Recents",
+                text = stringResource(R.string.recents_header),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag("recents_header")
@@ -78,7 +80,7 @@ fun RecentsTabContent(
             FilterChip(
                 selected = !filterByMissed,
                 onClick = { filterByMissed = false },
-                label = { Text("All") },
+                label = { Text(stringResource(R.string.filter_all)) },
                 leadingIcon = if (!filterByMissed) {
                     { Icon(Icons.Default.Done, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
                 } else null
@@ -86,7 +88,7 @@ fun RecentsTabContent(
             FilterChip(
                 selected = filterByMissed,
                 onClick = { filterByMissed = true },
-                label = { Text("Missed") },
+                label = { Text(stringResource(R.string.filter_missed)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedLabelColor = MaterialTheme.colorScheme.error,
                     selectedLeadingIconColor = MaterialTheme.colorScheme.error
@@ -98,7 +100,6 @@ fun RecentsTabContent(
         }
 
         if (!hasPermission && !isLoading) {
-            // ... (keep permission block)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -114,13 +115,13 @@ fun RecentsTabContent(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Permissions Required",
+                        text = stringResource(R.string.permissions_required),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "To access, load, and call the real call history on your phone, please enable the Call Log Permission.",
+                        text = stringResource(R.string.call_log_perm_desc),
                         style = MaterialTheme.typography.bodySmall,
                         textAlign = TextAlign.Center
                     )
@@ -129,7 +130,7 @@ fun RecentsTabContent(
                         onClick = onRequestPermission,
                         modifier = Modifier.height(40.dp)
                     ) {
-                        Text("Enable Call Log")
+                        Text(stringResource(R.string.enable_call_log_perm))
                     }
                 }
             }
@@ -145,8 +146,8 @@ fun RecentsTabContent(
                 contentAlignment = Alignment.Center
             ) {
                 EmptyStateIllustration(
-                    title = "Your call log is empty",
-                    subtitle = "Recent calls will show up here"
+                    title = stringResource(R.string.no_call_log_title),
+                    subtitle = stringResource(R.string.no_call_log_subtitle)
                 )
             }
         } else {

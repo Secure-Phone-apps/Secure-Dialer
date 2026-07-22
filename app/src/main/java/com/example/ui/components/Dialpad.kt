@@ -29,6 +29,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Contact
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.paging.compose.LazyPagingItems
 import androidx.compose.foundation.lazy.LazyColumn
 
@@ -79,7 +81,7 @@ fun DialpadTabContent(
                 if (contactsPaged.itemCount == 0) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
-                            "No matching contacts",
+                            stringResource(R.string.dialpad_no_matches),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -174,7 +176,7 @@ fun DialpadTabContent(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = inputValue.ifEmpty { "Enter Number" },
+                text = inputValue.ifEmpty { stringResource(R.string.dialpad_enter_number) },
                 style = MaterialTheme.typography.displayMedium,
                 color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -193,7 +195,7 @@ fun DialpadTabContent(
                     val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
                     if (filteredDigits.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("Paste: $filteredDigits") },
+                            text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
                             onClick = {
                                 onValueChange(filteredDigits)
                                 expandedClipboardMenu = false
@@ -203,7 +205,7 @@ fun DialpadTabContent(
                 }
                 if (inputValue.isNotEmpty()) {
                     DropdownMenuItem(
-                        text = { Text("Copy Number") },
+                        text = { Text(stringResource(R.string.dialpad_copy)) },
                         onClick = {
                             try {
                                 val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
@@ -216,7 +218,7 @@ fun DialpadTabContent(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Clear") },
+                        text = { Text(stringResource(R.string.dialpad_clear)) },
                         onClick = {
                             onValueChange("")
                             expandedClipboardMenu = false

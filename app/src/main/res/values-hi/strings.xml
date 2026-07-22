@@ -1,0 +1,151 @@
+<resources>
+    <string name="app_name">Secure Dialer</string>
+
+    <!-- Tabs -->
+    <string name="tab_favorites">पसंदीदा</string>
+    <string name="tab_recents">हाल के कॉल</string>
+    <string name="tab_contacts">संपर्क</string>
+    <string name="tab_dialpad">डायलपैड</string>
+    <string name="tab_voicemail">वॉइसमेल</string>
+
+    <!-- Header & Search -->
+    <string name="search_placeholder">संपर्क और नंबर खोजें</string>
+    <string name="search_clear">साफ करें</string>
+    <string name="settings_title">सेटिंग्स</string>
+    <string name="default_dialer_warning">सभी सुविधाओं को सक्षम करने के लिए डिफ़ॉल्ट डायलर के रूप में सेट करें।</string>
+    <string name="warning">चेतावनी</string>
+
+    <!-- Permissions -->
+    <string name="permissions_required">अनुमतियां आवश्यक हैं</string>
+    <string name="contacts_perm_desc">अपने फोन के वास्तविक संपर्कों को एक्सेस और कॉल करने के लिए कृपया संपर्क अनुमति सक्षम करें।</string>
+    <string name="enable_contacts_perm">संपर्क अनुमति दें</string>
+    <string name="call_log_perm_desc">अपनी कॉल हिस्ट्री देखने और कॉल करने के लिए कृपया कॉल लॉग अनुमति सक्षम करें।</string>
+    <string name="enable_call_log_perm">कॉल लॉग अनुमति दें</string>
+
+    <!-- Contacts -->
+    <string name="contacts_header">संपर्क</string>
+    <string name="add_new_contact">नया जोड़ें</string>
+    <string name="no_contacts_title">कोई संपर्क नहीं मिला</string>
+    <string name="no_contacts_subtitle">नया संपर्क बनाने के लिए \'नया जोड़ें\' पर टैप करें</string>
+    <string name="add_contact_dialog_title">संपर्क जोड़ें</string>
+    <string name="edit_contact_dialog_title">संपर्क संपादित करें</string>
+    <string name="label_name">नाम</string>
+    <string name="label_phone_number">फोन नंबर</string>
+    <string name="label_type">प्रकार</string>
+    <string name="label_email">ईमेल</string>
+    <string name="label_mobile">मोबाइल</string>
+    <string name="label_work">कार्य</string>
+    <string name="label_home">घर</string>
+    <string name="label_other">अन्य</string>
+    <string name="btn_save">सहेजें</string>
+    <string name="btn_cancel">रद्द करें</string>
+    <string name="btn_delete">हटाएं</string>
+    <string name="btn_edit">संपादित करें</string>
+
+    <!-- Recents -->
+    <string name="recents_header">हाल के कॉल</string>
+    <string name="filter_all">सभी</string>
+    <string name="filter_missed">मिस्ड</string>
+    <string name="no_call_log_title">आपका कॉल लॉग खाली है</string>
+    <string name="no_call_log_subtitle">हाल की कॉल यहां दिखाई देंगी</string>
+    <string name="no_results_title">कोई परिणाम नहीं मिला</string>
+    <string name="no_results_subtitle">कोई मेल खाती कॉल नहीं मिली</string>
+
+    <!-- Dialpad -->
+    <string name="dialpad_enter_number">नंबर दर्ज करें</string>
+    <string name="dialpad_no_matches">कोई मेल खाता संपर्क नहीं</string>
+    <string name="dialpad_paste">पेस्ट करें</string>
+    <string name="dialpad_copy">नंबर कॉपी करें</string>
+    <string name="dialpad_clear">साफ करें</string>
+
+    <!-- Active Call -->
+    <string name="call_blocked_toast">🚫 कॉल ब्लॉक की गई</string>
+    <string name="call_status_hold">कॉल होल्ड पर है</string>
+    <string name="call_status_dialing">डायल किया जा रहा है...</string>
+    <string name="call_status_ringing">आने वाली कॉल...</string>
+    <string name="call_status_connecting">कनेक्ट हो रहा है...</string>
+    <string name="call_status_conference">कॉन्फ्रेंस कॉल</string>
+    <string name="call_status_ongoing">जारी कॉल</string>
+    <string name="on_hold_prefix">होल्ड पर:</string>
+    <string name="btn_swap">बदलें</string>
+    <string name="call_waiting_title">कॉल वेटिंग</string>
+    <string name="call_waiting_incoming_from">आने वाली कॉल:</string>
+    <string name="call_waiting_notice">उत्तर देने पर आपकी वर्तमान कॉल होल्ड पर चली जाएगी।</string>
+    <string name="btn_answer_hold">उत्तर दें और होल्ड करें</string>
+    <string name="btn_decline">अस्वीकार करें</string>
+    <string name="quick_responses">त्वरित उत्तर</string>
+    <string name="sms_sent">एसएमएस भेजा गया</string>
+    <string name="sms_failed">एसएमएस भेजने में विफल</string>
+    <string name="close">बंद करें</string>
+    <string name="add_call">कॉल जोड़ें</string>
+    <string name="add_call_search_hint">संपर्क खोजें या नंबर दर्ज करें</string>
+    <string name="btn_add_merge">जोड़ें और मर्ज करें</string>
+    <string name="keypad">कीपैड</string>
+    <string name="mute">म्यूट</string>
+    <string name="speaker">स्पीकर</string>
+    <string name="hold">होल्ड</string>
+    <string name="bluetooth">ब्लूटूथ</string>
+    <string name="record">रिकॉर्ड</string>
+    <string name="recording">रिकॉर्डिंग</string>
+    <string name="call_note">कॉल नोट</string>
+    <string name="send_quick_response">💬 त्वरित उत्तर भेजें</string>
+    <string name="btn_answer">उत्तर दें</string>
+    <string name="btn_hangup">कॉल काटें</string>
+    <string name="jot_call_note_title">कॉल नोट लिखें</string>
+    <string name="note_placeholder">महत्वपूर्ण विवरण दर्ज करें...</string>
+    <string name="btn_save_note">नोट सहेजें</string>
+    <string name="btn_discard">हटाएं</string>
+    <string name="note_saved">नोट सुरक्षित रूप से सहेजा गया</string>
+    <string name="recording_saved">रिकॉर्डिंग सुरक्षित रूप से सहेजी गई</string>
+    <string name="recording_started">⏺️ कॉल रिकॉर्डिंग शुरू हुई</string>
+
+    <!-- Favorites & Voicemail -->
+    <string name="favorites_header">पसंदीदा</string>
+    <string name="no_favorites_title">अभी तक कोई पसंदीदा नहीं</string>
+    <string name="no_favorites_subtitle">उन्हें आसानी से खोजने के लिए संपर्कों को स्टार दें</string>
+    <string name="voicemail_header">वॉइसमेल</string>
+    <string name="no_voicemails_title">कोई वॉइसमेल नहीं</string>
+    <string name="no_voicemails_subtitle">सब कुछ अप-टू-डेट है</string>
+
+    <!-- Settings Panel -->
+    <string name="settings_appearance">दिखावट</string>
+    <string name="settings_dark_theme">डार्क थीम</string>
+    <string name="settings_dark_theme_sub">इंटरफ़ेस पर डार्क थीम लागू करें</string>
+    <string name="settings_accent_color">एक्सेंट रंग</string>
+    <string name="settings_sound_haptics">ध्वनि और कंपन</string>
+    <string name="settings_dialpad_tones">डायलपैड टोन</string>
+    <string name="settings_dialpad_tones_sub">कुंजियों को डायल करते समय ध्वनि चलाएं</string>
+    <string name="settings_vibrate">क्लिक पर कंपन</string>
+    <string name="settings_vibrate_sub">डायलपैड पर हैप्टिक प्रतिक्रिया</string>
+    <string name="settings_calls_blocking">कॉल और ब्लॉकिंग</string>
+    <string name="settings_speed_dial">स्पीड डायल</string>
+    <string name="settings_speed_dial_sub">तेज़ कॉल कीज़ 1-9 असाइन करें</string>
+    <string name="settings_blocked_numbers">ब्लॉक किए गए नंबर</string>
+    <string name="settings_blocked_numbers_sub">प्रतिबंधित आने वाले कॉल प्रबंधित करें</string>
+    <string name="settings_quick_responses">त्वरित उत्तर</string>
+    <string name="settings_quick_responses_sub">एसएमएस अस्वीकृति टेम्प्लेट संपादित करें</string>
+    <string name="settings_sim_voicemail">सिम और वॉइसमेल</string>
+    <string name="settings_preferred_sim">पसंदीदा सिम</string>
+    <string name="settings_preferred_sim_sub">आउटगोइंग कॉल के लिए सिम कार्ड चुनें</string>
+    <string name="settings_voicemail_num">वॉइसमेल नंबर</string>
+    <string name="settings_voicemail_num_sub">स्पीड डायल 1 लक्ष्य कॉन्फ़िगर करें</string>
+    <string name="settings_data_utilities">डेटा और उपयोगिताएँ</string>
+    <string name="settings_dedup">डीडुप्लीकेशन टूल</string>
+    <string name="settings_dedup_sub">डुप्लिकेट संपर्कों को स्वचालित रूप से मर्ज करें</string>
+    <string name="settings_recordings">सहेजी गई रिकॉर्डिंग</string>
+    <string name="settings_recordings_sub">स्थानीय रूप से संग्रहीत कॉल ऑडियो एक्सेस करें</string>
+    <string name="settings_app_updates">इन-ऐप अपडेट</string>
+    <string name="settings_app_updates_sub">संस्करण स्थिति जांचें</string>
+    <string name="settings_about_privacy">हमारे बारे में और गोपनीयता</string>
+    <string name="settings_about">Secure Dialer के बारे में</string>
+    <string name="settings_about_sub">संस्करण जानकारी और लाइसेंस</string>
+    <string name="settings_privacy">गोपनीयता नीति</string>
+    <string name="settings_privacy_sub">शून्य डेटा संग्रह नोटिस</string>
+    <string name="settings_back">वापस</string>
+    <string name="settings_block_list_title">ब्लॉक सूची</string>
+    <string name="settings_quick_resp_title">त्वरित उत्तर</string>
+    <string name="settings_voicemail_setup_title">वॉइसमेल सेटअप</string>
+    <string name="settings_dedup_title">डीडुप्लीकेशन</string>
+    <string name="settings_updates_title">अपडेट</string>
+    <string name="settings_recordings_title">रिकॉर्डिंग</string>
+</resources>

@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.CallRecord
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun VoicemailTabContent(
     voicemailRecords: List<CallRecord>,
@@ -32,7 +35,7 @@ fun VoicemailTabContent(
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Voicemail",
+            text = stringResource(R.string.voicemail_header),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(vertical = 16.dp)
@@ -47,19 +50,19 @@ fun VoicemailTabContent(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Default.PlayArrow, // Using PlayArrow as a surrogate for Voicemail icon
+                        imageVector = Icons.Default.PlayArrow,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
                         tint = MaterialTheme.colorScheme.surfaceVariant
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "No voicemails",
+                        stringResource(R.string.no_voicemails_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        "You're all caught up",
+                        stringResource(R.string.no_voicemails_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

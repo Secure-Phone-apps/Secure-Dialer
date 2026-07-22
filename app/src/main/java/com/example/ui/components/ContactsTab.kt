@@ -34,6 +34,8 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.model.Contact
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -71,7 +73,6 @@ fun ContactsTabContent(
                 .padding(horizontal = 16.dp)
         ) {
             if (!hasPermission && !isLoading) {
-                // ... (keep permission card)
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -87,13 +88,13 @@ fun ContactsTabContent(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            text = "Permissions Required",
+                            text = stringResource(R.string.permissions_required),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.",
+                            text = stringResource(R.string.contacts_perm_desc),
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
@@ -102,7 +103,7 @@ fun ContactsTabContent(
                             onClick = onRequestPermission,
                             modifier = Modifier.height(40.dp)
                         ) {
-                            Text("Enable Phone Contacts")
+                            Text(stringResource(R.string.enable_contacts_perm))
                         }
                     }
                 }
@@ -116,7 +117,7 @@ fun ContactsTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Contacts",
+                    text = stringResource(R.string.contacts_header),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -129,7 +130,7 @@ fun ContactsTabContent(
                 ) {
                     Icon(Icons.Default.Call, null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text("Add New", style = MaterialTheme.typography.labelLarge)
+                    Text(stringResource(R.string.add_new_contact), style = MaterialTheme.typography.labelLarge)
                 }
             }
 
@@ -141,8 +142,8 @@ fun ContactsTabContent(
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyStateIllustration(
-                        title = "No contacts found",
-                        subtitle = "Tap 'Add New' to create a contact"
+                        title = stringResource(R.string.no_contacts_title),
+                        subtitle = stringResource(R.string.no_contacts_subtitle)
                     )
                 }
             } else {
@@ -524,7 +525,7 @@ fun AddContactDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = if (initialName.isEmpty()) "Create Contact" else "Edit Contact",
+                text = if (initialName.isEmpty()) stringResource(R.string.add_contact_dialog_title) else stringResource(R.string.edit_contact_dialog_title),
                 style = MaterialTheme.typography.headlineSmall
             )
         },
@@ -540,7 +541,7 @@ fun AddContactDialog(
                     OutlinedTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        label = { Text("First Name") },
+                        label = { Text(stringResource(R.string.label_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_first_name_input"),
                         shape = RoundedCornerShape(12.dp)
@@ -548,7 +549,7 @@ fun AddContactDialog(
                     OutlinedTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        label = { Text("Last Name") },
+                        label = { Text(stringResource(R.string.label_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_last_name_input"),
                         shape = RoundedCornerShape(12.dp)

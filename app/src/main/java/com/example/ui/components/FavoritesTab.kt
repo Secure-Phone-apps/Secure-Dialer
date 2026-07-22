@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Contact
 
+import androidx.compose.ui.res.stringResource
+import com.example.R
+
 @Composable
 fun FavoritesTabContent(
     contacts: List<Contact>,
@@ -33,7 +36,7 @@ fun FavoritesTabContent(
             .padding(horizontal = 16.dp)
     ) {
         Text(
-            text = "Favorites",
+            text = stringResource(R.string.favorites_header),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.padding(vertical = 16.dp)
@@ -55,12 +58,12 @@ fun FavoritesTabContent(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "No favorites yet",
+                        stringResource(R.string.no_favorites_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        "Star contacts to find them easily",
+                        stringResource(R.string.no_favorites_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
