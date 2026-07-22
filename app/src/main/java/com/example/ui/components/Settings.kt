@@ -136,7 +136,7 @@ fun SettingsPanel(
                     ) {
                         // Appearance Card
                         item {
-                            PreferenceHeader("Appearance")
+                            PreferenceHeader(stringResource(R.string.settings_appearance))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -148,8 +148,8 @@ fun SettingsPanel(
                             ) {
                                 Column {
                                     SettingsRowToggle(
-                                        title = "Dark Theme",
-                                        subtitle = "Apply dark visual theme to the interface",
+                                        title = stringResource(R.string.settings_dark_theme),
+                                        subtitle = stringResource(R.string.settings_dark_theme_sub),
                                         checked = isDarkTheme,
                                         onCheckedChange = onThemeChange,
                                         icon = Icons.Default.DarkMode,
@@ -169,7 +169,7 @@ fun SettingsPanel(
                         // Sound & Haptics Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("Sound & Haptics")
+                            PreferenceHeader(stringResource(R.string.settings_sound_haptics))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -181,8 +181,8 @@ fun SettingsPanel(
                             ) {
                                 Column {
                                     SettingsRowToggle(
-                                        title = "Dialpad Tones",
-                                        subtitle = "Play sounds when dialing keys",
+                                        title = stringResource(R.string.settings_dialpad_tones),
+                                        subtitle = stringResource(R.string.settings_dialpad_tones_sub),
                                         checked = dialpadTonesEnabled,
                                         onCheckedChange = onTonesChange,
                                         icon = Icons.Default.VolumeUp,
@@ -191,8 +191,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowToggle(
-                                        title = "Vibrate on Click",
-                                        subtitle = "Haptic response on dialpad interactions",
+                                        title = stringResource(R.string.settings_vibrate),
+                                        subtitle = stringResource(R.string.settings_vibrate_sub),
                                         checked = vibrateOnClickEnabled,
                                         onCheckedChange = onVibrateChange,
                                         icon = Icons.Default.Vibration,
@@ -206,7 +206,7 @@ fun SettingsPanel(
                         // Calls & Blocking Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("Calls & Blocking")
+                            PreferenceHeader(stringResource(R.string.settings_calls_blocking))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -218,8 +218,8 @@ fun SettingsPanel(
                             ) {
                                 Column {
                                     SettingsRowNav(
-                                        title = "Speed Dial",
-                                        subtitle = "Assign fast call keys 1-9",
+                                        title = stringResource(R.string.settings_speed_dial),
+                                        subtitle = stringResource(R.string.settings_speed_dial_sub),
                                         onClick = { activeTab = 2 },
                                         icon = Icons.Default.Speed,
                                         iconBgColor = Color(0xFFE3F2FD),
@@ -227,8 +227,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "Blocked Numbers",
-                                        subtitle = "Manage restricted incoming callers",
+                                        title = stringResource(R.string.settings_blocked_numbers),
+                                        subtitle = stringResource(R.string.settings_blocked_numbers_sub),
                                         onClick = { activeTab = 1 },
                                         icon = Icons.Default.Block,
                                         iconBgColor = Color(0xFFFFEBEE),
@@ -236,8 +236,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "Quick Responses",
-                                        subtitle = "Edit SMS decline templates",
+                                        title = stringResource(R.string.settings_quick_responses),
+                                        subtitle = stringResource(R.string.settings_quick_responses_sub),
                                         onClick = { activeTab = 3 },
                                         icon = Icons.Default.Message,
                                         iconBgColor = Color(0xFFE8F5E9),
@@ -250,7 +250,7 @@ fun SettingsPanel(
                         // SIM & Voicemail Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("SIM & Voicemail")
+                            PreferenceHeader(stringResource(R.string.settings_sim_voicemail))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -264,14 +264,14 @@ fun SettingsPanel(
                                     ListItem(
                                         headlineContent = { 
                                             Text(
-                                                "Preferred SIM",
+                                                stringResource(R.string.settings_preferred_sim),
                                                 fontWeight = FontWeight.Medium,
                                                 style = MaterialTheme.typography.bodyLarge
                                             ) 
                                         },
                                         supportingContent = { 
                                             Text(
-                                                "Default SIM for making calls",
+                                                stringResource(R.string.settings_preferred_sim_sub),
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             ) 
@@ -297,17 +297,18 @@ fun SettingsPanel(
                                                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                                                 verticalAlignment = Alignment.CenterVertically
                                             ) {
-                                                listOf("SIM 1", "SIM 2", "Ask").forEach { op ->
-                                                    val sel = preferredSim == op
+                                                val askLabel = stringResource(R.string.sim_ask)
+                                                listOf("SIM 1" to "SIM 1", "SIM 2" to "SIM 2", "Ask" to askLabel).forEach { (opKey, labelText) ->
+                                                    val sel = preferredSim == opKey
                                                     FilterChip(
                                                         selected = sel,
                                                         onClick = {
                                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                            onSimChange(op)
+                                                            onSimChange(opKey)
                                                         },
                                                         label = { 
                                                             Text(
-                                                                op, 
+                                                                labelText, 
                                                                 style = MaterialTheme.typography.labelSmall,
                                                                 fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
                                                             ) 
@@ -324,8 +325,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "Voicemail Number",
-                                        subtitle = voicemailNumber.ifEmpty { "Not set" },
+                                        title = stringResource(R.string.settings_voicemail_num),
+                                        subtitle = voicemailNumber.ifEmpty { stringResource(R.string.not_set) },
                                         onClick = { activeTab = 4 },
                                         icon = Icons.Default.Voicemail,
                                         iconBgColor = Color(0xFFF3E5F5),
@@ -338,7 +339,7 @@ fun SettingsPanel(
                         // Startup Options Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("Startup Options")
+                            PreferenceHeader(stringResource(R.string.settings_startup_options))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -348,12 +349,17 @@ fun SettingsPanel(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        "Default Startup Tab",
+                                        stringResource(R.string.settings_default_startup_tab),
                                         fontWeight = FontWeight.Medium,
                                         style = MaterialTheme.typography.bodyLarge,
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
-                                    val tabs = listOf("Favorites", "Recents", "Contacts", "Dialpad")
+                                    val tabs = listOf(
+                                        stringResource(R.string.tab_favorites),
+                                        stringResource(R.string.tab_recents),
+                                        stringResource(R.string.tab_contacts),
+                                        stringResource(R.string.tab_dialpad)
+                                    )
                                     val currentTabSelected = viewModel.defaultTab.intValue
                                     Row(
                                         modifier = Modifier
@@ -395,7 +401,7 @@ fun SettingsPanel(
                         // Calling Features Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("Calling Features")
+                            PreferenceHeader(stringResource(R.string.settings_calling_features))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -407,8 +413,8 @@ fun SettingsPanel(
                                     val callWaiting = viewModel.callWaitingEnabled.value
                                     val callRecording = viewModel.recordingEnabled.value
                                     SettingsRowToggle(
-                                        title = "Call Waiting",
-                                        subtitle = "Notify of incoming calls during an active call",
+                                        title = stringResource(R.string.settings_call_waiting),
+                                        subtitle = stringResource(R.string.settings_call_waiting_sub),
                                         checked = callWaiting,
                                         onCheckedChange = { viewModel.updateCallWaitingEnabled(it) },
                                         icon = Icons.Default.NetworkCell,
@@ -417,8 +423,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowToggle(
-                                        title = "Call Recording",
-                                        subtitle = "Enable in-call recording controls & save locally",
+                                        title = stringResource(R.string.settings_call_recording),
+                                        subtitle = stringResource(R.string.settings_call_recording_sub),
                                         checked = callRecording,
                                         onCheckedChange = { viewModel.updateRecordingEnabled(it) },
                                         icon = Icons.Default.Mic,
@@ -427,8 +433,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "View Saved Recordings",
-                                        subtitle = "Listen to and manage your call recordings",
+                                        title = stringResource(R.string.settings_view_saved_recordings),
+                                        subtitle = stringResource(R.string.settings_view_saved_recordings_sub),
                                         onClick = { activeTab = 7 },
                                         icon = Icons.Default.Audiotrack,
                                         iconBgColor = Color(0xFFE8F5E9),
@@ -441,7 +447,7 @@ fun SettingsPanel(
                         // Information Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("Information & Utilities")
+                            PreferenceHeader(stringResource(R.string.settings_info_utilities))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -453,8 +459,8 @@ fun SettingsPanel(
                             ) {
                                 Column {
                                     SettingsRowNav(
-                                        title = "Merge Duplicate Contacts",
-                                        subtitle = "Scan and clean duplicate contact listings",
+                                        title = stringResource(R.string.settings_merge_duplicate_contacts),
+                                        subtitle = stringResource(R.string.settings_merge_duplicate_contacts_sub),
                                         onClick = { activeTab = 5 },
                                         icon = Icons.Default.MergeType,
                                         iconBgColor = Color(0xFFE0F7FA),
@@ -462,8 +468,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "Check for Updates",
-                                        subtitle = "Ensure app is up to date & secure",
+                                        title = stringResource(R.string.settings_check_updates),
+                                        subtitle = stringResource(R.string.settings_check_updates_sub),
                                         onClick = { activeTab = 6 },
                                         icon = Icons.Default.SystemUpdateAlt,
                                         iconBgColor = Color(0xFFE8F5E9),
@@ -471,8 +477,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "About",
-                                        subtitle = "Version and developer info",
+                                        title = stringResource(R.string.settings_about),
+                                        subtitle = stringResource(R.string.settings_about_sub),
                                         onClick = { showAboutDialog = true },
                                         icon = Icons.Default.Info,
                                         iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -480,8 +486,8 @@ fun SettingsPanel(
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
-                                        title = "Privacy Policy",
-                                        subtitle = "How we handle your data",
+                                        title = stringResource(R.string.settings_privacy),
+                                        subtitle = stringResource(R.string.settings_privacy_sub),
                                         onClick = { showPrivacyDialog = true },
                                         icon = Icons.Default.Security,
                                         iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -494,7 +500,7 @@ fun SettingsPanel(
                         // Contribution Card
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
-                            PreferenceHeader("Contribution")
+                            PreferenceHeader(stringResource(R.string.settings_contribution))
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -506,14 +512,14 @@ fun SettingsPanel(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        "Support Secure Dialer",
+                                        stringResource(R.string.settings_support_title),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        "Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.",
+                                        stringResource(R.string.settings_support_desc),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -528,7 +534,7 @@ fun SettingsPanel(
                                     ) {
                                         Icon(Icons.Default.Favorite, "Contribute")
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Contribute on GitHub")
+                                        Text(stringResource(R.string.settings_contribute_github))
                                     }
                                 }
                             }
@@ -548,7 +554,7 @@ fun SettingsPanel(
                         OutlinedTextField(
                             value = newBlockedInput,
                             onValueChange = { newBlockedInput = it },
-                            label = { Text("Enter Number to Block") },
+                            label = { Text(stringResource(R.string.enter_number_to_block)) },
                             singleLine = true,
                             leadingIcon = {
                                 Icon(
@@ -583,13 +589,13 @@ fun SettingsPanel(
                         ) {
                             Icon(Icons.Default.Block, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Block This Number", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.block_this_number), fontWeight = FontWeight.SemiBold)
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            "BLOCKED CALLERS",
+                            stringResource(R.string.blocked_callers_header),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
@@ -601,8 +607,8 @@ fun SettingsPanel(
                         if (blockedNumbers.isEmpty()) {
                             SettingsEmptyState(
                                 icon = Icons.Default.Block,
-                                title = "No Blocked Numbers",
-                                description = "Numbers you block will appear here. They won't be able to call you.",
+                                title = stringResource(R.string.no_blocked_numbers_title),
+                                description = stringResource(R.string.no_blocked_numbers_desc),
                                 tintColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                             )
                         } else {
@@ -654,7 +660,7 @@ fun SettingsPanel(
                                             }) {
                                                 Icon(
                                                     imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Unblock",
+                                                    contentDescription = stringResource(R.string.unblock),
                                                     tint = MaterialTheme.colorScheme.error
                                                 )
                                             }
@@ -674,7 +680,7 @@ fun SettingsPanel(
                             .padding(16.dp)
                     ) {
                         Text(
-                            "Hold keys 1-9 on the dialpad to quickly call assigned numbers.",
+                            stringResource(R.string.speed_dial_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -709,7 +715,7 @@ fun SettingsPanel(
                                             }
                                         }
                                         Text(
-                                            "Assign Speed Dial Key $targetSpeedDialKey",
+                                            stringResource(R.string.assign_speed_dial_key, targetSpeedDialKey),
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.SemiBold
                                         )
@@ -718,7 +724,7 @@ fun SettingsPanel(
                                     OutlinedTextField(
                                         value = speedNumInput,
                                         onValueChange = { speedNumInput = it },
-                                        label = { Text("Phone Number") },
+                                        label = { Text(stringResource(R.string.enter_number_to_block)) },
                                         singleLine = true,
                                         leadingIcon = { Icon(Icons.Default.Phone, null) },
                                         modifier = Modifier.fillMaxWidth(),
@@ -730,7 +736,7 @@ fun SettingsPanel(
                                         horizontalArrangement = Arrangement.End
                                     ) {
                                         TextButton(onClick = { targetSpeedDialKey = -1 }) {
-                                            Text("Cancel")
+                                            Text(stringResource(R.string.btn_cancel))
                                         }
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Button(
@@ -742,7 +748,7 @@ fun SettingsPanel(
                                             },
                                             shape = RoundedCornerShape(12.dp)
                                         ) {
-                                            Text("Assign Key")
+                                            Text(stringResource(R.string.assign_key))
                                         }
                                     }
                                 }
@@ -790,14 +796,14 @@ fun SettingsPanel(
                                                 Spacer(modifier = Modifier.width(16.dp))
                                                 Column {
                                                     Text(
-                                                        text = assignedNum ?: "Unassigned Key",
+                                                        text = assignedNum ?: stringResource(R.string.unassigned_key),
                                                         style = MaterialTheme.typography.bodyLarge,
                                                         fontWeight = if (assignedNum != null) FontWeight.Medium else FontWeight.Normal,
                                                         color = if (assignedNum != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline
                                                     )
                                                     if (assignedNum != null) {
                                                         Text(
-                                                            text = "Press & hold $digit on Dialpad",
+                                                            text = stringResource(R.string.press_and_hold_dialpad, digit),
                                                             style = MaterialTheme.typography.bodySmall,
                                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
                                                         )
@@ -814,7 +820,7 @@ fun SettingsPanel(
                                                 ) {
                                                     Icon(
                                                         imageVector = Icons.Default.Edit,
-                                                        contentDescription = "Edit Key $digit"
+                                                        contentDescription = stringResource(R.string.edit_key, digit)
                                                     )
                                                 }
                                                 if (assignedNum != null) {
@@ -826,7 +832,7 @@ fun SettingsPanel(
                                                     ) {
                                                         Icon(
                                                             imageVector = Icons.Default.Delete,
-                                                            contentDescription = "Delete Key $digit"
+                                                            contentDescription = stringResource(R.string.delete_key, digit)
                                                         )
                                                     }
                                                 }
@@ -849,7 +855,7 @@ fun SettingsPanel(
                         OutlinedTextField(
                             value = newQuickRespInput,
                             onValueChange = { newQuickRespInput = it },
-                            label = { Text("Create Custom Reply") },
+                            label = { Text(stringResource(R.string.create_custom_reply)) },
                             leadingIcon = {
                                 Icon(Icons.Default.Message, null, tint = MaterialTheme.colorScheme.primary)
                             },
@@ -871,13 +877,13 @@ fun SettingsPanel(
                         ) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Add Message Template", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.add_message_template), fontWeight = FontWeight.SemiBold)
                         }
 
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Text(
-                            "QUICK DECLINE MESSAGES",
+                            stringResource(R.string.quick_decline_messages),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
@@ -889,8 +895,8 @@ fun SettingsPanel(
                         if (quickResponses.isEmpty()) {
                             SettingsEmptyState(
                                 icon = Icons.Default.Message,
-                                title = "No Responses Saved",
-                                description = "Add custom message templates to quickly send when rejecting incoming calls.",
+                                title = stringResource(R.string.no_responses_saved_title),
+                                description = stringResource(R.string.no_responses_saved_desc),
                                 tintColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                             )
                         } else {
@@ -946,7 +952,7 @@ fun SettingsPanel(
                                             }) {
                                                 Icon(
                                                     imageVector = Icons.Default.Delete,
-                                                    contentDescription = "Delete response",
+                                                    contentDescription = stringResource(R.string.delete_response),
                                                     tint = MaterialTheme.colorScheme.error
                                                 )
                                             }
@@ -982,13 +988,13 @@ fun SettingsPanel(
                         }
                         Spacer(modifier = Modifier.height(24.dp))
                         Text(
-                            "Voicemail Setup",
+                            stringResource(R.string.settings_voicemail_setup_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "Set the phone number to trigger when you long-press key '1' on the dialpad.",
+                            stringResource(R.string.voicemail_setup_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -998,7 +1004,7 @@ fun SettingsPanel(
                         OutlinedTextField(
                             value = voicemailNumber,
                             onValueChange = onVoicemailChange,
-                            label = { Text("Voicemail Directory Number") },
+                            label = { Text(stringResource(R.string.voicemail_directory_number)) },
                             singleLine = true,
                             leadingIcon = { Icon(Icons.Default.Phone, null) },
                             modifier = Modifier.fillMaxWidth(),
@@ -1012,7 +1018,7 @@ fun SettingsPanel(
                         ) {
                             Icon(Icons.Default.Check, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Save Voicemail Number", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.save_voicemail_number), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -1031,7 +1037,7 @@ fun SettingsPanel(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = "DEDUPLICATION UTILITY",
+                            text = stringResource(R.string.settings_dedup_title),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
@@ -1039,7 +1045,7 @@ fun SettingsPanel(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "The system scans your local database for duplicate entries sharing the same phone number, allowing you to merge them instantly.",
+                            text = stringResource(R.string.dedup_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1049,8 +1055,8 @@ fun SettingsPanel(
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                                 SettingsEmptyState(
                                     icon = Icons.Default.FilterNone,
-                                    title = "No Duplicates Found",
-                                    description = "Your contacts list is completely clean! No duplicate numbers detected.",
+                                    title = stringResource(R.string.no_duplicates_title),
+                                    description = stringResource(R.string.no_duplicates_desc),
                                     tintColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                                 )
                             }
@@ -1075,7 +1081,7 @@ fun SettingsPanel(
                             ) {
                                 Icon(Icons.Default.MergeType, null)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Merge All Detected Duplicates (${duplicates.size} groups)", fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.merge_all_duplicates, duplicates.size), fontWeight = FontWeight.SemiBold)
                             }
 
                             Spacer(modifier = Modifier.height(16.dp))
@@ -1114,7 +1120,7 @@ fun SettingsPanel(
                                                         }
                                                     }
                                                 ) {
-                                                    Text("Merge Group")
+                                                    Text(stringResource(R.string.merge_group))
                                                 }
                                             }
                                             Spacer(modifier = Modifier.height(4.dp))
@@ -1157,6 +1163,7 @@ fun SettingsPanel(
                     var isChecking by remember { mutableStateOf(false) }
                     var checkResult by remember { mutableStateOf<String?>(null) }
                     val scope = rememberCoroutineScope()
+                    val upToDateMsg = stringResource(R.string.up_to_date_result)
                     
                     Column(
                         modifier = Modifier
@@ -1183,7 +1190,7 @@ fun SettingsPanel(
                         Spacer(modifier = Modifier.height(24.dp))
                         
                         Text(
-                            text = "In-App Updates",
+                            text = stringResource(R.string.settings_updates_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -1191,7 +1198,7 @@ fun SettingsPanel(
                         Spacer(modifier = Modifier.height(8.dp))
                         
                         Text(
-                            text = "Check and update Secure Dialer directly from official F-Droid or stable mirrors.",
+                            text = stringResource(R.string.check_updates_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center,
@@ -1203,7 +1210,7 @@ fun SettingsPanel(
                         if (isChecking) {
                             CircularProgressIndicator()
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Checking secure mirrors...", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.checking_mirrors), style = MaterialTheme.typography.bodyMedium)
                         } else if (checkResult != null) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -1211,11 +1218,11 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
                             ) {
                                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.CheckCircle, "Up to date", tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
+                                    Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(checkResult!!, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
                                     Spacer(modifier = Modifier.height(4.dp))
-                                    Text("You are using the latest official cryptographic build of Secure Dialer.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
+                                    Text(stringResource(R.string.app_up_to_date_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                                 }
                             }
                         }
@@ -1229,7 +1236,7 @@ fun SettingsPanel(
                                     isChecking = true
                                     kotlinx.coroutines.delay(2000)
                                     isChecking = false
-                                    checkResult = "Secure Dialer is up to date!\nVersion v1.0.2 (Stable Release)"
+                                    checkResult = upToDateMsg
                                 }
                             },
                             enabled = !isChecking,
@@ -1238,7 +1245,7 @@ fun SettingsPanel(
                         ) {
                             Icon(Icons.Default.Refresh, null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Check for Updates Now", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.check_for_updates_now), fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -1256,7 +1263,7 @@ fun SettingsPanel(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = "SECURE LOCAL RECORDINGS",
+                            text = stringResource(R.string.secure_local_recordings),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold,
@@ -1264,7 +1271,7 @@ fun SettingsPanel(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Recordings are stored securely inside the app's sandboxed private database and not shared with external servers.",
+                            text = stringResource(R.string.recordings_privacy_notice),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1274,8 +1281,8 @@ fun SettingsPanel(
                             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                                 SettingsEmptyState(
                                     icon = Icons.Default.Mic,
-                                    title = "No Recordings Found",
-                                    description = "Enable Call Recording and tap the record button during any active call.",
+                                    title = stringResource(R.string.no_recordings_title),
+                                    description = stringResource(R.string.no_recordings_desc),
                                     tintColor = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -1385,7 +1392,7 @@ fun SettingsPanel(
                                                     }) {
                                                         Icon(
                                                             imageVector = Icons.Default.Delete,
-                                                            contentDescription = "Delete Recording",
+                                                            contentDescription = stringResource(R.string.delete_key, rec.id),
                                                             tint = MaterialTheme.colorScheme.error
                                                         )
                                                     }
@@ -1627,7 +1634,7 @@ fun ThemeColorPicker(
     )
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
-            text = "Theme Accent Color",
+            text = stringResource(R.string.settings_accent_color),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -1710,20 +1717,20 @@ fun exportRecordingToDownloads(context: Context, filePath: String) {
 fun AboutDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("About", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Secure Dialer", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
                 Text("Version 1.0.2", style = MaterialTheme.typography.bodySmall)
-                Text("Secure Dialer is a privacy-focused communication tool designed to put you in control of your data. All functions occur exclusively on your device.")
-                Text("Our Mission", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("To provide a simple, reliable, and secure dialer experience without compromising user privacy.")
+                Text(stringResource(R.string.about_app_desc))
+                Text(stringResource(R.string.about_mission_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.about_mission_desc))
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } }
     )
 }
 
@@ -1731,22 +1738,22 @@ fun AboutDialog(onDismiss: () -> Unit) {
 fun PrivacyDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Privacy Policy", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.privacy_policy_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("At Secure Dialer, we prioritize your privacy.", style = MaterialTheme.typography.bodyLarge)
-                Text("1. Local Data Processing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Your contacts, call logs, and personal history are never transmitted to our servers.")
-                Text("2. Data Usage", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Information is used only for core dialer functions: Contacts mapping, Call history display, and Microphone access during calls.")
-                Text("3. Data Sharing", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("We do not share your data with any third parties.")
+                Text(stringResource(R.string.privacy_intro), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.privacy_section_1_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.privacy_section_1_desc))
+                Text(stringResource(R.string.privacy_section_2_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.privacy_section_2_desc))
+                Text(stringResource(R.string.privacy_section_3_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.privacy_section_3_desc))
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } }
     )
 }
 
