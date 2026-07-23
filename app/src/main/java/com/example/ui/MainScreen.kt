@@ -227,9 +227,6 @@ fun MainScreen(
     }
 
     val isDark by viewModel.isDarkTheme
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val bgColor = MaterialTheme.colorScheme.background
-    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

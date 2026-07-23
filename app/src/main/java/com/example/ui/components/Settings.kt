@@ -82,13 +82,16 @@ fun SettingsPanel(
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
 
     val isDark = isDarkTheme
+
     val cardBgColor = if (isDark) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
     }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = {
@@ -120,7 +123,7 @@ fun SettingsPanel(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -128,7 +131,6 @@ fun SettingsPanel(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
                 .padding(paddingValues)
         ) {
             when (activeTab) {
