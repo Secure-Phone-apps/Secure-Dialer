@@ -114,22 +114,13 @@ fun BottomNavBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    val isExpressive = LocalM3Expressive.current
-    val navColor = if (isExpressive) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    } else {
-        MaterialTheme.colorScheme.surface
-    }
-
     NavigationBar(
-        containerColor = navColor,
-        tonalElevation = if (isExpressive) 6.dp else 0.dp
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 0.dp
     ) {
         val items = listOf(
-            Triple(0, stringResource(R.string.tab_favorites), Icons.Default.Star),
-            Triple(1, stringResource(R.string.tab_recents), Icons.Default.History),
-            Triple(2, stringResource(R.string.tab_contacts), Icons.Default.Person),
-            Triple(3, stringResource(R.string.tab_dialpad), Icons.Default.Call)
+            Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
+            Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person)
         )
 
         items.forEach { (index, label, icon) ->
@@ -178,19 +169,10 @@ fun EmptyStateIllustration(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(32.dp),
+            .padding(top = 96.dp, bottom = 32.dp, start = 32.dp, end = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Image(
-            painter = painterResource(id = R.drawable.img_empty_state_dialer_1783587369431),
-            contentDescription = null,
-            modifier = Modifier
-                .size(240.dp)
-                .clip(MaterialTheme.shapes.medium),
-            contentScale = ContentScale.Fit
-        )
-        Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,

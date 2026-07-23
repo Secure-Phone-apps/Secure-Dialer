@@ -35,6 +35,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -225,26 +226,14 @@ fun MainScreen(
         CallManager.placeCall(context, number, preferredSim)
     }
 
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDark by viewModel.isDarkTheme
     val primaryColor = MaterialTheme.colorScheme.primary
     val bgColor = MaterialTheme.colorScheme.background
     val primaryContainer = MaterialTheme.colorScheme.primaryContainer
 
-    val ambientBgBrush = remember(isDark, primaryColor, bgColor, primaryContainer) {
-        val startColor = bgColor
-        val endColor = if (isDark) {
-            primaryContainer.copy(alpha = 0.06f)
-        } else {
-            primaryContainer.copy(alpha = 0.12f)
-        }
-        androidx.compose.ui.graphics.Brush.verticalGradient(
-            colors = listOf(startColor, endColor)
-        )
-    }
-
     Scaffold(
-        modifier = Modifier.fillMaxSize().background(ambientBgBrush),
-        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.safeDrawing
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
@@ -252,17 +241,20 @@ fun MainScreen(
                 if (!isDefaultDialer) {
                     Card(
                         modifier = Modifier.fillMaxWidth().padding(16.dp).clickable { onShowRestrictedSettings() },
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     ) {
                         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warning, stringResource(R.string.warning), tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                            Icon(Icons.Default.Warning, stringResource(R.string.warning), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                             Spacer(Modifier.width(16.dp))
-                            Text(stringResource(R.string.default_dialer_warning), color = MaterialTheme.colorScheme.onTertiaryContainer)
+                            Text(stringResource(R.string.default_dialer_warning), color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Medium)
                         }
                     }
                 }
 
-                if (selectedTab != 3) {
+                if (!isDialpadVisible) {
                     HeaderSearchBar(
                         searchQuery = searchQuery,
                         onQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -270,7 +262,7 @@ fun MainScreen(
                     )
                 }
 
-                val pagerState = rememberPagerState(initialPage = selectedTab) { 4 }
+                val pagerState = rememberPagerState(initialPage = selectedTab) { 2 }
                 LaunchedEffect(selectedTab) {
                     if (pagerState.currentPage != selectedTab) {
                         pagerState.scrollToPage(page = selectedTab)
@@ -285,15 +277,11 @@ fun MainScreen(
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     HorizontalPager(
                         state = pagerState,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        beyondViewportPageCount = 1
                     ) { page ->
                         when (page) {
-                            0 -> FavoritesTabContent(
-                                contacts = filteredFavorites,
-                                onCallClick = { name, number -> initiateCall(name, number) },
-                                onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) }
-                            )
-                            1 -> RecentsTabContent(
+                            0 -> RecentsTabContent(
                                 viewModel = viewModel,
                                 callRecordsPaged = callHistoryPaged,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
@@ -301,8 +289,10 @@ fun MainScreen(
                                 hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
                                 onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
                             )
-                            2 -> ContactsTabContent(
+                            1 -> ContactsTabContent(
+                                viewModel = viewModel,
                                 contactsPaged = contactsPaged,
+                                favoriteContacts = favoriteContacts,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
                                 onAddContactClick = { isAddContactDialogVisible = true },
                                 onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
@@ -311,7 +301,27 @@ fun MainScreen(
                                 onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
                                 onDeleteContact = { it -> viewModel.deleteContact(it.number) }
                             )
-                            3 -> DialpadTabContent(
+                        }
+                    }
+
+                    // Dialpad Slide-Up Panel
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isDialpadVisible,
+                        enter = slideInVertically(
+                            initialOffsetY = { it },
+                            animationSpec = tween(durationMillis = 220, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(150)),
+                        exit = slideOutVertically(
+                            targetOffsetY = { it },
+                            animationSpec = tween(durationMillis = 180, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                        ) + fadeOut(animationSpec = tween(120)),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MaterialTheme.colorScheme.background
+                        ) {
+                            DialpadTabContent(
                                 inputValue = dialpadInput,
                                 onValueChange = {
                                     if (it.length > dialpadInput.length) {
@@ -321,10 +331,11 @@ fun MainScreen(
                                     dialpadInput = it
                                     viewModel.onSearchQueryChange(it)
                                 },
-                                onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
+                                onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = ""; isDialpadVisible = false } },
                                 onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                                 voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
-                                contactsPaged = contactsPaged
+                                contactsPaged = contactsPaged,
+                                onCollapseClick = { isDialpadVisible = false }
                             )
                         }
                     }

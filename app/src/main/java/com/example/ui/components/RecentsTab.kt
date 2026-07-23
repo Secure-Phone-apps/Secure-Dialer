@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.CallMissed
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Dialpad
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.lazy.items
@@ -51,126 +52,54 @@ fun RecentsTabContent(
 ) {
     var filterByMissed by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        Row(
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
         ) {
-            Text(
-                text = stringResource(R.string.recents_header),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.testTag("recents_header")
-            )
-        }
-
-        // Filter Chips
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            FilterChip(
-                selected = !filterByMissed,
-                onClick = { filterByMissed = false },
-                label = { Text(stringResource(R.string.filter_all)) },
-                leadingIcon = if (!filterByMissed) {
-                    { Icon(Icons.Default.Done, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-                } else null
-            )
-            FilterChip(
-                selected = filterByMissed,
-                onClick = { filterByMissed = true },
-                label = { Text(stringResource(R.string.filter_missed)) },
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedLabelColor = MaterialTheme.colorScheme.error,
-                    selectedLeadingIconColor = MaterialTheme.colorScheme.error
-                ),
-                leadingIcon = if (filterByMissed) {
-                    { Icon(Icons.Default.Done, contentDescription = null, modifier = Modifier.size(FilterChipDefaults.IconSize)) }
-                } else null
-            )
-        }
-
-        if (!hasPermission && !isLoading) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
-                ),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+            if (!hasPermission && !isLoading) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    shape = MaterialTheme.shapes.medium
                 ) {
-                    Text(
-                        text = stringResource(R.string.permissions_required),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.call_log_perm_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = onRequestPermission,
-                        modifier = Modifier.height(40.dp)
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(stringResource(R.string.enable_call_log_perm))
-                    }
-                }
-            }
-        }
-
-        if (isLoading || callRecordsPaged.loadState.refresh is LoadState.Loading) {
-            RecentsSkeleton()
-        } else if (callRecordsPaged.itemCount == 0 && callRecordsPaged.loadState.refresh is LoadState.NotLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                EmptyStateIllustration(
-                    title = stringResource(R.string.no_call_log_title),
-                    subtitle = stringResource(R.string.no_call_log_subtitle)
-                )
-            }
-        } else {
-            val query by viewModel.searchQuery
-            val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed, query) {
-                val baseFiltered = callRecordsPaged.itemSnapshotList.items
-                    .filter { if (filterByMissed) it.type == CallType.MISSED else true }
-                    .filter { record ->
-                        if (query.isBlank()) {
-                            true
-                        } else {
-                            record.name.contains(query, ignoreCase = true) ||
-                            record.number.contains(query, ignoreCase = true)
+                        Text(
+                            text = stringResource(R.string.permissions_required),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.call_log_perm_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = onRequestPermission,
+                            modifier = Modifier.height(40.dp)
+                        ) {
+                            Text(stringResource(R.string.enable_call_log_perm))
                         }
                     }
-                
-                baseFiltered.groupBy { it.number }.map { (_, records) ->
-                    CallGroup(records.first(), records)
                 }
             }
 
-            if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (isLoading || callRecordsPaged.loadState.refresh is LoadState.Loading) {
+                RecentsSkeleton()
+            } else if (callRecordsPaged.itemCount == 0 && callRecordsPaged.loadState.refresh is LoadState.NotLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -178,36 +107,144 @@ fun RecentsTabContent(
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyStateIllustration(
-                        title = "No results found",
-                        subtitle = "No matching calls for \"$query\""
+                        title = stringResource(R.string.no_call_log_title),
+                        subtitle = stringResource(R.string.no_call_log_subtitle)
                     )
                 }
             } else {
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(vertical = 4.dp)
-                ) {
-                    items(
-                        items = consolidatedRecords,
-                        key = { it.primary.id }
-                    ) { group ->
-                        RecentCallRow(
-                            group = group,
-                            onCallClick = { onCallClick(group.primary) },
-                            onDeleteRecord = { id -> onDeleteRecord(id) },
-                            getHistory = { viewModel.getCallHistoryByNumber(it) }
+                val query by viewModel.searchQuery
+                val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed, query) {
+                    val baseFiltered = callRecordsPaged.itemSnapshotList.items
+                        .filter { if (filterByMissed) it.type == CallType.MISSED else true }
+                        .filter { record ->
+                            if (query.isBlank()) {
+                                true
+                            } else {
+                                record.name.contains(query, ignoreCase = true) ||
+                                record.number.contains(query, ignoreCase = true)
+                            }
+                        }
+                    
+                    baseFiltered.groupBy { it.number }.map { (_, records) ->
+                        CallGroup(records.first(), records)
+                    }
+                }
+
+                if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        EmptyStateIllustration(
+                            title = "No results found",
+                            subtitle = "No matching calls for \"$query\""
                         )
                     }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        items(
+                            items = consolidatedRecords,
+                            key = { it.primary.id }
+                        ) { group ->
+                            RecentCallRow(
+                                group = group,
+                                onCallClick = { onCallClick(group.primary) },
+                                onDeleteRecord = { id -> onDeleteRecord(id) },
+                                getHistory = { viewModel.getCallHistoryByNumber(it) },
+                                viewModel = viewModel
+                            )
+                        }
 
-                    if (callRecordsPaged.loadState.append is LoadState.Loading) {
-                        item {
-                            Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                                CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                        if (callRecordsPaged.loadState.append is LoadState.Loading) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
+                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                                }
                             }
                         }
                     }
+                }
+            }
+        }
+
+        // Floating Controls in Recents Tab (All / Missed Pill Toggle and Dialpad FAB)
+        if (hasPermission && !isLoading) {
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // All / Missed Pill/Toggle button
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
+                    shape = RoundedCornerShape(20.dp),
+                    tonalElevation = 4.dp,
+                    modifier = Modifier.height(40.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // All button
+                        Surface(
+                            color = if (!filterByMissed) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            contentColor = if (!filterByMissed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .clickable { filterByMissed = false }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.filter_all),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+
+                        // Missed button
+                        Surface(
+                            color = if (filterByMissed) MaterialTheme.colorScheme.error else Color.Transparent,
+                            contentColor = if (filterByMissed) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSurfaceVariant,
+                            shape = RoundedCornerShape(16.dp),
+                            modifier = Modifier
+                                .clickable { filterByMissed = true }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.filter_missed),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Dialpad FAB
+                val isExpressive = LocalM3Expressive.current
+                val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
+                
+                FloatingActionButton(
+                    onClick = { viewModel.isDialpadVisible.value = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = shape,
+                    modifier = Modifier.size(56.dp).testTag("dialpad_fab")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Dialpad,
+                        contentDescription = "Show Dialpad",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
         }
@@ -219,7 +256,8 @@ fun RecentCallRow(
     group: CallGroup,
     onCallClick: () -> Unit,
     onDeleteRecord: (Int) -> Unit,
-    getHistory: suspend (String) -> List<CallRecord>
+    getHistory: suspend (String) -> List<CallRecord>,
+    viewModel: com.example.ui.viewmodel.DialerViewModel
 ) {
     val record = group.primary
     val haptic = LocalHapticFeedback.current
@@ -235,7 +273,7 @@ fun RecentCallRow(
         }
     }
 
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDark by viewModel.isDarkTheme
     val containerColor = if (isExpanded) {
         if (isDark) {
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)

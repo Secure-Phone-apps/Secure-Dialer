@@ -35,9 +35,9 @@ private val DarkColorScheme =
     onError = OnErrorDark,
     errorContainer = ErrorContainerDark,
     onErrorContainer = OnErrorContainerDark,
-    background = BackgroundDark,
+    background = Color(0xFF000000),
     onBackground = OnBackgroundDark,
-    surface = SurfaceDark,
+    surface = Color(0xFF000000),
     onSurface = OnSurfaceDark,
     surfaceVariant = SurfaceVariantDark,
     onSurfaceVariant = OnSurfaceVariantDark,
@@ -62,9 +62,9 @@ private val LightColorScheme =
     onError = OnErrorLight,
     errorContainer = ErrorContainerLight,
     onErrorContainer = OnErrorContainerLight,
-    background = BackgroundLight,
+    background = Color(0xFFFFFFFF),
     onBackground = OnBackgroundLight,
-    surface = SurfaceLight,
+    surface = Color(0xFFFFFFFF),
     onSurface = OnSurfaceLight,
     surfaceVariant = SurfaceVariantLight,
     onSurfaceVariant = OnSurfaceVariantLight,
@@ -76,31 +76,31 @@ fun getColorSchemeForTheme(themeColor: String, darkTheme: Boolean): androidx.com
         "forest_green" -> {
             if (darkTheme) {
                 darkColorScheme(
-                    primary = Color(0xFFA5D6A7),
+                    primary = Color(0xFF34D399),
                     onPrimary = Color(0xFF003300),
-                    primaryContainer = Color(0xFF1B5E20),
+                    primaryContainer = Color(0xFF047857),
                     onPrimaryContainer = Color(0xFFE8F5E9),
-                    secondary = Color(0xFFC8E6C9),
-                    onSecondary = Color(0xFF1B5E20),
-                    secondaryContainer = Color(0xFF2E7D32),
+                    secondary = Color(0xFFD1FAE5),
+                    onSecondary = Color(0xFF047857),
+                    secondaryContainer = Color(0xFF059669),
                     onSecondaryContainer = Color(0xFFE8F5E9),
-                    background = Color(0xFF121512),
-                    surface = Color(0xFF121512),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
                     surfaceVariant = Color(0xFF3E4A3E),
                     onSurface = Color(0xFFE2E6E2)
                 )
             } else {
                 lightColorScheme(
-                    primary = Color(0xFF2E7D32),
+                    primary = Color(0xFF059669),
                     onPrimary = Color(0xFFFFFFFF),
-                    primaryContainer = Color(0xFFC8E6C9),
+                    primaryContainer = Color(0xFFD1FAE5),
                     onPrimaryContainer = Color(0xFF002200),
-                    secondary = Color(0xFF4CAF50),
+                    secondary = Color(0xFF10B981),
                     onSecondary = Color(0xFFFFFFFF),
                     secondaryContainer = Color(0xFFE8F5E9),
-                    onSecondaryContainer = Color(0xFF1B5E20),
-                    background = Color(0xFFF9FBF9),
-                    surface = Color(0xFFF9FBF9),
+                    onSecondaryContainer = Color(0xFF047857),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
                     surfaceVariant = Color(0xFFE2EAE2),
                     onSurface = Color(0xFF121512)
                 )
@@ -109,31 +109,31 @@ fun getColorSchemeForTheme(themeColor: String, darkTheme: Boolean): androidx.com
         "ocean_blue" -> {
             if (darkTheme) {
                 darkColorScheme(
-                    primary = Color(0xFF90CAF9),
+                    primary = Color(0xFF38BDF8),
                     onPrimary = Color(0xFF0D47A1),
-                    primaryContainer = Color(0xFF1565C0),
+                    primaryContainer = Color(0xFF0284C7),
                     onPrimaryContainer = Color(0xFFE3F2FD),
-                    secondary = Color(0xFFBBDEFB),
+                    secondary = Color(0xFFE0F2FE),
                     onSecondary = Color(0xFF0D47A1),
                     secondaryContainer = Color(0xFF1976D2),
                     onSecondaryContainer = Color(0xFFE3F2FD),
-                    background = Color(0xFF121417),
-                    surface = Color(0xFF121417),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
                     surfaceVariant = Color(0xFF3A424F),
                     onSurface = Color(0xFFE0E5ED)
                 )
             } else {
                 lightColorScheme(
-                    primary = Color(0xFF1565C0),
+                    primary = Color(0xFF0284C7),
                     onPrimary = Color(0xFFFFFFFF),
-                    primaryContainer = Color(0xFFBBDEFB),
+                    primaryContainer = Color(0xFFE0F2FE),
                     onPrimaryContainer = Color(0xFF0D2140),
-                    secondary = Color(0xFF2196F3),
+                    secondary = Color(0xFF0EA5E9),
                     onSecondary = Color(0xFFFFFFFF),
                     secondaryContainer = Color(0xFFE3F2FD),
                     onSecondaryContainer = Color(0xFF0D47A1),
-                    background = Color(0xFFFAFBFC),
-                    surface = Color(0xFFFAFBFC),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
                     surfaceVariant = Color(0xFFE5ECF6),
                     onSurface = Color(0xFF121417)
                 )
@@ -142,31 +142,31 @@ fun getColorSchemeForTheme(themeColor: String, darkTheme: Boolean): androidx.com
         "sunset_orange" -> {
             if (darkTheme) {
                 darkColorScheme(
-                    primary = Color(0xFFFFCC80),
-                    onPrimary = Color(0xFFE65100),
-                    primaryContainer = Color(0xFFD84315),
+                    primary = Color(0xFFFBBF24),
+                    onPrimary = Color(0xFFD97706),
+                    primaryContainer = Color(0xFFB45309),
                     onPrimaryContainer = Color(0xFFFFF3E0),
-                    secondary = Color(0xFFFFE0B2),
-                    onSecondary = Color(0xFFE65100),
+                    secondary = Color(0xFFFEF3C7),
+                    onSecondary = Color(0xFFD97706),
                     secondaryContainer = Color(0xFFF4511E),
                     onSecondaryContainer = Color(0xFFFFF3E0),
-                    background = Color(0xFF171312),
-                    surface = Color(0xFF171312),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
                     surfaceVariant = Color(0xFF4C3E3A),
                     onSurface = Color(0xFFECE0DD)
                 )
             } else {
                 lightColorScheme(
-                    primary = Color(0xFFE65100),
+                    primary = Color(0xFFD97706),
                     onPrimary = Color(0xFFFFFFFF),
-                    primaryContainer = Color(0xFFFFE0B2),
+                    primaryContainer = Color(0xFFFEF3C7),
                     onPrimaryContainer = Color(0xFF3E1200),
-                    secondary = Color(0xFFFF9800),
+                    secondary = Color(0xFFEA580C),
                     onSecondary = Color(0xFFFFFFFF),
                     secondaryContainer = Color(0xFFFFF3E0),
-                    onSecondaryContainer = Color(0xFFE65100),
-                    background = Color(0xFFFCFAF9),
-                    surface = Color(0xFFFCFAF9),
+                    onSecondaryContainer = Color(0xFFD97706),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
                     surfaceVariant = Color(0xFFECE2DE),
                     onSurface = Color(0xFF171312)
                 )
@@ -175,31 +175,31 @@ fun getColorSchemeForTheme(themeColor: String, darkTheme: Boolean): androidx.com
         "lavender_purple" -> {
             if (darkTheme) {
                 darkColorScheme(
-                    primary = Color(0xFFCE93D8),
+                    primary = Color(0xFFA78BFA),
                     onPrimary = Color(0xFF4A148C),
-                    primaryContainer = Color(0xFF7B1FA2),
+                    primaryContainer = Color(0xFF7C3AED),
                     onPrimaryContainer = Color(0xFFF3E5F5),
-                    secondary = Color(0xFFE1BEE7),
+                    secondary = Color(0xFFEDE9FE),
                     onSecondary = Color(0xFF4A148C),
                     secondaryContainer = Color(0xFF8E24AA),
                     onSecondaryContainer = Color(0xFFF3E5F5),
-                    background = Color(0xFF151217),
-                    surface = Color(0xFF151217),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
                     surfaceVariant = Color(0xFF453D4A),
                     onSurface = Color(0xFFE6E0E8)
                 )
             } else {
                 lightColorScheme(
-                    primary = Color(0xFF7B1FA2),
+                    primary = Color(0xFF7C3AED),
                     onPrimary = Color(0xFFFFFFFF),
-                    primaryContainer = Color(0xFFE1BEE7),
+                    primaryContainer = Color(0xFFEDE9FE),
                     onPrimaryContainer = Color(0xFF2E004F),
-                    secondary = Color(0xFF9C27B0),
+                    secondary = Color(0xFF6D28D9),
                     onSecondary = Color(0xFFFFFFFF),
                     secondaryContainer = Color(0xFFF3E5F5),
                     onSecondaryContainer = Color(0xFF4A148C),
-                    background = Color(0xFFFAF9FC),
-                    surface = Color(0xFFFAF9FC),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
                     surfaceVariant = Color(0xFFE6E1EB),
                     onSurface = Color(0xFF151217)
                 )
@@ -208,33 +208,66 @@ fun getColorSchemeForTheme(themeColor: String, darkTheme: Boolean): androidx.com
         "dark_crimson" -> {
             if (darkTheme) {
                 darkColorScheme(
-                    primary = Color(0xFFEF9A9A),
+                    primary = Color(0xFFFB7185),
                     onPrimary = Color(0xFF7F0000),
-                    primaryContainer = Color(0xFFB71C1C),
+                    primaryContainer = Color(0xFFE11D48),
                     onPrimaryContainer = Color(0xFFFFEBEE),
-                    secondary = Color(0xFFFFCDD2),
+                    secondary = Color(0xFFFFE4E6),
                     onSecondary = Color(0xFF7F0000),
                     secondaryContainer = Color(0xFFC62828),
                     onSecondaryContainer = Color(0xFFFFEBEE),
-                    background = Color(0xFF171212),
-                    surface = Color(0xFF171212),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
                     surfaceVariant = Color(0xFF4C3D3D),
                     onSurface = Color(0xFFECE0E0)
                 )
             } else {
                 lightColorScheme(
-                    primary = Color(0xFFB71C1C),
+                    primary = Color(0xFFE11D48),
                     onPrimary = Color(0xFFFFFFFF),
-                    primaryContainer = Color(0xFFFFCDD2),
+                    primaryContainer = Color(0xFFFFE4E6),
                     onPrimaryContainer = Color(0xFF3E0000),
-                    secondary = Color(0xFFD32F2F),
+                    secondary = Color(0xFFBE123C),
                     onSecondary = Color(0xFFFFFFFF),
                     secondaryContainer = Color(0xFFFFEBEE),
                     onSecondaryContainer = Color(0xFF7F0000),
-                    background = Color(0xFFFCF9F9),
-                    surface = Color(0xFFFCF9F9),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
                     surfaceVariant = Color(0xFFECE1E1),
                     onSurface = Color(0xFF171212)
+                )
+            }
+        }
+        "natural_gray" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFFE5E5E5),
+                    onPrimary = Color(0xFF212121),
+                    primaryContainer = Color(0xFF525252),
+                    onPrimaryContainer = Color(0xFFF5F5F5),
+                    secondary = Color(0xFFBDBDBD),
+                    onSecondary = Color(0xFF212121),
+                    secondaryContainer = Color(0xFF303030),
+                    onSecondaryContainer = Color(0xFFEEEEEE),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF000000),
+                    surfaceVariant = Color(0xFF333333),
+                    onSurface = Color(0xFFE5E5E5)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF525252),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFE5E5E5),
+                    onPrimaryContainer = Color(0xFF1F1F1F),
+                    secondary = Color(0xFF737373),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFF5F5F5),
+                    onSecondaryContainer = Color(0xFF212121),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceVariant = Color(0xFFE5E5E5),
+                    onSurface = Color(0xFF212121)
                 )
             }
         }

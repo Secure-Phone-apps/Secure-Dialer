@@ -81,7 +81,7 @@ fun SettingsPanel(
     var newQuickRespInput by remember { mutableStateOf("") }
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
 
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDark = isDarkTheme
     val cardBgColor = if (isDark) {
         MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
     } else {
@@ -358,10 +358,8 @@ fun SettingsPanel(
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
                                     val tabs = listOf(
-                                        stringResource(R.string.tab_favorites),
                                         stringResource(R.string.tab_recents),
-                                        stringResource(R.string.tab_contacts),
-                                        stringResource(R.string.tab_dialpad)
+                                        stringResource(R.string.tab_contacts)
                                     )
                                     val currentTabSelected = viewModel.defaultTab.intValue
                                     Row(
@@ -1637,12 +1635,13 @@ fun ThemeColorPicker(
     onColorSelected: (String) -> Unit
 ) {
     val options = listOf(
-        Triple("classic_slate", Color(0xFF1967D2), "Slate"),
-        Triple("forest_green", Color(0xFF2E7D32), "Green"),
-        Triple("ocean_blue", Color(0xFF1565C0), "Blue"),
-        Triple("sunset_orange", Color(0xFFE65100), "Orange"),
-        Triple("lavender_purple", Color(0xFF7B1FA2), "Purple"),
-        Triple("dark_crimson", Color(0xFFB71C1C), "Crimson")
+        Triple("classic_slate", Color(0xFF2563EB), "Royal Blue"),
+        Triple("forest_green", Color(0xFF059669), "Emerald"),
+        Triple("ocean_blue", Color(0xFF0284C7), "Cyan"),
+        Triple("sunset_orange", Color(0xFFD97706), "Amber"),
+        Triple("lavender_purple", Color(0xFF7C3AED), "Purple"),
+        Triple("dark_crimson", Color(0xFFE11D48), "Ruby"),
+        Triple("natural_gray", Color(0xFF525252), "Titanium")
     )
     val isExpressive = LocalM3Expressive.current
     val pickerShape = if (isExpressive) RoundedCornerShape(12.dp) else CircleShape

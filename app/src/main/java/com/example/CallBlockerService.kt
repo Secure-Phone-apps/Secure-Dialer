@@ -15,11 +15,7 @@ class CallBlockerService : CallScreeningService() {
 
     override fun onScreenCall(callDetails: Call.Details) {
         val number = callDetails.handle?.schemeSpecificPart ?: ""
-        val context = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            createAttributionContext("dialer")
-        } else {
-            this
-        }
+        val context = this
         val db = AppDatabase.getDatabase(context)
         val dao = db.dialerDao()
 

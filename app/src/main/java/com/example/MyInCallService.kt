@@ -101,11 +101,7 @@ class MyInCallService : InCallService() {
 
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: "Unknown"
-        val context = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            createAttributionContext("dialer")
-        } else {
-            this
-        }
+        val context = this
         val name = getContactNameFromNumber(context, number) ?: number
 
         val intent = Intent(this, MainActivity::class.java).apply {

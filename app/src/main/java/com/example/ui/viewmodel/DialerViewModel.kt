@@ -13,13 +13,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class DialerViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository = DialerRepository(
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            application.createAttributionContext("dialer")
-        } else {
-            application
-        }
-    )
+    private val repository = DialerRepository(application)
 
     // Search Query
     var searchQuery = mutableStateOf("")
@@ -53,10 +47,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
     var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
     var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
-    var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0))
+    var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 1))
     var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
     var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
-    var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0))
+    var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 1))
     var dialpadTonesEnabled = mutableStateOf(true)
     var vibrateOnClickEnabled = mutableStateOf(true)
     var preferredSim = mutableStateOf("SIM 1")

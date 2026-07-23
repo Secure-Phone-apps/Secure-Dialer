@@ -37,15 +37,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import com.example.ui.theme.LocalM3Expressive
 
 private val DIALPAD_KEYS = listOf(
-    Triple("1", "Voicemail", 1),
-    Triple("2", "A B C", 2),
-    Triple("3", "D E F", 3),
-    Triple("4", "G H I", 4),
-    Triple("5", "J K L", 5),
-    Triple("6", "M N O", 6),
-    Triple("7", "P Q R S", 7),
-    Triple("8", "T U V", 8),
-    Triple("9", "W X Y Z", 9),
+    Triple("1", "", 1),
+    Triple("2", "", 2),
+    Triple("3", "", 3),
+    Triple("4", "", 4),
+    Triple("5", "", 5),
+    Triple("6", "", 6),
+    Triple("7", "", 7),
+    Triple("8", "", 8),
+    Triple("9", "", 9),
     Triple("*", "", -1),
     Triple("0", "+", 0),
     Triple("#", "", -1)
@@ -60,7 +60,8 @@ fun DialpadTabContent(
     onSpeedDialCall: (String) -> Unit,
     voicemailNumber: String,
     speedDialMap: Map<Int, String>,
-    contactsPaged: LazyPagingItems<Contact>
+    contactsPaged: LazyPagingItems<Contact>,
+    onCollapseClick: () -> Unit
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -179,7 +180,8 @@ fun DialpadTabContent(
         ) {
             Text(
                 text = inputValue.ifEmpty { stringResource(R.string.dialpad_enter_number) },
-                style = MaterialTheme.typography.displayMedium,
+                style = if (inputValue.isEmpty()) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge,
+                fontWeight = if (inputValue.isEmpty()) FontWeight.Normal else FontWeight.Bold,
                 color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -268,8 +270,18 @@ fun DialpadTabContent(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Empty box for symmetry on the left
-            Box(modifier = Modifier.size(60.dp))
+            // Collapse dialpad button on the left
+            IconButton(
+                onClick = onCollapseClick,
+                modifier = Modifier.size(60.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Hide Dialpad",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
 
             // Central green call button
             val isExpressive = LocalM3Expressive.current
@@ -555,7 +567,7 @@ private fun DialButton(
 
     Surface(
         modifier = modifier
-            .size(if (modifier == Modifier) 72.dp else Dp.Unspecified)
+            .size(if (modifier == Modifier) 80.dp else Dp.Unspecified)
             .heightIn(min = 64.dp)
             .clip(buttonShape)
             .combinedClickable(
@@ -594,14 +606,14 @@ private fun DialButton(
         ) {
             Text(
                 text = key.first,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.headlineLarge,
+                fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             if (key.second.isNotEmpty()) {
                 Text(
                     text = key.second,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )

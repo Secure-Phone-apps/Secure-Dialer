@@ -2,22 +2,20 @@ package com.example.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Authorized Color Palette: Blue, White, Dark Grey, Black
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
 
-// Primary (Google Blue)
-val PrimaryLight = Color(0xFF1967D2)
+// Modern Refined Indigo / Material 3 Default Palette
+val PrimaryLight = Color(0xFF2563EB)
 val OnPrimaryLight = Color(0xFFFFFFFF)
-val PrimaryContainerLight = Color(0xFFD1E4FF)
-val OnPrimaryContainerLight = Color(0xFF001D36)
+val PrimaryContainerLight = Color(0xFFDBEAFE)
+val OnPrimaryContainerLight = Color(0xFF1E3A8A)
 
-val PrimaryDark = Color(0xFF8AB4F8)
-val OnPrimaryDark = Color(0xFF00315E)
-val PrimaryContainerDark = Color(0xFF004682)
-val OnPrimaryContainerDark = Color(0xFFD1E4FF)
+val PrimaryDark = Color(0xFF60A5FA)
+val OnPrimaryDark = Color(0xFF1E3A8A)
+val PrimaryContainerDark = Color(0xFF1D4ED8)
+val OnPrimaryContainerDark = Color(0xFFDBEAFE)
 
-// Secondary
 val SecondaryLight = Color(0xFF535F70)
 val OnSecondaryLight = Color(0xFFFFFFFF)
 val SecondaryContainerLight = Color(0xFFD7E3F7)
@@ -28,7 +26,6 @@ val OnSecondaryDark = Color(0xFF253140)
 val SecondaryContainerDark = Color(0xFF3B4858)
 val OnSecondaryContainerDark = Color(0xFFD7E3F7)
 
-// Tertiary
 val TertiaryLight = Color(0xFF6B5778)
 val OnTertiaryLight = Color(0xFFFFFFFF)
 val TertiaryContainerLight = Color(0xFFF2DAFF)
@@ -39,7 +36,6 @@ val OnTertiaryDark = Color(0xFF3B2948)
 val TertiaryContainerDark = Color(0xFF523F5F)
 val OnTertiaryContainerDark = Color(0xFFF2DAFF)
 
-// Error
 val ErrorLight = Color(0xFFBA1A1A)
 val OnErrorLight = Color(0xFFFFFFFF)
 val ErrorContainerLight = Color(0xFFFFDAD6)
@@ -50,24 +46,25 @@ val OnErrorDark = Color(0xFF690005)
 val ErrorContainerDark = Color(0xFF93000A)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
-// Background & Surface
-val BackgroundLight = Color(0xFFFDFBFF)
-val OnBackgroundLight = Color(0xFF1A1C1E)
-val SurfaceLight = Color(0xFFFDFBFF)
-val OnSurfaceLight = Color(0xFF1A1C1E)
-val SurfaceVariantLight = Color(0xFFDFE2EB)
+// Clean light background and surface for speed & readability (Pure White)
+val BackgroundLight = Color(0xFFFFFFFF)
+val OnBackgroundLight = Color(0xFF000000)
+val SurfaceLight = Color(0xFFFFFFFF)
+val OnSurfaceLight = Color(0xFF000000)
+val SurfaceVariantLight = Color(0xFFF1F3F4)
 val OnSurfaceVariantLight = Color(0xFF43474E)
 val OutlineLight = Color(0xFF73777F)
 
-val BackgroundDark = Color(0xFF1A1C1E)
-val OnBackgroundDark = Color(0xFFE2E2E6)
-val SurfaceDark = Color(0xFF1A1C1E)
-val OnSurfaceDark = Color(0xFFE2E2E6)
-val SurfaceVariantDark = Color(0xFF43474E)
+// Deep sleek dark background for OLED & battery efficiency (Pure Black)
+val BackgroundDark = Color(0xFF000000)
+val OnBackgroundDark = Color(0xFFFFFFFF)
+val SurfaceDark = Color(0xFF000000)
+val OnSurfaceDark = Color(0xFFFFFFFF)
+val SurfaceVariantDark = Color(0xFF1E2022)
 val OnSurfaceVariantDark = Color(0xFFC3C7CF)
 val OutlineDark = Color(0xFF8D9199)
 
-// Avatar Colors (Custom)
+// Avatar Colors
 val AvatarOrange = Color(0xFFFFDBCB)
 val AvatarOrangeText = Color(0xFF311300)
 val AvatarBlue = Color(0xFFD1E4FF)
