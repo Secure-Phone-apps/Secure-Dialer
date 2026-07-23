@@ -226,8 +226,8 @@ fun ContactsTabContent(
                 
                 FloatingActionButton(
                     onClick = { showOnlyFavorites = !showOnlyFavorites },
-                    containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
                     shape = shape,
                     modifier = Modifier.size(56.dp).testTag("favorites_toggle_fab")
                 ) {
@@ -241,8 +241,8 @@ fun ContactsTabContent(
                 // Add Contact FAB (Add new)
                 FloatingActionButton(
                     onClick = onAddContactClick,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                     shape = shape,
                     modifier = Modifier.size(56.dp).testTag("add_contact_fab")
                 ) {

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.CallMissed
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.History
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.foundation.lazy.items
@@ -174,7 +175,7 @@ fun RecentsTabContent(
             }
         }
 
-        // Floating Controls in Recents Tab (All / Missed Pill Toggle and Dialpad FAB)
+        // Floating Controls in Recents Tab (All, Missed, and Dialpad FABs)
         if (hasPermission && !isLoading) {
             Row(
                 modifier = Modifier
@@ -183,56 +184,40 @@ fun RecentsTabContent(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // All / Missed Pill/Toggle button
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f),
-                    shape = RoundedCornerShape(20.dp),
-                    tonalElevation = 4.dp,
-                    modifier = Modifier.height(40.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // All button
-                        Surface(
-                            color = if (!filterByMissed) MaterialTheme.colorScheme.primary else Color.Transparent,
-                            contentColor = if (!filterByMissed) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .clickable { filterByMissed = false }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.filter_all),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                        }
+                val isExpressive = LocalM3Expressive.current
+                val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
 
-                        // Missed button
-                        Surface(
-                            color = if (filterByMissed) MaterialTheme.colorScheme.error else Color.Transparent,
-                            contentColor = if (filterByMissed) MaterialTheme.colorScheme.onError else MaterialTheme.colorScheme.onSurfaceVariant,
-                            shape = RoundedCornerShape(16.dp),
-                            modifier = Modifier
-                                .clickable { filterByMissed = true }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.filter_missed),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                            )
-                        }
-                    }
+                // All Filter FAB
+                FloatingActionButton(
+                    onClick = { filterByMissed = false },
+                    containerColor = if (!filterByMissed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = if (!filterByMissed) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = shape,
+                    modifier = Modifier.size(56.dp).testTag("filter_all_fab")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = "All Calls",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                // Missed Filter FAB
+                FloatingActionButton(
+                    onClick = { filterByMissed = true },
+                    containerColor = if (filterByMissed) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = if (filterByMissed) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                    shape = shape,
+                    modifier = Modifier.size(56.dp).testTag("filter_missed_fab")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CallMissed,
+                        contentDescription = "Missed Calls",
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
 
                 // Dialpad FAB
-                val isExpressive = LocalM3Expressive.current
-                val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
-                
                 FloatingActionButton(
                     onClick = { viewModel.isDialpadVisible.value = true },
                     containerColor = MaterialTheme.colorScheme.primary,
