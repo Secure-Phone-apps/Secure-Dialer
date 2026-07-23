@@ -51,6 +51,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var dialpadInput = mutableStateOf("")
     var isSettingsVisible = mutableStateOf(false)
     var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
+    var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
     var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0))
     var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
@@ -112,6 +113,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updatePreferredSim(sim: String) {
         preferredSim.value = sim
         viewModelScope.launch { repository.savePreferredSim(sim) }
+    }
+
+    fun updateDarkTheme(dark: Boolean) {
+        isDarkTheme.value = dark
+        prefs.edit().putBoolean("is_dark_theme", dark).apply()
+    }
+
+    fun updateM3Expressive(expressive: Boolean) {
+        isM3Expressive.value = expressive
+        prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
     }
 
     fun updateThemeColor(color: String) {

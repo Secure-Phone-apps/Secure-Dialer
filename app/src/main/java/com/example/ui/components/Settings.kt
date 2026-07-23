@@ -37,6 +37,12 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import com.example.R
+import com.example.ui.theme.LocalM3Expressive
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.scale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,9 +54,7 @@ fun SettingsPanel(
     val haptic = LocalHapticFeedback.current
     val isDarkTheme by viewModel.isDarkTheme
     val onThemeChange = { newVal: Boolean ->
-        viewModel.isDarkTheme.value = newVal
-        context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-            .edit().putBoolean("is_dark_theme", newVal).apply()
+        viewModel.updateDarkTheme(newVal)
     }
     val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
     val onTonesChange = { newVal: Boolean -> viewModel.dialpadTonesEnabled.value = newVal }
@@ -144,7 +148,7 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(
                                     containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column {
                                     SettingsRowToggle(
@@ -161,7 +165,6 @@ fun SettingsPanel(
                                         currentSelected = viewModel.themeColor.value,
                                         onColorSelected = { viewModel.updateThemeColor(it) }
                                     )
-
                                 }
                             }
                         }
@@ -177,7 +180,7 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(
                                     containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column {
                                     SettingsRowToggle(
@@ -214,7 +217,7 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(
                                     containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column {
                                     SettingsRowNav(
@@ -222,8 +225,8 @@ fun SettingsPanel(
                                         subtitle = stringResource(R.string.settings_speed_dial_sub),
                                         onClick = { activeTab = 2 },
                                         icon = Icons.Default.Speed,
-                                        iconBgColor = Color(0xFFE3F2FD),
-                                        iconTint = Color(0xFF1E88E5)
+                                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.primary
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
@@ -231,8 +234,8 @@ fun SettingsPanel(
                                         subtitle = stringResource(R.string.settings_blocked_numbers_sub),
                                         onClick = { activeTab = 1 },
                                         icon = Icons.Default.Block,
-                                        iconBgColor = Color(0xFFFFEBEE),
-                                        iconTint = Color(0xFFE53935)
+                                        iconBgColor = MaterialTheme.colorScheme.errorContainer,
+                                        iconTint = MaterialTheme.colorScheme.error
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
@@ -240,8 +243,8 @@ fun SettingsPanel(
                                         subtitle = stringResource(R.string.settings_quick_responses_sub),
                                         onClick = { activeTab = 3 },
                                         icon = Icons.Default.Message,
-                                        iconBgColor = Color(0xFFE8F5E9),
-                                        iconTint = Color(0xFF43A047)
+                                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.tertiary
                                     )
                                 }
                             }
@@ -258,7 +261,7 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(
                                     containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column {
                                     ListItem(
@@ -280,14 +283,14 @@ fun SettingsPanel(
                                             Box(
                                                 modifier = Modifier
                                                     .size(38.dp)
-                                                    .clip(RoundedCornerShape(8.dp))
-                                                    .background(Color(0xFFFFF3E0)),
+                                                    .clip(MaterialTheme.shapes.small)
+                                                    .background(MaterialTheme.colorScheme.tertiaryContainer),
                                                 contentAlignment = Alignment.Center
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.SimCard,
                                                     contentDescription = null,
-                                                    tint = Color(0xFFFB8C00),
+                                                    tint = MaterialTheme.colorScheme.tertiary,
                                                     modifier = Modifier.size(20.dp)
                                                 )
                                             }
@@ -329,8 +332,8 @@ fun SettingsPanel(
                                         subtitle = voicemailNumber.ifEmpty { stringResource(R.string.not_set) },
                                         onClick = { activeTab = 4 },
                                         icon = Icons.Default.Voicemail,
-                                        iconBgColor = Color(0xFFF3E5F5),
-                                        iconTint = Color(0xFF8E24AA)
+                                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.secondary
                                     )
                                 }
                             }
@@ -345,7 +348,7 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
@@ -364,7 +367,7 @@ fun SettingsPanel(
                                     Row(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .clip(RoundedCornerShape(12.dp))
+                                            .clip(MaterialTheme.shapes.small)
                                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                             .padding(4.dp),
                                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -374,7 +377,7 @@ fun SettingsPanel(
                                             Box(
                                                 modifier = Modifier
                                                     .weight(1f)
-                                                    .clip(RoundedCornerShape(8.dp))
+                                                    .clip(MaterialTheme.shapes.extraSmall)
                                                     .background(
                                                         if (isSel) MaterialTheme.colorScheme.primary
                                                         else Color.Transparent
@@ -407,7 +410,7 @@ fun SettingsPanel(
                                     .fillMaxWidth()
                                     .padding(horizontal = 16.dp, vertical = 4.dp),
                                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column {
                                     val callWaiting = viewModel.callWaitingEnabled.value
@@ -418,8 +421,8 @@ fun SettingsPanel(
                                         checked = callWaiting,
                                         onCheckedChange = { viewModel.updateCallWaitingEnabled(it) },
                                         icon = Icons.Default.NetworkCell,
-                                        iconBgColor = Color(0xFFECEFF1),
-                                        iconTint = Color(0xFF607D8B)
+                                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.secondary
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowToggle(
@@ -428,8 +431,8 @@ fun SettingsPanel(
                                         checked = callRecording,
                                         onCheckedChange = { viewModel.updateRecordingEnabled(it) },
                                         icon = Icons.Default.Mic,
-                                        iconBgColor = Color(0xFFEDE7F6),
-                                        iconTint = Color(0xFF673AB7)
+                                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.primary
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
@@ -437,8 +440,8 @@ fun SettingsPanel(
                                         subtitle = stringResource(R.string.settings_view_saved_recordings_sub),
                                         onClick = { activeTab = 7 },
                                         icon = Icons.Default.Audiotrack,
-                                        iconBgColor = Color(0xFFE8F5E9),
-                                        iconTint = Color(0xFF2E7D32)
+                                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.tertiary
                                     )
                                 }
                             }
@@ -455,7 +458,7 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(
                                     containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column {
                                     SettingsRowNav(
@@ -463,8 +466,8 @@ fun SettingsPanel(
                                         subtitle = stringResource(R.string.settings_merge_duplicate_contacts_sub),
                                         onClick = { activeTab = 5 },
                                         icon = Icons.Default.MergeType,
-                                        iconBgColor = Color(0xFFE0F7FA),
-                                        iconTint = Color(0xFF00838F)
+                                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.secondary
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
@@ -472,8 +475,8 @@ fun SettingsPanel(
                                         subtitle = stringResource(R.string.settings_check_updates_sub),
                                         onClick = { activeTab = 6 },
                                         icon = Icons.Default.SystemUpdateAlt,
-                                        iconBgColor = Color(0xFFE8F5E9),
-                                        iconTint = Color(0xFF2E7D32)
+                                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                                        iconTint = MaterialTheme.colorScheme.primary
                                     )
                                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                                     SettingsRowNav(
@@ -508,7 +511,7 @@ fun SettingsPanel(
                                 colors = CardDefaults.cardColors(
                                     containerColor = cardBgColor
                                 ),
-                                shape = RoundedCornerShape(16.dp)
+                                shape = MaterialTheme.shapes.medium
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
@@ -530,7 +533,7 @@ fun SettingsPanel(
                                             try { context.startActivity(intent) } catch (e: Exception) {}
                                         },
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = MaterialTheme.shapes.small
                                     ) {
                                         Icon(Icons.Default.Favorite, "Contribute")
                                         Spacer(modifier = Modifier.width(8.dp))
@@ -571,7 +574,7 @@ fun SettingsPanel(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         )
                         
                         Spacer(modifier = Modifier.height(12.dp))
@@ -585,7 +588,7 @@ fun SettingsPanel(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         ) {
                             Icon(Icons.Default.Block, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
@@ -619,7 +622,7 @@ fun SettingsPanel(
                                 items(blockedNumbers, key = { it }) { num ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = MaterialTheme.shapes.medium,
                                         colors = CardDefaults.cardColors(
                                             containerColor = cardBgColor
                                         )
@@ -635,7 +638,7 @@ fun SettingsPanel(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(36.dp)
-                                                        .clip(CircleShape)
+                                                        .clip(if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape)
                                                         .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
                                                     contentAlignment = Alignment.Center
                                                 ) {
@@ -690,7 +693,7 @@ fun SettingsPanel(
                             var speedNumInput by remember { mutableStateOf("") }
                             ElevatedCard(
                                 modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = CardDefaults.elevatedCardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
                                 )
@@ -702,7 +705,7 @@ fun SettingsPanel(
                                     ) {
                                         Surface(
                                             modifier = Modifier.size(32.dp),
-                                            shape = CircleShape,
+                                            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
                                             color = MaterialTheme.colorScheme.primaryContainer
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
@@ -728,7 +731,7 @@ fun SettingsPanel(
                                         singleLine = true,
                                         leadingIcon = { Icon(Icons.Default.Phone, null) },
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(12.dp)
+                                        shape = MaterialTheme.shapes.small
                                     )
                                     Spacer(modifier = Modifier.height(20.dp))
                                     Row(
@@ -746,7 +749,7 @@ fun SettingsPanel(
                                                     targetSpeedDialKey = -1
                                                 }
                                             },
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = MaterialTheme.shapes.small
                                         ) {
                                             Text(stringResource(R.string.assign_key))
                                         }
@@ -763,7 +766,7 @@ fun SettingsPanel(
 
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = MaterialTheme.shapes.medium,
                                         colors = CardDefaults.cardColors(
                                             containerColor = cardBgColor
                                         )
@@ -781,7 +784,7 @@ fun SettingsPanel(
                                             ) {
                                                 Surface(
                                                     modifier = Modifier.size(44.dp),
-                                                    shape = CircleShape,
+                                                    shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
                                                     color = if (assignedNum != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                                                 ) {
                                                     Box(contentAlignment = Alignment.Center) {
@@ -860,7 +863,7 @@ fun SettingsPanel(
                                 Icon(Icons.Default.Message, null, tint = MaterialTheme.colorScheme.primary)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         )
                         
                         Spacer(modifier = Modifier.height(12.dp))
@@ -873,7 +876,7 @@ fun SettingsPanel(
                                 }
                             },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         ) {
                             Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(8.dp))
@@ -907,7 +910,7 @@ fun SettingsPanel(
                                 items(quickResponses, key = { it }) { resp ->
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = MaterialTheme.shapes.medium,
                                         colors = CardDefaults.cardColors(
                                             containerColor = cardBgColor
                                         )
@@ -926,7 +929,7 @@ fun SettingsPanel(
                                                 Box(
                                                     modifier = Modifier
                                                         .size(36.dp)
-                                                        .clip(CircleShape)
+                                                        .clip(if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape)
                                                         .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)),
                                                     contentAlignment = Alignment.Center
                                                 ) {
@@ -974,7 +977,7 @@ fun SettingsPanel(
                     ) {
                         Surface(
                             modifier = Modifier.size(96.dp),
-                            shape = CircleShape,
+                            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else CircleShape,
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -1008,13 +1011,13 @@ fun SettingsPanel(
                             singleLine = true,
                             leadingIcon = { Icon(Icons.Default.Phone, null) },
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                         Button(
                             onClick = { activeTab = 0 },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         ) {
                             Icon(Icons.Default.Check, null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1077,7 +1080,7 @@ fun SettingsPanel(
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth().height(48.dp),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = MaterialTheme.shapes.small
                             ) {
                                 Icon(Icons.Default.MergeType, null)
                                 Spacer(modifier = Modifier.width(8.dp))
@@ -1094,7 +1097,7 @@ fun SettingsPanel(
                                     val group = duplicates[key] ?: emptyList()
                                     Card(
                                         modifier = Modifier.fillMaxWidth(),
-                                        shape = RoundedCornerShape(16.dp),
+                                        shape = MaterialTheme.shapes.medium,
                                         colors = CardDefaults.cardColors(containerColor = cardBgColor)
                                     ) {
                                         Column(modifier = Modifier.padding(16.dp)) {
@@ -1174,7 +1177,7 @@ fun SettingsPanel(
                     ) {
                         Surface(
                             modifier = Modifier.size(96.dp),
-                            shape = CircleShape,
+                            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else CircleShape,
                             color = MaterialTheme.colorScheme.secondaryContainer
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -1214,11 +1217,11 @@ fun SettingsPanel(
                         } else if (checkResult != null) {
                             Card(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                                shape = RoundedCornerShape(16.dp),
+                                shape = MaterialTheme.shapes.medium,
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f))
                             ) {
                                 Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(32.dp))
+                                    Icon(Icons.Default.CheckCircle, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text(checkResult!!, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -1241,7 +1244,7 @@ fun SettingsPanel(
                             },
                             enabled = !isChecking,
                             modifier = Modifier.fillMaxWidth().height(48.dp),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = MaterialTheme.shapes.small
                         ) {
                             Icon(Icons.Default.Refresh, null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1297,7 +1300,7 @@ fun SettingsPanel(
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(vertical = 6.dp),
-                                        shape = RoundedCornerShape(12.dp),
+                                        shape = MaterialTheme.shapes.medium,
                                         colors = CardDefaults.cardColors(
                                             containerColor = if (isPlaying) {
                                                 MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
@@ -1321,7 +1324,7 @@ fun SettingsPanel(
                                                     Box(
                                                         modifier = Modifier
                                                             .size(40.dp)
-                                                            .clip(CircleShape)
+                                                            .clip(if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape)
                                                             .background(
                                                                 if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer
                                                             ),
@@ -1423,7 +1426,7 @@ fun SettingsPanel(
                                                         modifier = Modifier
                                                             .weight(1f)
                                                             .height(4.dp)
-                                                            .clip(RoundedCornerShape(2.dp)),
+                                                            .clip(MaterialTheme.shapes.extraSmall),
                                                         color = MaterialTheme.colorScheme.primary,
                                                         trackColor = MaterialTheme.colorScheme.surfaceVariant
                                                     )
@@ -1485,7 +1488,7 @@ fun SettingsRowToggle(
                 Box(
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .background(iconBgColor),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1495,12 +1498,21 @@ fun SettingsRowToggle(
         } else null,
         trailingContent = {
             val haptic = LocalHapticFeedback.current
+            val isExpressive = LocalM3Expressive.current
             Switch(
                 checked = checked,
                 onCheckedChange = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCheckedChange(it)
-                }
+                },
+                colors = if (isExpressive) {
+                    SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                } else SwitchDefaults.colors()
             )
         },
         colors = ListItemDefaults.colors(containerColor = Color.Transparent)
@@ -1541,7 +1553,7 @@ fun SettingsRowNav(
                 Box(
                     modifier = Modifier
                         .size(38.dp)
-                        .clip(RoundedCornerShape(8.dp))
+                        .clip(MaterialTheme.shapes.small)
                         .background(iconBgColor),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1589,7 +1601,7 @@ fun SettingsEmptyState(
     ) {
         Surface(
             modifier = Modifier.size(72.dp),
-            shape = CircleShape,
+            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else CircleShape,
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -1632,6 +1644,9 @@ fun ThemeColorPicker(
         Triple("lavender_purple", Color(0xFF7B1FA2), "Purple"),
         Triple("dark_crimson", Color(0xFFB71C1C), "Crimson")
     )
+    val isExpressive = LocalM3Expressive.current
+    val pickerShape = if (isExpressive) RoundedCornerShape(12.dp) else CircleShape
+
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
             text = stringResource(R.string.settings_accent_color),
@@ -1646,16 +1661,26 @@ fun ThemeColorPicker(
         ) {
             options.forEach { (key, color, label) ->
                 val isSelected = currentSelected == key
+                val scale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.15f else 1.0f,
+                    animationSpec = tween(
+                        durationMillis = 150,
+                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                    ),
+                    label = "color_picker_scale"
+                )
+
                 Box(
                     modifier = Modifier
                         .size(44.dp)
-                        .clip(CircleShape)
+                        .scale(scale)
+                        .clip(pickerShape)
                         .background(color)
                         .clickable { onColorSelected(key) }
                         .border(
                             width = if (isSelected) 3.dp else 0.dp,
                             color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                            shape = CircleShape
+                            shape = pickerShape
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -1715,8 +1740,10 @@ fun exportRecordingToDownloads(context: Context, filePath: String) {
 
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
+    val dialogShape = if (LocalM3Expressive.current) RoundedCornerShape(32.dp) else MaterialTheme.shapes.extraLarge
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = dialogShape,
         title = { Text(stringResource(R.string.settings_about), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
         text = {
             Column(
@@ -1736,8 +1763,10 @@ fun AboutDialog(onDismiss: () -> Unit) {
 
 @Composable
 fun PrivacyDialog(onDismiss: () -> Unit) {
+    val dialogShape = if (LocalM3Expressive.current) RoundedCornerShape(32.dp) else MaterialTheme.shapes.extraLarge
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = dialogShape,
         title = { Text(stringResource(R.string.privacy_policy_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold) },
         text = {
             Column(

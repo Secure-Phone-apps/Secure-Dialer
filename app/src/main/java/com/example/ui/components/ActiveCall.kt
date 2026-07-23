@@ -37,6 +37,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.CallManager
 import com.example.model.Contact
+import com.example.ui.theme.LocalM3Expressive
 import kotlinx.coroutines.delay
 
 import android.hardware.Sensor
@@ -281,7 +282,7 @@ fun ActiveCallScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 8.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
@@ -388,7 +389,7 @@ fun ActiveCallScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = MaterialTheme.shapes.large
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
@@ -435,7 +436,7 @@ fun ActiveCallScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    shape = RoundedCornerShape(28.dp)
+                    shape = MaterialTheme.shapes.large
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -461,7 +462,7 @@ fun ActiveCallScreen(
                                                     inCallDialpadInput += key
                                                     CallManager.playDtmf(key[0])
                                                 },
-                                            shape = RoundedCornerShape(12.dp),
+                                            shape = MaterialTheme.shapes.small,
                                             color = MaterialTheme.colorScheme.surfaceVariant
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
@@ -481,7 +482,7 @@ fun ActiveCallScreen(
             } else {
                 Surface(
                     modifier = Modifier.size(120.dp),
-                    shape = CircleShape,
+                    shape = if (LocalM3Expressive.current) MaterialTheme.shapes.extraLarge else CircleShape,
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -571,7 +572,7 @@ fun ActiveCallScreen(
                                             addCallNumberInput = contact.number
                                             selectedAddCallContactName = contact.name
                                         },
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = MaterialTheme.shapes.small,
                                         color = if (addCallNumberInput == contact.number) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
                                     ) {
                                         Row(
@@ -609,7 +610,7 @@ fun ActiveCallScreen(
                             }
                         }
                     },
-                    shape = RoundedCornerShape(28.dp)
+                    shape = MaterialTheme.shapes.large
                 )
             }
 
@@ -809,9 +810,9 @@ fun ActiveCallScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onAnswer()
                         },
-                        containerColor = Color(0xFF4CAF50),
-                        contentColor = Color.White,
-                        shape = CircleShape,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
                         modifier = Modifier.testTag("answer_button")
                     ) {
                         Icon(
@@ -831,7 +832,7 @@ fun ActiveCallScreen(
                     },
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
-                    shape = CircleShape,
+                    shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
                     modifier = Modifier.testTag("hangup_button")
                 ) {
                     Icon(
@@ -877,7 +878,7 @@ fun InCallButton(
             modifier = Modifier
                 .size(64.dp)
                 .clickable { onClick() },
-            shape = CircleShape,
+            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
             color = btnColor
         ) {
             Box(contentAlignment = Alignment.Center) {

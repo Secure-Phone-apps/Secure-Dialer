@@ -167,7 +167,7 @@
     <string name="settings_check_updates_sub">Garantir que o aplicativo esteja atualizado e seguro</string>
     <string name="settings_contribution">Contribuição</string>
     <string name="settings_support_title">Apoiar o Secure Dialer</string>
-    <string name="settings_support_desc">O Secure Dialer é 100% gratuito, código aberto, sem anúncios e focado na privacidade. Se você acha este app útil, considere contribuir com código ou traduções.</string>
+    <string name="settings_support_desc" formatted="false">O Secure Dialer é 100% gratuito, código aberto, sem anúncios e focado na privacidade. Se você acha este app útil, considere contribuir com código ou traduções.</string>
     <string name="settings_contribute_github">Contribuir no GitHub</string>
     <string name="enter_number_to_block">Digite o número para bloquear</string>
     <string name="block_this_number">Bloquear este número</string>

@@ -34,6 +34,8 @@ import com.example.R
 import androidx.paging.compose.LazyPagingItems
 import androidx.compose.foundation.lazy.LazyColumn
 
+import com.example.ui.theme.LocalM3Expressive
+
 private val DIALPAD_KEYS = listOf(
     Triple("1", "Voicemail", 1),
     Triple("2", "A B C", 2),
@@ -270,12 +272,15 @@ fun DialpadTabContent(
             Box(modifier = Modifier.size(60.dp))
 
             // Central green call button
+            val isExpressive = LocalM3Expressive.current
+            val callFabShape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
+
             LargeFloatingActionButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCallClick(inputValue)
                 },
-                shape = CircleShape,
+                shape = callFabShape,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
@@ -319,9 +324,10 @@ fun DialpadTabContent(
 fun FloatingDialpadButton(
     onClick: () -> Unit
 ) {
+    val shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else MaterialTheme.shapes.medium
     FloatingActionButton(
         onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
+        shape = shape,
         containerColor = MaterialTheme.colorScheme.primaryContainer,
         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         modifier = Modifier.testTag("dialpad_fab")
@@ -351,7 +357,12 @@ fun DialpadOverlay(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
+            .clip(
+                RoundedCornerShape(
+                    topStart = if (LocalM3Expressive.current) 40.dp else 28.dp,
+                    topEnd = if (LocalM3Expressive.current) 40.dp else 28.dp
+                )
+            ),
         color = MaterialTheme.colorScheme.surface,
         tonalElevation = 8.dp
     ) {
@@ -494,12 +505,15 @@ fun DialpadOverlay(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Call Action Button
+            val isOverlayExpressive = LocalM3Expressive.current
+            val overlayFabShape = if (isOverlayExpressive) MaterialTheme.shapes.large else CircleShape
+
             LargeFloatingActionButton(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCallClick(inputValue)
                 },
-                shape = CircleShape,
+                shape = overlayFabShape,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
@@ -531,12 +545,19 @@ private fun DialButton(
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
+    val isExpressive = LocalM3Expressive.current
+    val buttonShape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
+    val buttonColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    }
 
     Surface(
         modifier = modifier
             .size(if (modifier == Modifier) 72.dp else Dp.Unspecified)
             .heightIn(min = 64.dp)
-            .clip(CircleShape)
+            .clip(buttonShape)
             .combinedClickable(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -563,9 +584,9 @@ private fun DialButton(
                 }
             )
             .testTag("dialpad_key_${key.first}"),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
-        tonalElevation = 2.dp
+        shape = buttonShape,
+        color = buttonColor,
+        tonalElevation = if (isExpressive) 4.dp else 2.dp
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,

@@ -36,6 +36,7 @@ import androidx.paging.compose.itemKey
 import com.example.model.Contact
 import androidx.compose.ui.res.stringResource
 import com.example.R
+import com.example.ui.theme.LocalM3Expressive
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -81,7 +82,7 @@ fun ContactsTabContent(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                     ),
-                    shape = RoundedCornerShape(16.dp)
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -287,7 +288,7 @@ fun ContactRow(
         colors = CardDefaults.cardColors(
             containerColor = containerColor
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
         Column {
             ListItem(
@@ -311,11 +312,12 @@ fun ContactRow(
                 },
                 supportingContent = null,
                 leadingContent = {
+                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
                             .size(44.dp),
-                        shape = CircleShape,
+                        shape = avatarShape,
                         color = contact.avatarBg
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -406,7 +408,7 @@ fun ContactActionItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .clickable(onClick = onClick)
             .padding(8.dp)
             .width(64.dp)
@@ -544,7 +546,7 @@ fun AddContactDialog(
                         label = { Text(stringResource(R.string.label_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_first_name_input"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = MaterialTheme.shapes.small
                     )
                     OutlinedTextField(
                         value = lastName,
@@ -552,7 +554,7 @@ fun AddContactDialog(
                         label = { Text(stringResource(R.string.label_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_last_name_input"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = MaterialTheme.shapes.small
                     )
                 }
 
@@ -567,7 +569,7 @@ fun AddContactDialog(
                         OutlinedButton(
                             onClick = { expandedCountryMenu = true },
                             modifier = Modifier.height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = MaterialTheme.shapes.small,
                             contentPadding = PaddingValues(horizontal = 12.dp)
                         ) {
                             Text(
@@ -616,7 +618,7 @@ fun AddContactDialog(
                         label = { Text("Phone Number") },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_phone_input"),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = MaterialTheme.shapes.small
                     )
                 }
 
@@ -626,7 +628,7 @@ fun AddContactDialog(
                     label = { Text("Email Address") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("dialog_email_input"),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.small,
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") }
                 )
 
@@ -675,6 +677,6 @@ fun AddContactDialog(
                 Text("Cancel")
             }
         },
-        shape = RoundedCornerShape(28.dp)
+        shape = MaterialTheme.shapes.large
     )
 }

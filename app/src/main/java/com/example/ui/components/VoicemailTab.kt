@@ -23,6 +23,7 @@ import com.example.model.CallRecord
 
 import androidx.compose.ui.res.stringResource
 import com.example.R
+import com.example.ui.theme.LocalM3Expressive
 
 @Composable
 fun VoicemailTabContent(
@@ -77,7 +78,7 @@ fun VoicemailTabContent(
                 items(voicemailRecords, key = { it.id }) { record ->
                     ElevatedCard(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(20.dp)
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             ListItem(
@@ -94,9 +95,10 @@ fun VoicemailTabContent(
                                     )
                                 },
                                 leadingContent = {
+                                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
                                     Surface(
                                         modifier = Modifier.size(40.dp),
-                                        shape = CircleShape,
+                                        shape = avatarShape,
                                         color = record.avatarBg
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
@@ -109,9 +111,10 @@ fun VoicemailTabContent(
                                     }
                                 },
                                 trailingContent = {
+                                    val buttonShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
                                     FilledIconButton(
                                         onClick = { onPlayClick(record) },
-                                        shape = CircleShape
+                                        shape = buttonShape
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.PlayArrow,

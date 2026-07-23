@@ -111,6 +111,8 @@
     <string name="settings_appearance">Appearance</string>
     <string name="settings_dark_theme">Dark Theme</string>
     <string name="settings_dark_theme_sub">Apply dark visual theme to the interface</string>
+    <string name="settings_m3_expressive">Material 3 Expressive</string>
+    <string name="settings_m3_expressive_sub">Vibrant colors, extra rounded squircle shapes, and dynamic styling</string>
     <string name="settings_accent_color">Accent Color</string>
     <string name="settings_sound_haptics">Sound &amp; Haptics</string>
     <string name="settings_dialpad_tones">Dialpad Tones</string>
@@ -167,7 +169,7 @@
     <string name="settings_check_updates_sub">Ensure app is up to date &amp; secure</string>
     <string name="settings_contribution">Contribution</string>
     <string name="settings_support_title">Support Secure Dialer</string>
-    <string name="settings_support_desc">Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.</string>
+    <string name="settings_support_desc" formatted="false">Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.</string>
     <string name="settings_contribute_github">Contribute on GitHub</string>
     <string name="enter_number_to_block">Enter Number to Block</string>
     <string name="block_this_number">Block This Number</string>

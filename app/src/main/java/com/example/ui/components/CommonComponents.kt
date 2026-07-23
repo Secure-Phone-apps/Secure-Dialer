@@ -1,6 +1,10 @@
 package com.example.ui.components
 
 import android.content.Context
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
@@ -29,18 +34,30 @@ import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 import androidx.compose.ui.res.stringResource
 
+import com.example.ui.theme.LocalM3Expressive
+import androidx.compose.ui.draw.shadow
+
 @Composable
 fun HeaderSearchBar(
     searchQuery: String,
     onQueryChange: (String) -> Unit,
     onSettingsClick: () -> Unit
 ) {
+    val isExpressive = LocalM3Expressive.current
+    val searchShape = if (isExpressive) MaterialTheme.shapes.medium else MaterialTheme.shapes.extraLarge
+    val containerColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+    } else {
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-        shape = RoundedCornerShape(32.dp),
-        color = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+        shape = searchShape,
+        color = containerColor,
+        tonalElevation = if (isExpressive) 6.dp else 3.dp
     ) {
         Row(
             modifier = Modifier
@@ -97,9 +114,16 @@ fun BottomNavBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val isExpressive = LocalM3Expressive.current
+    val navColor = if (isExpressive) {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
+
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp
+        containerColor = navColor,
+        tonalElevation = if (isExpressive) 6.dp else 0.dp
     ) {
         val items = listOf(
             Triple(0, stringResource(R.string.tab_favorites), Icons.Default.Star),
@@ -109,14 +133,31 @@ fun BottomNavBar(
         )
 
         items.forEach { (index, label, icon) ->
+            val isSelected = selectedTab == index
+            val animatedScale by animateFloatAsState(
+                targetValue = if (isSelected) 1.22f else 1.0f,
+                animationSpec = tween(
+                    durationMillis = 150,
+                    easing = androidx.compose.animation.core.FastOutSlowInEasing
+                ),
+                label = "nav_icon_scale"
+            )
+
             NavigationBarItem(
-                selected = selectedTab == index,
+                selected = isSelected,
                 onClick = { onTabSelected(index) },
-                label = { Text(label) },
+                label = { 
+                    Text(
+                        text = label,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        style = MaterialTheme.typography.labelMedium
+                    ) 
+                },
                 icon = {
                     Icon(
                         imageVector = icon,
-                        contentDescription = label
+                        contentDescription = label,
+                        modifier = Modifier.scale(animatedScale)
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
@@ -146,7 +187,7 @@ fun EmptyStateIllustration(
             contentDescription = null,
             modifier = Modifier
                 .size(240.dp)
-                .clip(RoundedCornerShape(24.dp)),
+                .clip(MaterialTheme.shapes.medium),
             contentScale = ContentScale.Fit
         )
         Spacer(modifier = Modifier.height(24.dp))

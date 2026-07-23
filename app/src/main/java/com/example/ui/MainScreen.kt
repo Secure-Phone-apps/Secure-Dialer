@@ -12,11 +12,17 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
@@ -219,9 +225,26 @@ fun MainScreen(
         CallManager.placeCall(context, number, preferredSim)
     }
 
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val bgColor = MaterialTheme.colorScheme.background
+    val primaryContainer = MaterialTheme.colorScheme.primaryContainer
+
+    val ambientBgBrush = remember(isDark, primaryColor, bgColor, primaryContainer) {
+        val startColor = bgColor
+        val endColor = if (isDark) {
+            primaryContainer.copy(alpha = 0.06f)
+        } else {
+            primaryContainer.copy(alpha = 0.12f)
+        }
+        androidx.compose.ui.graphics.Brush.verticalGradient(
+            colors = listOf(startColor, endColor)
+        )
+    }
+
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxSize().background(ambientBgBrush),
+        containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets.safeDrawing
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
@@ -250,7 +273,7 @@ fun MainScreen(
                 val pagerState = rememberPagerState(initialPage = selectedTab) { 4 }
                 LaunchedEffect(selectedTab) {
                     if (pagerState.currentPage != selectedTab) {
-                        pagerState.animateScrollToPage(selectedTab)
+                        pagerState.scrollToPage(page = selectedTab)
                     }
                 }
                 LaunchedEffect(pagerState.currentPage) {
@@ -312,7 +335,11 @@ fun MainScreen(
                 )
             }
 
-            AnimatedVisibility(visible = isCallActive, enter = fadeIn(), exit = fadeOut()) {
+            AnimatedVisibility(
+                visible = isCallActive,
+                enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
+                exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
+            ) {
                 ActiveCallScreen(
                     contactName = callingContactName, contactNumber = callingContactNumber,
                     preferredSim = preferredSim, quickResponses = quickResponses,
@@ -339,7 +366,17 @@ fun MainScreen(
                 )
             }
 
-            AnimatedVisibility(visible = isSettingsVisible, enter = slideInVertically { it } + fadeIn(), exit = slideOutVertically { it } + fadeOut()) {
+            AnimatedVisibility(
+                visible = isSettingsVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(150)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(150, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                ) + fadeOut(animationSpec = tween(120))
+            ) {
                 SettingsPanel(
                     viewModel = viewModel, onClose = { isSettingsVisible = false }
                 )

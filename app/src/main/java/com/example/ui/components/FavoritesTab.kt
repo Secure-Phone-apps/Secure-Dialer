@@ -23,6 +23,7 @@ import com.example.model.Contact
 
 import androidx.compose.ui.res.stringResource
 import com.example.R
+import com.example.ui.theme.LocalM3Expressive
 
 @Composable
 fun FavoritesTabContent(
@@ -90,7 +91,7 @@ fun FavoritesTabContent(
                         colors = CardDefaults.cardColors(
                             containerColor = containerColor
                         ),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = MaterialTheme.shapes.medium
                     ) {
                         ListItem(
                             headlineContent = {
@@ -113,11 +114,12 @@ fun FavoritesTabContent(
                             },
                             supportingContent = null,
                             leadingContent = {
+                                val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
                                 Surface(
                                     modifier = Modifier
                                         .offset(x = (-8).dp)
                                         .size(44.dp),
-                                    shape = CircleShape,
+                                    shape = avatarShape,
                                     color = contact.avatarBg
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -141,12 +143,14 @@ fun FavoritesTabContent(
                                             tint = Color(0xFFEAB308)
                                         )
                                     }
-                                    IconButton(
+                                    val callButtonShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                                    FilledIconButton(
                                         onClick = { onCallClick(contact.name, contact.number) },
                                         colors = IconButtonDefaults.filledIconButtonColors(
                                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                                         ),
+                                        shape = callButtonShape,
                                         modifier = Modifier.size(36.dp)
                                     ) {
                                         Icon(

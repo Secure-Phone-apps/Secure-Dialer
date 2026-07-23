@@ -36,6 +36,7 @@ import com.example.model.CallRecord
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.model.CallType
+import com.example.ui.theme.LocalM3Expressive
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -108,7 +109,7 @@ fun RecentsTabContent(
                     containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                     contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                 ),
-                shape = RoundedCornerShape(16.dp)
+                shape = MaterialTheme.shapes.medium
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -259,7 +260,7 @@ fun RecentCallRow(
         colors = CardDefaults.cardColors(
             containerColor = containerColor
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = MaterialTheme.shapes.medium
     ) {
         Column {
             ListItem(
@@ -291,7 +292,7 @@ fun RecentCallRow(
                         ) {
                             val (icon, iconColor) = when (record.type) {
                                 CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF4CAF50)
+                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to MaterialTheme.colorScheme.primary
                                 CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
                             }
                             Icon(
@@ -312,11 +313,12 @@ fun RecentCallRow(
                 },
                 supportingContent = null,
                 leadingContent = {
+                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
                             .size(40.dp),
-                        shape = CircleShape,
+                        shape = avatarShape,
                         color = record.avatarBg.copy(alpha = 0.8f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -396,7 +398,7 @@ fun RecentCallRow(
                                 containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
                                 contentColor = MaterialTheme.colorScheme.onErrorContainer
                             ),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = MaterialTheme.shapes.small,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
@@ -432,7 +434,7 @@ fun ActionItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
+            .clip(MaterialTheme.shapes.small)
             .clickable(onClick = onClick)
             .padding(8.dp)
             .width(64.dp)
@@ -462,7 +464,7 @@ fun HistorySubItem(record: CallRecord, onDeleteClick: () -> Unit) {
     ) {
         val (icon, color) = when (record.type) {
             CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-            CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF4CAF50)
+            CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to MaterialTheme.colorScheme.primary
             CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
         }
         
@@ -536,7 +538,7 @@ fun RecentsSkeleton() {
                         modifier = Modifier
                             .fillMaxWidth(0.4f)
                             .height(16.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -544,7 +546,7 @@ fun RecentsSkeleton() {
                         modifier = Modifier
                             .fillMaxWidth(0.6f)
                             .height(12.dp)
-                            .clip(RoundedCornerShape(4.dp))
+                            .clip(MaterialTheme.shapes.extraSmall)
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                     )
                 }

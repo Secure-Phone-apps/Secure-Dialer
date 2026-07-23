@@ -167,7 +167,7 @@
     <string name="settings_check_updates_sub">सुनिश्चित करें कि ऐप अद्यतित और सुरक्षित है</string>
     <string name="settings_contribution">योगदान</string>
     <string name="settings_support_title">Secure Dialer का समर्थन करें</string>
-    <string name="settings_support_desc">Secure Dialer 100% मुफ़्त, ओपन-सोर्स और विज्ञापन-मुक्त है। यदि यह ऐप उपयोगी लगे, तो योगदान पर विचार करें।</string>
+    <string name="settings_support_desc" formatted="false">Secure Dialer 100% मुफ़्त, ओपन-सोर्स और विज्ञापन-मुक्त है। यदि यह ऐप उपयोगी लगे, तो योगदान पर विचार करें।</string>
     <string name="settings_contribute_github">GitHub पर योगदान करें</string>
     <string name="enter_number_to_block">ब्लॉक करने के लिए नंबर दर्ज करें</string>
     <string name="block_this_number">इस नंबर को ब्लॉक करें</string>
