@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.automirrored.filled.CallMade
@@ -40,6 +42,10 @@ import com.example.R
 import com.example.model.CallType
 import com.example.ui.theme.LocalM3Expressive
 
+enum class RecentsFilter {
+    ALL, MISSED, DIALED, RECEIVED
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RecentsTabContent(
@@ -51,7 +57,7 @@ fun RecentsTabContent(
     isLoading: Boolean = false,
     onRequestPermission: () -> Unit = {}
 ) {
-    var filterByMissed by remember { mutableStateOf(false) }
+    var currentFilter by remember { mutableStateOf(RecentsFilter.ALL) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -96,7 +102,51 @@ fun RecentsTabContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Google Dialer style filter chips
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val filters = listOf(
+                    Triple(RecentsFilter.ALL, "All", Icons.Default.History),
+                    Triple(RecentsFilter.MISSED, "Missed", Icons.Default.CallMissed),
+                    Triple(RecentsFilter.DIALED, "Dialed", Icons.AutoMirrored.Filled.CallMade),
+                    Triple(RecentsFilter.RECEIVED, "Received", Icons.AutoMirrored.Filled.CallReceived)
+                )
+
+                filters.forEach { (filter, label, icon) ->
+                    val selected = currentFilter == filter
+                    val iconTint = when (filter) {
+                        RecentsFilter.MISSED -> MaterialTheme.colorScheme.error
+                        RecentsFilter.DIALED -> Color(0xFF2E7D32)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    FilterChip(
+                        selected = selected,
+                        onClick = { currentFilter = filter },
+                        label = { Text(label) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = iconTint,
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedLeadingIconColor = iconTint
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (isLoading || callRecordsPaged.loadState.refresh is LoadState.Loading) {
                 RecentsSkeleton()
@@ -114,9 +164,16 @@ fun RecentsTabContent(
                 }
             } else {
                 val query by viewModel.searchQuery
-                val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, filterByMissed, query) {
+                val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, currentFilter, query) {
                     val baseFiltered = callRecordsPaged.itemSnapshotList.items
-                        .filter { if (filterByMissed) it.type == CallType.MISSED else true }
+                        .filter { record ->
+                            when (currentFilter) {
+                                RecentsFilter.ALL -> true
+                                RecentsFilter.MISSED -> record.type == CallType.MISSED
+                                RecentsFilter.DIALED -> record.type == CallType.OUTGOING
+                                RecentsFilter.RECEIVED -> record.type == CallType.INCOMING
+                            }
+                        }
                         .filter { record ->
                             if (query.isBlank()) {
                                 true
@@ -175,62 +232,27 @@ fun RecentsTabContent(
             }
         }
 
-        // Floating Controls in Recents Tab (All, Missed, and Dialpad FABs)
+        // Dialpad FAB at bottom right
         if (hasPermission && !isLoading) {
-            Row(
+            val isExpressive = LocalM3Expressive.current
+            val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
+
+            FloatingActionButton(
+                onClick = { viewModel.isDialpadVisible.value = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = shape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(16.dp)
+                    .size(56.dp)
+                    .testTag("dialpad_fab")
             ) {
-                val isExpressive = LocalM3Expressive.current
-                val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
-
-                // All Filter FAB
-                FloatingActionButton(
-                    onClick = { filterByMissed = false },
-                    containerColor = if (!filterByMissed) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = if (!filterByMissed) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = shape,
-                    modifier = Modifier.size(56.dp).testTag("filter_all_fab")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = "All Calls",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                // Missed Filter FAB
-                FloatingActionButton(
-                    onClick = { filterByMissed = true },
-                    containerColor = if (filterByMissed) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = if (filterByMissed) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = shape,
-                    modifier = Modifier.size(56.dp).testTag("filter_missed_fab")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CallMissed,
-                        contentDescription = "Missed Calls",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-
-                // Dialpad FAB
-                FloatingActionButton(
-                    onClick = { viewModel.isDialpadVisible.value = true },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = shape,
-                    modifier = Modifier.size(56.dp).testTag("dialpad_fab")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Dialpad,
-                        contentDescription = "Show Dialpad",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Dialpad,
+                    contentDescription = "Show Dialpad",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     }
@@ -312,7 +334,7 @@ fun RecentCallRow(
                         ) {
                             val (icon, iconColor) = when (record.type) {
                                 CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to MaterialTheme.colorScheme.primary
+                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF2E7D32)
                                 CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
                             }
                             Icon(
@@ -484,7 +506,7 @@ fun HistorySubItem(record: CallRecord, onDeleteClick: () -> Unit) {
     ) {
         val (icon, color) = when (record.type) {
             CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-            CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to MaterialTheme.colorScheme.primary
+            CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF2E7D32)
             CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
         }
         

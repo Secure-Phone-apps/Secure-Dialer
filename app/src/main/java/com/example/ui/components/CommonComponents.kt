@@ -121,54 +121,78 @@ fun BottomNavBar(
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
 
-    NavigationBar(
-        modifier = Modifier.height(68.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 3.dp
     ) {
-        val items = listOf(
-            Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
-            Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person)
-        )
-
-        items.forEach { (index, label, icon) ->
-            val isSelected = selectedTab == index
-            val animatedScale by animateFloatAsState(
-                targetValue = if (isSelected) 1.15f else 1.0f,
-                animationSpec = tween(
-                    durationMillis = 150,
-                    easing = androidx.compose.animation.core.FastOutSlowInEasing
-                ),
-                label = "nav_icon_scale"
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(68.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val items = listOf(
+                Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
+                Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person)
             )
 
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = { onTabSelected(index) },
-                icon = {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = label,
+            items.forEach { (index, label, icon) ->
+                val isSelected = selectedTab == index
+                val animatedScale by animateFloatAsState(
+                    targetValue = if (isSelected) 1.15f else 1.0f,
+                    animationSpec = tween(
+                        durationMillis = 150,
+                        easing = androidx.compose.animation.core.FastOutSlowInEasing
+                    ),
+                    label = "nav_icon_scale"
+                )
+
+                val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                val indicatorColor = if (isSelected) searchBarColor else Color.Transparent
+
+                Column(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = { onTabSelected(index) },
+                            indication = null,
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+                        )
+                        .padding(horizontal = 24.dp, vertical = 4.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Box(
                         modifier = Modifier
-                            .size(24.dp)
-                            .scale(animatedScale)
-                    )
-                },
-                label = {
+                            .size(36.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSelected) {
+                            Surface(
+                                modifier = Modifier.matchParentSize(),
+                                shape = MaterialTheme.shapes.small,
+                                color = indicatorColor
+                            ) {}
+                        }
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = label,
+                            tint = contentColor,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .scale(animatedScale)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = label,
+                        color = contentColor,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelSmall
                     )
-                },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = searchBarColor
-                )
-            )
+                }
+            }
         }
     }
 }
