@@ -73,15 +73,28 @@ class MyInCallService : InCallService() {
             nm.createNotificationChannel(NotificationChannel(channelId, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH))
         }
 
+        val handle = call.details?.handle
+        val number = handle?.schemeSpecificPart ?: ""
+        val displayName = if (number.isNotEmpty()) {
+            getContactNameFromNumber(this, number) ?: number
+        } else {
+            "Unknown"
+        }
+
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
-        val fullScreenPendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            this, 
+            0, 
+            intent, 
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_call_incoming)
             .setContentTitle("Incoming Call")
-            .setContentText("Incoming call from ${call.details.handle}")
+            .setContentText("Incoming call from $displayName")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .setAutoCancel(true)
@@ -108,12 +121,22 @@ class MyInCallService : InCallService() {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("SHOW_CALL_LOG", true)
         }
-        val pendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(
+            this, 
+            System.currentTimeMillis().toInt(), 
+            intent, 
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val callBackIntent = Intent(Intent.ACTION_CALL).apply {
             data = android.net.Uri.parse("tel:$number")
         }
-        val callBackPendingIntent = PendingIntent.getActivity(this, System.currentTimeMillis().toInt() + 1, callBackIntent, PendingIntent.FLAG_IMMUTABLE)
+        val callBackPendingIntent = PendingIntent.getActivity(
+            this, 
+            System.currentTimeMillis().toInt() + 1, 
+            callBackIntent, 
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_call_missed)

@@ -55,17 +55,32 @@ class DialerRepository(rawContext: Context) {
 
     // --- Sync Logic ---
 
+    private var contentObserver: android.database.ContentObserver? = null
+
     fun startObservingChanges(onChanged: () -> Unit) {
+        if (contentObserver != null) return
         try {
             val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
                 override fun onChange(selfChange: Boolean) {
                     onChanged()
                 }
             }
+            contentObserver = observer
             context.contentResolver.registerContentObserver(ContactsContract.Contacts.CONTENT_URI, true, observer)
             context.contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI, true, observer)
         } catch (e: SecurityException) {
             e.printStackTrace()
+        }
+    }
+
+    fun stopObservingChanges() {
+        contentObserver?.let { observer ->
+            try {
+                context.contentResolver.unregisterContentObserver(observer)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            contentObserver = null
         }
     }
 
@@ -141,21 +156,33 @@ class DialerRepository(rawContext: Context) {
         val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
         try {
             context.contentResolver.query(CallLog.Calls.CONTENT_URI, arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION), null, null, "${CallLog.Calls.DATE} DESC")?.use { cursor ->
+                val idIdx = cursor.getColumnIndex(CallLog.Calls._ID)
+                val nameIdx = cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)
+                val numIdx = cursor.getColumnIndex(CallLog.Calls.NUMBER)
+                val typeIdx = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
+                val durIdx = cursor.getColumnIndex(CallLog.Calls.DURATION)
+
                 while (cursor.moveToNext()) {
-                    val num = cursor.getString(2) ?: ""
-                    val cachedName = cursor.getString(1)
+                    val num = if (numIdx != -1) cursor.getString(numIdx) ?: "" else ""
+                    val cachedName = if (nameIdx != -1) cursor.getString(nameIdx) else null
                     val name = if (cachedName.isNullOrBlank()) {
                         if (num.isBlank()) "Unknown" else num
                     } else {
                         cachedName
                     }
-                    val type = when (cursor.getInt(3)) {
+                    val typeVal = if (typeIdx != -1) cursor.getInt(typeIdx) else CallLog.Calls.INCOMING_TYPE
+                    val type = when (typeVal) {
                         CallLog.Calls.MISSED_TYPE -> CallType.MISSED
                         CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
                         else -> CallType.INCOMING
                     }
+                    val idVal = if (idIdx != -1) cursor.getInt(idIdx) else 0
+                    val dateVal = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
+                    val durVal = if (durIdx != -1) cursor.getLong(durIdx) else 0L
+
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                    logs.add(CallRecord(cursor.getInt(0), name, num, "Mobile", sdf.format(Date(cursor.getLong(4))), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), cursor.getLong(5), false))
+                    logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false))
                 }
             }
         } catch (e: SecurityException) {

@@ -20,17 +20,26 @@ class CallBlockerService : CallScreeningService() {
         val dao = db.dialerDao()
 
         serviceScope.launch {
-            val isBlocked = dao.isBlocked(number)
-            if (isBlocked) {
-                val response = CallResponse.Builder()
-                    .setDisallowCall(true)
-                    .setRejectCall(true)
-                    .setSkipCallLog(false)
-                    .setSkipNotification(true)
-                    .build()
-                respondToCall(callDetails, response)
-            } else {
-                respondToCall(callDetails, CallResponse.Builder().build())
+            try {
+                val isBlocked = dao.isBlocked(number)
+                if (isBlocked) {
+                    val response = CallResponse.Builder()
+                        .setDisallowCall(true)
+                        .setRejectCall(true)
+                        .setSkipCallLog(false)
+                        .setSkipNotification(true)
+                        .build()
+                    respondToCall(callDetails, response)
+                } else {
+                    respondToCall(callDetails, CallResponse.Builder().build())
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                try {
+                    respondToCall(callDetails, CallResponse.Builder().build())
+                } catch (inner: Exception) {
+                    inner.printStackTrace()
+                }
             }
         }
     }

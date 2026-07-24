@@ -311,4 +311,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     suspend fun getCallHistoryByNumber(number: String): List<CallRecord> {
         return repository.getCallHistoryByNumber(number)
     }
+
+    override fun onCleared() {
+        super.onCleared()
+        repository.stopObservingChanges()
+    }
 }

@@ -1708,7 +1708,12 @@ fun exportRecordingToDownloads(context: Context, filePath: String) {
         }
         val fileName = file.name
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            val resolver = context.contentResolver
+            val attributionContext = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                context.createAttributionContext("default")
+            } else {
+                context
+            }
+            val resolver = attributionContext.contentResolver
             val contentValues = android.content.ContentValues().apply {
                 put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                 put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "audio/m4a")
