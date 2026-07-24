@@ -149,8 +149,7 @@ class MainActivity : ComponentActivity() {
                         CallManager.placeCall(this, number)
                     } else {
                         viewModel.dialpadInput.value = number
-                        viewModel.selectedTab.value = 3
-                        viewModel.isDialpadVisible.value = true
+                        viewModel.selectedTab.value = 2
                     }
                 }
             }

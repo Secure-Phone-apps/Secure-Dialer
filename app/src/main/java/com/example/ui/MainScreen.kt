@@ -251,7 +251,7 @@ fun MainScreen(
                     }
                 }
 
-                if (!isDialpadVisible) {
+                if (selectedTab != 2) {
                     HeaderSearchBar(
                         searchQuery = searchQuery,
                         onQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -259,7 +259,7 @@ fun MainScreen(
                     )
                 }
 
-                val pagerState = rememberPagerState(initialPage = selectedTab) { 2 }
+                val pagerState = rememberPagerState(initialPage = selectedTab) { 3 }
                 LaunchedEffect(selectedTab) {
                     if (pagerState.currentPage != selectedTab) {
                         pagerState.scrollToPage(page = selectedTab)
@@ -298,27 +298,7 @@ fun MainScreen(
                                 onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
                                 onDeleteContact = { it -> viewModel.deleteContact(it.number) }
                             )
-                        }
-                    }
-
-                    // Dialpad Slide-Up Panel
-                    androidx.compose.animation.AnimatedVisibility(
-                        visible = isDialpadVisible,
-                        enter = slideInVertically(
-                            initialOffsetY = { it },
-                            animationSpec = tween(durationMillis = 220, easing = androidx.compose.animation.core.FastOutSlowInEasing)
-                        ) + fadeIn(animationSpec = tween(150)),
-                        exit = slideOutVertically(
-                            targetOffsetY = { it },
-                            animationSpec = tween(durationMillis = 180, easing = androidx.compose.animation.core.FastOutLinearInEasing)
-                        ) + fadeOut(animationSpec = tween(120)),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MaterialTheme.colorScheme.background
-                        ) {
-                            DialpadTabContent(
+                            2 -> DialpadTabContent(
                                 inputValue = dialpadInput,
                                 onValueChange = {
                                     if (it.length > dialpadInput.length) {
@@ -328,11 +308,11 @@ fun MainScreen(
                                     dialpadInput = it
                                     viewModel.onSearchQueryChange(it)
                                 },
-                                onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = ""; isDialpadVisible = false } },
+                                onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
                                 onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                                 voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
                                 contactsPaged = contactsPaged,
-                                onCollapseClick = { isDialpadVisible = false }
+                                onCollapseClick = {}
                             )
                         }
                     }

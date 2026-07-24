@@ -232,29 +232,7 @@ fun RecentsTabContent(
             }
         }
 
-        // Dialpad FAB at bottom right
-        if (hasPermission && !isLoading) {
-            val isExpressive = LocalM3Expressive.current
-            val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
 
-            FloatingActionButton(
-                onClick = { viewModel.isDialpadVisible.value = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = shape,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp)
-                    .size(56.dp)
-                    .testTag("dialpad_fab")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Dialpad,
-                    contentDescription = "Show Dialpad",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
     }
 }
 

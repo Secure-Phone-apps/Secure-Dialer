@@ -135,7 +135,8 @@ fun BottomNavBar(
         ) {
             val items = listOf(
                 Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
-                Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person)
+                Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person),
+                Triple(2, stringResource(R.string.tab_dialpad), Icons.Default.Dialpad)
             )
 
             items.forEach { (index, label, icon) ->

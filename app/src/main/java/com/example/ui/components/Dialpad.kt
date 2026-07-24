@@ -270,18 +270,8 @@ fun DialpadTabContent(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Collapse dialpad button on the left
-            IconButton(
-                onClick = onCollapseClick,
-                modifier = Modifier.size(60.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "Hide Dialpad",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(32.dp)
-                )
-            }
+            // Symmetrical space to keep call button perfectly centered
+            Spacer(modifier = Modifier.size(60.dp))
 
             // Central green call button
             val isExpressive = LocalM3Expressive.current

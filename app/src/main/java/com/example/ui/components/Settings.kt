@@ -360,7 +360,8 @@ fun SettingsPanel(
                                     )
                                     val tabs = listOf(
                                         stringResource(R.string.tab_recents),
-                                        stringResource(R.string.tab_contacts)
+                                        stringResource(R.string.tab_contacts),
+                                        stringResource(R.string.tab_dialpad)
                                     )
                                     val currentTabSelected = viewModel.defaultTab.intValue
                                     Row(
