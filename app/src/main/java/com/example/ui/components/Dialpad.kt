@@ -71,7 +71,7 @@ fun DialpadTabContent(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // T9 Results Preview (Vertical list occupying remaining top space)
         if (inputValue.isNotEmpty()) {
@@ -95,7 +95,7 @@ fun DialpadTabContent(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         items(
-                            count = minOf(contactsPaged.itemCount, 5) // Show top 5 best matches
+                            count = minOf(contactsPaged.itemCount, 15) // Show top 15 best matches
                         ) { index ->
                             val contact = contactsPaged[index]
                             if (contact != null) {
@@ -171,7 +171,7 @@ fun DialpadTabContent(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(80.dp)
+                .height(64.dp)
                 .padding(horizontal = 16.dp)
                 .clickable {
                     expandedClipboardMenu = true
@@ -232,17 +232,19 @@ fun DialpadTabContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Dialer Grid
         Column(
-            modifier = Modifier.width(300.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             for (i in 0 until 4) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     for (j in 0 until 3) {
                         val index = i * 3 + j
@@ -253,29 +255,32 @@ fun DialpadTabContent(
                             onValueChange = onValueChange,
                             onSpeedDialCall = onSpeedDialCall,
                             speedDialMap = speedDialMap,
-                            voicemailNumber = voicemailNumber
+                            voicemailNumber = voicemailNumber,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(70.dp)
                         )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Action Row (Call & Backspace inline)
         Row(
             modifier = Modifier
-                .width(280.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Symmetrical space to keep call button perfectly centered
-            Spacer(modifier = Modifier.size(60.dp))
+            Spacer(modifier = Modifier.size(78.dp))
 
             // Central green call button
             val isExpressive = LocalM3Expressive.current
-            val callFabShape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
+            val callFabShape = if (isExpressive) MaterialTheme.shapes.large else CircleShape
 
             LargeFloatingActionButton(
                 onClick = {
@@ -286,19 +291,19 @@ fun DialpadTabContent(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(78.dp)
                     .testTag("dialpad_call_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
                     contentDescription = "Place call",
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             }
 
             // Backspace button on the right
             Box(
-                modifier = Modifier.size(60.dp),
+                modifier = Modifier.size(78.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (inputValue.isNotEmpty()) {
@@ -306,19 +311,21 @@ fun DialpadTabContent(
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             onValueChange(inputValue.dropLast(1))
-                        }
+                        },
+                        modifier = Modifier.size(48.dp)
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Backspace,
                             contentDescription = "Backspace",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 
@@ -519,13 +526,13 @@ fun DialpadOverlay(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
-                    .size(72.dp)
+                    .size(78.dp)
                     .testTag("dialpad_call_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
                     contentDescription = "Place call",
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(30.dp)
                 )
             }
 
@@ -550,15 +557,15 @@ private fun DialButton(
     val isExpressive = LocalM3Expressive.current
     val buttonShape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
     val buttonColor = if (isExpressive) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
 
     Surface(
         modifier = modifier
-            .size(if (modifier == Modifier) 80.dp else Dp.Unspecified)
-            .heightIn(min = 64.dp)
+            .size(if (modifier == Modifier) 64.dp else Dp.Unspecified)
+            .heightIn(min = 52.dp)
             .clip(buttonShape)
             .combinedClickable(
                 onClick = {
@@ -598,15 +605,15 @@ private fun DialButton(
         ) {
             Text(
                 text = key.first,
-                style = MaterialTheme.typography.headlineLarge,
+                style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.primary
             )
             if (key.second.isNotEmpty()) {
                 Text(
                     text = key.second,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Bold
                 )
             }
