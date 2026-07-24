@@ -534,6 +534,11 @@ fun AddContactDialog(
     onConfirm: (name: String, number: String, label: String, email: String) -> Unit
 ) {
     val context = LocalContext.current
+    val isExpressive = LocalM3Expressive.current
+    val dialogShape = if (isExpressive) MaterialTheme.shapes.extraLarge else MaterialTheme.shapes.large
+    val fieldShape = if (isExpressive) MaterialTheme.shapes.medium else MaterialTheme.shapes.small
+    val buttonShape = if (isExpressive) MaterialTheme.shapes.medium else MaterialTheme.shapes.small
+
     val countryIso = remember {
         try {
             val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
@@ -587,10 +592,14 @@ fun AddContactDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = dialogShape,
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = if (isExpressive) 6.dp else 3.dp,
         title = {
             Text(
                 text = if (initialName.isEmpty()) stringResource(R.string.add_contact_dialog_title) else stringResource(R.string.edit_contact_dialog_title),
-                style = MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
             )
         },
         text = {
@@ -608,7 +617,7 @@ fun AddContactDialog(
                         label = { Text(stringResource(R.string.label_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_first_name_input"),
-                        shape = MaterialTheme.shapes.small
+                        shape = fieldShape
                     )
                     OutlinedTextField(
                         value = lastName,
@@ -616,7 +625,7 @@ fun AddContactDialog(
                         label = { Text(stringResource(R.string.label_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_last_name_input"),
-                        shape = MaterialTheme.shapes.small
+                        shape = fieldShape
                     )
                 }
 
@@ -631,7 +640,7 @@ fun AddContactDialog(
                         OutlinedButton(
                             onClick = { expandedCountryMenu = true },
                             modifier = Modifier.height(56.dp),
-                            shape = MaterialTheme.shapes.small,
+                            shape = fieldShape,
                             contentPadding = PaddingValues(horizontal = 12.dp)
                         ) {
                             Text(
@@ -680,7 +689,7 @@ fun AddContactDialog(
                         label = { Text("Phone Number") },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_phone_input"),
-                        shape = MaterialTheme.shapes.small
+                        shape = fieldShape
                     )
                 }
 
@@ -690,7 +699,7 @@ fun AddContactDialog(
                     label = { Text("Email Address") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("dialog_email_input"),
-                    shape = MaterialTheme.shapes.small,
+                    shape = fieldShape,
                     leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") }
                 )
 
@@ -710,7 +719,8 @@ fun AddContactDialog(
                                 selected = selectedLabel == option,
                                 onClick = { selectedLabel = option },
                                 label = { Text(option) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                shape = fieldShape
                             )
                         }
                     }
@@ -729,16 +739,19 @@ fun AddContactDialog(
                     }
                     onConfirm(finalName, finalNumber, selectedLabel, emailInput.trim())
                 },
-                enabled = firstName.trim().isNotEmpty() && rawNumberInput.trim().isNotEmpty()
+                enabled = firstName.trim().isNotEmpty() && rawNumberInput.trim().isNotEmpty(),
+                shape = buttonShape
             ) {
                 Text("Save")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                shape = buttonShape
+            ) {
                 Text("Cancel")
             }
-        },
-        shape = MaterialTheme.shapes.large
+        }
     )
 }
