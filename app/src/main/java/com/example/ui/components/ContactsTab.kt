@@ -118,6 +118,70 @@ fun ContactsTabContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            if (hasPermission && !isLoading) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    FilterChip(
+                        selected = !showOnlyFavorites,
+                        onClick = { showOnlyFavorites = false },
+                        label = { Text("All Contacts") },
+                        shape = MaterialTheme.shapes.medium,
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+
+                    FilterChip(
+                        selected = showOnlyFavorites,
+                        onClick = { showOnlyFavorites = true },
+                        label = { Text("Favorites") },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = "Toggle Favorites",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.testTag("favorites_toggle_fab"),
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = onAddContactClick,
+                        modifier = Modifier.testTag("add_contact_fab")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Contact",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Add Contact",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
+                }
+            }
+
             val listItemsCount = if (showOnlyFavorites) sortedFavorites.size else contactsPaged.itemCount
             val isRefreshNotLoading = contactsPaged.loadState.refresh is LoadState.NotLoading
 
@@ -211,49 +275,7 @@ fun ContactsTabContent(
             }
         }
 
-        // Floating Action Buttons in bottom right corner
-        if (hasPermission && !isLoading) {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Favorites toggle FAB
-                val isExpressive = LocalM3Expressive.current
-                val shape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
-                
-                FloatingActionButton(
-                    onClick = { showOnlyFavorites = !showOnlyFavorites },
-                    containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
-                    contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
-                    shape = shape,
-                    modifier = Modifier.size(56.dp).testTag("favorites_toggle_fab")
-                ) {
-                    Icon(
-                        imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
-                        contentDescription = "Toggle Favorites",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
 
-                // Add Contact FAB (Add new)
-                FloatingActionButton(
-                    onClick = onAddContactClick,
-                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    shape = shape,
-                    modifier = Modifier.size(56.dp).testTag("add_contact_fab")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Contact",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
 
         // A-Z Scroller Rail
         if (contactsPaged.itemCount > 0 && !showOnlyFavorites) {
