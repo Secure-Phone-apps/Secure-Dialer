@@ -75,8 +75,18 @@ class MyInCallService : InCallService() {
 
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: ""
-        val displayName = if (number.isNotEmpty()) {
-            getContactNameFromNumber(this, number) ?: number
+        val cnapName = call.details?.callerDisplayName
+        val contactName = if (number.isNotEmpty()) {
+            getContactNameFromNumber(this, number)
+        } else {
+            null
+        }
+        val displayName = if (contactName != null) {
+            if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
+        } else if (!cnapName.isNullOrBlank()) {
+            "$cnapName (Verified Carrier Name)"
+        } else if (number.isNotEmpty()) {
+            number
         } else {
             "Unknown"
         }
@@ -114,8 +124,16 @@ class MyInCallService : InCallService() {
 
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: "Unknown"
+        val cnapName = call.details?.callerDisplayName
         val context = this
-        val name = getContactNameFromNumber(context, number) ?: number
+        val contactName = getContactNameFromNumber(context, number)
+        val name = if (contactName != null) {
+            if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
+        } else if (!cnapName.isNullOrBlank()) {
+            "$cnapName (Verified Carrier Name)"
+        } else {
+            number
+        }
 
         val intent = Intent(this, MainActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)

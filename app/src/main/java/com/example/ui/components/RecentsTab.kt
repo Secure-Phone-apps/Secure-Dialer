@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -342,12 +344,21 @@ fun RecentCallRow(
                         color = record.avatarBg.copy(alpha = 0.8f)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = record.avatarText,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = record.avatarTextColor,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                            if (record.photoUri.isNotEmpty()) {
+                                AsyncImage(
+                                    model = record.photoUri,
+                                    contentDescription = "Contact Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = record.avatarText,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = record.avatarTextColor,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
                 },

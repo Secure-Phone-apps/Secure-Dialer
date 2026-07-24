@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -436,11 +438,20 @@ fun ContactRow(
                         color = contact.avatarBg
                     ) {
                         Box(contentAlignment = Alignment.Center) {
-                            Text(
-                                text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = contact.avatarTextColor
-                            )
+                            if (contact.photoUri.isNotEmpty()) {
+                                AsyncImage(
+                                    model = contact.photoUri,
+                                    contentDescription = "Contact Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = contact.avatarTextColor
+                                )
+                            }
                         }
                     }
                 },

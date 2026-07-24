@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -102,11 +104,20 @@ fun VoicemailTabContent(
                                         color = record.avatarBg
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
-                                            Text(
-                                                record.avatarText,
-                                                style = MaterialTheme.typography.titleSmall,
-                                                color = record.avatarTextColor
-                                            )
+                                            if (record.photoUri.isNotEmpty()) {
+                                                AsyncImage(
+                                                    model = record.photoUri,
+                                                    contentDescription = "Contact Photo",
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            } else {
+                                                Text(
+                                                    record.avatarText,
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    color = record.avatarTextColor
+                                                )
+                                            }
                                         }
                                     }
                                 },

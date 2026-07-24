@@ -28,6 +28,9 @@ object CallManager {
     private val _callerName = MutableStateFlow<String>("")
     val callerName: StateFlow<String> = _callerName
 
+    private val _callerCnapName = MutableStateFlow<String>("")
+    val callerCnapName: StateFlow<String> = _callerCnapName
+
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
@@ -89,10 +92,12 @@ object CallManager {
             // Extract phone number
             _callerNumber.value = call.details?.handle?.schemeSpecificPart ?: ""
             _callerName.value = "" 
+            _callerCnapName.value = call.details?.callerDisplayName ?: ""
         } else {
             _callState.value = android.telecom.Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""
+            _callerCnapName.value = ""
             if (_calls.value.isEmpty()) {
                 inCallService = null
             }

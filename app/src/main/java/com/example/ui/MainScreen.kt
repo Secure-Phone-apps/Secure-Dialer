@@ -134,6 +134,7 @@ fun MainScreen(
     val systemActiveCall by CallManager.currentCall.collectAsState()
     val systemCallState by CallManager.callState.collectAsState()
     val systemCallerNumber by CallManager.callerNumber.collectAsState()
+    val systemCallerCnapName by CallManager.callerCnapName.collectAsState()
 
     // DTMF Tone Generator
     val toneGenerator = remember {
@@ -204,12 +205,19 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber) {
+    LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, systemCallerCnapName) {
         if (systemActiveCall != null) {
             isCallActive = true
             if (systemCallerNumber.isNotEmpty()) {
                 callingContactNumber = systemCallerNumber
-                callingContactName = getContactNameFromNumber(context, systemCallerNumber) ?: systemCallerNumber
+                val contactName = getContactNameFromNumber(context, systemCallerNumber)
+                callingContactName = if (contactName != null) {
+                    if (systemCallerCnapName.isNotEmpty()) "$contactName (CNAP: $systemCallerCnapName)" else contactName
+                } else if (systemCallerCnapName.isNotEmpty()) {
+                    "$systemCallerCnapName (Verified CNAP)"
+                } else {
+                    systemCallerNumber
+                }
             }
         } else {
             isCallActive = false

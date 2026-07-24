@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import android.widget.Toast
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -125,12 +127,21 @@ fun DialpadTabContent(
                                             color = match.avatarBg.copy(alpha = 0.8f)
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
-                                                Text(
-                                                    text = if (match.name.length >= 2) match.name.substring(0, 2).uppercase() else match.name.take(1).uppercase(),
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    color = match.avatarTextColor,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
+                                                if (match.photoUri.isNotEmpty()) {
+                                                    AsyncImage(
+                                                        model = match.photoUri,
+                                                        contentDescription = "Contact Photo",
+                                                        modifier = Modifier.fillMaxSize(),
+                                                        contentScale = ContentScale.Crop
+                                                    )
+                                                } else {
+                                                    Text(
+                                                        text = if (match.name.length >= 2) match.name.substring(0, 2).uppercase() else match.name.take(1).uppercase(),
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        color = match.avatarTextColor,
+                                                        fontWeight = FontWeight.SemiBold
+                                                    )
+                                                }
                                             }
                                         }
                                     },

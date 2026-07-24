@@ -79,7 +79,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     avatarBgValue = record.avatarBgValue,
                     avatarTextColorValue = record.avatarTextColorValue,
                     isFromContacts = false,
-                    isFromRecents = true
+                    isFromRecents = true,
+                    photoUri = record.photoUri
                 )
             }
 

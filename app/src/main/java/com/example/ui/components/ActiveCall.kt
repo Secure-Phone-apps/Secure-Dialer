@@ -1,6 +1,8 @@
 package com.example.ui.components
 
 import android.content.Context
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.widget.Toast
@@ -489,12 +491,24 @@ fun ActiveCallScreen(
                         if (participants.size > 1) {
                             Text(text = "👥", fontSize = 64.sp)
                         } else {
-                            val pName = participants.firstOrNull()?.first ?: contactName
-                            Text(
-                                text = if (pName.length >= 2) pName.substring(0, 2).uppercase() else "📞",
-                                style = MaterialTheme.typography.displayLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            val matchedContact = remember(contactNumber, contacts) {
+                                contacts.find { it.number == contactNumber }
+                            }
+                            if (matchedContact != null && matchedContact.photoUri.isNotEmpty()) {
+                                AsyncImage(
+                                    model = matchedContact.photoUri,
+                                    contentDescription = "Contact Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                val pName = participants.firstOrNull()?.first ?: contactName
+                                Text(
+                                    text = if (pName.length >= 2) pName.substring(0, 2).uppercase() else "📞",
+                                    style = MaterialTheme.typography.displayLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }

@@ -12,6 +12,7 @@ import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 
 class DialerRepository(rawContext: Context) {
     val context: Context = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
@@ -150,10 +151,15 @@ class DialerRepository(rawContext: Context) {
         return contacts.distinctBy { it.number }
     }
 
-    private fun fetchSystemCallLogs(): List<CallRecord> {
+    private suspend fun fetchSystemCallLogs(): List<CallRecord> {
         val logs = mutableListOf<CallRecord>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
         val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+        val contactsMap = try {
+            dao.getAllContactsFlow().first().associate { it.number to it.photoUri }
+        } catch (e: Exception) {
+            emptyMap<String, String>()
+        }
         try {
             context.contentResolver.query(CallLog.Calls.CONTENT_URI, arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION), null, null, "${CallLog.Calls.DATE} DESC")?.use { cursor ->
                 val idIdx = cursor.getColumnIndex(CallLog.Calls._ID)
@@ -182,7 +188,8 @@ class DialerRepository(rawContext: Context) {
                     val durVal = if (durIdx != -1) cursor.getLong(durIdx) else 0L
 
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                    logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false))
+                    val photoUriVal = contactsMap[num] ?: ""
+                    logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal))
                 }
             }
         } catch (e: SecurityException) {
