@@ -574,6 +574,8 @@ private fun DialButton(
                         } else {
                             Toast.makeText(context, "Voicemail number not set. Configure in Settings!", Toast.LENGTH_SHORT).show()
                         }
+                    } else if (key.first == "0") {
+                        onValueChange(inputValue + "+")
                     } else if (key.third != -1) {
                         val speedNum = speedDialMap[key.third]
                         if (speedNum != null) {
