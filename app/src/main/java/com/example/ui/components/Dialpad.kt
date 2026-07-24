@@ -29,10 +29,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.model.Contact
+import com.example.model.DialpadMatch
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import androidx.paging.compose.LazyPagingItems
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 
 import com.example.ui.theme.LocalM3Expressive
 
@@ -60,7 +62,7 @@ fun DialpadTabContent(
     onSpeedDialCall: (String) -> Unit,
     voicemailNumber: String,
     speedDialMap: Map<Int, String>,
-    contactsPaged: LazyPagingItems<Contact>,
+    dialpadMatches: List<DialpadMatch>,
     onCollapseClick: () -> Unit
 ) {
     val context = LocalContext.current
@@ -81,7 +83,7 @@ fun DialpadTabContent(
                     .weight(1f)
                     .padding(vertical = 4.dp)
             ) {
-                if (contactsPaged.itemCount == 0) {
+                if (dialpadMatches.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(
                             stringResource(R.string.dialpad_no_matches),
@@ -94,66 +96,61 @@ fun DialpadTabContent(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(
-                            count = minOf(contactsPaged.itemCount, 15) // Show top 15 best matches
-                        ) { index ->
-                            val contact = contactsPaged[index]
-                            if (contact != null) {
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { onCallClick(contact.number) },
-                                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                                ) {
-                                    ListItem(
-                                        headlineContent = {
-                                            Text(
-                                                text = contact.name,
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                fontWeight = FontWeight.Medium
-                                            )
-                                        },
-                                        supportingContent = {
-                                            Text(
-                                                text = "${contact.label} • ${contact.number}",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        },
-                                        leadingContent = {
-                                            Surface(
-                                                modifier = Modifier.size(40.dp),
-                                                shape = CircleShape,
-                                                color = contact.avatarBg.copy(alpha = 0.8f)
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    Text(
-                                                        text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                                                        style = MaterialTheme.typography.titleSmall,
-                                                        color = contact.avatarTextColor,
-                                                        fontWeight = FontWeight.SemiBold
-                                                    )
-                                                }
-                                            }
-                                        },
-                                        trailingContent = {
-                                            IconButton(
-                                                onClick = {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    onCallClick(contact.number)
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Call,
-                                                    contentDescription = "Call",
-                                                    tint = MaterialTheme.colorScheme.primary,
-                                                    modifier = Modifier.size(20.dp)
+                        items(dialpadMatches) { match ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onCallClick(match.number) },
+                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                            ) {
+                                ListItem(
+                                    headlineContent = {
+                                        Text(
+                                            text = match.name,
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    },
+                                    supportingContent = {
+                                        Text(
+                                            text = "${match.label} • ${match.number}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    },
+                                    leadingContent = {
+                                        Surface(
+                                            modifier = Modifier.size(40.dp),
+                                            shape = CircleShape,
+                                            color = match.avatarBg.copy(alpha = 0.8f)
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center) {
+                                                Text(
+                                                    text = if (match.name.length >= 2) match.name.substring(0, 2).uppercase() else match.name.take(1).uppercase(),
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    color = match.avatarTextColor,
+                                                    fontWeight = FontWeight.SemiBold
                                                 )
                                             }
-                                        },
-                                        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-                                    )
-                                }
+                                        }
+                                    },
+                                    trailingContent = {
+                                        IconButton(
+                                            onClick = {
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                onCallClick(match.number)
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Call,
+                                                contentDescription = "Call",
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    },
+                                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                                )
                             }
                         }
                     }

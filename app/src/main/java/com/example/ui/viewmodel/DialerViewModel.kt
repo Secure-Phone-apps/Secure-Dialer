@@ -38,6 +38,59 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val allContactsFlow: StateFlow<List<Contact>> = repository.getAllContactsFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val allCallHistoryFlow: StateFlow<List<CallRecord>> = repository.getAllCallHistoryFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val dialpadMatches: StateFlow<List<DialpadMatch>> = combine(
+        allContactsFlow,
+        allCallHistoryFlow,
+        _searchQueryFlow
+    ) { contacts, recents, query ->
+        if (query.isEmpty()) {
+            emptyList()
+        } else {
+            val matchedContacts = contacts.filter { contact ->
+                contact.name.contains(query, ignoreCase = true) ||
+                contact.number.contains(query, ignoreCase = true) ||
+                contact.t9Mapping.contains(query, ignoreCase = true)
+            }.map { contact ->
+                DialpadMatch(
+                    number = contact.number,
+                    name = contact.name,
+                    label = contact.label,
+                    avatarText = contact.avatarText,
+                    avatarBgValue = contact.avatarBgValue,
+                    avatarTextColorValue = contact.avatarTextColorValue,
+                    isFromContacts = true,
+                    isFromRecents = false,
+                    photoUri = contact.photoUri
+                )
+            }
+
+            val matchedRecents = recents.filter { record ->
+                record.name.contains(query, ignoreCase = true) ||
+                record.number.contains(query, ignoreCase = true)
+            }.map { record ->
+                DialpadMatch(
+                    number = record.number,
+                    name = record.name,
+                    label = "Recent • ${record.label}",
+                    avatarText = record.avatarText,
+                    avatarBgValue = record.avatarBgValue,
+                    avatarTextColorValue = record.avatarTextColorValue,
+                    isFromContacts = false,
+                    isFromRecents = true
+                )
+            }
+
+            val contactNumbers = matchedContacts.map { it.number }.toSet()
+            val uniqueRecents = matchedRecents.filter { it.number !in contactNumbers }
+                .distinctBy { it.number }
+
+            (matchedContacts + uniqueRecents).take(15)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
     // UI State

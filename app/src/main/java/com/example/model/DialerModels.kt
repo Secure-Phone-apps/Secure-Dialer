@@ -88,3 +88,19 @@ data class AppSetting(
     @PrimaryKey val key: String,
     val value: String
 )
+
+data class DialpadMatch(
+    val number: String,
+    val name: String,
+    val label: String,
+    val avatarText: String,
+    val avatarBgValue: Long,
+    val avatarTextColorValue: Long,
+    val isFromContacts: Boolean,
+    val isFromRecents: Boolean,
+    val photoUri: String = ""
+) {
+    val avatarBg: Color get() = Color(avatarBgValue.toULong())
+    val avatarTextColor: Color get() = Color(avatarTextColorValue.toULong())
+}
+

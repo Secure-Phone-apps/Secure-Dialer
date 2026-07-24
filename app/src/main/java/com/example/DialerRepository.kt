@@ -44,6 +44,10 @@ class DialerRepository(val context: Context) {
         ).flow
     }
 
+    fun getAllCallHistoryFlow(): Flow<List<CallRecord>> {
+        return dao.getAllCallHistoryFlow()
+    }
+
     // --- Sync Logic ---
 
     fun startObservingChanges(onChanged: () -> Unit) {

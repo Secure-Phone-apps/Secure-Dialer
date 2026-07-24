@@ -39,6 +39,9 @@ interface DialerDao {
     @Query("SELECT * FROM call_history ORDER BY id DESC")
     fun getCallHistoryPaged(): PagingSource<Int, CallRecord>
 
+    @Query("SELECT * FROM call_history ORDER BY id DESC")
+    fun getAllCallHistoryFlow(): Flow<List<CallRecord>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallLogs(logs: List<CallRecord>)
 

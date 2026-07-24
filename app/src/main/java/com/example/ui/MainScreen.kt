@@ -74,6 +74,7 @@ fun MainScreen(
     // Paging Items
     val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
     val callHistoryPaged = viewModel.callHistoryPaged.collectAsLazyPagingItems()
+    val dialpadMatches by viewModel.dialpadMatches.collectAsState()
 
     // State from ViewModel
     val isDarkTheme by viewModel.isDarkTheme
@@ -311,7 +312,7 @@ fun MainScreen(
                                 onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
                                 onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                                 voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
-                                contactsPaged = contactsPaged,
+                                dialpadMatches = dialpadMatches,
                                 onCollapseClick = {}
                             )
                         }
