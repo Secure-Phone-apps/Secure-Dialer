@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,6 +73,18 @@ fun ContactsTabContent(
     val alphabet = ('A'..'Z').toList() + '#'
     var showOnlyFavorites by remember { mutableStateOf(false) }
     val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
+
+    val activeLetter = remember(listState) {
+        derivedStateOf {
+            val firstVisibleIndex = listState.firstVisibleItemIndex
+            if (firstVisibleIndex < contactsPaged.itemCount) {
+                val contact = contactsPaged.peek(firstVisibleIndex)
+                contact?.name?.firstOrNull()?.uppercaseChar() ?: 'A'
+            } else {
+                'A'
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -116,13 +129,13 @@ fun ContactsTabContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             if (hasPermission && !isLoading) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 4.dp),
+                        .padding(bottom = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -160,12 +173,18 @@ fun ContactsTabContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(end = 36.dp, bottom = 4.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    TextButton(
+                    Button(
                         onClick = onAddContactClick,
+                        shape = MaterialTheme.shapes.medium,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         modifier = Modifier.testTag("add_contact_fab")
                     ) {
                         Icon(
@@ -173,7 +192,7 @@ fun ContactsTabContent(
                             contentDescription = "Add Contact",
                             modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Add Contact",
                             style = MaterialTheme.typography.labelLarge
@@ -201,7 +220,7 @@ fun ContactsTabContent(
                 LazyColumn(
                     state = listState,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxSize().padding(end = 24.dp)
+                    modifier = Modifier.fillMaxSize().padding(end = 36.dp)
                 ) {
                     if (showOnlyFavorites) {
                         items(
@@ -284,18 +303,34 @@ fun ContactsTabContent(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
-                    .width(32.dp)
-                    .padding(vertical = 60.dp)
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures { change, _ ->
+                    .width(40.dp)
+                    .padding(vertical = 40.dp)
+                    .pointerInput(alphabet) {
+                        detectTapGestures { offset ->
+                            val index = (offset.y / size.height * alphabet.size)
+                                .toInt()
+                                .coerceIn(0, alphabet.size - 1)
+                            val letter = alphabet[index].toString()
+                            for (i in 0 until contactsPaged.itemCount) {
+                                val c = contactsPaged.peek(i)
+                                if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(i)
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    .pointerInput(alphabet) {
+                        detectDragGestures { change, _ ->
                             val index = (change.position.y / size.height * alphabet.size)
                                 .toInt()
                                 .coerceIn(0, alphabet.size - 1)
                             val letter = alphabet[index].toString()
-                            
-                            // Find first contact starting with this letter
                             for (i in 0 until contactsPaged.itemCount) {
-                                val c = contactsPaged[i]
+                                val c = contactsPaged.peek(i)
                                 if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
                                     coroutineScope.launch {
                                         listState.scrollToItem(i)
@@ -310,25 +345,24 @@ fun ContactsTabContent(
                 verticalArrangement = Arrangement.SpaceEvenly
             ) {
                 alphabet.forEach { char ->
-                    Text(
-                        text = char.toString(),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        modifier = Modifier.clickable {
-                            val letter = char.toString()
-                            for (i in 0 until contactsPaged.itemCount) {
-                                val c = contactsPaged[i]
-                                if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(i)
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    }
-                                    break
-                                }
-                            }
-                        }
-                    )
+                    val isActive = char == activeLetter.value
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(20.dp)
+                            .background(
+                                color = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                                shape = CircleShape
+                            )
+                    ) {
+                        Text(
+                            text = char.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontSize = if (isActive) 11.sp else 9.sp,
+                            fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
+                            color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
+                        )
+                    }
                 }
             }
         }
