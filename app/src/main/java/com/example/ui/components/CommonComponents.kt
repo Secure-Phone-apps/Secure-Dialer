@@ -114,7 +114,15 @@ fun BottomNavBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val isExpressive = LocalM3Expressive.current
+    val searchBarColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+    } else {
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    }
+
     NavigationBar(
+        modifier = Modifier.height(68.dp),
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp
     ) {
@@ -126,7 +134,7 @@ fun BottomNavBar(
         items.forEach { (index, label, icon) ->
             val isSelected = selectedTab == index
             val animatedScale by animateFloatAsState(
-                targetValue = if (isSelected) 1.22f else 1.0f,
+                targetValue = if (isSelected) 1.15f else 1.0f,
                 animationSpec = tween(
                     durationMillis = 150,
                     easing = androidx.compose.animation.core.FastOutSlowInEasing
@@ -137,24 +145,28 @@ fun BottomNavBar(
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onTabSelected(index) },
-                label = { 
-                    Text(
-                        text = label,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        style = MaterialTheme.typography.labelMedium
-                    ) 
-                },
                 icon = {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
-                        modifier = Modifier.scale(animatedScale)
+                        modifier = Modifier
+                            .size(24.dp)
+                            .scale(animatedScale)
+                    )
+                },
+                label = {
+                    Text(
+                        text = label,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        style = MaterialTheme.typography.labelMedium
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
                     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    indicatorColor = MaterialTheme.colorScheme.secondaryContainer
+                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    indicatorColor = searchBarColor
                 )
             )
         }

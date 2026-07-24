@@ -325,19 +325,16 @@ fun ContactRow(
     val haptic = LocalHapticFeedback.current
     var isExpanded by remember { mutableStateOf(false) }
 
-    val isDark by viewModel.isDarkTheme
-    val containerColor = if (isExpanded) {
-        if (isDark) {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f)
-        }
+    val isExpressive = LocalM3Expressive.current
+    val searchBarColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
-        if (isDark) {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
-        } else {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.42f)
-        }
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    }
+    val containerColor = if (isExpanded) {
+        searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
+    } else {
+        searchBarColor
     }
 
     Card(

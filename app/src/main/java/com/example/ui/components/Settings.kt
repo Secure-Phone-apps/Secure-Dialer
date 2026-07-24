@@ -81,12 +81,11 @@ fun SettingsPanel(
     var newQuickRespInput by remember { mutableStateOf("") }
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
 
-    val isDark = isDarkTheme
-
-    val cardBgColor = if (isDark) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f)
+    val isExpressive = LocalM3Expressive.current
+    val cardBgColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f)
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
 
     Scaffold(
