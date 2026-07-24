@@ -13,7 +13,12 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlinx.coroutines.flow.Flow
 
-class DialerRepository(val context: Context) {
+class DialerRepository(rawContext: Context) {
+    val context: Context = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+        rawContext.createAttributionContext("default")
+    } else {
+        rawContext
+    }
     private val db = AppDatabase.getDatabase(context)
     private val dao = db.dialerDao()
 
@@ -306,8 +311,13 @@ class DialerRepository(val context: Context) {
 
 // Keep these for simple lookups if needed, but repository should be preferred
 fun getContactNameFromNumber(context: Context, number: String): String? {
+    val attributionContext = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+        context.createAttributionContext("default")
+    } else {
+        context
+    }
     val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
-    context.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)?.use { cursor ->
+    attributionContext.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)?.use { cursor ->
         if (cursor.moveToFirst()) return cursor.getString(0)
     }
     return null

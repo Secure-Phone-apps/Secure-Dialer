@@ -272,8 +272,38 @@ fun DialpadTabContent(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Symmetrical space to keep call button perfectly centered
-            Spacer(modifier = Modifier.size(78.dp))
+            // Symmetrical Paste button on the left to keep call button perfectly centered
+            Box(
+                modifier = Modifier.size(78.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
+                IconButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        try {
+                            val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                            val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                            if (filteredDigits.isNotEmpty()) {
+                                onValueChange(filteredDigits)
+                                Toast.makeText(context, "Pasted: $filteredDigits", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "No valid number in clipboard", Toast.LENGTH_SHORT).show()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentPaste,
+                        contentDescription = "Paste number",
+                        tint = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
 
             // Central green call button
             val isExpressive = LocalM3Expressive.current
