@@ -1,5 +1,16 @@
 # Add project specific ProGuard rules here.
 
+-dontoptimize
+-dontobfuscate
+
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable,MethodParameters
+
+# Keep all app classes
+-keep class com.example.** { *; }
+-keepclassmembers class com.example.** { *; }
+-keep class io.github.securephoneapps.** { *; }
+-keepclassmembers class io.github.securephoneapps.** { *; }
+
 # Keep Room database, DAOs, entities, and type converters
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep class *_Impl { *; }
@@ -13,23 +24,13 @@
 -keepclassmembers class * {
     @androidx.room.TypeConverter *;
 }
--dontwarn androidx.room.paging.**
+-dontwarn androidx.room.**
 
-# Keep app data models, enums, and database DAOs
--keep class com.example.model.** { *; }
--keepclassmembers class com.example.model.** { *; }
--keepclassmembers enum com.example.model.** { *; }
--keep class com.example.data.** { *; }
--keepclassmembers class com.example.data.** { *; }
-
-# Keep Android system components (Services, Receivers, MainActivity)
--keep class com.example.MyInCallService { *; }
--keep class com.example.CallBlockerService { *; }
--keep class com.example.MainActivity { *; }
--keep class com.example.CallManager { *; }
+# Keep Coroutines
+-keepclassmembers class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
 
 # Keep kotlinx.serialization models
--keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 -dontwarn kotlinx.serialization.**
 -keepclassmembers class * {
     *** Companion;
@@ -39,4 +40,6 @@
 }
 
 # Keep Compose and Material 3
+-keep class androidx.compose.** { *; }
 -dontwarn androidx.compose.**
+

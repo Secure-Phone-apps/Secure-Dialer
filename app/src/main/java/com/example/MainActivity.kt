@@ -28,8 +28,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        checkDefaultDialerRole()
-        handleIntent(intent)
+        try {
+            checkDefaultDialerRole()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        try {
+            handleIntent(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
 
         setContent {
             val context = LocalContext.current
@@ -38,7 +46,11 @@ class MainActivity : ComponentActivity() {
             val isCallActive by viewModel.isCallActive
 
             LaunchedEffect(isCallActive) {
-                setLockScreenVisibility(isCallActive)
+                try {
+                    setLockScreenVisibility(isCallActive)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
             // Observe lifecycle to refresh default dialer status
@@ -62,9 +74,13 @@ class MainActivity : ComponentActivity() {
                     onDismiss = { showRestrictedSettingsDialog = false },
                     onOpenSettings = {
                         showRestrictedSettingsDialog = false
-                        startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", packageName, null)
-                        })
+                        try {
+                            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", packageName, null)
+                            })
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
                     }
                 )
             }
@@ -88,40 +104,55 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setLockScreenVisibility(show: Boolean) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
-            setShowWhenLocked(show)
-            setTurnScreenOn(show)
-        } else {
-            @Suppress("DEPRECATION")
-            if (show) {
-                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                setShowWhenLocked(show)
+                setTurnScreenOn(show)
             } else {
-                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+                @Suppress("DEPRECATION")
+                if (show) {
+                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+                } else {
+                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     private fun checkDefaultDialerRole() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val roleManager = getSystemService(Context.ROLE_SERVICE) as RoleManager
-            if (!roleManager.isRoleHeld(RoleManager.ROLE_DIALER)) {
-                startActivity(roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER))
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val roleManager = getSystemService(Context.ROLE_SERVICE) as? RoleManager
+                if (roleManager != null && !roleManager.isRoleHeld(RoleManager.ROLE_DIALER)) {
+                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+                    startActivity(intent)
+                }
+            } else {
+                val telecomManager = getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+                if (telecomManager != null && telecomManager.defaultDialerPackage != packageName) {
+                    val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                        putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
+                    }
+                    startActivity(intent)
+                }
             }
-        } else {
-            val telecomManager = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            if (telecomManager.defaultDialerPackage != packageName) {
-                startActivity(Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                    putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
-                })
-            }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
     private fun updateDefaultDialerStatus(context: Context) {
-        viewModel.isDefaultDialer.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            (context.getSystemService(Context.ROLE_SERVICE) as RoleManager).isRoleHeld(RoleManager.ROLE_DIALER)
-        } else {
-            (context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager).defaultDialerPackage == context.packageName
+        try {
+            viewModel.isDefaultDialer.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                (context.getSystemService(Context.ROLE_SERVICE) as? RoleManager)?.isRoleHeld(RoleManager.ROLE_DIALER) == true
+            } else {
+                (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.defaultDialerPackage == context.packageName
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            viewModel.isDefaultDialer.value = false
         }
     }
 
