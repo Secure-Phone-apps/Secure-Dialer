@@ -1,27 +1,35 @@
 # Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# Keep Room entity and DAO implementations
--keep class * extends androidx.room.RoomDatabase
+# Keep Room database, DAOs, entities, and type converters
+-keep class * extends androidx.room.RoomDatabase { *; }
+-keep class *_Impl { *; }
+-keep class * extends androidx.room.Entity { *; }
+-keep @androidx.room.Entity class * { *; }
+-keepclassmembers class * {
+    @androidx.room.* <fields>;
+    @androidx.room.* <methods>;
+}
+-keep @androidx.room.Dao interface * { *; }
+-keepclassmembers class * {
+    @androidx.room.TypeConverter *;
+}
 -dontwarn androidx.room.paging.**
 
+# Keep app data models, enums, and database DAOs
+-keep class com.example.model.** { *; }
+-keepclassmembers class com.example.model.** { *; }
+-keepclassmembers enum com.example.model.** { *; }
+-keep class com.example.data.** { *; }
+-keepclassmembers class com.example.data.** { *; }
+
+# Keep Android system components (Services, Receivers, MainActivity)
+-keep class com.example.MyInCallService { *; }
+-keep class com.example.CallBlockerService { *; }
+-keep class com.example.MainActivity { *; }
+-keep class com.example.CallManager { *; }
+
 # Keep kotlinx.serialization models
--keepattributes *Annotation*,Signature,InnerClasses
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
 -dontwarn kotlinx.serialization.**
 -keepclassmembers class * {
     *** Companion;
@@ -29,3 +37,6 @@
 -keepclasseswithmembers class * {
     kotlinx.serialization.KSerializer serializer(...);
 }
+
+# Keep Compose and Material 3
+-dontwarn androidx.compose.**
