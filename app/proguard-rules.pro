@@ -1,15 +1,18 @@
 # Add project specific ProGuard rules here.
 
--dontoptimize
--dontobfuscate
-
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable,MethodParameters
 
-# Keep all app classes
+# Keep all app classes and members
 -keep class com.example.** { *; }
 -keepclassmembers class com.example.** { *; }
 -keep class io.github.securephoneapps.** { *; }
 -keepclassmembers class io.github.securephoneapps.** { *; }
+
+# Keep ViewModel constructors for Reflection instantiation
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    public <init>(...);
+    public <init>(android.app.Application);
+}
 
 # Keep Room database, DAOs, entities, and type converters
 -keep class * extends androidx.room.RoomDatabase { *; }
