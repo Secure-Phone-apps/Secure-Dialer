@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -114,86 +116,62 @@ fun BottomNavBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    val isExpressive = LocalM3Expressive.current
-    val searchBarColor = if (isExpressive) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
-    } else {
-        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-    }
+    val haptic = LocalHapticFeedback.current
 
-    Surface(
+    NavigationBar(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 3.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(68.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val items = listOf(
-                Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
-                Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person),
-                Triple(2, stringResource(R.string.tab_dialpad), Icons.Default.Dialpad)
+        val items = listOf(
+            Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
+            Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person),
+            Triple(2, stringResource(R.string.tab_dialpad), Icons.Default.Dialpad)
+        )
+
+        items.forEach { (index, label, icon) ->
+            val isSelected = selectedTab == index
+            val animatedScale by animateFloatAsState(
+                targetValue = if (isSelected) 1.18f else 1.0f,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = Spring.DampingRatioMediumBouncy
+                ),
+                label = "nav_icon_scale"
             )
 
-            items.forEach { (index, label, icon) ->
-                val isSelected = selectedTab == index
-                val animatedScale by animateFloatAsState(
-                    targetValue = if (isSelected) 1.15f else 1.0f,
-                    animationSpec = tween(
-                        durationMillis = 150,
-                        easing = androidx.compose.animation.core.FastOutSlowInEasing
-                    ),
-                    label = "nav_icon_scale"
-                )
-
-                val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                val indicatorColor = if (isSelected) searchBarColor else Color.Transparent
-
-                Column(
-                    modifier = Modifier
-                        .clickable(
-                            onClick = { onTabSelected(index) },
-                            indication = null,
-                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
-                        )
-                        .padding(horizontal = 24.dp, vertical = 4.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isSelected) {
-                            Surface(
-                                modifier = Modifier.matchParentSize(),
-                                shape = MaterialTheme.shapes.small,
-                                color = indicatorColor
-                            ) {}
-                        }
-                        Icon(
-                            imageVector = icon,
-                            contentDescription = label,
-                            tint = contentColor,
-                            modifier = Modifier
-                                .size(24.dp)
-                                .scale(animatedScale)
-                        )
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = {
+                    if (!isSelected) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onTabSelected(index)
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                },
+                icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .scale(animatedScale)
+                    )
+                },
+                label = {
                     Text(
                         text = label,
-                        color = contentColor,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelMedium
                     )
-                }
-            }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
         }
     }
 }

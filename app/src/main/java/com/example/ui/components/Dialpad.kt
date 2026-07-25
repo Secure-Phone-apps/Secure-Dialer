@@ -1,5 +1,11 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.ui.draw.scale
 import android.widget.Toast
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
@@ -600,12 +606,26 @@ private fun DialButton(
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
 
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.92f else 1.0f,
+        animationSpec = spring(
+            stiffness = Spring.StiffnessHigh,
+            dampingRatio = Spring.DampingRatioMediumBouncy
+        ),
+        label = "dial_button_scale"
+    )
+
     Surface(
         modifier = modifier
             .size(if (modifier == Modifier) 64.dp else Dp.Unspecified)
             .heightIn(min = 52.dp)
+            .scale(scale)
             .clip(buttonShape)
             .combinedClickable(
+                interactionSource = interactionSource,
+                indication = ripple(),
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onValueChange(inputValue + key.first)

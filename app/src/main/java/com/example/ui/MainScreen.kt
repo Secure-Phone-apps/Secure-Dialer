@@ -271,7 +271,13 @@ fun MainScreen(
                 val pagerState = rememberPagerState(initialPage = selectedTab) { 3 }
                 LaunchedEffect(selectedTab) {
                     if (pagerState.currentPage != selectedTab) {
-                        pagerState.scrollToPage(page = selectedTab)
+                        pagerState.animateScrollToPage(
+                            page = selectedTab,
+                            animationSpec = spring(
+                                stiffness = Spring.StiffnessMediumLow,
+                                dampingRatio = Spring.DampingRatioNoBouncy
+                            )
+                        )
                     }
                 }
                 LaunchedEffect(pagerState.currentPage) {
@@ -328,7 +334,19 @@ fun MainScreen(
                 }
 
                 BottomNavBar(
-                    selectedTab = selectedTab, onTabSelected = { selectedTab = it }
+                    selectedTab = selectedTab,
+                    onTabSelected = { targetTab ->
+                        selectedTab = targetTab
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                page = targetTab,
+                                animationSpec = spring(
+                                    stiffness = Spring.StiffnessMediumLow,
+                                    dampingRatio = Spring.DampingRatioNoBouncy
+                                )
+                            )
+                        }
+                    }
                 )
             }
 

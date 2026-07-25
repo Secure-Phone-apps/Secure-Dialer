@@ -1,5 +1,10 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
@@ -211,7 +216,8 @@ fun RecentsTabContent(
                     ) {
                         items(
                             items = consolidatedRecords,
-                            key = { it.primary.id }
+                            key = { it.primary.id },
+                            contentType = { "recent_call_group" }
                         ) { group ->
                             RecentCallRow(
                                 group = group,
@@ -378,7 +384,11 @@ fun RecentCallRow(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             )
 
-            if (isExpanded) {
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()

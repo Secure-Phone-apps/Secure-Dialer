@@ -1,5 +1,10 @@
 package com.example.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
@@ -470,54 +475,60 @@ fun ContactRow(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             )
 
-            if (isExpanded) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                    thickness = 0.5.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant
-                )
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                        thickness = 0.5.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val context = LocalContext.current
-                    ContactActionItem(
-                        icon = Icons.Default.Call,
-                        label = "Call",
-                        onClick = { onCallClick(contact) },
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    ContactActionItem(
-                        icon = Icons.Default.Email,
-                        label = "Message",
-                        onClick = {
-                            try {
-                                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                    data = Uri.parse("smsto:${contact.number}")
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val context = LocalContext.current
+                        ContactActionItem(
+                            icon = Icons.Default.Call,
+                            label = "Call",
+                            onClick = { onCallClick(contact) },
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        ContactActionItem(
+                            icon = Icons.Default.Email,
+                            label = "Message",
+                            onClick = {
+                                try {
+                                    val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                        data = Uri.parse("smsto:${contact.number}")
+                                    }
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "Could not open messages", Toast.LENGTH_SHORT).show()
                                 }
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Could not open messages", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        tint = MaterialTheme.colorScheme.secondary
-                    )
-                    ContactActionItem(
-                        icon = Icons.Default.Edit,
-                        label = "Edit",
-                        onClick = { onEditContact(contact) },
-                        tint = MaterialTheme.colorScheme.tertiary
-                    )
-                    ContactActionItem(
-                        icon = Icons.Default.Delete,
-                        label = "Delete",
-                        onClick = { onDeleteContact(contact) },
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                            },
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                        ContactActionItem(
+                            icon = Icons.Default.Edit,
+                            label = "Edit",
+                            onClick = { onEditContact(contact) },
+                            tint = MaterialTheme.colorScheme.tertiary
+                        )
+                        ContactActionItem(
+                            icon = Icons.Default.Delete,
+                            label = "Delete",
+                            onClick = { onDeleteContact(contact) },
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
