@@ -315,7 +315,14 @@ class DialerRepository(rawContext: Context) {
     fun getBlockedNumbers(): Flow<List<BlockedNumber>> = dao.getBlockedNumbersFlow()
     suspend fun addBlockedNumber(number: String) = dao.insertBlockedNumber(BlockedNumber(number))
     suspend fun removeBlockedNumber(number: String) = dao.deleteBlockedNumber(BlockedNumber(number))
-    suspend fun isBlocked(number: String): Boolean = dao.isBlocked(number)
+    suspend fun isBlocked(number: String): Boolean = CallBlockerService.isNumberBlocked(dao, number)
+
+    // --- Backup & Restore ---
+    suspend fun exportBackup(password: String = ""): String = com.example.data.BackupRestoreManager.exportBackup(context, password)
+    suspend fun importBackup(rawData: String, password: String = ""): Boolean = com.example.data.BackupRestoreManager.importBackup(context, rawData, password)
+
+    // --- Watchdog & Health ---
+    suspend fun getServiceHealth(): ServiceHealth = CallBlockerService.getServiceHealthStatus(context)
 
     fun getSpeedDial(): Flow<List<SpeedDial>> = dao.getSpeedDialFlow()
     suspend fun saveSpeedDial(key: Int, number: String, name: String) = dao.insertSpeedDial(SpeedDial(key, number, name))

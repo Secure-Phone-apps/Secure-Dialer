@@ -1,8 +1,16 @@
 package com.example
 
-import android.telecom.Call
-import android.telecom.VideoProfile
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.net.Uri
+import android.os.Bundle
+import android.telecom.Call
+import android.telecom.CallAudioState
+import android.telecom.InCallService
+import android.telecom.TelecomManager
+import android.telecom.VideoProfile
+import android.view.inputmethod.InputMethodManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -16,26 +24,25 @@ object CallManager {
     private val _calls = MutableStateFlow<List<Call>>(emptyList())
     val calls: StateFlow<List<Call>> = _calls
 
-    private val _callState = MutableStateFlow<Int>(Call.STATE_DISCONNECTED)
+    private val _callState = MutableStateFlow(Call.STATE_DISCONNECTED)
     val callState: StateFlow<Int> = _callState
 
-    private val _audioState = MutableStateFlow<android.telecom.CallAudioState?>(null)
-    val audioState: StateFlow<android.telecom.CallAudioState?> = _audioState
+    private val _audioState = MutableStateFlow<CallAudioState?>(null)
+    val audioState: StateFlow<CallAudioState?> = _audioState
 
-    private val _callerNumber = MutableStateFlow<String>("")
+    private val _callerNumber = MutableStateFlow("")
     val callerNumber: StateFlow<String> = _callerNumber
 
-    private val _callerName = MutableStateFlow<String>("")
+    private val _callerName = MutableStateFlow("")
     val callerName: StateFlow<String> = _callerName
 
-    private val _callerCnapName = MutableStateFlow<String>("")
+    private val _callerCnapName = MutableStateFlow("")
     val callerCnapName: StateFlow<String> = _callerCnapName
 
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
-            val list = _calls.value.toList()
-            _calls.value = list // force emit
+            _calls.value = _calls.value // force emit
             if (call == _currentCall.value) {
                 _callState.value = state
                 if (state == Call.STATE_DISCONNECTED) {
@@ -47,7 +54,7 @@ object CallManager {
         }
     }
 
-    var inCallService: android.telecom.InCallService? = null
+    var inCallService: InCallService? = null
         set(value) {
             field = value
             if (value == null) {
@@ -56,10 +63,8 @@ object CallManager {
         }
 
     fun addCall(call: Call) {
-        val currentList = _calls.value.toMutableList()
-        if (!currentList.contains(call)) {
-            currentList.add(call)
-            _calls.value = currentList
+        if (call !in _calls.value) {
+            _calls.value = _calls.value + call
             call.registerCallback(callCallback)
         }
         if (_currentCall.value == null) {
@@ -70,10 +75,8 @@ object CallManager {
     }
 
     fun removeCall(call: Call) {
-        val currentList = _calls.value.toMutableList()
-        if (currentList.contains(call)) {
-            currentList.remove(call)
-            _calls.value = currentList
+        if (call in _calls.value) {
+            _calls.value = _calls.value - call
             call.unregisterCallback(callCallback)
         }
         if (_currentCall.value == call) {
@@ -85,16 +88,15 @@ object CallManager {
         }
     }
 
-    fun updateCall(call: android.telecom.Call?) {
+    fun updateCall(call: Call?) {
         _currentCall.value = call
         if (call != null) {
             _callState.value = call.state
-            // Extract phone number
             _callerNumber.value = call.details?.handle?.schemeSpecificPart ?: ""
             _callerName.value = "" 
             _callerCnapName.value = call.details?.callerDisplayName ?: ""
         } else {
-            _callState.value = android.telecom.Call.STATE_DISCONNECTED
+            _callState.value = Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""
             _callerCnapName.value = ""
@@ -108,13 +110,13 @@ object CallManager {
         _waitingCall.value = call
     }
 
-    fun updateAudioState(audioState: android.telecom.CallAudioState?) {
+    fun updateAudioState(audioState: CallAudioState?) {
         _audioState.value = audioState
     }
 
     fun answer() {
         try {
-            _currentCall.value?.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
+            _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -125,7 +127,7 @@ object CallManager {
     }
 
     fun setSpeaker(speaker: Boolean) {
-        inCallService?.setAudioRoute(if (speaker) android.telecom.CallAudioState.ROUTE_SPEAKER else android.telecom.CallAudioState.ROUTE_EARPIECE)
+        inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else CallAudioState.ROUTE_EARPIECE)
     }
 
     fun setHold(hold: Boolean) {
@@ -136,11 +138,11 @@ object CallManager {
         }
     }
 
-    @android.annotation.SuppressLint("MissingPermission")
+    @SuppressLint("MissingPermission")
     fun placeCall(context: Context, number: String, preferredSim: String = "Ask") {
         try {
-            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
-            val activity = context as? android.app.Activity
+            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+            val activity = context as? Activity
             val windowToken = activity?.currentFocus?.windowToken ?: activity?.window?.decorView?.windowToken
             if (imm != null && windowToken != null) {
                 imm.hideSoftInputFromWindow(windowToken, 0)
@@ -150,16 +152,16 @@ object CallManager {
         }
 
         try {
-            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
             if (telecomManager != null) {
-                val uri = android.net.Uri.fromParts("tel", number, null)
-                val extras = android.os.Bundle()
+                val uri = Uri.fromParts("tel", number, null)
+                val extras = Bundle()
                 
                 if (preferredSim != "Ask") {
                     val accounts = telecomManager.callCapablePhoneAccounts
                     val index = if (preferredSim == "SIM 1") 0 else 1
                     if (index < accounts.size) {
-                        extras.putParcelable(android.telecom.TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, accounts[index])
+                        extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, accounts[index])
                     }
                 }
                 
@@ -197,6 +199,6 @@ object CallManager {
     }
 
     fun setBluetooth(bluetooth: Boolean) {
-        inCallService?.setAudioRoute(if (bluetooth) android.telecom.CallAudioState.ROUTE_BLUETOOTH else android.telecom.CallAudioState.ROUTE_EARPIECE)
+        inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_EARPIECE)
     }
 }

@@ -58,11 +58,17 @@ interface DialerDao {
     @Query("SELECT * FROM blocked_numbers")
     fun getBlockedNumbersFlow(): Flow<List<BlockedNumber>>
 
+    @Query("SELECT * FROM blocked_numbers")
+    suspend fun getBlockedNumbersList(): List<BlockedNumber>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBlockedNumber(blockedNumber: BlockedNumber)
 
     @Delete
     suspend fun deleteBlockedNumber(blockedNumber: BlockedNumber)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM blocked_numbers WHERE number = :number OR (:number LIKE REPLACE(number, '*', '%')))")
+    suspend fun isBlockedSql(number: String): Boolean
 
     @Query("SELECT EXISTS(SELECT 1 FROM blocked_numbers WHERE number = :number)")
     suspend fun isBlocked(number: String): Boolean
@@ -70,6 +76,9 @@ interface DialerDao {
     // Speed Dial
     @Query("SELECT * FROM speed_dial")
     fun getSpeedDialFlow(): Flow<List<SpeedDial>>
+
+    @Query("SELECT * FROM speed_dial")
+    suspend fun getSpeedDialList(): List<SpeedDial>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSpeedDial(speedDial: SpeedDial)
@@ -81,6 +90,9 @@ interface DialerDao {
     @Query("SELECT * FROM quick_responses")
     fun getQuickResponsesFlow(): Flow<List<QuickResponse>>
 
+    @Query("SELECT * FROM quick_responses")
+    suspend fun getQuickResponsesList(): List<QuickResponse>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertQuickResponse(response: QuickResponse)
 
@@ -91,6 +103,9 @@ interface DialerDao {
     @Query("SELECT value FROM app_settings WHERE `key` = :key")
     suspend fun getSetting(key: String): String?
 
+    @Query("SELECT * FROM app_settings")
+    suspend fun getAllSettingsList(): List<AppSetting>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSetting(setting: AppSetting)
 
@@ -100,6 +115,9 @@ interface DialerDao {
 
     @Query("SELECT * FROM call_notes")
     fun getAllCallNotesFlow(): Flow<List<CallNote>>
+
+    @Query("SELECT * FROM call_notes")
+    suspend fun getAllCallNotesList(): List<CallNote>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallNote(callNote: CallNote)

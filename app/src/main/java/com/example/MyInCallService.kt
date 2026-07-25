@@ -5,8 +5,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.telecom.Call
+import android.telecom.CallAudioState
+import android.telecom.DisconnectCause
 import android.telecom.InCallService
 import androidx.core.app.NotificationCompat
 
@@ -37,8 +40,8 @@ class MyInCallService : InCallService() {
                 if (state == Call.STATE_DISCONNECTED) {
                     if (wasRinging) {
                         val causeCode = c.details?.disconnectCause?.code
-                        if (causeCode != android.telecom.DisconnectCause.REJECTED &&
-                            causeCode != android.telecom.DisconnectCause.LOCAL) {
+                        if (causeCode != DisconnectCause.REJECTED &&
+                            causeCode != DisconnectCause.LOCAL) {
                             showMissedCallNotification(c)
                         }
                     }
@@ -76,19 +79,13 @@ class MyInCallService : InCallService() {
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: ""
         val cnapName = call.details?.callerDisplayName
-        val contactName = if (number.isNotEmpty()) {
-            getContactNameFromNumber(this, number)
-        } else {
-            null
-        }
-        val displayName = if (contactName != null) {
-            if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
-        } else if (!cnapName.isNullOrBlank()) {
-            "$cnapName (Verified Carrier Name)"
-        } else if (number.isNotEmpty()) {
-            number
-        } else {
-            "Unknown"
+        val contactName = if (number.isNotEmpty()) getContactNameFromNumber(this, number) else null
+        
+        val displayName = when {
+            contactName != null -> if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
+            !cnapName.isNullOrBlank() -> "$cnapName (Verified Carrier Name)"
+            number.isNotEmpty() -> number
+            else -> "Unknown"
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -125,14 +122,12 @@ class MyInCallService : InCallService() {
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: "Unknown"
         val cnapName = call.details?.callerDisplayName
-        val context = this
-        val contactName = getContactNameFromNumber(context, number)
-        val name = if (contactName != null) {
-            if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
-        } else if (!cnapName.isNullOrBlank()) {
-            "$cnapName (Verified Carrier Name)"
-        } else {
-            number
+        val contactName = getContactNameFromNumber(this, number)
+        
+        val name = when {
+            contactName != null -> if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
+            !cnapName.isNullOrBlank() -> "$cnapName (Verified Carrier Name)"
+            else -> number
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
@@ -147,7 +142,7 @@ class MyInCallService : InCallService() {
         )
 
         val callBackIntent = Intent(Intent.ACTION_CALL).apply {
-            data = android.net.Uri.parse("tel:$number")
+            data = Uri.parse("tel:$number")
         }
         val callBackPendingIntent = PendingIntent.getActivity(
             this, 
@@ -178,9 +173,8 @@ class MyInCallService : InCallService() {
         }
     }
 
-    override fun onCallAudioStateChanged(audioState: android.telecom.CallAudioState?) {
+    override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         super.onCallAudioStateChanged(audioState)
         CallManager.updateAudioState(audioState)
     }
 }
-
