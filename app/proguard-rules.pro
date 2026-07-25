@@ -1,6 +1,6 @@
 # Add project specific ProGuard rules here.
 
--keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable,MethodParameters
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable,MethodParameters,ElementValuePairs
 
 # Keep all app classes and members
 -keep class com.example.** { *; }
@@ -13,10 +13,16 @@
     public <init>(...);
     public <init>(android.app.Application);
 }
+-keepclassmembers class * extends androidx.lifecycle.AndroidViewModel {
+    public <init>(...);
+    public <init>(android.app.Application);
+}
 
-# Keep Room database, DAOs, entities, and type converters
--keep class * extends androidx.room.RoomDatabase { *; }
+# Keep Room database, DAOs, entities, generated implementations and type converters
+# NOTE: **.*_Impl matches package paths (e.g. com.example.data.AppDatabase_Impl)
+-keep class **.*_Impl { *; }
 -keep class *_Impl { *; }
+-keep class * extends androidx.room.RoomDatabase { *; }
 -keep class * extends androidx.room.Entity { *; }
 -keep @androidx.room.Entity class * { *; }
 -keepclassmembers class * {
@@ -42,7 +48,12 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Keep Compose and Material 3
+# Keep Compose, Material 3, and Lifecycle
 -keep class androidx.compose.** { *; }
 -dontwarn androidx.compose.**
+-keep class androidx.lifecycle.** { *; }
+-dontwarn androidx.lifecycle.**
+-keep class androidx.activity.** { *; }
+-keep class androidx.core.** { *; }
+
 
