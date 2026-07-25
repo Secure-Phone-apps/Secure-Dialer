@@ -4,16 +4,26 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.0] - 2026-07-25
 
+### Design & Material 3 Expressive
+- **Material 3 Expressive Integration**: Adopted Material 3 Expressive design patterns, enhanced typography, elevated card surfaces, and refined accent color options (including slate/grey accent palette).
+- **Streamlined Visual Layouts**: Removed heavy placeholder avatar images in Recents and Contacts in favor of lightweight, high-contrast typography initials for clean visual scanning.
+- **Enlarged Dialpad Ergonomics**: Optimized keypad layout with larger, cleaner key targets, compact spacing, and instant tactile touch response.
+
+### Multilingual Support & Localization
+- **7 App Translations**: Fully localized the user interface in **Spanish**, **German**, **Hindi**, **Arabic**, **Portuguese**, **Japanese**, and default **English** with RTL/LTR layout support.
+
+### Advanced Filtering & Search
+- **Comprehensive Call Log Filters**: Expanded Recents tab with quick filter chips for **All**, **Missed**, **Dialed**, and **Received** call logs.
+- **Contacts & Favorites Filtering**: Added **All Contacts** and **Favorites** quick filters along with prominent single-tap contact creation.
+- **In-Dialpad Smart Search**: Integrated real-time T9 and number search directly inside the Dialpad view to match saved contacts and call history logs instantly.
+- **CNAP (Calling Name Delivery) Support**: Enhanced caller identification display for carrier-supplied CNAP name tags during active and incoming calls.
+
 ### Performance & Motion Design
-- **Ultra-Fluid Tab Navigation**: Redesigned bottom navigation using standard Material 3 `NavigationBar` components with spring-physics icon scaling (`StiffnessMediumLow`, `DampingRatioMediumBouncy`) and subtle tactile haptic feedback.
-- **Spring-Engineered Pager Transitions**: Smooth tab transitions across Recents, Contacts, and Dialpad powered by non-bouncy spring animations for zero-lag 60/120Hz screen switching.
-- **Animated List Expanders**: Added fluid `AnimatedVisibility` (vertical expansion + crossfade) for expanded call detail cards in Recents and contact quick-action bars in Contacts.
-- **List Recycling Optimizations**: Applied explicit `contentType` definitions across `LazyColumn` components to maximize view reuse and ensure butter-smooth scrolling.
-- **Tactile Keypad Feedback**: Integrated spring-press scaling (`0.92f` scale reduction) and dynamic Material 3 ripples across all dialpad keys.
+- **Ultra-Fluid Tab Navigation**: Redesigned navigation with spring-physics icon scaling (`StiffnessMediumLow`, `DampingRatioMediumBouncy`) and zero-lag tab transitions across Recents, Contacts, and Dialpad.
+- **List Recycling Optimizations**: Applied explicit `contentType` definitions across `LazyColumn` components to maximize view reuse and ensure butter-smooth 120Hz scrolling.
 
 ### Security & Release Infrastructure
-- **Release Version Bump**: Upgraded build configuration to `versionCode = 5` and `versionName = "1.2.0"`.
-- **R8 / ProGuard Verification**: Added rules for Room DB entities, DAOs, and `kotlinx.serialization` model classes to prevent release build shrinkage issues.
+- **Release Build Optimization**: Fine-tuned R8 rules and ProGuard mappings for Room DB entities, DAOs, ViewModel reflection constructors, and serialization to guarantee release APK stability and keep binary size minimal.
 
 
 ## [1.1.0] - 2026-07-15
