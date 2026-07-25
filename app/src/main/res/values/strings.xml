@@ -202,7 +202,7 @@
     <string name="checking_mirrors">Checking secure mirrors...</string>
     <string name="app_up_to_date_desc">You are using the latest official cryptographic build of Secure Dialer.</string>
     <string name="check_for_updates_now">Check for Updates Now</string>
-    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.0.2 (Stable Release)</string>
+    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.2.0 (Stable Release)</string>
     <string name="secure_local_recordings">SECURE LOCAL RECORDINGS</string>
     <string name="recordings_privacy_notice">Recordings are stored securely inside the app\'s sandboxed private database and not shared with external servers.</string>
     <string name="no_recordings_title">No Recordings Found</string>

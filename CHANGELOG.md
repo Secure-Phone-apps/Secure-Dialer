@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-07-25
+
+### Performance & Motion Design
+- **Ultra-Fluid Tab Navigation**: Redesigned bottom navigation using standard Material 3 `NavigationBar` components with spring-physics icon scaling (`StiffnessMediumLow`, `DampingRatioMediumBouncy`) and subtle tactile haptic feedback.
+- **Spring-Engineered Pager Transitions**: Smooth tab transitions across Recents, Contacts, and Dialpad powered by non-bouncy spring animations for zero-lag 60/120Hz screen switching.
+- **Animated List Expanders**: Added fluid `AnimatedVisibility` (vertical expansion + crossfade) for expanded call detail cards in Recents and contact quick-action bars in Contacts.
+- **List Recycling Optimizations**: Applied explicit `contentType` definitions across `LazyColumn` components to maximize view reuse and ensure butter-smooth scrolling.
+- **Tactile Keypad Feedback**: Integrated spring-press scaling (`0.92f` scale reduction) and dynamic Material 3 ripples across all dialpad keys.
+
+### Security & Release Infrastructure
+- **Release Version Bump**: Upgraded build configuration to `versionCode = 5` and `versionName = "1.2.0"`.
+- **R8 / ProGuard Verification**: Added rules for Room DB entities, DAOs, and `kotlinx.serialization` model classes to prevent release build shrinkage issues.
+
+
 ## [1.1.0] - 2026-07-15
 
 ### Added
