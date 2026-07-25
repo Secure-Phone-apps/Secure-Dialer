@@ -2,30 +2,40 @@
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.
 
+# Disable aggressive bytecode optimization (inlining/argument reordering) to prevent R8 runtime crashes
+-dontoptimize
+
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable,MethodParameters,ElementValuePairs
 
-# Keep all App Data Models & Entities (Prevents Room DB & JSON reflection crashes)
--keep class com.example.model.** { *; }
--keep class com.example.data.** { *; }
--keep class com.example.ui.** { *; }
+# 1. CRITICAL: Preserve Enums so Room TypeConverters (e.g. CallType.valueOf) don't crash on startup
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+    public **[] $VALUES;
+}
 
-# Keep Room Database implementation classes and DAOs
+# 2. Keep all App Classes, Models, Services, Repositories, ViewModels, and Data Entities
+-keep class com.example.** { *; }
+-keepclassmembers class com.example.** { *; }
+
+# 3. Keep Room Database implementation classes and DAOs
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Dao interface * { *; }
 -keep class *_Impl { *; }
 -dontwarn androidx.room.**
 
-# Keep Android Services & Main Activity
--keep class com.example.CallBlockerService { *; }
--keep class com.example.MyInCallService { *; }
--keep class com.example.MainActivity { *; }
--keep class com.example.DialerRepository { *; }
+# 4. Keep Android Services, BroadcastReceivers, and Telecom Framework Handlers
+-keep public class * extends android.app.Service
+-keep public class * extends android.app.Activity
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.telecom.InCallService
+-keep public class * extends android.telecom.CallScreeningService
 
-# Keep Kotlin Coroutines internals
--keepclassmembers class kotlinx.coroutines.** {
-    public *** *;
-}
+# 5. Keep Kotlin Coroutines & Flow
+-keepclassmembers class kotlinx.coroutines.** { *; }
 -dontwarn kotlinx.coroutines.**
 
-# Keep Jetpack Compose & Navigation internal reflection
+# 6. Keep Jetpack Compose & Navigation internal reflection
 -dontwarn androidx.compose.**
+-dontwarn androidx.paging.**
+-keep class androidx.paging.** { *; }
