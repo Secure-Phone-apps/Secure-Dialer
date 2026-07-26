@@ -46,10 +46,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         allCallHistoryFlow,
         _searchQueryFlow
     ) { contacts, recents, query ->
-        if (query.isEmpty()) {
+        if (query.isBlank()) {
             emptyList()
         } else {
-            val matchedContacts = contacts.filter { contact ->
+            val matchedContacts = contacts.asSequence().filter { contact ->
                 contact.name.contains(query, ignoreCase = true) ||
                 contact.number.contains(query, ignoreCase = true) ||
                 contact.t9Mapping.contains(query, ignoreCase = true)
@@ -65,32 +65,36 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     isFromRecents = false,
                     photoUri = contact.photoUri
                 )
+            }.take(15).toList()
+
+            if (matchedContacts.size >= 15) {
+                matchedContacts
+            } else {
+                val contactNumbers = matchedContacts.map { it.number }.toSet()
+                val matchedRecents = recents.asSequence().filter { record ->
+                    record.number !in contactNumbers &&
+                    (record.name.contains(query, ignoreCase = true) ||
+                     record.number.contains(query, ignoreCase = true))
+                }.distinctBy { it.number }
+                .map { record ->
+                    DialpadMatch(
+                        number = record.number,
+                        name = record.name,
+                        label = "Recent • ${record.label}",
+                        avatarText = record.avatarText,
+                        avatarBgValue = record.avatarBgValue,
+                        avatarTextColorValue = record.avatarTextColorValue,
+                        isFromContacts = false,
+                        isFromRecents = true,
+                        photoUri = record.photoUri
+                    )
+                }.take(15 - matchedContacts.size).toList()
+
+                matchedContacts + matchedRecents
             }
-
-            val matchedRecents = recents.filter { record ->
-                record.name.contains(query, ignoreCase = true) ||
-                record.number.contains(query, ignoreCase = true)
-            }.map { record ->
-                DialpadMatch(
-                    number = record.number,
-                    name = record.name,
-                    label = "Recent • ${record.label}",
-                    avatarText = record.avatarText,
-                    avatarBgValue = record.avatarBgValue,
-                    avatarTextColorValue = record.avatarTextColorValue,
-                    isFromContacts = false,
-                    isFromRecents = true,
-                    photoUri = record.photoUri
-                )
-            }
-
-            val contactNumbers = matchedContacts.map { it.number }.toSet()
-            val uniqueRecents = matchedRecents.filter { it.number !in contactNumbers }
-                .distinctBy { it.number }
-
-            (matchedContacts + uniqueRecents).take(15)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default)
+     .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
@@ -279,9 +283,13 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun syncData() {
-        viewModelScope.launch {
-            repository.syncContacts()
-            repository.syncCallLogs()
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                repository.syncContacts()
+                repository.syncCallLogs()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

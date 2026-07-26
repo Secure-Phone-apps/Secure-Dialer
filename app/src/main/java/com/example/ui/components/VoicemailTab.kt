@@ -2,6 +2,8 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -106,7 +108,11 @@ fun VoicemailTabContent(
                                         Box(contentAlignment = Alignment.Center) {
                                             if (record.photoUri.isNotEmpty()) {
                                                 AsyncImage(
-                                                    model = record.photoUri,
+                                                    model = ImageRequest.Builder(LocalContext.current)
+                                                        .data(record.photoUri)
+                                                        .size(256, 256)
+                                                        .crossfade(true)
+                                                        .build(),
                                                     contentDescription = "Contact Photo",
                                                     modifier = Modifier.fillMaxSize(),
                                                     contentScale = ContentScale.Crop

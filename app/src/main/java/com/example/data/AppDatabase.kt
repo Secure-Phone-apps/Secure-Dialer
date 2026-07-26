@@ -6,10 +6,17 @@ import com.example.model.*
 
 class Converters {
     @TypeConverter
-    fun fromCallType(value: CallType): String = value.name
+    fun fromCallType(value: CallType?): String = (value ?: CallType.INCOMING).name
 
     @TypeConverter
-    fun toCallType(value: String): CallType = CallType.valueOf(value)
+    fun toCallType(value: String?): CallType {
+        if (value.isNullOrBlank()) return CallType.INCOMING
+        return try {
+            CallType.valueOf(value)
+        } catch (e: Exception) {
+            CallType.INCOMING
+        }
+    }
 }
 
 @Database(

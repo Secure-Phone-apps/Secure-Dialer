@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -119,10 +121,10 @@ fun RecentsTabContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val filters = listOf(
-                    Triple(RecentsFilter.ALL, "All", Icons.Default.History),
-                    Triple(RecentsFilter.MISSED, "Missed", Icons.Default.CallMissed),
-                    Triple(RecentsFilter.DIALED, "Dialed", Icons.AutoMirrored.Filled.CallMade),
-                    Triple(RecentsFilter.RECEIVED, "Received", Icons.AutoMirrored.Filled.CallReceived)
+                    Triple(RecentsFilter.ALL, stringResource(R.string.filter_all), Icons.Default.History),
+                    Triple(RecentsFilter.MISSED, stringResource(R.string.filter_missed), Icons.Default.CallMissed),
+                    Triple(RecentsFilter.DIALED, stringResource(R.string.filter_dialed), Icons.AutoMirrored.Filled.CallMade),
+                    Triple(RecentsFilter.RECEIVED, stringResource(R.string.filter_received), Icons.AutoMirrored.Filled.CallReceived)
                 )
 
                 filters.forEach { (filter, label, icon) ->
@@ -203,8 +205,8 @@ fun RecentsTabContent(
                         contentAlignment = Alignment.Center
                     ) {
                         EmptyStateIllustration(
-                            title = "No results found",
-                            subtitle = "No matching calls for \"$query\""
+                            title = stringResource(R.string.no_results_title),
+                            subtitle = stringResource(R.string.no_matching_calls_for, query)
                         )
                     }
                 } else {
@@ -352,7 +354,11 @@ fun RecentCallRow(
                         Box(contentAlignment = Alignment.Center) {
                             if (record.photoUri.isNotEmpty()) {
                                 AsyncImage(
-                                    model = record.photoUri,
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(record.photoUri)
+                                        .size(256, 256)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = "Contact Photo",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
@@ -419,7 +425,7 @@ fun RecentCallRow(
                         
                         if (history.size > 5) {
                             Text(
-                                text = "Showing last 5 calls",
+                                text = stringResource(R.string.showing_last_5_calls),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                                 modifier = Modifier.padding(start = 72.dp, top = 8.dp)
@@ -453,7 +459,7 @@ fun RecentCallRow(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Delete All Call History",
+                                text = stringResource(R.string.delete_all_call_history),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -528,9 +534,9 @@ fun HistorySubItem(record: CallRecord, onDeleteClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurface
             )
             val typeText = when (record.type) {
-                CallType.MISSED -> "Missed call"
-                CallType.OUTGOING -> "Outgoing call"
-                CallType.INCOMING -> "Incoming call"
+                CallType.MISSED -> stringResource(R.string.call_type_missed)
+                CallType.OUTGOING -> stringResource(R.string.call_type_outgoing)
+                CallType.INCOMING -> stringResource(R.string.call_type_incoming)
             }
             val durationText = if (record.duration > 0) {
                 val mins = record.duration / 60
@@ -549,7 +555,7 @@ fun HistorySubItem(record: CallRecord, onDeleteClick: () -> Unit) {
         IconButton(onClick = onDeleteClick) {
             Icon(
                 imageVector = Icons.Default.Delete,
-                contentDescription = "Delete call log entry",
+                contentDescription = stringResource(R.string.delete_call_log_entry),
                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.8f),
                 modifier = Modifier.size(20.dp)
             )

@@ -7,6 +7,8 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -149,7 +151,7 @@ fun ContactsTabContent(
                     FilterChip(
                         selected = !showOnlyFavorites,
                         onClick = { showOnlyFavorites = false },
-                        label = { Text("All Contacts") },
+                        label = { Text(stringResource(R.string.filter_all_contacts)) },
                         shape = MaterialTheme.shapes.medium,
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -160,7 +162,7 @@ fun ContactsTabContent(
                     FilterChip(
                         selected = showOnlyFavorites,
                         onClick = { showOnlyFavorites = true },
-                        label = { Text("Favorites") },
+                        label = { Text(stringResource(R.string.tab_favorites)) },
                         leadingIcon = {
                             Icon(
                                 imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
@@ -196,12 +198,12 @@ fun ContactsTabContent(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
-                            contentDescription = "Add Contact",
+                            contentDescription = stringResource(R.string.action_add_contact),
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Add Contact",
+                            text = stringResource(R.string.action_add_contact),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -445,7 +447,11 @@ fun ContactRow(
                         Box(contentAlignment = Alignment.Center) {
                             if (contact.photoUri.isNotEmpty()) {
                                 AsyncImage(
-                                    model = contact.photoUri,
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(contact.photoUri)
+                                        .size(256, 256)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = "Contact Photo",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
@@ -497,13 +503,13 @@ fun ContactRow(
                         val context = LocalContext.current
                         ContactActionItem(
                             icon = Icons.Default.Call,
-                            label = "Call",
+                            label = stringResource(R.string.action_call),
                             onClick = { onCallClick(contact) },
                             tint = MaterialTheme.colorScheme.primary
                         )
                         ContactActionItem(
                             icon = Icons.Default.Email,
-                            label = "Message",
+                            label = stringResource(R.string.action_message),
                             onClick = {
                                 try {
                                     val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -511,20 +517,20 @@ fun ContactRow(
                                     }
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not open messages", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             tint = MaterialTheme.colorScheme.secondary
                         )
                         ContactActionItem(
                             icon = Icons.Default.Edit,
-                            label = "Edit",
+                            label = stringResource(R.string.btn_edit),
                             onClick = { onEditContact(contact) },
                             tint = MaterialTheme.colorScheme.tertiary
                         )
                         ContactActionItem(
                             icon = Icons.Default.Delete,
-                            label = "Delete",
+                            label = stringResource(R.string.btn_delete),
                             onClick = { onDeleteContact(contact) },
                             tint = MaterialTheme.colorScheme.error
                         )
@@ -689,7 +695,7 @@ fun AddContactDialog(
                     OutlinedTextField(
                         value = firstName,
                         onValueChange = { firstName = it },
-                        label = { Text(stringResource(R.string.label_name)) },
+                        label = { Text(stringResource(R.string.label_first_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_first_name_input"),
                         shape = fieldShape
@@ -697,7 +703,7 @@ fun AddContactDialog(
                     OutlinedTextField(
                         value = lastName,
                         onValueChange = { lastName = it },
-                        label = { Text(stringResource(R.string.label_name)) },
+                        label = { Text(stringResource(R.string.label_last_name)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_last_name_input"),
                         shape = fieldShape
@@ -761,7 +767,7 @@ fun AddContactDialog(
                     OutlinedTextField(
                         value = rawNumberInput,
                         onValueChange = { rawNumberInput = it },
-                        label = { Text("Phone Number") },
+                        label = { Text(stringResource(R.string.label_phone_number)) },
                         singleLine = true,
                         modifier = Modifier.weight(1f).testTag("dialog_phone_input"),
                         shape = fieldShape
@@ -771,7 +777,7 @@ fun AddContactDialog(
                 OutlinedTextField(
                     value = emailInput,
                     onValueChange = { emailInput = it },
-                    label = { Text("Email Address") },
+                    label = { Text(stringResource(R.string.label_email)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().testTag("dialog_email_input"),
                     shape = fieldShape,
@@ -780,7 +786,7 @@ fun AddContactDialog(
 
                 Column {
                     Text(
-                        text = "Label",
+                        text = stringResource(R.string.label_type),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 8.dp)
@@ -789,11 +795,15 @@ fun AddContactDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("Mobile", "Work", "Home").forEach { option ->
+                        listOf(
+                            stringResource(R.string.label_mobile) to "Mobile",
+                            stringResource(R.string.label_work) to "Work",
+                            stringResource(R.string.label_home) to "Home"
+                        ).forEach { (displayLabel, optionKey) ->
                             FilterChip(
-                                selected = selectedLabel == option,
-                                onClick = { selectedLabel = option },
-                                label = { Text(option) },
+                                selected = selectedLabel == optionKey,
+                                onClick = { selectedLabel = optionKey },
+                                label = { Text(displayLabel) },
                                 modifier = Modifier.weight(1f),
                                 shape = fieldShape
                             )
@@ -817,7 +827,7 @@ fun AddContactDialog(
                 enabled = firstName.trim().isNotEmpty() && rawNumberInput.trim().isNotEmpty(),
                 shape = buttonShape
             ) {
-                Text("Save")
+                Text(stringResource(R.string.btn_save))
             }
         },
         dismissButton = {
@@ -825,7 +835,7 @@ fun AddContactDialog(
                 onClick = onDismiss,
                 shape = buttonShape
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.btn_cancel))
             }
         }
     )

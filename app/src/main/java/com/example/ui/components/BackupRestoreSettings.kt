@@ -17,11 +17,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ClipboardManager
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 
 @Composable
@@ -84,12 +86,12 @@ fun BackupRestoreSettings(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Call Blocker Service Health",
+                                text = stringResource(R.string.service_health_header),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (serviceHealth?.isHealthy == true) "Active & Protected" else "Action Required / Role Missing",
+                                text = if (serviceHealth?.isHealthy == true) stringResource(R.string.service_health_active) else stringResource(R.string.service_health_action_req),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = if (serviceHealth?.isHealthy == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                             )
@@ -105,7 +107,7 @@ fun BackupRestoreSettings(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Screening Role: ${if (serviceHealth?.isRoleGranted == true) "Granted" else "Not Granted"}",
+                    text = if (serviceHealth?.isRoleGranted == true) stringResource(R.string.service_health_role_granted) else stringResource(R.string.service_health_role_not_granted),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -120,14 +122,14 @@ fun BackupRestoreSettings(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Encrypted Local Backup",
+                    text = stringResource(R.string.backup_export_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Export blocklists, call notes, speed dials, and quick responses into an encrypted AES-256 JSON backup string.",
+                    text = stringResource(R.string.backup_export_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -137,7 +139,7 @@ fun BackupRestoreSettings(
                 OutlinedTextField(
                     value = exportPassword,
                     onValueChange = { exportPassword = it },
-                    label = { Text("Encryption Password (Optional)") },
+                    label = { Text(stringResource(R.string.backup_export_password_label)) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
@@ -157,7 +159,7 @@ fun BackupRestoreSettings(
                 ) {
                     Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Export Encrypted Backup", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.backup_export_btn), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -170,14 +172,14 @@ fun BackupRestoreSettings(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Restore from Backup",
+                    text = stringResource(R.string.backup_restore_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.secondary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Restore blocklists, notes, and preferences from a previously exported backup string.",
+                    text = stringResource(R.string.backup_restore_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -191,7 +193,7 @@ fun BackupRestoreSettings(
                 ) {
                     Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Import Backup String", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.backup_import_btn), fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -202,11 +204,11 @@ fun BackupRestoreSettings(
         val dataStr = exportedDataDialog ?: ""
         AlertDialog(
             onDismissRequest = { exportedDataDialog = null },
-            title = { Text("Backup Exported Successfully") },
+            title = { Text(stringResource(R.string.backup_exported_dialog_title)) },
             text = {
                 Column {
                     Text(
-                        "Below is your backup data string. Copy and store it safely:",
+                        stringResource(R.string.backup_exported_dialog_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -224,15 +226,15 @@ fun BackupRestoreSettings(
             confirmButton = {
                 Button(onClick = {
                     clipboardManager.setText(AnnotatedString(dataStr))
-                    Toast.makeText(context, "Copied backup string to clipboard!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.backup_copied_toast), Toast.LENGTH_SHORT).show()
                     exportedDataDialog = null
                 }) {
-                    Text("Copy to Clipboard")
+                    Text(stringResource(R.string.backup_copy_clipboard))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { exportedDataDialog = null }) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -242,14 +244,14 @@ fun BackupRestoreSettings(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text("Import Backup") },
+            title = { Text(stringResource(R.string.backup_import_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Paste your backup JSON or encrypted string below:")
+                    Text(stringResource(R.string.backup_import_dialog_desc))
                     OutlinedTextField(
                         value = importDataInput,
                         onValueChange = { importDataInput = it },
-                        label = { Text("Backup String") },
+                        label = { Text(stringResource(R.string.backup_string_label)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(120.dp),
@@ -258,7 +260,7 @@ fun BackupRestoreSettings(
                     OutlinedTextField(
                         value = importPassword,
                         onValueChange = { importPassword = it },
-                        label = { Text("Password (if encrypted)") },
+                        label = { Text(stringResource(R.string.backup_password_label)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.fillMaxWidth(),
@@ -271,22 +273,22 @@ fun BackupRestoreSettings(
                     if (importDataInput.isNotBlank()) {
                         viewModel.importBackup(importDataInput.trim(), importPassword) { success ->
                             if (success) {
-                                Toast.makeText(context, "Backup restored successfully!", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.backup_restored_success_toast), Toast.LENGTH_LONG).show()
                                 showImportDialog = false
                                 importDataInput = ""
                                 importPassword = ""
                             } else {
-                                Toast.makeText(context, "Failed to restore backup. Check password or data string.", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.backup_restore_failed_toast), Toast.LENGTH_LONG).show()
                             }
                         }
                     }
                 }) {
-                    Text("Restore")
+                    Text(stringResource(R.string.backup_restore_btn))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showImportDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )

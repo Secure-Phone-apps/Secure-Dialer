@@ -8,6 +8,8 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.draw.scale
 import android.widget.Toast
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -48,14 +50,14 @@ import com.example.ui.theme.LocalM3Expressive
 
 private val DIALPAD_KEYS = listOf(
     Triple("1", "", 1),
-    Triple("2", "", 2),
-    Triple("3", "", 3),
-    Triple("4", "", 4),
-    Triple("5", "", 5),
-    Triple("6", "", 6),
-    Triple("7", "", 7),
-    Triple("8", "", 8),
-    Triple("9", "", 9),
+    Triple("2", "ABC", 2),
+    Triple("3", "DEF", 3),
+    Triple("4", "GHI", 4),
+    Triple("5", "JKL", 5),
+    Triple("6", "MNO", 6),
+    Triple("7", "PQRS", 7),
+    Triple("8", "TUV", 8),
+    Triple("9", "WXYZ", 9),
     Triple("*", "", -1),
     Triple("0", "+", 0),
     Triple("#", "", -1)
@@ -104,7 +106,11 @@ fun DialpadTabContent(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(dialpadMatches) { match ->
+                        items(
+                            items = dialpadMatches,
+                            key = { it.number },
+                            contentType = { "dialpad_match" }
+                        ) { match ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -135,7 +141,11 @@ fun DialpadTabContent(
                                             Box(contentAlignment = Alignment.Center) {
                                                 if (match.photoUri.isNotEmpty()) {
                                                     AsyncImage(
-                                                        model = match.photoUri,
+                                                        model = ImageRequest.Builder(LocalContext.current)
+                                                            .data(match.photoUri)
+                                                            .size(256, 256)
+                                                            .crossfade(true)
+                                                            .build(),
                                                         contentDescription = "Contact Photo",
                                                         modifier = Modifier.fillMaxSize(),
                                                         contentScale = ContentScale.Crop
@@ -228,7 +238,7 @@ fun DialpadTabContent(
                             try {
                                 val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
                                 clipboardManager?.setPrimaryClip(clip)
-                                Toast.makeText(context, "Number copied", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
                             } catch (e: Exception) {
                                 e.printStackTrace()
                             }
@@ -479,7 +489,7 @@ fun DialpadOverlay(
                             val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
                             if (filteredDigits.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("Paste: $filteredDigits") },
+                                    text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
                                     onClick = {
                                         onValueChange(filteredDigits)
                                         expandedOverlayClipboardMenu = false
@@ -489,12 +499,12 @@ fun DialpadOverlay(
                         }
                         if (inputValue.isNotEmpty()) {
                             DropdownMenuItem(
-                                text = { Text("Copy Number") },
+                                text = { Text(stringResource(R.string.dialpad_copy)) },
                                 onClick = {
                                     try {
                                         val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
                                         overlayClipboardManager?.setPrimaryClip(clip)
-                                        Toast.makeText(context, "Number copied", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
                                     } catch (e: Exception) {
                                         e.printStackTrace()
                                     }
@@ -502,7 +512,7 @@ fun DialpadOverlay(
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Clear") },
+                                text = { Text(stringResource(R.string.dialpad_clear)) },
                                 onClick = {
                                     onValueChange("")
                                     expandedOverlayClipboardMenu = false

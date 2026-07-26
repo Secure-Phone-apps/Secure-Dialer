@@ -81,17 +81,17 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
-    suspend fun syncContacts() {
+    suspend fun syncContacts() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val systemContacts = fetchSystemContacts()
         dao.insertContacts(systemContacts)
     }
 
-    suspend fun syncCallLogs() {
+    suspend fun syncCallLogs() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val systemLogs = fetchSystemCallLogs()
         dao.insertCallLogs(systemLogs)
     }
 
-    private fun fetchSystemContacts(): List<Contact> {
+    private suspend fun fetchSystemContacts(): List<Contact> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val contacts = mutableListOf<Contact>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
         
@@ -143,11 +143,13 @@ class DialerRepository(rawContext: Context) {
             }
         } catch (e: SecurityException) {
             e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        return contacts.distinctBy { it.number }
+        contacts.distinctBy { it.number }
     }
 
-    private suspend fun fetchSystemCallLogs(): List<CallRecord> {
+    private suspend fun fetchSystemCallLogs(): List<CallRecord> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val logs = mutableListOf<CallRecord>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
         val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
@@ -190,8 +192,10 @@ class DialerRepository(rawContext: Context) {
             }
         } catch (e: SecurityException) {
             e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-        return logs
+        logs
     }
 
     // --- T9 Helper ---

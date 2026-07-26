@@ -77,7 +77,7 @@ fun MergeDuplicateSettings(
                                 viewModel.deleteContact(dup.number)
                             }
                         }
-                        Toast.makeText(context, "All duplicates merged successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.toast_merged_all_duplicates), Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),
@@ -120,7 +120,7 @@ fun MergeDuplicateSettings(
                                             group.drop(1).forEach { dup ->
                                                 viewModel.deleteContact(dup.number)
                                             }
-                                            Toast.makeText(context, "Merged duplicates for ${group.first().number}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.toast_merged_duplicates_for, group.first().number), Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 ) {

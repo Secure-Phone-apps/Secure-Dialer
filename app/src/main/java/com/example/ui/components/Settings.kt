@@ -77,7 +77,7 @@ fun SettingsPanel(
                             5 -> stringResource(R.string.settings_dedup_title)
                             6 -> stringResource(R.string.settings_updates_title)
                             7 -> stringResource(R.string.settings_recordings_title)
-                            8 -> "Backup & Service Health"
+                            8 -> stringResource(R.string.backup_service_health_title)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -455,7 +455,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                Text("Version 1.0.2", style = MaterialTheme.typography.bodySmall)
+                Text(stringResource(R.string.app_version_name), style = MaterialTheme.typography.bodySmall)
                 Text(stringResource(R.string.about_app_desc))
                 Text(stringResource(R.string.about_mission_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.about_mission_desc))

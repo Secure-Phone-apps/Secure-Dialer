@@ -168,7 +168,7 @@ fun CallRecordingsSettings(
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         viewModel.deleteCallRecording(rec.id)
                                         if (isPlaying) playingId = -1
-                                        Toast.makeText(context, "Deleted recording", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,

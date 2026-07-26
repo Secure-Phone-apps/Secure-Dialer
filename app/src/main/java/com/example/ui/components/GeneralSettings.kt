@@ -317,8 +317,8 @@ fun GeneralSettings(
             ) {
                 Column {
                     SettingsRowNav(
-                        title = "Backup & Service Health",
-                        subtitle = "Encrypted local JSON backup, restore & watchdog status",
+                        title = stringResource(R.string.backup_service_health_title),
+                        subtitle = stringResource(R.string.backup_service_health_sub),
                         onClick = { onNavigateToTab(8) },
                         icon = Icons.Default.Shield,
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
@@ -452,7 +452,9 @@ fun SettingsPreferredSimRow(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val askLabel = stringResource(R.string.sim_ask)
-                listOf("SIM 1" to "SIM 1", "SIM 2" to "SIM 2", "Ask" to askLabel).forEach { (opKey, labelText) ->
+                val sim1Label = stringResource(R.string.sim_1)
+                val sim2Label = stringResource(R.string.sim_2)
+                listOf("SIM 1" to sim1Label, "SIM 2" to sim2Label, "Ask" to askLabel).forEach { (opKey, labelText) ->
                     val sel = preferredSim == opKey
                     FilterChip(
                         selected = sel,

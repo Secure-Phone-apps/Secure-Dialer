@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import android.content.Context
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import androidx.compose.ui.layout.ContentScale
 import android.media.AudioManager
 import android.media.ToneGenerator
@@ -395,7 +396,7 @@ fun ActiveCallScreen(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = "Quick Responses",
+                            text = stringResource(R.string.quick_responses),
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -408,9 +409,9 @@ fun ActiveCallScreen(
                                             try {
                                                 val smsManager = context.getSystemService(android.telephony.SmsManager::class.java)
                                                 smsManager.sendTextMessage(contactNumber, null, resp, null, null)
-                                                Toast.makeText(context, "SMS Sent", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.sms_sent), Toast.LENGTH_SHORT).show()
                                             } catch (e: Exception) {
-                                                Toast.makeText(context, "Failed to send SMS", Toast.LENGTH_SHORT).show()
+                                                Toast.makeText(context, context.getString(R.string.sms_failed), Toast.LENGTH_SHORT).show()
                                             }
                                             onQuickDecline(resp)
                                         }
@@ -428,7 +429,7 @@ fun ActiveCallScreen(
                             onClick = { isQuickDeclineMenuOpen = false },
                             modifier = Modifier.align(Alignment.End)
                         ) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.btn_cancel))
                         }
                     }
                 }
@@ -477,7 +478,7 @@ fun ActiveCallScreen(
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         TextButton(onClick = { isInCallDialpadOpen = false }) {
-                            Text("Close")
+                            Text(stringResource(R.string.close))
                         }
                     }
                 }
@@ -496,7 +497,11 @@ fun ActiveCallScreen(
                             }
                             if (matchedContact != null && matchedContact.photoUri.isNotEmpty()) {
                                 AsyncImage(
-                                    model = matchedContact.photoUri,
+                                    model = ImageRequest.Builder(context)
+                                        .data(matchedContact.photoUri)
+                                        .size(256, 256)
+                                        .crossfade(true)
+                                        .build(),
                                     contentDescription = "Contact Photo",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
@@ -537,17 +542,17 @@ fun ActiveCallScreen(
                                 }
                             }
                         ) {
-                            Text("Add & Merge")
+                            Text(stringResource(R.string.btn_add_merge))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { isAddCallDialogOpen = false }) {
-                            Text("Cancel")
+                            Text(stringResource(R.string.btn_cancel))
                         }
                     },
                     title = {
                         Text(
-                            "Add Call",
+                            stringResource(R.string.add_call),
                             style = MaterialTheme.typography.headlineSmall
                         )
                     },
@@ -559,7 +564,7 @@ fun ActiveCallScreen(
                                     addCallNumberInput = it
                                     selectedAddCallContactName = ""
                                 },
-                                label = { Text("Search contact or enter number") },
+                                label = { Text(stringResource(R.string.add_call_search_hint)) },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -579,7 +584,11 @@ fun ActiveCallScreen(
                                     .heightIn(max = 200.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                items(filteredContacts) { contact ->
+                                items(
+                                    items = filteredContacts,
+                                    key = { it.number },
+                                    contentType = { "add_call_contact" }
+                                ) { contact ->
                                     Surface(
                                         modifier = Modifier.fillMaxWidth(),
                                         onClick = {
@@ -640,7 +649,7 @@ fun ActiveCallScreen(
                 ) {
                     InCallButton(
                         icon = "⌨️",
-                        label = "Keypad",
+                        label = stringResource(R.string.keypad),
                         isActive = isInCallDialpadOpen,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -649,7 +658,7 @@ fun ActiveCallScreen(
                     )
                     InCallButton(
                         icon = "🔇",
-                        label = "Mute",
+                        label = stringResource(R.string.mute),
                         isActive = isMuted,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -659,7 +668,7 @@ fun ActiveCallScreen(
                     )
                     InCallButton(
                         icon = "🔊",
-                        label = "Speaker",
+                        label = stringResource(R.string.speaker),
                         isActive = isSpeakerOn,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -676,7 +685,7 @@ fun ActiveCallScreen(
                 ) {
                     InCallButton(
                         icon = "⏸️",
-                        label = "Hold",
+                        label = stringResource(R.string.hold),
                         isActive = isOnHold,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -686,7 +695,7 @@ fun ActiveCallScreen(
                     )
                     InCallButton(
                         icon = "🎧",
-                        label = "Bluetooth",
+                        label = stringResource(R.string.bluetooth),
                         isActive = isBluetoothOn,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -696,7 +705,7 @@ fun ActiveCallScreen(
                     )
                     InCallButton(
                         icon = "➕",
-                        label = "Add Call",
+                        label = stringResource(R.string.add_call),
                         isActive = isAddCallDialogOpen,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -713,7 +722,7 @@ fun ActiveCallScreen(
                     if (recordingEnabled) {
                         InCallButton(
                             icon = "🎙️",
-                            label = if (isRecording) "Recording" else "Record",
+                            label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
                             isActive = isRecording,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -727,12 +736,12 @@ fun ActiveCallScreen(
                                         e.printStackTrace()
                                     }
                                     onSaveRecording(duration, localFile.absolutePath)
-                                    Toast.makeText(context, "Saved recording securely", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
                                     isRecording = false
                                 } else {
                                     recordingStartTime = System.currentTimeMillis()
                                     isRecording = true
-                                    Toast.makeText(context, "⏺️ Call Recording Started", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         )
@@ -745,7 +754,7 @@ fun ActiveCallScreen(
 
                     InCallButton(
                         icon = "📝",
-                        label = "Call Note",
+                        label = stringResource(R.string.call_note),
                         isActive = isNoteDialogOpen,
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
@@ -756,12 +765,12 @@ fun ActiveCallScreen(
                     if (isNoteDialogOpen) {
                         AlertDialog(
                             onDismissRequest = { isNoteDialogOpen = false },
-                            title = { Text("Jot Call Note") },
+                            title = { Text(stringResource(R.string.jot_call_note_title)) },
                             text = {
                                 OutlinedTextField(
                                     value = noteText,
                                     onValueChange = { noteText = it },
-                                    label = { Text("Enter important details...") },
+                                    label = { Text(stringResource(R.string.note_placeholder)) },
                                     modifier = Modifier.fillMaxWidth().height(120.dp)
                                 )
                             },
@@ -770,17 +779,17 @@ fun ActiveCallScreen(
                                     onClick = {
                                         if (noteText.isNotBlank()) {
                                             onSaveNote(noteText)
-                                            Toast.makeText(context, "Note saved securely", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
                                         }
                                         isNoteDialogOpen = false
                                     }
                                 ) {
-                                    Text("Save Note")
+                                    Text(stringResource(R.string.btn_save_note))
                                 }
                             },
                             dismissButton = {
                                 TextButton(onClick = { isNoteDialogOpen = false }) {
-                                    Text("Discard")
+                                    Text(stringResource(R.string.btn_discard))
                                 }
                             }
                         )
@@ -801,7 +810,7 @@ fun ActiveCallScreen(
                             onClick = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen }
                         ) {
                             Text(
-                                text = "💬 Send Quick Response",
+                                text = stringResource(R.string.send_quick_response),
                                 style = MaterialTheme.typography.labelLarge
                             )
                         }
