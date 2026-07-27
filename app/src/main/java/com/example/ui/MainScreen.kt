@@ -266,16 +266,16 @@ fun MainScreen(
                     visible = selectedTab != 2,
                     enter = expandVertically(
                         animationSpec = spring(
-                            stiffness = Spring.StiffnessMediumLow,
+                            stiffness = Spring.StiffnessMedium,
                             dampingRatio = Spring.DampingRatioNoBouncy
                         )
-                    ) + fadeIn(animationSpec = tween(150)),
+                    ) + fadeIn(animationSpec = tween(120)),
                     exit = shrinkVertically(
                         animationSpec = spring(
-                            stiffness = Spring.StiffnessMediumLow,
+                            stiffness = Spring.StiffnessMedium,
                             dampingRatio = Spring.DampingRatioNoBouncy
                         )
-                    ) + fadeOut(animationSpec = tween(150))
+                    ) + fadeOut(animationSpec = tween(120))
                 ) {
                     HeaderSearchBar(
                         searchQuery = searchQuery,
@@ -290,7 +290,7 @@ fun MainScreen(
                         pagerState.animateScrollToPage(
                             page = selectedTab,
                             animationSpec = spring(
-                                stiffness = Spring.StiffnessMediumLow,
+                                stiffness = Spring.StiffnessMedium,
                                 dampingRatio = Spring.DampingRatioNoBouncy
                             )
                         )
@@ -353,15 +353,6 @@ fun MainScreen(
                     selectedTab = selectedTab,
                     onTabSelected = { targetTab ->
                         selectedTab = targetTab
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(
-                                page = targetTab,
-                                animationSpec = spring(
-                                    stiffness = Spring.StiffnessMediumLow,
-                                    dampingRatio = Spring.DampingRatioNoBouncy
-                                )
-                            )
-                        }
                     }
                 )
             }
