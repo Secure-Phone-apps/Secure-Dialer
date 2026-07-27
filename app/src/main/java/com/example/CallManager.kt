@@ -208,12 +208,34 @@ object CallManager {
         }
     }
 
+    private var dtmfJob: kotlinx.coroutines.Job? = null
+
     fun playDtmf(key: Char) {
-        _currentCall.value?.playDtmfTone(key)
+        _currentCall.value?.let { call ->
+            dtmfJob?.cancel()
+            try {
+                call.playDtmfTone(key)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            dtmfJob = CoroutineScope(Dispatchers.Default).launch {
+                kotlinx.coroutines.delay(150)
+                try {
+                    call.stopDtmfTone()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     fun stopDtmf() {
-        _currentCall.value?.stopDtmfTone()
+        dtmfJob?.cancel()
+        try {
+            _currentCall.value?.stopDtmfTone()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun setBluetooth(bluetooth: Boolean) {
