@@ -38,6 +38,12 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -106,43 +112,58 @@ fun SettingsPanel(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (activeTab) {
-                0 -> GeneralSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor,
-                    onNavigateToTab = { activeTab = it },
-                    onShowAbout = { showAboutDialog = true },
-                    onShowPrivacy = { showPrivacyDialog = true }
-                )
-                1 -> BlockListSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor
-                )
-                2 -> SpeedDialSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor
-                )
-                3 -> QuickResponsesSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor
-                )
-                4 -> VoicemailSettings(
-                    viewModel = viewModel,
-                    onBackToGeneral = { activeTab = 0 }
-                )
-                5 -> MergeDuplicateSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor
-                )
-                6 -> AppUpdatesSettings()
-                7 -> CallRecordingsSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor
-                )
-                8 -> BackupRestoreSettings(
-                    viewModel = viewModel,
-                    cardBgColor = cardBgColor
-                )
+            AnimatedContent(
+                targetState = activeTab,
+                transitionSpec = {
+                    if (targetState > initialState) {
+                        (slideInHorizontally { width -> width } + fadeIn(animationSpec = tween(220)))
+                            .togetherWith(slideOutHorizontally { width -> -width } + fadeOut(animationSpec = tween(220)))
+                    } else {
+                        (slideInHorizontally { width -> -width } + fadeIn(animationSpec = tween(220)))
+                            .togetherWith(slideOutHorizontally { width -> width } + fadeOut(animationSpec = tween(220)))
+                    }
+                },
+                label = "settings_tab_animation",
+                modifier = Modifier.fillMaxSize()
+            ) { targetTab ->
+                when (targetTab) {
+                    0 -> GeneralSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor,
+                        onNavigateToTab = { activeTab = it },
+                        onShowAbout = { showAboutDialog = true },
+                        onShowPrivacy = { showPrivacyDialog = true }
+                    )
+                    1 -> BlockListSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    2 -> SpeedDialSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    3 -> QuickResponsesSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    4 -> VoicemailSettings(
+                        viewModel = viewModel,
+                        onBackToGeneral = { activeTab = 0 }
+                    )
+                    5 -> MergeDuplicateSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    6 -> AppUpdatesSettings()
+                    7 -> CallRecordingsSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    8 -> BackupRestoreSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                }
             }
         }
     }

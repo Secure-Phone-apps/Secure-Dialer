@@ -87,11 +87,53 @@ class DialerRepository(rawContext: Context) {
     }
 
     suspend fun syncContacts() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            var systemContactsCount = 0
+            context.contentResolver.query(
+                Phone.CONTENT_URI,
+                arrayOf(Phone.CONTACT_ID),
+                null, null, null
+            )?.use { cursor ->
+                systemContactsCount = cursor.count
+            }
+            val localCount = dao.getContactsCount()
+            if (systemContactsCount == localCount && localCount > 0) {
+                // Counts match and we have data; skip heavy sync
+                return@withContext
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         val systemContacts = fetchSystemContacts()
         dao.insertContacts(systemContacts)
     }
 
     suspend fun syncCallLogs() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            var systemCount = 0
+            var systemMaxId = 0
+            context.contentResolver.query(
+                CallLog.Calls.CONTENT_URI,
+                arrayOf(CallLog.Calls._ID),
+                null, null, "${CallLog.Calls._ID} DESC"
+            )?.use { cursor ->
+                systemCount = cursor.count
+                if (cursor.moveToFirst()) {
+                    val idCol = cursor.getColumnIndex(CallLog.Calls._ID)
+                    if (idCol != -1) {
+                        systemMaxId = cursor.getInt(idCol)
+                    }
+                }
+            }
+            val localCount = dao.getCallLogCount()
+            val localMaxId = dao.getMaxCallLogId() ?: 0
+            if (systemMaxId == localMaxId && systemCount == localCount && localCount > 0) {
+                // No new logs; skip heavy sync
+                return@withContext
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
         val systemLogs = fetchSystemCallLogs()
         dao.insertCallLogs(systemLogs)
     }
@@ -158,11 +200,36 @@ class DialerRepository(rawContext: Context) {
         val logs = mutableListOf<CallRecord>()
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
         val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
-        val contactsMap = try {
-            dao.getAllContactsList().associate { it.number to it.photoUri }
+        
+        val allContacts = try {
+            dao.getAllContactsList()
         } catch (e: Exception) {
-            emptyMap<String, String>()
+            emptyList<Contact>()
         }
+
+        val allSettings = try {
+            dao.getAllSettingsList()
+        } catch (e: Exception) {
+            emptyList<AppSetting>()
+        }
+
+        val cnapPrefix = "cnap_"
+        val cnapMap = allSettings.filter { it.key.startsWith(cnapPrefix) }
+            .associate { it.key.substring(cnapPrefix.length) to it.value }
+
+        fun numbersMatch(n1: String, n2: String): Boolean {
+            val c1 = n1.filter { it.isDigit() }
+            val c2 = n2.filter { it.isDigit() }
+            if (c1.isEmpty() || c2.isEmpty()) return false
+            if (c1 == c2) return true
+            val minLen = minOf(c1.length, c2.length)
+            if (minLen >= 7) {
+                val matchLen = if (minLen >= 10) 10 else if (minLen >= 8) 8 else 7
+                return c1.takeLast(matchLen) == c2.takeLast(matchLen)
+            }
+            return false
+        }
+
         try {
             val queryUri = CallLog.Calls.CONTENT_URI.buildUpon()
                 .appendQueryParameter("limit", "200")
@@ -182,11 +249,23 @@ class DialerRepository(rawContext: Context) {
                 while (cursor.moveToNext()) {
                     val num = if (numIdx != -1) cursor.getString(numIdx) ?: "" else ""
                     val cachedName = if (nameIdx != -1) cursor.getString(nameIdx) else null
-                    val name = if (cachedName.isNullOrBlank()) {
-                        if (num.isBlank()) "Unknown" else num
-                    } else {
-                        cachedName
+                    
+                    val matchingContact = if (num.isNotEmpty()) {
+                        allContacts.firstOrNull { numbersMatch(it.number, num) }
+                    } else null
+                    
+                    val matchingCnapName = if (num.isNotEmpty()) {
+                        cnapMap.entries.firstOrNull { numbersMatch(it.key, num) }?.value
+                    } else null
+
+                    val name = when {
+                        matchingContact != null -> matchingContact.name
+                        !cachedName.isNullOrBlank() -> cachedName
+                        !matchingCnapName.isNullOrBlank() -> "$matchingCnapName (Verified Carrier Name)"
+                        num.isBlank() -> "Unknown"
+                        else -> num
                     }
+                    
                     val typeVal = if (typeIdx != -1) cursor.getInt(typeIdx) else CallLog.Calls.INCOMING_TYPE
                     val type = when (typeVal) {
                         CallLog.Calls.MISSED_TYPE -> CallType.MISSED
@@ -198,7 +277,7 @@ class DialerRepository(rawContext: Context) {
                     val durVal = if (durIdx != -1) cursor.getLong(durIdx) else 0L
 
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                    val photoUriVal = contactsMap[num] ?: ""
+                    val photoUriVal = matchingContact?.photoUri ?: ""
                     logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal))
                 }
             }
@@ -369,9 +448,38 @@ fun getContactNameFromNumber(context: Context, number: String): String? {
     } else {
         context
     }
-    val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
-    attributionContext.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)?.use { cursor ->
-        if (cursor.moveToFirst()) return cursor.getString(0)
+    try {
+        val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+        attributionContext.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup.DISPLAY_NAME), null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) return cursor.getString(0)
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    
+    // Fallback: Query our local database contacts using robust matching
+    try {
+        val db = com.example.data.AppDatabase.getDatabase(context)
+        val dao = db.dialerDao()
+        val cleanInput = number.filter { it.isDigit() }
+        if (cleanInput.isNotEmpty()) {
+            val contacts = kotlinx.coroutines.runBlocking { dao.getAllContactsList() }
+            val match = contacts.firstOrNull { contact ->
+                val cleanContact = contact.number.filter { it.isDigit() }
+                if (cleanContact.isEmpty()) false
+                else if (cleanInput == cleanContact) true
+                else {
+                    val minLen = minOf(cleanInput.length, cleanContact.length)
+                    if (minLen >= 7) {
+                        val matchLen = if (minLen >= 10) 10 else if (minLen >= 8) 8 else 7
+                        cleanInput.takeLast(matchLen) == cleanContact.takeLast(matchLen)
+                    } else false
+                }
+            }
+            if (match != null) return match.name
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
     }
     return null
 }

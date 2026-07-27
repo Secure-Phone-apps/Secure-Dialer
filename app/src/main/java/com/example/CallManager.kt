@@ -11,8 +11,11 @@ import android.telecom.InCallService
 import android.telecom.TelecomManager
 import android.telecom.VideoProfile
 import android.view.inputmethod.InputMethodManager
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 object CallManager {
     private val _currentCall = MutableStateFlow<Call?>(null)
@@ -92,9 +95,24 @@ object CallManager {
         _currentCall.value = call
         if (call != null) {
             _callState.value = call.state
-            _callerNumber.value = call.details?.handle?.schemeSpecificPart ?: ""
+            val number = call.details?.handle?.schemeSpecificPart ?: ""
+            _callerNumber.value = number
             _callerName.value = "" 
-            _callerCnapName.value = call.details?.callerDisplayName ?: ""
+            val cnap = call.details?.callerDisplayName ?: ""
+            _callerCnapName.value = cnap
+            
+            if (cnap.isNotBlank() && number.isNotEmpty()) {
+                inCallService?.let { context ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val db = com.example.data.AppDatabase.getDatabase(context)
+                            db.dialerDao().insertSetting(com.example.model.AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
         } else {
             _callState.value = Call.STATE_DISCONNECTED
             _callerNumber.value = ""

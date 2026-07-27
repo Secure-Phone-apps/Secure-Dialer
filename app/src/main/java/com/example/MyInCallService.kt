@@ -12,12 +12,29 @@ import android.telecom.CallAudioState
 import android.telecom.DisconnectCause
 import android.telecom.InCallService
 import androidx.core.app.NotificationCompat
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MyInCallService : InCallService() {
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
         CallManager.inCallService = this
         CallManager.addCall(call)
+        
+        val handle = call.details?.handle
+        val number = handle?.schemeSpecificPart ?: ""
+        val cnapName = call.details?.callerDisplayName
+        if (!cnapName.isNullOrBlank() && number.isNotEmpty()) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val db = com.example.data.AppDatabase.getDatabase(this@MyInCallService)
+                    db.dialerDao().insertSetting(com.example.model.AppSetting("cnap_" + number.filter { it.isDigit() }, cnapName))
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
         
         if (call.state == Call.STATE_RINGING) {
             showIncomingCallNotification(call)

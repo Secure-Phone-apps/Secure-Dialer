@@ -17,6 +17,9 @@ interface DialerDao {
     @Query("SELECT * FROM contacts")
     suspend fun getAllContactsList(): List<Contact>
 
+    @Query("SELECT COUNT(*) FROM contacts")
+    suspend fun getContactsCount(): Int
+
     @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name ASC")
     fun getFavoriteContacts(): Flow<List<Contact>>
 
@@ -44,6 +47,12 @@ interface DialerDao {
 
     @Query("SELECT * FROM call_history ORDER BY id DESC")
     fun getAllCallHistoryFlow(): Flow<List<CallRecord>>
+
+    @Query("SELECT COUNT(*) FROM call_history")
+    suspend fun getCallLogCount(): Int
+
+    @Query("SELECT MAX(id) FROM call_history")
+    suspend fun getMaxCallLogId(): Int?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallLogs(logs: List<CallRecord>)
