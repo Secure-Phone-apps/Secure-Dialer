@@ -309,7 +309,7 @@ class DialerRepository(rawContext: Context) {
                     val name = when {
                         matchingContact != null -> matchingContact.name
                         !cachedName.isNullOrBlank() -> cachedName
-                        !matchingCnapName.isNullOrBlank() -> "$matchingCnapName (Verified Carrier Name)"
+                        !matchingCnapName.isNullOrBlank() -> matchingCnapName
                         num.isBlank() -> "Unknown"
                         else -> num
                     }

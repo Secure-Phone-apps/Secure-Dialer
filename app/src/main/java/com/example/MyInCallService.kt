@@ -99,8 +99,8 @@ class MyInCallService : InCallService() {
         val contactName = if (number.isNotEmpty()) getContactNameFromNumber(this, number) else null
         
         val displayName = when {
-            contactName != null -> if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
-            !cnapName.isNullOrBlank() -> "$cnapName (Verified Carrier Name)"
+            contactName != null -> contactName
+            !cnapName.isNullOrBlank() -> cnapName
             number.isNotEmpty() -> number
             else -> "Unknown"
         }
@@ -142,8 +142,8 @@ class MyInCallService : InCallService() {
         val contactName = getContactNameFromNumber(this, number)
         
         val name = when {
-            contactName != null -> if (!cnapName.isNullOrBlank()) "$contactName (CNAP: $cnapName)" else contactName
-            !cnapName.isNullOrBlank() -> "$cnapName (Verified Carrier Name)"
+            contactName != null -> contactName
+            !cnapName.isNullOrBlank() -> cnapName
             else -> number
         }
 

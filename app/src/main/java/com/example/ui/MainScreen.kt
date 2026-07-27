@@ -214,9 +214,9 @@ fun MainScreen(
                 callingContactNumber = systemCallerNumber
                 val contactName = getContactNameFromNumber(context, systemCallerNumber)
                 callingContactName = if (contactName != null) {
-                    if (systemCallerCnapName.isNotEmpty()) "$contactName (CNAP: $systemCallerCnapName)" else contactName
+                    contactName
                 } else if (systemCallerCnapName.isNotEmpty()) {
-                    "$systemCallerCnapName (Verified CNAP)"
+                    systemCallerCnapName
                 } else {
                     systemCallerNumber
                 }
