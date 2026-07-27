@@ -59,7 +59,7 @@ enum class RecentsFilter {
 @Composable
 fun RecentsTabContent(
     viewModel: com.example.ui.viewmodel.DialerViewModel,
-    callRecordsPaged: LazyPagingItems<CallRecord>,
+    callRecords: List<CallRecord>,
     onCallClick: (CallRecord) -> Unit,
     onDeleteRecord: (Int) -> Unit,
     hasPermission: Boolean = true,
@@ -157,9 +157,9 @@ fun RecentsTabContent(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            if (isLoading || callRecordsPaged.loadState.refresh is LoadState.Loading) {
+            if (isLoading) {
                 RecentsSkeleton()
-            } else if (callRecordsPaged.itemCount == 0 && callRecordsPaged.loadState.refresh is LoadState.NotLoading) {
+            } else if (callRecords.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -173,8 +173,8 @@ fun RecentsTabContent(
                 }
             } else {
                 val query by viewModel.searchQuery
-                val consolidatedRecords = remember(callRecordsPaged.itemCount, callRecordsPaged.loadState.refresh, currentFilter, query) {
-                    val baseFiltered = callRecordsPaged.itemSnapshotList.items
+                val consolidatedRecords = remember(callRecords, currentFilter, query) {
+                    val baseFiltered = callRecords
                         .filter { record ->
                             when (currentFilter) {
                                 RecentsFilter.ALL -> true
@@ -229,20 +229,10 @@ fun RecentsTabContent(
                                 viewModel = viewModel
                             )
                         }
-
-                        if (callRecordsPaged.loadState.append is LoadState.Loading) {
-                            item {
-                                Box(modifier = Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
-                                    CircularProgressIndicator(modifier = Modifier.size(24.dp))
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
-
-
     }
 }
 

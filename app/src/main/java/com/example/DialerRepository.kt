@@ -88,28 +88,58 @@ class DialerRepository(rawContext: Context) {
 
     suspend fun syncContacts() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
+            val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
             var systemContactsCount = 0
+            var maxTimestamp = 0L
             context.contentResolver.query(
-                Phone.CONTENT_URI,
-                arrayOf(Phone.CONTACT_ID),
+                ContactsContract.Contacts.CONTENT_URI,
+                arrayOf(ContactsContract.Contacts._ID, ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP),
                 null, null, null
             )?.use { cursor ->
                 systemContactsCount = cursor.count
+                val tsCol = cursor.getColumnIndex(ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP)
+                if (tsCol != -1) {
+                    while (cursor.moveToNext()) {
+                        val ts = cursor.getLong(tsCol)
+                        if (ts > maxTimestamp) {
+                            maxTimestamp = ts
+                        }
+                    }
+                }
             }
+            
             val localCount = dao.getContactsCount()
-            if (systemContactsCount == localCount && localCount > 0) {
-                // Counts match and we have data; skip heavy sync
+            val lastSyncedCount = prefs.getInt("last_synced_contacts_count", -1)
+            val lastSyncedTimestamp = prefs.getLong("last_synced_contacts_timestamp", -1L)
+            
+            if (localCount > 0 && systemContactsCount == lastSyncedCount && maxTimestamp == lastSyncedTimestamp) {
+                // No changes in system contacts; skip heavy sync
                 return@withContext
             }
+            
+            val systemContacts = fetchSystemContacts()
+            dao.insertContacts(systemContacts)
+            
+            prefs.edit()
+                .putInt("last_synced_contacts_count", systemContactsCount)
+                .putLong("last_synced_contacts_timestamp", maxTimestamp)
+                .apply()
         } catch (e: Exception) {
             e.printStackTrace()
+            try {
+                val systemContacts = fetchSystemContacts()
+                if (systemContacts.isNotEmpty()) {
+                    dao.insertContacts(systemContacts)
+                }
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
         }
-        val systemContacts = fetchSystemContacts()
-        dao.insertContacts(systemContacts)
     }
 
     suspend fun syncCallLogs() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
+            val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
             var systemCount = 0
             var systemMaxId = 0
             context.contentResolver.query(
@@ -125,17 +155,35 @@ class DialerRepository(rawContext: Context) {
                     }
                 }
             }
+            
             val localCount = dao.getCallLogCount()
-            val localMaxId = dao.getMaxCallLogId() ?: 0
-            if (systemMaxId == localMaxId && systemCount == localCount && localCount > 0) {
+            val expectedLocalCount = minOf(systemCount, 200)
+            
+            val lastSyncedMaxId = prefs.getInt("last_synced_call_log_max_id", -1)
+            val lastSyncedCount = prefs.getInt("last_synced_call_log_count", -1)
+            
+            if (localCount > 0 && localCount == expectedLocalCount && systemMaxId == lastSyncedMaxId && systemCount == lastSyncedCount) {
                 // No new logs; skip heavy sync
                 return@withContext
             }
+            
+            val systemLogs = fetchSystemCallLogs()
+            dao.clearCallLogs()
+            dao.insertCallLogs(systemLogs)
+            
+            prefs.edit()
+                .putInt("last_synced_call_log_max_id", systemMaxId)
+                .putInt("last_synced_call_log_count", systemCount)
+                .apply()
         } catch (e: Exception) {
             e.printStackTrace()
+            try {
+                val systemLogs = fetchSystemCallLogs()
+                dao.insertCallLogs(systemLogs)
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+            }
         }
-        val systemLogs = fetchSystemCallLogs()
-        dao.insertCallLogs(systemLogs)
     }
 
     private suspend fun fetchSystemContacts(): List<Contact> = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {

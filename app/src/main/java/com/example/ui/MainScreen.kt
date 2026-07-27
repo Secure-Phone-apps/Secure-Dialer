@@ -75,7 +75,7 @@ fun MainScreen(
 
     // Paging Items
     val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
-    val callHistoryPaged = viewModel.callHistoryPaged.collectAsLazyPagingItems()
+    val allCallHistory by viewModel.allCallHistoryFlow.collectAsState()
     val dialpadMatches by viewModel.dialpadMatches.collectAsState()
 
     // State from ViewModel
@@ -311,7 +311,7 @@ fun MainScreen(
                         when (page) {
                             0 -> RecentsTabContent(
                                 viewModel = viewModel,
-                                callRecordsPaged = callHistoryPaged,
+                                callRecords = allCallHistory,
                                 onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
                                 onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
                                 hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
