@@ -6,7 +6,7 @@
     <string name="tab_recents">Anrufe</string>
     <string name="tab_contacts">Kontakte</string>
     <string name="tab_dialpad">Tastenfeld</string>
-    <string name="tab_voicemail">Mbox</string>
+    <string name="tab_voicemail">Anrufbeantworter</string>
 
     <!-- Header & Search -->
     <string name="search_placeholder">Kontakte &amp; Nummern suchen</string>
@@ -103,7 +103,7 @@
     <string name="favorites_header">Favoriten</string>
     <string name="no_favorites_title">Noch keine Favoriten</string>
     <string name="no_favorites_subtitle">Markieren Sie Kontakte mit einem Stern</string>
-    <string name="voicemail_header">Voicemail</string>
+    <string name="voicemail_header">Anrufbeantworter</string>
     <string name="no_voicemails_title">Keine Sprachnachrichten</string>
     <string name="no_voicemails_subtitle">Sie sind auf dem neuesten Stand</string>
 
@@ -111,6 +111,8 @@
     <string name="settings_appearance">Erscheinungsbild</string>
     <string name="settings_dark_theme">Dunkles Design</string>
     <string name="settings_dark_theme_sub">Dunkles visuelles Design anwenden</string>
+    <string name="settings_m3_expressive">Material 3 Expressiv</string>
+    <string name="settings_m3_expressive_sub">Lebendige Farben, abgerundete Formen und dynamischer Stil</string>
     <string name="settings_accent_color">Akzentfarbe</string>
     <string name="settings_sound_haptics">Ton &amp; Haptik</string>
     <string name="settings_dialpad_tones">Wähltöne</string>
@@ -124,10 +126,10 @@
     <string name="settings_blocked_numbers_sub">Eingehende Anrufe verwalten</string>
     <string name="settings_quick_responses">Schnellantworten</string>
     <string name="settings_quick_responses_sub">SMS-Ablehnungsvorlagen bearbeiten</string>
-    <string name="settings_sim_voicemail">SIM &amp; Voicemail</string>
+    <string name="settings_sim_voicemail">SIM &amp; Anrufbeantworter</string>
     <string name="settings_preferred_sim">Bevorzugte SIM</string>
     <string name="settings_preferred_sim_sub">SIM-Karte für ausgehende Anrufe wählen</string>
-    <string name="settings_voicemail_num">Voicemail-Nummer</string>
+    <string name="settings_voicemail_num">Anrufbeantworter-Nummer</string>
     <string name="settings_voicemail_num_sub">Kurzwahl-Taste 1 konfigurieren</string>
     <string name="settings_data_utilities">Daten &amp; Werkzeuge</string>
     <string name="settings_dedup">Duplikate zusammenführen</string>
@@ -144,7 +146,7 @@
     <string name="settings_back">Zurück</string>
     <string name="settings_block_list_title">Sperrliste</string>
     <string name="settings_quick_resp_title">Schnellantworten</string>
-    <string name="settings_voicemail_setup_title">Voicemail-Einrichtung</string>
+    <string name="settings_voicemail_setup_title">Anrufbeantworter-Einrichtung</string>
     <string name="settings_dedup_title">Duplikate</string>
     <string name="settings_updates_title">Updates</string>
     <string name="settings_recordings_title">Aufnahmen</string>
@@ -161,7 +163,7 @@
     <string name="settings_view_saved_recordings">Gespeicherte Aufnahmen anzeigen</string>
     <string name="settings_view_saved_recordings_sub">Anrufaufnahmen anhören und verwalten</string>
     <string name="settings_info_utilities">Informationen &amp; Dienstprogramme</string>
-    <string name="settings_merge_duplicate_contacts">Duplikate Kontakte zusammenführen</string>
+    <string name="settings_merge_duplicate_contacts">Doppelte Kontakte zusammenführen</string>
     <string name="settings_merge_duplicate_contacts_sub">Nach doppelten Kontakten suchen und bereinigen</string>
     <string name="settings_check_updates">Nach Updates suchen</string>
     <string name="settings_check_updates_sub">Sicherstellen, dass die App aktuell &amp; sicher ist</string>
@@ -189,8 +191,8 @@
     <string name="no_responses_saved_desc">Fügen Sie Nachrichtenvorlagen hinzu, um sie beim Ablehnen von Anrufen schnell zu senden.</string>
     <string name="delete_response">Antwort löschen</string>
     <string name="voicemail_setup_desc">Legen Sie die Nummer fest, die beim langen Drücken der Taste \'1\' angerufen wird.</string>
-    <string name="voicemail_directory_number">Sprachbox-Nummer</string>
-    <string name="save_voicemail_number">Sprachbox-Nummer speichern</string>
+    <string name="voicemail_directory_number">Anrufbeantworter-Nummer</string>
+    <string name="save_voicemail_number">Anrufbeantworter-Nummer speichern</string>
     <string name="dedup_desc">Das System scannt Ihre lokale Datenbank nach doppelten Einträgen mit derselben Telefonnummer.</string>
     <string name="no_duplicates_title">Keine Duplikate gefunden</string>
     <string name="no_duplicates_desc">Ihre Kontaktliste ist sauber! Keine doppelten Nummern erkannt.</string>
@@ -237,7 +239,7 @@
     <string name="label_last_name">Nachname</string>
     <string name="backup_service_health_title">Sicherung &amp; Dienststatus</string>
     <string name="backup_service_health_sub">Verschlüsselte lokale JSON-Sicherung, Wiederherstellung &amp; Watchdog-Status</string>
-    <string name="service_health_header">Anrufsperre Dienststatus</string>
+    <string name="service_health_header">Dienststatus der Anrufsperre</string>
     <string name="service_health_active">Aktiv &amp; Geschützt</string>
     <string name="service_health_action_req">Aktion erforderlich / Rolle fehlt</string>
     <string name="service_health_role_granted">Filterrolle: Erteilt</string>

@@ -111,6 +111,8 @@
     <string name="settings_appearance">外観</string>
     <string name="settings_dark_theme">ダークテーマ</string>
     <string name="settings_dark_theme_sub">ダークテーマを適用します</string>
+    <string name="settings_m3_expressive">Material 3 エクスプレッシブ</string>
+    <string name="settings_m3_expressive_sub">鮮やかな色、角丸デザイン、ダイナミックなスタイル</string>
     <string name="settings_accent_color">アクセントカラー</string>
     <string name="settings_sound_haptics">音とバイブレーション</string>
     <string name="settings_dialpad_tones">ダイヤル音</string>

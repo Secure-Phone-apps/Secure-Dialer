@@ -53,13 +53,18 @@ class DialerRepository(rawContext: Context) {
     // --- Sync Logic ---
 
     private var contentObserver: android.database.ContentObserver? = null
+    private var lastSyncTimestamp = 0L
 
     fun startObservingChanges(onChanged: () -> Unit) {
         if (contentObserver != null) return
         try {
             val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
                 override fun onChange(selfChange: Boolean) {
-                    onChanged()
+                    val now = System.currentTimeMillis()
+                    if (now - lastSyncTimestamp > 1500) {
+                        lastSyncTimestamp = now
+                        onChanged()
+                    }
                 }
             }
             contentObserver = observer
@@ -154,12 +159,19 @@ class DialerRepository(rawContext: Context) {
         val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
         val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
         val contactsMap = try {
-            dao.getAllContactsFlow().first().associate { it.number to it.photoUri }
+            dao.getAllContactsList().associate { it.number to it.photoUri }
         } catch (e: Exception) {
             emptyMap<String, String>()
         }
         try {
-            context.contentResolver.query(CallLog.Calls.CONTENT_URI, arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION), null, null, "${CallLog.Calls.DATE} DESC")?.use { cursor ->
+            val queryUri = CallLog.Calls.CONTENT_URI.buildUpon()
+                .appendQueryParameter("limit", "200")
+                .build()
+            context.contentResolver.query(
+                queryUri,
+                arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION),
+                null, null, "${CallLog.Calls.DATE} DESC"
+            )?.use { cursor ->
                 val idIdx = cursor.getColumnIndex(CallLog.Calls._ID)
                 val nameIdx = cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)
                 val numIdx = cursor.getColumnIndex(CallLog.Calls.NUMBER)

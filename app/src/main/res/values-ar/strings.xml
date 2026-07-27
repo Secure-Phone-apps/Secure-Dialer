@@ -111,6 +111,8 @@
     <string name="settings_appearance">المظهر</string>
     <string name="settings_dark_theme">المظهر الداكن</string>
     <string name="settings_dark_theme_sub">تطبيق المظهر الداكن على الواجهة</string>
+    <string name="settings_m3_expressive">Material 3 التعبيري</string>
+    <string name="settings_m3_expressive_sub">ألوان زاهية، أشكال دائرية للغاية، وتصميم ديناميكي</string>
     <string name="settings_accent_color">لون التمييز</string>
     <string name="settings_sound_haptics">الصوت والاهتزاز</string>
     <string name="settings_dialpad_tones">نغمات لوحة الاتصال</string>

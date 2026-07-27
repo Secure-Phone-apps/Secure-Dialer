@@ -111,6 +111,8 @@
     <string name="settings_appearance">Aparência</string>
     <string name="settings_dark_theme">Tema escuro</string>
     <string name="settings_dark_theme_sub">Aplicar tema visual escuro à interface</string>
+    <string name="settings_m3_expressive">Material 3 Expressivo</string>
+    <string name="settings_m3_expressive_sub">Cores vibrantes, formas arredondadas e estilo dinâmico</string>
     <string name="settings_accent_color">Cor de destaque</string>
     <string name="settings_sound_haptics">Som e vibração</string>
     <string name="settings_dialpad_tones">Sons do teclado</string>

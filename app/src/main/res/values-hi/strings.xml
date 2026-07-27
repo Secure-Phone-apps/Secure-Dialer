@@ -111,6 +111,8 @@
     <string name="settings_appearance">दिखावट</string>
     <string name="settings_dark_theme">डार्क थीम</string>
     <string name="settings_dark_theme_sub">इंटरफ़ेस पर डार्क थीम लागू करें</string>
+    <string name="settings_m3_expressive">मटीरियल 3 एक्सप्रेसिव</string>
+    <string name="settings_m3_expressive_sub">जीवंत रंग, अतिरिक्त गोल आकार और डायनामिक स्टाइलिंग</string>
     <string name="settings_accent_color">एक्सेंट रंग</string>
     <string name="settings_sound_haptics">ध्वनि और कंपन</string>
     <string name="settings_dialpad_tones">डायलपैड टोन</string>

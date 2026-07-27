@@ -14,6 +14,9 @@ interface DialerDao {
     @Query("SELECT * FROM contacts ORDER BY name ASC")
     fun getAllContactsFlow(): Flow<List<Contact>>
 
+    @Query("SELECT * FROM contacts")
+    suspend fun getAllContactsList(): List<Contact>
+
     @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name ASC")
     fun getFavoriteContacts(): Flow<List<Contact>>
 

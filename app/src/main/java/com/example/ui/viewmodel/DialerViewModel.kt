@@ -285,8 +285,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun syncData() {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                repository.syncContacts()
-                repository.syncCallLogs()
+                launch { repository.syncContacts() }
+                launch { repository.syncCallLogs() }
             } catch (e: Exception) {
                 e.printStackTrace()
             }

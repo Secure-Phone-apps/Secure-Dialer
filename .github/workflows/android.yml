@@ -12,6 +12,9 @@ on:
         required: true
         default: 'v1.0.0'
 
+env:
+  ACTIONS_AUDIT_NODE_VERSION: 'false'
+
 jobs:
   build-debug:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
