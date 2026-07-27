@@ -210,13 +210,19 @@ fun ActiveCallScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(top = 8.dp)
             ) {
+                val simDisplay = if (preferredSim.equals("Ask", ignoreCase = true)) {
+                    stringResource(R.string.sim_ask)
+                } else {
+                    preferredSim
+                }
+
                 val displayHeader = when {
-                    isOnHold || callState == android.telecom.Call.STATE_HOLDING -> "Call on hold"
-                    callState == android.telecom.Call.STATE_DIALING -> "Dialing..."
-                    callState == android.telecom.Call.STATE_RINGING -> "Incoming call..."
-                    callState == android.telecom.Call.STATE_CONNECTING -> "Connecting..."
-                    participants.size > 1 -> "Conference call via $preferredSim"
-                    else -> "Ongoing call via $preferredSim"
+                    isOnHold || callState == android.telecom.Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
+                    callState == android.telecom.Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
+                    callState == android.telecom.Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
+                    callState == android.telecom.Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
+                    participants.size > 1 -> "${stringResource(R.string.call_status_conference)} • $simDisplay"
+                    else -> "${stringResource(R.string.call_status_ongoing)} • $simDisplay"
                 }
 
                 Text(
@@ -253,7 +259,7 @@ fun ActiveCallScreen(
                         "${participants[0].second} • ${participants[1].second}"
                     }
                 } else {
-                    if (contactName.isNotEmpty() && contactNumber.isNotEmpty()) contactNumber else ""
+                    if (contactName.isNotEmpty() && contactNumber.isNotEmpty() && contactName != contactNumber) contactNumber else ""
                 }
 
                 if (displaySubtitle.isNotEmpty()) {
@@ -508,8 +514,16 @@ fun ActiveCallScreen(
                                 )
                             } else {
                                 val pName = participants.firstOrNull()?.first ?: contactName
+                                val isRawNumber = pName.none { it.isLetter() }
+                                val avatarText = if (!isRawNumber && pName.length >= 2) {
+                                    pName.substring(0, 2).uppercase()
+                                } else if (!isRawNumber && pName.isNotEmpty()) {
+                                    pName.take(1).uppercase()
+                                } else {
+                                    "📞"
+                                }
                                 Text(
-                                    text = if (pName.length >= 2) pName.substring(0, 2).uppercase() else "📞",
+                                    text = avatarText,
                                     style = MaterialTheme.typography.displayLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -645,158 +659,232 @@ fun ActiveCallScreen(
                 // Row 1: Keypad, Mute, Speaker
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    InCallButton(
-                        icon = "⌨️",
-                        label = stringResource(R.string.keypad),
-                        isActive = isInCallDialpadOpen,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isInCallDialpadOpen = !isInCallDialpadOpen
-                        }
-                    )
-                    InCallButton(
-                        icon = "🔇",
-                        label = stringResource(R.string.mute),
-                        isActive = isMuted,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isMuted = !isMuted
-                            CallManager.setMuted(isMuted)
-                        }
-                    )
-                    InCallButton(
-                        icon = "🔊",
-                        label = stringResource(R.string.speaker),
-                        isActive = isSpeakerOn,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isSpeakerOn = !isSpeakerOn
-                            CallManager.setSpeaker(isSpeakerOn)
-                        }
-                    )
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        InCallButton(
+                            icon = Icons.Default.Dialpad,
+                            label = stringResource(R.string.keypad),
+                            isActive = isInCallDialpadOpen,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isInCallDialpadOpen = !isInCallDialpadOpen
+                            }
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        InCallButton(
+                            icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                            label = stringResource(R.string.mute),
+                            isActive = isMuted,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isMuted = !isMuted
+                                CallManager.setMuted(isMuted)
+                            }
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        InCallButton(
+                            icon = Icons.Default.VolumeUp,
+                            label = stringResource(R.string.speaker),
+                            isActive = isSpeakerOn,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isSpeakerOn = !isSpeakerOn
+                                CallManager.setSpeaker(isSpeakerOn)
+                            }
+                        )
+                    }
                 }
 
                 // Row 2: Hold, Bluetooth, Add Call
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    InCallButton(
-                        icon = "⏸️",
-                        label = stringResource(R.string.hold),
-                        isActive = isOnHold,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isOnHold = !isOnHold
-                            CallManager.setHold(isOnHold)
-                        }
-                    )
-                    InCallButton(
-                        icon = "🎧",
-                        label = stringResource(R.string.bluetooth),
-                        isActive = isBluetoothOn,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isBluetoothOn = !isBluetoothOn
-                            CallManager.setBluetooth(isBluetoothOn)
-                        }
-                    )
-                    InCallButton(
-                        icon = "➕",
-                        label = stringResource(R.string.add_call),
-                        isActive = isAddCallDialogOpen,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isAddCallDialogOpen = true
-                        }
-                    )
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        InCallButton(
+                            icon = Icons.Default.Pause,
+                            label = stringResource(R.string.hold),
+                            isActive = isOnHold,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isOnHold = !isOnHold
+                                CallManager.setHold(isOnHold)
+                            }
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        InCallButton(
+                            icon = Icons.Default.Bluetooth,
+                            label = stringResource(R.string.bluetooth),
+                            isActive = isBluetoothOn,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isBluetoothOn = !isBluetoothOn
+                                CallManager.setBluetooth(isBluetoothOn)
+                            }
+                        )
+                    }
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        InCallButton(
+                            icon = Icons.Default.GroupAdd,
+                            label = stringResource(R.string.add_call),
+                            isActive = isAddCallDialogOpen,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                isAddCallDialogOpen = true
+                            }
+                        )
+                    }
                 }
 
                 // Row 3: Record & Note
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     if (recordingEnabled) {
-                        InCallButton(
-                            icon = "🎙️",
-                            label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
-                            isActive = isRecording,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                if (isRecording) {
-                                    val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
-                                    val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
-                                    val localFile = java.io.File(context.filesDir, fileName)
-                                    try {
-                                        localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                    onSaveRecording(duration, localFile.absolutePath)
-                                    Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
-                                    isRecording = false
-                                } else {
-                                    recordingStartTime = System.currentTimeMillis()
-                                    isRecording = true
-                                    Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        )
-                    } else {
-                        Spacer(modifier = Modifier.size(64.dp))
-                    }
-
-                    var isNoteDialogOpen by remember { mutableStateOf(false) }
-                    var noteText by remember { mutableStateOf("") }
-
-                    InCallButton(
-                        icon = "📝",
-                        label = stringResource(R.string.call_note),
-                        isActive = isNoteDialogOpen,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            isNoteDialogOpen = true
-                        }
-                    )
-
-                    if (isNoteDialogOpen) {
-                        AlertDialog(
-                            onDismissRequest = { isNoteDialogOpen = false },
-                            title = { Text(stringResource(R.string.jot_call_note_title)) },
-                            text = {
-                                OutlinedTextField(
-                                    value = noteText,
-                                    onValueChange = { noteText = it },
-                                    label = { Text(stringResource(R.string.note_placeholder)) },
-                                    modifier = Modifier.fillMaxWidth().height(120.dp)
-                                )
-                            },
-                            confirmButton = {
-                                Button(
-                                    onClick = {
-                                        if (noteText.isNotBlank()) {
-                                            onSaveNote(noteText)
-                                            Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            InCallButton(
+                                icon = Icons.Default.Mic,
+                                label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
+                                isActive = isRecording,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (isRecording) {
+                                        val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
+                                        val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
+                                        val localFile = java.io.File(context.filesDir, fileName)
+                                        try {
+                                            localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
+                                        } catch (e: Exception) {
+                                            e.printStackTrace()
                                         }
-                                        isNoteDialogOpen = false
+                                        onSaveRecording(duration, localFile.absolutePath)
+                                        Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
+                                        isRecording = false
+                                    } else {
+                                        recordingStartTime = System.currentTimeMillis()
+                                        isRecording = true
+                                        Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
                                     }
-                                ) {
-                                    Text(stringResource(R.string.btn_save_note))
                                 }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { isNoteDialogOpen = false }) {
-                                    Text(stringResource(R.string.btn_discard))
-                                }
-                            }
-                        )
-                    }
+                            )
+                        }
 
-                    Spacer(modifier = Modifier.size(64.dp))
+                        var isNoteDialogOpen by remember { mutableStateOf(false) }
+                        var noteText by remember { mutableStateOf("") }
+
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            InCallButton(
+                                icon = Icons.Default.EditNote,
+                                label = stringResource(R.string.call_note),
+                                isActive = isNoteDialogOpen,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isNoteDialogOpen = true
+                                }
+                            )
+                        }
+
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            // Spacer to align symmetrically
+                        }
+
+                        if (isNoteDialogOpen) {
+                            AlertDialog(
+                                onDismissRequest = { isNoteDialogOpen = false },
+                                title = { Text(stringResource(R.string.jot_call_note_title)) },
+                                text = {
+                                    OutlinedTextField(
+                                        value = noteText,
+                                        onValueChange = { noteText = it },
+                                        label = { Text(stringResource(R.string.note_placeholder)) },
+                                        modifier = Modifier.fillMaxWidth().height(120.dp)
+                                    )
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            if (noteText.isNotBlank()) {
+                                                onSaveNote(noteText)
+                                                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                                            }
+                                            isNoteDialogOpen = false
+                                        }
+                                    ) {
+                                        Text(stringResource(R.string.btn_save_note))
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { isNoteDialogOpen = false }) {
+                                        Text(stringResource(R.string.btn_discard))
+                                    }
+                                }
+                            )
+                        }
+                    } else {
+                        // If recording is disabled, place Call Note in the middle to look perfect
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            // Empty slot
+                        }
+
+                        var isNoteDialogOpen by remember { mutableStateOf(false) }
+                        var noteText by remember { mutableStateOf("") }
+
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            InCallButton(
+                                icon = Icons.Default.EditNote,
+                                label = stringResource(R.string.call_note),
+                                isActive = isNoteDialogOpen,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    isNoteDialogOpen = true
+                                }
+                            )
+                        }
+
+                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            // Empty slot
+                        }
+
+                        if (isNoteDialogOpen) {
+                            AlertDialog(
+                                onDismissRequest = { isNoteDialogOpen = false },
+                                title = { Text(stringResource(R.string.jot_call_note_title)) },
+                                text = {
+                                    OutlinedTextField(
+                                        value = noteText,
+                                        onValueChange = { noteText = it },
+                                        label = { Text(stringResource(R.string.note_placeholder)) },
+                                        modifier = Modifier.fillMaxWidth().height(120.dp)
+                                    )
+                                },
+                                confirmButton = {
+                                    Button(
+                                        onClick = {
+                                            if (noteText.isNotBlank()) {
+                                                onSaveNote(noteText)
+                                                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                                            }
+                                            isNoteDialogOpen = false
+                                        }
+                                    ) {
+                                        Text(stringResource(R.string.btn_save_note))
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { isNoteDialogOpen = false }) {
+                                        Text(stringResource(R.string.btn_discard))
+                                    }
+                                }
+                            )
+                        }
+                    }
                 }
+            }
 
                 // Styled "Quick Decline SMS" text link/button below the main buttons
                 if (isIncoming) {
@@ -816,7 +904,6 @@ fun ActiveCallScreen(
                         }
                     }
                 }
-            }
 
             // Actions: Answer and Hang Up
             Row(
@@ -885,7 +972,7 @@ fun ActiveCallScreen(
 
 @Composable
 fun InCallButton(
-    icon: String, // Kept for logic if needed, but we draw clean symbols
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
     isActive: Boolean,
     onClick: () -> Unit
@@ -905,19 +992,8 @@ fun InCallButton(
             color = btnColor
         ) {
             Box(contentAlignment = Alignment.Center) {
-                val iconVector = when (label) {
-                    "Keypad" -> Icons.Default.Dialpad
-                    "Mute" -> Icons.Default.MicOff
-                    "Speaker" -> Icons.Default.VolumeUp
-                    "Hold" -> Icons.Default.Pause
-                    "Bluetooth" -> Icons.Default.Bluetooth
-                    "Add Call" -> Icons.Default.GroupAdd
-                    "Record", "Recording" -> Icons.Default.Mic
-                    "Call Note" -> Icons.Default.EditNote
-                    else -> Icons.Default.QuestionMark
-                }
                 Icon(
-                    imageVector = iconVector,
+                    imageVector = icon,
                     contentDescription = label,
                     tint = contentColor,
                     modifier = Modifier.size(28.dp)

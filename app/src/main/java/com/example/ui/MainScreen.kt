@@ -73,43 +73,13 @@ fun MainScreen(
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Paging Items
-    val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
-    val allCallHistory by viewModel.allCallHistoryFlow.collectAsState()
-    val dialpadMatches by viewModel.dialpadMatches.collectAsState()
-
-    // State from ViewModel
-    val isDarkTheme by viewModel.isDarkTheme
-    val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
-    val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
+    // Localized state declarations for MainScreen
     val preferredSim by viewModel.preferredSim
-    val voicemailNumber by viewModel.voicemailNumber
-    
     val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
     val blockedNumbers = remember(blockedNumbersEntities) { blockedNumbersEntities.map { it.number } }
-    
-    val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
-    val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
-    
-    val speedDialEntities by viewModel.speedDialFlow.collectAsState()
-    val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
-
-    val favoriteContacts by viewModel.favoriteContacts.collectAsState()
-    val allContacts by viewModel.allContactsFlow.collectAsState()
 
     var selectedTab by viewModel.selectedTab
     val searchQuery by viewModel.searchQuery
-
-    val filteredFavorites = remember(favoriteContacts, searchQuery) {
-        if (searchQuery.isBlank()) {
-            favoriteContacts
-        } else {
-            favoriteContacts.filter { contact ->
-                contact.name.contains(searchQuery, ignoreCase = true) ||
-                contact.number.contains(searchQuery, ignoreCase = true)
-            }
-        }
-    }
     var isDialpadVisible by viewModel.isDialpadVisible
     var dialpadInput by viewModel.dialpadInput
     var isSettingsVisible by viewModel.isSettingsVisible
@@ -285,17 +255,6 @@ fun MainScreen(
                 }
 
                 val pagerState = rememberPagerState(initialPage = selectedTab) { 3 }
-                LaunchedEffect(selectedTab) {
-                    if (pagerState.currentPage != selectedTab) {
-                        pagerState.animateScrollToPage(
-                            page = selectedTab,
-                            animationSpec = spring(
-                                stiffness = Spring.StiffnessMedium,
-                                dampingRatio = Spring.DampingRatioNoBouncy
-                            )
-                        )
-                    }
-                }
                 LaunchedEffect(pagerState.currentPage) {
                     if (selectedTab != pagerState.currentPage) {
                         selectedTab = pagerState.currentPage
@@ -309,42 +268,58 @@ fun MainScreen(
                         beyondViewportPageCount = 1
                     ) { page ->
                         when (page) {
-                            0 -> RecentsTabContent(
-                                viewModel = viewModel,
-                                callRecords = allCallHistory,
-                                onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
-                                onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
-                                hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
-                                onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
-                            )
-                            1 -> ContactsTabContent(
-                                viewModel = viewModel,
-                                contactsPaged = contactsPaged,
-                                favoriteContacts = favoriteContacts,
-                                onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
-                                onAddContactClick = { isAddContactDialogVisible = true },
-                                onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
-                                hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
-                                onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
-                                onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
-                                onDeleteContact = { it -> viewModel.deleteContact(it.number) }
-                            )
-                            2 -> DialpadTabContent(
-                                inputValue = dialpadInput,
-                                onValueChange = {
-                                    if (it.length > dialpadInput.length) {
-                                        if (dialpadTonesEnabled) playDtmf(it.last().toString())
-                                        if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    }
-                                    dialpadInput = it
-                                    viewModel.onSearchQueryChange(it)
-                                },
-                                onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
-                                onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
-                                voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
-                                dialpadMatches = dialpadMatches,
-                                onCollapseClick = {}
-                            )
+                            0 -> {
+                                val allCallHistory by viewModel.allCallHistoryFlow.collectAsState()
+                                RecentsTabContent(
+                                    viewModel = viewModel,
+                                    callRecords = allCallHistory,
+                                    onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
+                                    onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
+                                    hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
+                                    onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
+                                )
+                            }
+                            1 -> {
+                                val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
+                                val favoriteContacts by viewModel.favoriteContacts.collectAsState()
+                                ContactsTabContent(
+                                    viewModel = viewModel,
+                                    contactsPaged = contactsPaged,
+                                    favoriteContacts = favoriteContacts,
+                                    onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
+                                    onAddContactClick = { isAddContactDialogVisible = true },
+                                    onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
+                                    hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
+                                    onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
+                                    onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
+                                    onDeleteContact = { it -> viewModel.deleteContact(it.number) }
+                                )
+                            }
+                            2 -> {
+                                val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
+                                val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
+                                val voicemailNumber by viewModel.voicemailNumber
+                                val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+                                val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
+                                val dialpadMatches by viewModel.dialpadMatches.collectAsState()
+
+                                DialpadTabContent(
+                                    inputValue = dialpadInput,
+                                    onValueChange = {
+                                        if (it.length > dialpadInput.length) {
+                                            if (dialpadTonesEnabled) playDtmf(it.last().toString())
+                                            if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
+                                        dialpadInput = it
+                                        viewModel.onSearchQueryChange(it)
+                                    } ,
+                                    onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
+                                    onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
+                                    voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
+                                    dialpadMatches = dialpadMatches,
+                                    onCollapseClick = {}
+                                )
+                            }
                         }
                     }
                 }
@@ -353,6 +328,9 @@ fun MainScreen(
                     selectedTab = selectedTab,
                     onTabSelected = { targetTab ->
                         selectedTab = targetTab
+                        coroutineScope.launch {
+                            pagerState.scrollToPage(targetTab)
+                        }
                     }
                 )
             }
@@ -362,6 +340,10 @@ fun MainScreen(
                 enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
                 exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
             ) {
+                val allContacts by viewModel.allContactsFlow.collectAsState()
+                val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
+                val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
+
                 ActiveCallScreen(
                     contactName = callingContactName, contactNumber = callingContactNumber,
                     preferredSim = preferredSim, quickResponses = quickResponses,
