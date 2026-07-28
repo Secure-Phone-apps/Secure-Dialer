@@ -616,20 +616,24 @@ fun CallLogSummaryDashboard(
     var isExpanded by remember { mutableStateOf(true) }
     
     val todayPrefix = remember { SimpleDateFormat("MMM d", Locale.getDefault()).format(Date()) }
-    val todayCallsCount = remember(callRecords) {
-        callRecords.count { it.timestamp.startsWith(todayPrefix) }
+    
+    val todayRecords = remember(callRecords, todayPrefix) {
+        callRecords.filter { it.timestamp.startsWith(todayPrefix) }
     }
-    val missedCallsCount = remember(callRecords) {
-        callRecords.count { it.type == CallType.MISSED }
+    
+    val todayCallsCount = todayRecords.size
+    
+    val missedCallsCount = remember(todayRecords) {
+        todayRecords.count { it.type == CallType.MISSED }
     }
-    val outgoingCallsCount = remember(callRecords) {
-        callRecords.count { it.type == CallType.OUTGOING }
+    val outgoingCallsCount = remember(todayRecords) {
+        todayRecords.count { it.type == CallType.OUTGOING }
     }
-    val receivedCallsCount = remember(callRecords) {
-        callRecords.count { it.type == CallType.INCOMING }
+    val receivedCallsCount = remember(todayRecords) {
+        todayRecords.count { it.type == CallType.INCOMING }
     }
-    val totalDurationSeconds = remember(callRecords) {
-        callRecords.sumOf { it.duration }
+    val totalDurationSeconds = remember(todayRecords) {
+        todayRecords.sumOf { it.duration }
     }
 
     val formattedTotalDuration = remember(totalDurationSeconds) {
@@ -672,7 +676,7 @@ fun CallLogSummaryDashboard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Call Log Summary",
+                        text = "Today's Call Summary",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
