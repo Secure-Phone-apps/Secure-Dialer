@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -39,6 +40,14 @@ fun GeneralSettings(
     val onThemeChange = { newVal: Boolean ->
         viewModel.updateDarkTheme(newVal)
     }
+    val useDynamicColor by viewModel.useDynamicColor
+    val onDynamicColorChange = { newVal: Boolean ->
+        viewModel.updateUseDynamicColor(newVal)
+    }
+    val isM3Expressive by viewModel.isM3Expressive
+    val onExpressiveChange = { newVal: Boolean ->
+        viewModel.updateM3Expressive(newVal)
+    }
     val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
     val onTonesChange = { newVal: Boolean -> viewModel.dialpadTonesEnabled.value = newVal }
     val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
@@ -74,10 +83,41 @@ fun GeneralSettings(
                         iconTint = MaterialTheme.colorScheme.primary
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    ThemeColorPicker(
-                        currentSelected = viewModel.themeColor.value,
-                        onColorSelected = { viewModel.updateThemeColor(it) }
+                    
+                    val isDynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+                    SettingsRowToggle(
+                        title = stringResource(R.string.settings_dynamic_color),
+                        subtitle = if (isDynamicSupported) {
+                            stringResource(R.string.settings_dynamic_color_sub)
+                        } else {
+                            "System wallpaper color scheme (Requires Android 12+)"
+                        },
+                        checked = useDynamicColor && isDynamicSupported,
+                        onCheckedChange = { if (isDynamicSupported) onDynamicColorChange(it) },
+                        icon = Icons.Default.Palette,
+                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        iconTint = MaterialTheme.colorScheme.secondary,
+                        enabled = isDynamicSupported
                     )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    SettingsRowToggle(
+                        title = stringResource(R.string.settings_m3_expressive),
+                        subtitle = stringResource(R.string.settings_m3_expressive_sub),
+                        checked = isM3Expressive,
+                        onCheckedChange = onExpressiveChange,
+                        icon = Icons.Default.AutoAwesome,
+                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                        iconTint = MaterialTheme.colorScheme.tertiary
+                    )
+
+                    if (!useDynamicColor || !isDynamicSupported) {
+                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        ThemeColorPicker(
+                            currentSelected = viewModel.themeColor.value,
+                            onColorSelected = { viewModel.updateThemeColor(it) }
+                        )
+                    }
                 }
             }
         }

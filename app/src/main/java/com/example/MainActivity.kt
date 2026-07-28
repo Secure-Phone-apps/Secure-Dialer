@@ -87,10 +87,11 @@ class MainActivity : ComponentActivity() {
 
             val currentThemeColor by viewModel.themeColor
             val isM3Expressive by viewModel.isM3Expressive
+            val useDynamicColor by viewModel.useDynamicColor
 
             MyApplicationTheme(
                 darkTheme = isDarkTheme,
-                dynamicColor = false,
+                dynamicColor = useDynamicColor,
                 themeColor = currentThemeColor,
                 isM3Expressive = isM3Expressive
             ) {

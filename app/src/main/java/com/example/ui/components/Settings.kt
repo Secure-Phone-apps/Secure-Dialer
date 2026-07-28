@@ -185,21 +185,29 @@ fun SettingsRowToggle(
     onCheckedChange: (Boolean) -> Unit,
     icon: ImageVector? = null,
     iconBgColor: Color = Color.Transparent,
-    iconTint: Color = Color.Unspecified
+    iconTint: Color = Color.Unspecified,
+    enabled: Boolean = true
 ) {
+    val haptic = LocalHapticFeedback.current
+    val isExpressive = LocalM3Expressive.current
     ListItem(
+        modifier = Modifier.clickable(enabled = enabled) {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onCheckedChange(!checked)
+        },
         headlineContent = { 
             Text(
                 title,
                 fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
             ) 
         },
         supportingContent = { 
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
             ) 
         },
         leadingContent = if (icon != null) {
@@ -208,22 +216,21 @@ fun SettingsRowToggle(
                     modifier = Modifier
                         .size(38.dp)
                         .clip(MaterialTheme.shapes.small)
-                        .background(iconBgColor),
+                        .background(if (enabled) iconBgColor else iconBgColor.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(icon, null, tint = iconTint, modifier = Modifier.size(20.dp))
+                    Icon(icon, null, tint = if (enabled) iconTint else iconTint.copy(alpha = 0.38f), modifier = Modifier.size(20.dp))
                 }
             }
         } else null,
         trailingContent = {
-            val haptic = LocalHapticFeedback.current
-            val isExpressive = LocalM3Expressive.current
             Switch(
                 checked = checked,
                 onCheckedChange = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCheckedChange(it)
                 },
+                enabled = enabled,
                 colors = if (isExpressive) {
                     SwitchDefaults.colors(
                         checkedThumbColor = MaterialTheme.colorScheme.onPrimary,

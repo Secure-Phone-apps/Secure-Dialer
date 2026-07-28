@@ -105,6 +105,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
     var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
     var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
+    var useDynamicColor = mutableStateOf(prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S))
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
     var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
@@ -176,6 +177,11 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updateM3Expressive(expressive: Boolean) {
         isM3Expressive.value = expressive
         prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
+    }
+
+    fun updateUseDynamicColor(dynamic: Boolean) {
+        useDynamicColor.value = dynamic
+        prefs.edit().putBoolean("use_dynamic_color", dynamic).apply()
     }
 
     fun updateThemeColor(color: String) {
