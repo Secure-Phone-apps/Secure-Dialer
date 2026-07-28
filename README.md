@@ -23,7 +23,7 @@ Whether you are looking to replace **Fossify Dialer**, **Simple Dialer**, **Ever
 | :---: | :---: | :---: |
 | ![Dialpad](assets/screenshots/dialpad.jpg) | ![Contacts](assets/screenshots/contacts.jpg) | ![Recents](assets/screenshots/recents.jpg) |
 
-*Note: Screenshots are representative of the Material 3 "Cosmic Slate" theme.*
+*Note: Screenshots are representative of current app themes.
 
 ---
 
@@ -83,6 +83,7 @@ Secure Dialer provides a comprehensive suite of tools designed to replace your s
   * **Decline:** Safely declines the incoming caller without dropping your current conversation.
   * **One-Tap Swap:** Easily swap back and forth between active and held calls.
 * **In-Call Controls:** Features custom, high-contrast, interactive toggles for Microphone Mute, Speakerphone, and Bluetooth Audio Routing.
+* **CNAP (Calling Name Presentation):** Displays the caller's network-provided name directly on the screen for incoming calls, even if the number is not saved in your contacts, giving you immediate context on who is calling.
 
 ### 3. Comprehensive Contacts Directory & Favorites
 * **Interactive Search Filter:** Search your entire contact book in real-time by typing names, phone numbers, or notes.
@@ -92,11 +93,22 @@ Secure Dialer provides a comprehensive suite of tools designed to replace your s
 
 ### 4. Smart Call History & Recents
 * **Grouped Call Entries:** Group successive calls from the same number into a single line-item with a call counter, keeping your history extremely tidy.
+* **Dynamic Call Log Filters:** Quickly filter call history by **All**, **Missed**, **Dialed**, and **Received** calls, allowing you to instantly isolate and review specific kinds of calls.
 * **Visual Status Indicators:** Color-coded icons for incoming, outgoing, missed, and blocked calls.
 * **Quick Recall:** Single-tap callback actions straight from the Recents list.
 * **Individual Log Deletion:** Slide or select individual log entries to delete them, or clear the entire history at once.
 
 ### 5. Advanced Settings & Customizations
+* **Material 3 Expressive Design:** Implements Google's latest Material 3 Expressive standards with visually distinctive layouts, expressive typography (Plus Jakarta Sans paired with Playfair Display), responsive fluid scaling, generous dynamic padding, and modern, eye-friendly dark/light dynamic color palettes.
+* **Global Translation Support:** Full native localization support for multiple languages across the globe, including:
+  * 🇺🇸 **English** (Default)
+  * 🇸🇦 **Arabic** (العربية)
+  * 🇩🇪 **German** (Deutsch)
+  * 🇪🇸 **Spanish** (Español)
+  * 🇫🇷 **French** (Français)
+  * 🇮🇳 **Hindi** (हिन्दी)
+  * 🇯🇵 **Japanese** (日本語)
+  * 🇵🇹 **Portuguese** (Português)
 * **Dual-SIM Card Selection:** Set a preferred SIM card for outbound calls (SIM 1, SIM 2, or "Ask Every Time").
 * **Local Blocklist Manager:** Add spam phone numbers and robocall patterns to a local database. Powered by Android's native `CallScreeningService`, incoming calls from blocked numbers are rejected silently without disturbing you.
 * **Quick SMS Decline Templates:** Custom text messages (e.g., "In a meeting, will call you later") to instantly reject incoming calls with an SMS.
