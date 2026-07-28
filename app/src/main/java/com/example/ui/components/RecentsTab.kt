@@ -50,6 +50,12 @@ import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.model.CallType
 import com.example.ui.theme.LocalM3Expressive
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Schedule
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 enum class RecentsFilter {
     ALL, MISSED, DIALED, RECEIVED
@@ -172,6 +178,11 @@ fun RecentsTabContent(
                     )
                 }
             } else {
+                CallLogSummaryDashboard(
+                    callRecords = callRecords,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+
                 val query by viewModel.searchQuery
                 val consolidatedRecords = remember(callRecords, currentFilter, query) {
                     val baseFiltered = callRecords
@@ -596,3 +607,224 @@ data class CallGroup(
     val primary: CallRecord,
     val calls: List<CallRecord>
 )
+
+@Composable
+fun CallLogSummaryDashboard(
+    callRecords: List<CallRecord>,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(true) }
+    
+    val todayPrefix = remember { SimpleDateFormat("MMM d", Locale.getDefault()).format(Date()) }
+    val todayCallsCount = remember(callRecords) {
+        callRecords.count { it.timestamp.startsWith(todayPrefix) }
+    }
+    val missedCallsCount = remember(callRecords) {
+        callRecords.count { it.type == CallType.MISSED }
+    }
+    val outgoingCallsCount = remember(callRecords) {
+        callRecords.count { it.type == CallType.OUTGOING }
+    }
+    val receivedCallsCount = remember(callRecords) {
+        callRecords.count { it.type == CallType.INCOMING }
+    }
+    val totalDurationSeconds = remember(callRecords) {
+        callRecords.sumOf { it.duration }
+    }
+
+    val formattedTotalDuration = remember(totalDurationSeconds) {
+        val hrs = totalDurationSeconds / 3600
+        val mins = (totalDurationSeconds % 3600) / 60
+        val secs = totalDurationSeconds % 60
+        when {
+            hrs > 0 -> "${hrs}h ${mins}m"
+            mins > 0 -> "${mins}m"
+            else -> "${secs}s"
+        }
+    }
+    
+    val isExpressive = LocalM3Expressive.current
+    val cardColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    }
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Call Log Summary",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!isExpanded) {
+                        Text(
+                            text = "Today: $todayCallsCount • Missed: $missedCallsCount • Time: $formattedTotalDuration",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SummaryBox(
+                            value = todayCallsCount.toString(),
+                            label = "Today",
+                            icon = Icons.Default.Call,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SummaryBox(
+                            value = missedCallsCount.toString(),
+                            label = "Missed",
+                            icon = Icons.Default.CallMissed,
+                            iconColor = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SummaryBox(
+                            value = outgoingCallsCount.toString(),
+                            label = "Outgoing",
+                            icon = Icons.AutoMirrored.Filled.CallMade,
+                            iconColor = Color(0xFF2E7D32),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SummaryBox(
+                            value = receivedCallsCount.toString(),
+                            label = "Received",
+                            icon = Icons.AutoMirrored.Filled.CallReceived,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Total Talk Time",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Text(
+                            text = formattedTotalDuration,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SummaryBox(
+    value: String,
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconColor: Color,
+    modifier: Modifier = Modifier
+) {
+    val isExpressive = LocalM3Expressive.current
+    val boxBgColor = if (isExpressive) {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+    } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+    }
+    
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(boxBgColor)
+            .padding(vertical = 8.dp, horizontal = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(16.dp)
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            fontSize = 9.sp,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
