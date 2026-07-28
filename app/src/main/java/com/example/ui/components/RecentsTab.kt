@@ -774,7 +774,7 @@ fun CallLogSummaryDashboard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (!isExpanded) {
                         Text(
-                            text = "${selectedRange.label}: $totalCallsCount • Missed: $missedCallsCount • Time: $formattedTotalDuration",
+                            text = "Missed: $missedCallsCount • Time: $formattedTotalDuration",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(end = 8.dp)
