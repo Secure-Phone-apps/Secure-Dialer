@@ -13,7 +13,7 @@ Welcome to **Secure Dialer**, your trustworthy, lightning-fast, and open-source 
 
 If you are looking for a reliable, modern, and offline-first dialer that can fully replace your phone's pre-installed application, you have found it. Secure Dialer is engineered to provide a secure alternative to commercial caller-ID dialers, stock system apps, and closed-source tools. 
 
-Whether you are looking to replace **Fossify Dialer**, **Simple Dialer**, **Ever Dialer**, **Truecaller**, or standard **Google Dialer**, our application provides a secure, lightweight, and offline experience that respects your communication boundaries.
+Whether you are looking to replace **Fossify Dialer**, **Simple Dialer**, **Ever Dialer**, **Rivo Dialer**, **Nova Dialer**, **Truecaller**, or standard **Google Dialer**, **Samsung Dialer**, **Graphene OS Dialer**, our application provides a secure, lightweight, and offline experience that respects your communication boundaries.
 
 ---
 
