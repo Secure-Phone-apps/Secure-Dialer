@@ -608,32 +608,120 @@ data class CallGroup(
     val calls: List<CallRecord>
 )
 
+enum class SummaryTimeRange(val label: String) {
+    TODAY("Today"),
+    WEEK("Week"),
+    MONTH("Month"),
+    YEAR("Year"),
+    ALL("All")
+}
+
 @Composable
 fun CallLogSummaryDashboard(
     callRecords: List<CallRecord>,
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(true) }
+    var selectedRange by remember { mutableStateOf(SummaryTimeRange.TODAY) }
     
-    val todayPrefix = remember { SimpleDateFormat("MMM d", Locale.getDefault()).format(Date()) }
-    
-    val todayRecords = remember(callRecords, todayPrefix) {
-        callRecords.filter { it.timestamp.startsWith(todayPrefix) }
+    val now = System.currentTimeMillis()
+    val startOfWeek = remember(now) { now - 7L * 24 * 60 * 60 * 1000 }
+    val startOfMonth = remember(now) { now - 30L * 24 * 60 * 60 * 1000 }
+    val startOfYear = remember(now) { now - 365L * 24 * 60 * 60 * 1000 }
+
+    val filteredRecords = remember(callRecords, selectedRange, startOfWeek, startOfMonth, startOfYear) {
+        val todayPrefix = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date())
+        
+        when (selectedRange) {
+            SummaryTimeRange.TODAY -> {
+                callRecords.filter { it.timestamp.startsWith(todayPrefix) }
+            }
+            SummaryTimeRange.WEEK -> {
+                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val calCurrent = java.util.Calendar.getInstance()
+                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                val currentMillis = calCurrent.timeInMillis
+                callRecords.filter { record ->
+                    try {
+                        val parsed = sdf.parse(record.timestamp)
+                        if (parsed != null) {
+                            val calParsed = java.util.Calendar.getInstance().apply { 
+                                time = parsed
+                                set(java.util.Calendar.YEAR, currentYear)
+                            }
+                            if (calParsed.timeInMillis > currentMillis) {
+                                calParsed.add(java.util.Calendar.YEAR, -1)
+                            }
+                            calParsed.timeInMillis >= startOfWeek
+                        } else false
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+            SummaryTimeRange.MONTH -> {
+                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val calCurrent = java.util.Calendar.getInstance()
+                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                val currentMillis = calCurrent.timeInMillis
+                callRecords.filter { record ->
+                    try {
+                        val parsed = sdf.parse(record.timestamp)
+                        if (parsed != null) {
+                            val calParsed = java.util.Calendar.getInstance().apply { 
+                                time = parsed
+                                set(java.util.Calendar.YEAR, currentYear)
+                            }
+                            if (calParsed.timeInMillis > currentMillis) {
+                                calParsed.add(java.util.Calendar.YEAR, -1)
+                            }
+                            calParsed.timeInMillis >= startOfMonth
+                        } else false
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+            SummaryTimeRange.YEAR -> {
+                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val calCurrent = java.util.Calendar.getInstance()
+                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                val currentMillis = calCurrent.timeInMillis
+                callRecords.filter { record ->
+                    try {
+                        val parsed = sdf.parse(record.timestamp)
+                        if (parsed != null) {
+                            val calParsed = java.util.Calendar.getInstance().apply { 
+                                time = parsed
+                                set(java.util.Calendar.YEAR, currentYear)
+                            }
+                            if (calParsed.timeInMillis > currentMillis) {
+                                calParsed.add(java.util.Calendar.YEAR, -1)
+                            }
+                            calParsed.timeInMillis >= startOfYear
+                        } else false
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+            SummaryTimeRange.ALL -> callRecords
+        }
     }
     
-    val todayCallsCount = todayRecords.size
+    val totalCallsCount = filteredRecords.size
     
-    val missedCallsCount = remember(todayRecords) {
-        todayRecords.count { it.type == CallType.MISSED }
+    val missedCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.MISSED }
     }
-    val outgoingCallsCount = remember(todayRecords) {
-        todayRecords.count { it.type == CallType.OUTGOING }
+    val outgoingCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.OUTGOING }
     }
-    val receivedCallsCount = remember(todayRecords) {
-        todayRecords.count { it.type == CallType.INCOMING }
+    val receivedCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.INCOMING }
     }
-    val totalDurationSeconds = remember(todayRecords) {
-        todayRecords.sumOf { it.duration }
+    val totalDurationSeconds = remember(filteredRecords) {
+        filteredRecords.sumOf { it.duration }
     }
 
     val formattedTotalDuration = remember(totalDurationSeconds) {
@@ -676,7 +764,7 @@ fun CallLogSummaryDashboard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Today's Call Summary",
+                        text = if (selectedRange == SummaryTimeRange.TODAY) "Today's Call Summary" else "${selectedRange.label} Call Summary",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -686,7 +774,7 @@ fun CallLogSummaryDashboard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (!isExpanded) {
                         Text(
-                            text = "Today: $todayCallsCount • Missed: $missedCallsCount • Time: $formattedTotalDuration",
+                            text = "${selectedRange.label}: $totalCallsCount • Missed: $missedCallsCount • Time: $formattedTotalDuration",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(end = 8.dp)
@@ -709,13 +797,55 @@ fun CallLogSummaryDashboard(
                 Column {
                     Spacer(modifier = Modifier.height(10.dp))
                     
+                    // Interactive Segmented-like filter row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .padding(2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SummaryTimeRange.values().forEach { range ->
+                            val isSelected = selectedRange == range
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary
+                                        else Color.Transparent
+                                    )
+                                    .clickable { selectedRange = range }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = range.label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         SummaryBox(
-                            value = todayCallsCount.toString(),
-                            label = "Today",
+                            value = totalCallsCount.toString(),
+                            label = when (selectedRange) {
+                                SummaryTimeRange.TODAY -> "Today"
+                                SummaryTimeRange.WEEK -> "This Week"
+                                SummaryTimeRange.MONTH -> "This Month"
+                                SummaryTimeRange.YEAR -> "This Year"
+                                SummaryTimeRange.ALL -> "Total"
+                            },
                             icon = Icons.Default.Call,
                             iconColor = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.weight(1f)
