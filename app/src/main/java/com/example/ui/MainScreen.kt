@@ -388,9 +388,9 @@ fun MainScreen(
 
         if (isAddContactDialogVisible) {
             AddContactDialog(
-                initialName = "",
-                initialNumber = "",
-                initialLabel = "Mobile",
+                initialName = newContactName,
+                initialNumber = newContactNumber,
+                initialLabel = newContactLabel,
                 initialEmail = "",
                 onDismiss = { isAddContactDialogVisible = false },
                 onConfirm = { name, number, label, email ->

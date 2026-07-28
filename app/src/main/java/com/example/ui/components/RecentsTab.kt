@@ -46,6 +46,16 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.model.CallRecord
+import com.example.model.Contact
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.model.CallType
@@ -73,13 +83,26 @@ fun RecentsTabContent(
     onRequestPermission: () -> Unit = {}
 ) {
     var currentFilter by remember { mutableStateOf(RecentsFilter.ALL) }
+    var selectedHistoryNumber by remember { mutableStateOf<String?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
-        ) {
+    if (selectedHistoryNumber != null) {
+        val filteredLogs = remember(callRecords, selectedHistoryNumber) {
+            callRecords.filter { it.number == selectedHistoryNumber }
+        }
+        CallHistoryDetailsScreen(
+            number = selectedHistoryNumber!!,
+            logs = filteredLogs,
+            viewModel = viewModel,
+            onCallClick = onCallClick,
+            onBack = { selectedHistoryNumber = null }
+        )
+    } else {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp)
+            ) {
             if (!hasPermission && !isLoading) {
                 Card(
                     modifier = Modifier
@@ -239,7 +262,8 @@ fun RecentsTabContent(
                                 onCallClick = { onCallClick(group.primary) },
                                 onDeleteRecord = { id -> onDeleteRecord(id) },
                                 getHistory = { viewModel.getCallHistoryByNumber(it) },
-                                viewModel = viewModel
+                                viewModel = viewModel,
+                                onHistoryClick = { selectedHistoryNumber = it }
                             )
                         }
                     }
@@ -248,6 +272,7 @@ fun RecentsTabContent(
         }
     }
 }
+}
 
 @Composable
 fun RecentCallRow(
@@ -255,21 +280,12 @@ fun RecentCallRow(
     onCallClick: () -> Unit,
     onDeleteRecord: (Int) -> Unit,
     getHistory: suspend (String) -> List<CallRecord>,
-    viewModel: com.example.ui.viewmodel.DialerViewModel
+    viewModel: com.example.ui.viewmodel.DialerViewModel,
+    onHistoryClick: (String) -> Unit
 ) {
     val record = group.primary
     val haptic = LocalHapticFeedback.current
     var isExpanded by remember { mutableStateOf(false) }
-    var history by remember { mutableStateOf<List<CallRecord>>(emptyList()) }
-    var isLoadingHistory by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isExpanded) {
-        if (isExpanded && history.isEmpty()) {
-            isLoadingHistory = true
-            history = getHistory(record.number)
-            isLoadingHistory = false
-        }
-    }
 
     val isExpressive = LocalM3Expressive.current
     val searchBarColor = if (isExpressive) {
@@ -393,6 +409,12 @@ fun RecentCallRow(
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             )
 
+            val context = LocalContext.current
+            val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+            val isBlocked = remember(blockedNumbersEntities, record.number) {
+                blockedNumbersEntities.any { it.number == record.number }
+            }
+
             AnimatedVisibility(
                 visible = isExpanded,
                 enter = expandVertically() + fadeIn(),
@@ -409,64 +431,85 @@ fun RecentCallRow(
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
                     
-                    if (isLoadingHistory) {
-                        LinearProgressIndicator(
-                            modifier = Modifier.fillMaxWidth().height(2.dp).padding(horizontal = 16.dp)
-                        )
-                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val isContact = record.name != record.number
 
-                    Column {
-                        history.take(5).forEach { historyRecord ->
-                            HistorySubItem(
-                                record = historyRecord,
-                                onDeleteClick = {
-                                    onDeleteRecord(historyRecord.id)
-                                    history = history.filter { it.id != historyRecord.id }
-                                }
-                            )
-                        }
-                        
-                        if (history.size > 5) {
-                            Text(
-                                text = stringResource(R.string.showing_last_5_calls),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                modifier = Modifier.padding(start = 72.dp, top = 8.dp)
-                            )
-                        }
-                    }
-
-                    if (history.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        
-                        Button(
+                        // 1. Send SMS
+                        ActionItem(
+                            icon = Icons.Default.Message,
+                            label = "Send SMS",
+                            tint = MaterialTheme.colorScheme.primary,
                             onClick = {
-                                history.forEach { r -> onDeleteRecord(r.id) }
-                                history = emptyList()
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            ),
-                            shape = MaterialTheme.shapes.small,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .height(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = MaterialTheme.colorScheme.error
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.delete_all_call_history),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("smsto:${record.number}")
+                                }
+                                try {
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    Toast.makeText(context, "No SMS app found", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+
+                        // 2. Block/Spam
+                        ActionItem(
+                            icon = Icons.Default.Block,
+                            label = if (isBlocked) "Unblock" else "Block",
+                            tint = if (isBlocked) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            onClick = {
+                                if (isBlocked) {
+                                    viewModel.removeBlockedNumber(record.number)
+                                } else {
+                                    viewModel.addBlockedNumber(record.number)
+                                }
+                            }
+                        )
+
+                        // 3. History
+                        ActionItem(
+                            icon = Icons.Default.History,
+                            label = "History",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            onClick = {
+                                onHistoryClick(record.number)
+                            }
+                        )
+
+                        // 4. Add/Edit Contact
+                        ActionItem(
+                            icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
+                            label = if (isContact) "Edit" else "Add",
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            onClick = {
+                                if (isContact) {
+                                    viewModel.oldContactToEdit.value = Contact(
+                                        number = record.number,
+                                        name = record.name,
+                                        label = record.label,
+                                        favorite = false,
+                                        avatarText = record.avatarText,
+                                        avatarBgValue = record.avatarBgValue,
+                                        avatarTextColorValue = record.avatarTextColorValue,
+                                        email = ""
+                                    )
+                                    viewModel.editContactName.value = record.name
+                                    viewModel.editContactNumber.value = record.number
+                                    viewModel.editContactLabel.value = record.label
+                                    viewModel.isEditContactDialogVisible.value = true
+                                } else {
+                                    viewModel.newContactName.value = ""
+                                    viewModel.newContactNumber.value = record.number
+                                    viewModel.newContactLabel.value = "Mobile"
+                                    viewModel.isAddContactDialogVisible.value = true
+                                }
+                            }
+                        )
                     }
                 }
             }
@@ -962,5 +1005,796 @@ fun SummaryBox(
             textAlign = TextAlign.Center,
             maxLines = 1
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CallHistoryDetailsScreen(
+    number: String,
+    logs: List<CallRecord>,
+    viewModel: com.example.ui.viewmodel.DialerViewModel,
+    onCallClick: (CallRecord) -> Unit,
+    onBack: () -> Unit
+) {
+    val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    
+    // Primary record for detail headers
+    val primaryRecord = logs.firstOrNull() ?: return
+    
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+    val isBlocked = remember(blockedNumbersEntities, number) {
+        blockedNumbersEntities.any { it.number == number }
+    }
+    
+    val isContact = primaryRecord.name != primaryRecord.number
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Call Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    var showMenu by remember { mutableStateOf(false) }
+                    IconButton(onClick = { showMenu = true }) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "More options"
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("Delete all history") },
+                            onClick = {
+                                showMenu = false
+                                logs.forEach { log -> viewModel.deleteCallLog(log.id) }
+                                onBack()
+                            },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.Delete, 
+                                    contentDescription = null, 
+                                    tint = MaterialTheme.colorScheme.error
+                                ) 
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(if (isBlocked) "Unblock number" else "Block number") },
+                            onClick = {
+                                showMenu = false
+                                if (isBlocked) {
+                                    viewModel.removeBlockedNumber(number)
+                                } else {
+                                    viewModel.addBlockedNumber(number)
+                                }
+                            },
+                            leadingIcon = { 
+                                Icon(
+                                    imageVector = Icons.Default.Block, 
+                                    contentDescription = null
+                                ) 
+                            }
+                        )
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // 1. Profile Hero Section (Unboxed, modern, very clean)
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                    Surface(
+                        modifier = Modifier.size(80.dp),
+                        shape = avatarShape,
+                        color = primaryRecord.avatarBg.copy(alpha = 0.85f),
+                        tonalElevation = 2.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (primaryRecord.photoUri.isNotEmpty()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(primaryRecord.photoUri)
+                                        .size(256, 256)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "Contact Photo",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = primaryRecord.avatarText,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    color = primaryRecord.avatarTextColor,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Text(
+                        text = primaryRecord.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Text(
+                        text = primaryRecord.number,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                    
+                    if (primaryRecord.label.isNotEmpty()) {
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                            shape = RoundedCornerShape(100.dp),
+                            modifier = Modifier.padding(top = 6.dp)
+                        ) {
+                            Text(
+                                text = primaryRecord.label.uppercase(),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // 2. Premium Action Buttons Row
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    DetailActionItem(
+                        icon = Icons.Default.Call,
+                        label = "Call",
+                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onCallClick(primaryRecord)
+                        }
+                    )
+
+                    DetailActionItem(
+                        icon = Icons.Default.Message,
+                        label = "Message",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                data = Uri.parse("smsto:$number")
+                            }
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Toast.makeText(context, "No SMS app found", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    )
+
+                    DetailActionItem(
+                        icon = Icons.Default.Block,
+                        label = if (isBlocked) "Unblock" else "Block",
+                        containerColor = if (isBlocked) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                        contentColor = if (isBlocked) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                        onClick = {
+                            if (isBlocked) {
+                                viewModel.removeBlockedNumber(number)
+                            } else {
+                                viewModel.addBlockedNumber(number)
+                            }
+                        }
+                    )
+
+                    DetailActionItem(
+                        icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
+                        label = if (isContact) "Edit" else "Add",
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        onClick = {
+                            if (isContact) {
+                                viewModel.oldContactToEdit.value = Contact(
+                                    number = primaryRecord.number,
+                                    name = primaryRecord.name,
+                                    label = primaryRecord.label,
+                                    favorite = false,
+                                    avatarText = primaryRecord.avatarText,
+                                    avatarBgValue = primaryRecord.avatarBgValue,
+                                    avatarTextColorValue = primaryRecord.avatarTextColorValue,
+                                    email = ""
+                                )
+                                viewModel.editContactName.value = primaryRecord.name
+                                viewModel.editContactNumber.value = primaryRecord.number
+                                viewModel.editContactLabel.value = primaryRecord.label
+                                viewModel.isEditContactDialogVisible.value = true
+                            } else {
+                                viewModel.newContactName.value = ""
+                                viewModel.newContactNumber.value = primaryRecord.number
+                                viewModel.newContactLabel.value = "Mobile"
+                                viewModel.isAddContactDialogVisible.value = true
+                            }
+                        }
+                    )
+                }
+            }
+            
+            // 3. Collapsible Analytics Summary Dashboard (Same to same as main recents)
+            item {
+                ContactCallSummaryDashboard(callRecords = logs)
+            }
+            
+            // 4. Timeline Logs Section Header
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "History Timeline",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Text(
+                        text = "${logs.size} calls",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            // 5. Timeline List Items
+            items(
+                items = logs,
+                key = { it.id }
+            ) { logRecord ->
+                DetailHistoryItem(
+                    record = logRecord,
+                    onDeleteClick = {
+                        viewModel.deleteCallLog(logRecord.id)
+                    }
+                )
+            }
+            
+            // 6. Non-sticky bottom clear button
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        logs.forEach { log -> viewModel.deleteCallLog(log.id) }
+                        onBack()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f),
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    ),
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                        .height(44.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Clear History with this Number",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.error,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ContactCallSummaryDashboard(
+    callRecords: List<CallRecord>,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(true) }
+    var selectedRange by remember { mutableStateOf(SummaryTimeRange.TODAY) }
+    
+    val now = System.currentTimeMillis()
+    val startOfWeek = remember(now) { now - 7L * 24 * 60 * 60 * 1000 }
+    val startOfMonth = remember(now) { now - 30L * 24 * 60 * 60 * 1000 }
+    val startOfYear = remember(now) { now - 365L * 24 * 60 * 60 * 1000 }
+
+    val filteredRecords = remember(callRecords, selectedRange, startOfWeek, startOfMonth, startOfYear) {
+        val todayPrefix = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date())
+        
+        when (selectedRange) {
+            SummaryTimeRange.TODAY -> {
+                callRecords.filter { it.timestamp.startsWith(todayPrefix) }
+            }
+            SummaryTimeRange.WEEK -> {
+                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val calCurrent = java.util.Calendar.getInstance()
+                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                val currentMillis = calCurrent.timeInMillis
+                callRecords.filter { record ->
+                    try {
+                        val parsed = sdf.parse(record.timestamp)
+                        if (parsed != null) {
+                            val calParsed = java.util.Calendar.getInstance().apply { 
+                                time = parsed
+                                set(java.util.Calendar.YEAR, currentYear)
+                            }
+                            if (calParsed.timeInMillis > currentMillis) {
+                                calParsed.add(java.util.Calendar.YEAR, -1)
+                            }
+                            calParsed.timeInMillis >= startOfWeek
+                        } else false
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+            SummaryTimeRange.MONTH -> {
+                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val calCurrent = java.util.Calendar.getInstance()
+                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                val currentMillis = calCurrent.timeInMillis
+                callRecords.filter { record ->
+                    try {
+                        val parsed = sdf.parse(record.timestamp)
+                        if (parsed != null) {
+                            val calParsed = java.util.Calendar.getInstance().apply { 
+                                time = parsed
+                                set(java.util.Calendar.YEAR, currentYear)
+                            }
+                            if (calParsed.timeInMillis > currentMillis) {
+                                calParsed.add(java.util.Calendar.YEAR, -1)
+                            }
+                            calParsed.timeInMillis >= startOfMonth
+                        } else false
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+            SummaryTimeRange.YEAR -> {
+                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val calCurrent = java.util.Calendar.getInstance()
+                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                val currentMillis = calCurrent.timeInMillis
+                callRecords.filter { record ->
+                    try {
+                        val parsed = sdf.parse(record.timestamp)
+                        if (parsed != null) {
+                            val calParsed = java.util.Calendar.getInstance().apply { 
+                                time = parsed
+                                set(java.util.Calendar.YEAR, currentYear)
+                            }
+                            if (calParsed.timeInMillis > currentMillis) {
+                                calParsed.add(java.util.Calendar.YEAR, -1)
+                            }
+                            calParsed.timeInMillis >= startOfYear
+                        } else false
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            }
+            SummaryTimeRange.ALL -> callRecords
+        }
+    }
+    
+    val totalCallsCount = filteredRecords.size
+    val missedCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.MISSED }
+    }
+    val outgoingCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.OUTGOING }
+    }
+    val receivedCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.INCOMING }
+    }
+    val totalDurationSeconds = remember(filteredRecords) {
+        filteredRecords.sumOf { it.duration }
+    }
+
+    val formattedTotalDuration = remember(totalDurationSeconds) {
+        val hrs = totalDurationSeconds / 3600
+        val mins = (totalDurationSeconds % 3600) / 60
+        val secs = totalDurationSeconds % 60
+        when {
+            hrs > 0 -> "${hrs}h ${mins}m"
+            mins > 0 -> "${mins}m"
+            else -> "${secs}s"
+        }
+    }
+    
+    val cardColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        shape = MaterialTheme.shapes.medium,
+        border = androidx.compose.foundation.BorderStroke(
+            width = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.History,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (selectedRange == SummaryTimeRange.TODAY) "Today's Call Stats" else "${selectedRange.label} Call Stats",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!isExpanded) {
+                        Text(
+                            text = "Calls: $totalCallsCount • Missed: $missedCallsCount",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    }
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    
+                    // Interactive Segmented-like filter row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                            .padding(2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        SummaryTimeRange.values().forEach { range ->
+                            val isSelected = selectedRange == range
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary
+                                        else Color.Transparent
+                                    )
+                                    .clickable { selectedRange = range }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = range.label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        SummaryBox(
+                            value = totalCallsCount.toString(),
+                            label = when (selectedRange) {
+                                SummaryTimeRange.TODAY -> "Today"
+                                SummaryTimeRange.WEEK -> "This Week"
+                                SummaryTimeRange.MONTH -> "This Month"
+                                SummaryTimeRange.YEAR -> "This Year"
+                                SummaryTimeRange.ALL -> "Total"
+                            },
+                            icon = Icons.Default.Call,
+                            iconColor = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SummaryBox(
+                            value = missedCallsCount.toString(),
+                            label = "Missed",
+                            icon = Icons.Default.CallMissed,
+                            iconColor = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SummaryBox(
+                            value = outgoingCallsCount.toString(),
+                            label = "Outgoing",
+                            icon = Icons.AutoMirrored.Filled.CallMade,
+                            iconColor = Color(0xFF2E7D32),
+                            modifier = Modifier.weight(1f)
+                        )
+
+                        SummaryBox(
+                            value = receivedCallsCount.toString(),
+                            label = "Received",
+                            icon = Icons.AutoMirrored.Filled.CallReceived,
+                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(MaterialTheme.shapes.small)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Total Talk Time",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Text(
+                            text = formattedTotalDuration,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailActionItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    containerColor: Color,
+    contentColor: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(68.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick)
+            .padding(vertical = 6.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(containerColor, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = contentColor,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+    }
+}
+
+@Composable
+fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
+    val (icon, color) = when (record.type) {
+        CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
+        CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF2E7D32)
+        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.primary
+    }
+    
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
+        ),
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            width = 0.5.dp,
+            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Colored status accent strip on the left
+            Box(
+                modifier = Modifier
+                    .width(4.dp)
+                    .fillMaxHeight()
+                    .background(color)
+            )
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            // Icon Badge
+            Surface(
+                modifier = Modifier.size(32.dp),
+                shape = CircleShape,
+                color = when (record.type) {
+                    CallType.MISSED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
+                    CallType.OUTGOING -> Color(0xFFE8F5E9)
+                    CallType.INCOMING -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                }
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = color
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.width(12.dp))
+            
+            // Info Column
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = 10.dp)
+            ) {
+                Text(
+                    text = record.timestamp,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                val typeStr = when (record.type) {
+                    CallType.MISSED -> "Missed Call"
+                    CallType.OUTGOING -> "Outgoing Call"
+                    CallType.INCOMING -> "Incoming Call"
+                }
+                
+                val durationText = if (record.duration > 0) {
+                    val mins = record.duration / 60
+                    val secs = record.duration % 60
+                    if (mins > 0) "${mins}m ${secs}s" else "${secs}s"
+                } else null
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 1.dp)
+                ) {
+                    Text(
+                        text = typeStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = color,
+                        fontWeight = FontWeight.Medium
+                    )
+                    
+                    if (durationText != null) {
+                        Text(
+                            text = " • $durationText",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else if (record.type != CallType.MISSED) {
+                        Text(
+                            text = " • No Answer",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+            
+            // Delete record item action
+            IconButton(
+                onClick = onDeleteClick,
+                modifier = Modifier.padding(end = 4.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete call entry",
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     }
 }
