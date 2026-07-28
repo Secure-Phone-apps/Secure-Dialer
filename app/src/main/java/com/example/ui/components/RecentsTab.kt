@@ -117,52 +117,6 @@ fun RecentsTabContent(
                 }
             }
 
-            // Google Dialer style filter chips
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val filters = listOf(
-                    Triple(RecentsFilter.ALL, stringResource(R.string.filter_all), Icons.Default.History),
-                    Triple(RecentsFilter.MISSED, stringResource(R.string.filter_missed), Icons.Default.CallMissed),
-                    Triple(RecentsFilter.DIALED, stringResource(R.string.filter_dialed), Icons.AutoMirrored.Filled.CallMade),
-                    Triple(RecentsFilter.RECEIVED, stringResource(R.string.filter_received), Icons.AutoMirrored.Filled.CallReceived)
-                )
-
-                filters.forEach { (filter, label, icon) ->
-                    val selected = currentFilter == filter
-                    val iconTint = when (filter) {
-                        RecentsFilter.MISSED -> MaterialTheme.colorScheme.error
-                        RecentsFilter.DIALED -> Color(0xFF2E7D32)
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                    FilterChip(
-                        selected = selected,
-                        onClick = { currentFilter = filter },
-                        label = { Text(label) },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = iconTint,
-                                modifier = Modifier.size(FilterChipDefaults.IconSize)
-                            )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                            selectedLeadingIconColor = iconTint
-                        )
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
             if (isLoading) {
                 RecentsSkeleton()
             } else if (callRecords.isEmpty()) {
@@ -178,11 +132,59 @@ fun RecentsTabContent(
                     )
                 }
             } else {
+                // 1. Call Log Summary Dashboard at the top
                 CallLogSummaryDashboard(
                     callRecords = callRecords,
-                    modifier = Modifier.padding(bottom = 12.dp)
+                    modifier = Modifier.padding(vertical = 8.dp)
                 )
 
+                // 2. Google Dialer style filter chips directly below the dashboard
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val filters = listOf(
+                        Triple(RecentsFilter.ALL, stringResource(R.string.filter_all), Icons.Default.History),
+                        Triple(RecentsFilter.MISSED, stringResource(R.string.filter_missed), Icons.Default.CallMissed),
+                        Triple(RecentsFilter.DIALED, stringResource(R.string.filter_dialed), Icons.AutoMirrored.Filled.CallMade),
+                        Triple(RecentsFilter.RECEIVED, stringResource(R.string.filter_received), Icons.AutoMirrored.Filled.CallReceived)
+                    )
+
+                    filters.forEach { (filter, label, icon) ->
+                        val selected = currentFilter == filter
+                        val iconTint = when (filter) {
+                            RecentsFilter.MISSED -> MaterialTheme.colorScheme.error
+                            RecentsFilter.DIALED -> Color(0xFF2E7D32)
+                            else -> MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                        FilterChip(
+                            selected = selected,
+                            onClick = { currentFilter = filter },
+                            label = { Text(label) },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = iconTint,
+                                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                )
+                            },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                selectedLeadingIconColor = iconTint
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // 3. Consolidated Call Logs list or search results state
                 val query by viewModel.searchQuery
                 val consolidatedRecords = remember(callRecords, currentFilter, query) {
                     val baseFiltered = callRecords
