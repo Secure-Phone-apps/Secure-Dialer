@@ -85,6 +85,10 @@ fun RecentsTabContent(
     var currentFilter by remember { mutableStateOf(RecentsFilter.ALL) }
     var selectedHistoryNumber by remember { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(selectedHistoryNumber) {
+        viewModel.isCallHistoryDetailsOpen.value = (selectedHistoryNumber != null)
+    }
+
     if (selectedHistoryNumber != null) {
         val filteredLogs = remember(callRecords, selectedHistoryNumber) {
             callRecords.filter { it.number == selectedHistoryNumber }
@@ -1033,7 +1037,13 @@ fun CallHistoryDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Call Details") },
+                title = {
+                    Text(
+                        text = "Call Details",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
@@ -1098,18 +1108,17 @@ fun CallHistoryDetailsScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. Profile Hero Section (Unboxed, modern, very clean)
+            // 1. Profile Hero Section (Unboxed, compact, premium)
             item {
-                Spacer(modifier = Modifier.height(4.dp))
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
                     Surface(
-                        modifier = Modifier.size(80.dp),
+                        modifier = Modifier.size(72.dp),
                         shape = avatarShape,
                         color = primaryRecord.avatarBg.copy(alpha = 0.85f),
                         tonalElevation = 2.dp
@@ -1129,7 +1138,7 @@ fun CallHistoryDetailsScreen(
                             } else {
                                 Text(
                                     text = primaryRecord.avatarText,
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    style = MaterialTheme.typography.headlineSmall,
                                     color = primaryRecord.avatarTextColor,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -1137,11 +1146,11 @@ fun CallHistoryDetailsScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
                         text = primaryRecord.name,
-                        style = MaterialTheme.typography.headlineSmall,
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface
@@ -1151,7 +1160,7 @@ fun CallHistoryDetailsScreen(
                         text = primaryRecord.number,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 2.dp)
+                        modifier = Modifier.padding(top = 1.dp)
                     )
                     
                     if (primaryRecord.label.isNotEmpty()) {

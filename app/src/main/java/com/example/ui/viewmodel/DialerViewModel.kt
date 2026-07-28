@@ -19,6 +19,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var searchQuery = mutableStateOf("")
     private val _searchQueryFlow = MutableStateFlow("")
 
+    // Details Screen state (to hide global search bar)
+    var isCallHistoryDetailsOpen = mutableStateOf(false)
+
     fun onSearchQueryChange(newQuery: String) {
         searchQuery.value = newQuery
         _searchQueryFlow.value = newQuery

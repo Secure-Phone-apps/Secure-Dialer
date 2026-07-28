@@ -80,6 +80,7 @@ fun MainScreen(
 
     var selectedTab by viewModel.selectedTab
     val searchQuery by viewModel.searchQuery
+    val isCallHistoryDetailsOpen by viewModel.isCallHistoryDetailsOpen
     var isDialpadVisible by viewModel.isDialpadVisible
     var dialpadInput by viewModel.dialpadInput
     var isSettingsVisible by viewModel.isSettingsVisible
@@ -233,7 +234,7 @@ fun MainScreen(
                 }
 
                 AnimatedVisibility(
-                    visible = selectedTab != 2,
+                    visible = selectedTab != 2 && !isCallHistoryDetailsOpen,
                     enter = expandVertically(
                         animationSpec = spring(
                             stiffness = Spring.StiffnessMedium,
