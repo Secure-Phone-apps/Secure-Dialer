@@ -107,6 +107,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isSettingsVisible = mutableStateOf(false)
     var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
     var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
+    var avatarShapeType = mutableStateOf(prefs.getString("avatar_shape_type", "circular") ?: "circular")
     var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
     var useDynamicColor = mutableStateOf(prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S))
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
@@ -180,6 +181,11 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updateM3Expressive(expressive: Boolean) {
         isM3Expressive.value = expressive
         prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
+    }
+
+    fun updateAvatarShapeType(shapeType: String) {
+        avatarShapeType.value = shapeType
+        prefs.edit().putString("avatar_shape_type", shapeType).apply()
     }
 
     fun updateUseDynamicColor(dynamic: Boolean) {

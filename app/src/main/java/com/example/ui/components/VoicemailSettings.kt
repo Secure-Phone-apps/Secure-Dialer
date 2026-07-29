@@ -1,7 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -32,7 +32,7 @@ fun VoicemailSettings(
     ) {
         Surface(
             modifier = Modifier.size(96.dp),
-            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else CircleShape,
+            shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
             Box(contentAlignment = Alignment.Center) {

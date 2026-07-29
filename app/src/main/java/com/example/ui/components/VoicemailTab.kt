@@ -24,8 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.model.CallRecord
-
+import com.example.model.*
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
@@ -33,7 +32,8 @@ import com.example.ui.theme.LocalM3Expressive
 @Composable
 fun VoicemailTabContent(
     voicemailRecords: List<CallRecord>,
-    onPlayClick: (CallRecord) -> Unit
+    onPlayClick: (CallRecord) -> Unit,
+    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
 ) {
     Column(
         modifier = Modifier
@@ -100,7 +100,7 @@ fun VoicemailTabContent(
                                     )
                                 },
                                 leadingContent = {
-                                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                                    val avatarShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: CircleShape
                                     Surface(
                                         modifier = Modifier.size(40.dp),
                                         shape = avatarShape,
@@ -140,7 +140,7 @@ fun VoicemailTabContent(
                                     }
                                 },
                                 trailingContent = {
-                                    val buttonShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                                    val buttonShape = RoundedCornerShape(16.dp)
                                     FilledIconButton(
                                         onClick = { onPlayClick(record) },
                                         shape = buttonShape

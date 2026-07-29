@@ -45,8 +45,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.example.model.CallRecord
-import com.example.model.Contact
+import com.example.model.*
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
@@ -192,15 +191,18 @@ fun RecentsTabContent(
                             selected = selected,
                             onClick = { currentFilter = filter },
                             label = { Text(label) },
+                            shape = RoundedCornerShape(16.dp),
+                            border = null,
                             leadingIcon = {
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = null,
-                                    tint = iconTint,
                                     modifier = Modifier.size(FilterChipDefaults.IconSize)
                                 )
                             },
                             colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                 selectedLeadingIconColor = iconTint
@@ -366,7 +368,7 @@ fun RecentCallRow(
                 },
                 supportingContent = null,
                 leadingContent = {
-                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                    val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
@@ -636,7 +638,7 @@ fun RecentsSkeleton() {
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(CircleShape)
+                        .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                 )
                 Spacer(modifier = Modifier.width(16.dp))
@@ -860,7 +862,7 @@ fun CallLogSummaryDashboard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(CircleShape)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                             .padding(2.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -870,7 +872,7 @@ fun CallLogSummaryDashboard(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(CircleShape)
+                                    .clip(RoundedCornerShape(16.dp))
                                     .background(
                                         if (isSelected) MaterialTheme.colorScheme.primary
                                         else Color.Transparent
@@ -1126,7 +1128,7 @@ fun CallHistoryDetailsScreen(
                         .padding(vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                    val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
                     Surface(
                         modifier = Modifier.size(72.dp),
                         shape = avatarShape,
@@ -1486,11 +1488,7 @@ fun ContactCallSummaryDashboard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = MaterialTheme.shapes.medium,
-        border = androidx.compose.foundation.BorderStroke(
-            width = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-        )
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -1546,7 +1544,7 @@ fun ContactCallSummaryDashboard(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(CircleShape)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                             .padding(2.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -1556,7 +1554,7 @@ fun ContactCallSummaryDashboard(
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .clip(CircleShape)
+                                    .clip(RoundedCornerShape(16.dp))
                                     .background(
                                         if (isSelected) MaterialTheme.colorScheme.primary
                                         else Color.Transparent
@@ -1679,7 +1677,7 @@ fun DetailActionItem(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(containerColor, CircleShape),
+                .background(containerColor, RoundedCornerShape(16.dp)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -1716,11 +1714,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 2.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            width = 0.5.dp,
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-        )
+            .padding(vertical = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -1741,7 +1735,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
             // Icon Badge
             Surface(
                 modifier = Modifier.size(32.dp),
-                shape = CircleShape,
+                shape = RoundedCornerShape(16.dp),
                 color = when (record.type) {
                     CallType.MISSED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
                     CallType.OUTGOING -> Color(0xFFE8F5E9)

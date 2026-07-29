@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -504,12 +505,16 @@ fun SettingsPreferredSimRow(
                         },
                         label = { 
                             Text(
-                                labelText, 
+                                text = labelText, 
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
                             ) 
                         },
+                        shape = RoundedCornerShape(16.dp),
+                        border = null,
                         colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )

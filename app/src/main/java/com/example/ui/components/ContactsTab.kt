@@ -152,8 +152,11 @@ fun ContactsTabContent(
                         selected = !showOnlyFavorites,
                         onClick = { showOnlyFavorites = false },
                         label = { Text(stringResource(R.string.filter_all_contacts)) },
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
+                        border = null,
                         colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -170,9 +173,12 @@ fun ContactsTabContent(
                                 modifier = Modifier.size(18.dp)
                             )
                         },
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
+                        border = null,
                         modifier = Modifier.testTag("favorites_toggle_fab"),
                         colors = FilterChipDefaults.filterChipColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -188,7 +194,7 @@ fun ContactsTabContent(
                 ) {
                     Button(
                         onClick = onAddContactClick,
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
@@ -361,7 +367,7 @@ fun ContactsTabContent(
                             .size(20.dp)
                             .background(
                                 color = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                                shape = CircleShape
+                                shape = RoundedCornerShape(16.dp)
                             )
                     ) {
                         Text(
@@ -436,7 +442,7 @@ fun ContactRow(
                 },
                 supportingContent = null,
                 leadingContent = {
-                    val avatarShape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape
+                    val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
@@ -626,10 +632,10 @@ fun AddContactDialog(
     onConfirm: (name: String, number: String, label: String, email: String) -> Unit
 ) {
     val context = LocalContext.current
+    val dialogShape = RoundedCornerShape(16.dp)
+    val fieldShape = RoundedCornerShape(16.dp)
+    val buttonShape = RoundedCornerShape(16.dp)
     val isExpressive = LocalM3Expressive.current
-    val dialogShape = if (isExpressive) MaterialTheme.shapes.extraLarge else MaterialTheme.shapes.large
-    val fieldShape = if (isExpressive) MaterialTheme.shapes.medium else MaterialTheme.shapes.small
-    val buttonShape = if (isExpressive) MaterialTheme.shapes.medium else MaterialTheme.shapes.small
 
     val countryIso = remember {
         try {

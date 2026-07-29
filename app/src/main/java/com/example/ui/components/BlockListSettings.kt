@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -122,7 +123,7 @@ fun BlockListSettings(
                                 Box(
                                     modifier = Modifier
                                         .size(36.dp)
-                                        .clip(if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape)
+                                        .clip(RoundedCornerShape(16.dp))
                                         .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)),
                                     contentAlignment = Alignment.Center
                                 ) {

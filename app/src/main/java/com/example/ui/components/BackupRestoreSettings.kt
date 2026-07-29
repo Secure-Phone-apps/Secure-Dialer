@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -69,7 +70,7 @@ fun BackupRestoreSettings(
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .clip(CircleShape)
+                                .clip(RoundedCornerShape(16.dp))
                                 .background(
                                     if (serviceHealth?.isHealthy == true) MaterialTheme.colorScheme.primaryContainer
                                     else MaterialTheme.colorScheme.errorContainer

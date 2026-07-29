@@ -408,7 +408,7 @@ fun ActiveCallScreen(
                         )
                         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             items(quickResponses, key = { it }) { resp ->
-                                OutlinedCard(
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
@@ -420,7 +420,11 @@ fun ActiveCallScreen(
                                                 Toast.makeText(context, context.getString(R.string.sms_failed), Toast.LENGTH_SHORT).show()
                                             }
                                             onQuickDecline(resp)
-                                        }
+                                        },
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                                    ),
+                                    shape = MaterialTheme.shapes.medium
                                 ) {
                                     Text(
                                         resp,
@@ -491,7 +495,7 @@ fun ActiveCallScreen(
             } else {
                 Surface(
                     modifier = Modifier.size(120.dp),
-                    shape = if (LocalM3Expressive.current) MaterialTheme.shapes.extraLarge else CircleShape,
+                    shape = RoundedCornerShape(16.dp),
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     Box(contentAlignment = Alignment.Center) {
@@ -621,7 +625,7 @@ fun ActiveCallScreen(
                                         ) {
                                             Surface(
                                                 modifier = Modifier.size(32.dp),
-                                                shape = CircleShape,
+                                                shape = RoundedCornerShape(16.dp),
                                                 color = contact.avatarBg
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
@@ -938,7 +942,7 @@ fun ActiveCallScreen(
                         },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
+                        shape = RoundedCornerShape(16.dp),
                         modifier = Modifier.testTag("answer_button")
                     ) {
                         Icon(
@@ -958,7 +962,7 @@ fun ActiveCallScreen(
                     },
                     containerColor = MaterialTheme.colorScheme.error,
                     contentColor = MaterialTheme.colorScheme.onError,
-                    shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
+                    shape = RoundedCornerShape(16.dp),
                     modifier = Modifier.testTag("hangup_button")
                 ) {
                     Icon(
@@ -1004,7 +1008,7 @@ fun InCallButton(
             modifier = Modifier
                 .size(64.dp)
                 .clickable { onClick() },
-            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
+            shape = RoundedCornerShape(16.dp),
             color = btnColor
         ) {
             Box(contentAlignment = Alignment.Center) {

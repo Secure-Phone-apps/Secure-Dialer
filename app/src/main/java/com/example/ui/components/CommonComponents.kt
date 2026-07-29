@@ -45,8 +45,8 @@ fun HeaderSearchBar(
     onQueryChange: (String) -> Unit,
     onSettingsClick: () -> Unit
 ) {
+    val searchShape = RoundedCornerShape(16.dp)
     val isExpressive = LocalM3Expressive.current
-    val searchShape = if (isExpressive) MaterialTheme.shapes.medium else MaterialTheme.shapes.extraLarge
     val containerColor = if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {

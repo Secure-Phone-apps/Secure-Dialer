@@ -72,7 +72,8 @@ fun DialpadTabContent(
     voicemailNumber: String,
     speedDialMap: Map<Int, String>,
     dialpadMatches: List<DialpadMatch>,
-    onCollapseClick: () -> Unit
+    onCollapseClick: () -> Unit,
+    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -134,7 +135,7 @@ fun DialpadTabContent(
                                     leadingContent = {
                                         Surface(
                                             modifier = Modifier.size(40.dp),
-                                            shape = CircleShape,
+                                            shape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: CircleShape,
                                             color = match.avatarBg.copy(alpha = 0.8f)
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
@@ -342,8 +343,7 @@ fun DialpadTabContent(
             }
 
             // Central green call button
-            val isExpressive = LocalM3Expressive.current
-            val callFabShape = if (isExpressive) MaterialTheme.shapes.large else CircleShape
+            val callFabShape = RoundedCornerShape(16.dp)
 
             LargeFloatingActionButton(
                 onClick = {
@@ -396,7 +396,7 @@ fun DialpadTabContent(
 fun FloatingDialpadButton(
     onClick: () -> Unit
 ) {
-    val shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else MaterialTheme.shapes.medium
+    val shape = RoundedCornerShape(16.dp)
     FloatingActionButton(
         onClick = onClick,
         shape = shape,
@@ -449,7 +449,7 @@ fun DialpadOverlay(
                 modifier = Modifier
                     .width(40.dp)
                     .height(4.dp)
-                    .clip(CircleShape)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.outlineVariant)
                     .padding(vertical = 12.dp)
                     .clickable {
@@ -577,8 +577,7 @@ fun DialpadOverlay(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Call Action Button
-            val isOverlayExpressive = LocalM3Expressive.current
-            val overlayFabShape = if (isOverlayExpressive) MaterialTheme.shapes.large else CircleShape
+            val overlayFabShape = RoundedCornerShape(16.dp)
 
             LargeFloatingActionButton(
                 onClick = {
@@ -618,7 +617,7 @@ private fun DialButton(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
-    val buttonShape = if (isExpressive) MaterialTheme.shapes.medium else CircleShape
+    val buttonShape = RoundedCornerShape(16.dp)
     val buttonColor = if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {

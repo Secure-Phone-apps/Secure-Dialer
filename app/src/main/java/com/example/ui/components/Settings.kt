@@ -327,7 +327,7 @@ fun SettingsEmptyState(
     ) {
         Surface(
             modifier = Modifier.size(72.dp),
-            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.large else CircleShape,
+            shape = RoundedCornerShape(16.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -371,8 +371,7 @@ fun ThemeColorPicker(
         Triple("dark_crimson", Color(0xFFE11D48), "Ruby"),
         Triple("natural_gray", Color(0xFF525252), "Titanium")
     )
-    val isExpressive = LocalM3Expressive.current
-    val pickerShape = if (isExpressive) RoundedCornerShape(12.dp) else CircleShape
+    val pickerShape = RoundedCornerShape(16.dp)
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
@@ -403,12 +402,7 @@ fun ThemeColorPicker(
                         .scale(scale)
                         .clip(pickerShape)
                         .background(color)
-                        .clickable { onColorSelected(key) }
-                        .border(
-                            width = if (isSelected) 3.dp else 0.dp,
-                            color = if (isSelected) MaterialTheme.colorScheme.onSurface else Color.Transparent,
-                            shape = pickerShape
-                        ),
+                        .clickable { onColorSelected(key) },
                     contentAlignment = Alignment.Center
                 ) {
                     if (isSelected) {

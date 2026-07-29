@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -55,7 +56,7 @@ fun SpeedDialSettings(
                     ) {
                         Surface(
                             modifier = Modifier.size(32.dp),
-                            shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
+                            shape = RoundedCornerShape(16.dp),
                             color = MaterialTheme.colorScheme.primaryContainer
                         ) {
                             Box(contentAlignment = Alignment.Center) {
@@ -134,7 +135,7 @@ fun SpeedDialSettings(
                             ) {
                                 Surface(
                                     modifier = Modifier.size(44.dp),
-                                    shape = if (LocalM3Expressive.current) MaterialTheme.shapes.medium else CircleShape,
+                                    shape = RoundedCornerShape(16.dp),
                                     color = if (assignedNum != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {

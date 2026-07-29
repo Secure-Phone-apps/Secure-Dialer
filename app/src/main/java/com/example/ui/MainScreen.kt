@@ -318,7 +318,8 @@ fun MainScreen(
                                     onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                                     voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
                                     dialpadMatches = dialpadMatches,
-                                    onCollapseClick = {}
+                                    onCollapseClick = {},
+                                    viewModel = viewModel
                                 )
                             }
                         }

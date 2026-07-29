@@ -1,7 +1,15 @@
 package com.example.model
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.room.*
+
+fun getAvatarShape(shapeType: String): Shape {
+    return RoundedCornerShape(16.dp)
+}
 
 fun getInitials(name: String): String {
     val trimmed = name.trim()
