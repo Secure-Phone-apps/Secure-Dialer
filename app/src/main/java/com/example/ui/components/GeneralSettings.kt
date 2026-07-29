@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -142,7 +143,7 @@ fun GeneralSettings(
                         subtitle = stringResource(R.string.settings_dialpad_tones_sub),
                         checked = dialpadTonesEnabled,
                         onCheckedChange = onTonesChange,
-                        icon = Icons.Default.VolumeUp,
+                        icon = Icons.AutoMirrored.Filled.VolumeUp,
                         iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                         iconTint = MaterialTheme.colorScheme.secondary
                     )
@@ -196,7 +197,7 @@ fun GeneralSettings(
                         title = stringResource(R.string.settings_quick_responses),
                         subtitle = stringResource(R.string.settings_quick_responses_sub),
                         onClick = { onNavigateToTab(3) },
-                        icon = Icons.Default.Message,
+                        icon = Icons.AutoMirrored.Filled.Message,
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                         iconTint = MaterialTheme.colorScheme.tertiary
                     )
@@ -240,61 +241,7 @@ fun GeneralSettings(
         item {
             Spacer(modifier = Modifier.height(16.dp))
             PreferenceHeader(stringResource(R.string.settings_startup_options))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.settings_default_startup_tab),
-                        fontWeight = FontWeight.Medium,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    val tabs = listOf(
-                        stringResource(R.string.tab_recents),
-                        stringResource(R.string.tab_contacts),
-                        stringResource(R.string.tab_dialpad)
-                    )
-                    val currentTabSelected = viewModel.defaultTab.intValue
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(MaterialTheme.shapes.small)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                            .padding(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        tabs.forEachIndexed { idx, title ->
-                            val isSel = currentTabSelected == idx
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(MaterialTheme.shapes.extraSmall)
-                                    .background(
-                                        if (isSel) MaterialTheme.colorScheme.primary
-                                        else Color.Transparent
-                                    )
-                                    .clickable { viewModel.updateDefaultTab(idx) }
-                                    .padding(vertical = 10.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = title,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSel) MaterialTheme.colorScheme.onPrimary
-                                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            DefaultStartupTabCard(viewModel = viewModel, cardBgColor = cardBgColor)
         }
 
         // Calling Features Card
@@ -370,7 +317,7 @@ fun GeneralSettings(
                         title = stringResource(R.string.settings_merge_duplicate_contacts),
                         subtitle = stringResource(R.string.settings_merge_duplicate_contacts_sub),
                         onClick = { onNavigateToTab(5) },
-                        icon = Icons.Default.MergeType,
+                        icon = Icons.AutoMirrored.Filled.MergeType,
                         iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
                         iconTint = MaterialTheme.colorScheme.secondary
                     )
@@ -409,119 +356,7 @@ fun GeneralSettings(
         item {
             Spacer(modifier = Modifier.height(16.dp))
             PreferenceHeader(stringResource(R.string.settings_contribution))
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = cardBgColor
-                ),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        stringResource(R.string.settings_support_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        stringResource(R.string.settings_support_desc),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Button(
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/Secure-Phone-apps/Secure-Dialer"))
-                            try { context.startActivity(intent) } catch (e: Exception) {}
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = MaterialTheme.shapes.small
-                    ) {
-                        Icon(Icons.Default.Favorite, "Contribute")
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.settings_contribute_github))
-                    }
-                }
-            }
+            GeneralSettingsSupportCard(context)
         }
     }
-}
-
-@Composable
-fun SettingsPreferredSimRow(
-    preferredSim: String,
-    onSimChange: (String) -> Unit,
-    haptic: HapticFeedback
-) {
-    ListItem(
-        headlineContent = { 
-            Text(
-                stringResource(R.string.settings_preferred_sim),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge
-            ) 
-        },
-        supportingContent = { 
-            Text(
-                stringResource(R.string.settings_preferred_sim_sub),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            ) 
-        },
-        leadingContent = {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.tertiaryContainer),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.SimCard,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        },
-        trailingContent = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val askLabel = stringResource(R.string.sim_ask)
-                val sim1Label = stringResource(R.string.sim_1)
-                val sim2Label = stringResource(R.string.sim_2)
-                listOf("SIM 1" to sim1Label, "SIM 2" to sim2Label, "Ask" to askLabel).forEach { (opKey, labelText) ->
-                    val sel = preferredSim == opKey
-                    FilterChip(
-                        selected = sel,
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onSimChange(opKey)
-                        },
-                        label = { 
-                            Text(
-                                text = labelText, 
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
-                            ) 
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        border = null,
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }
-            }
-        },
-        colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-    )
 }

@@ -133,6 +133,7 @@ fun ActiveCallScreen(
 
     var isQuickDeclineMenuOpen by remember { mutableStateOf(false) }
     var isInCallDialpadOpen by remember { mutableStateOf(false) }
+    var isNoteDialogOpen by remember { mutableStateOf(false) }
     var inCallDialpadInput by remember { mutableStateOf("") }
     var participants by remember(contactName, contactNumber) {
         mutableStateOf(listOf(Pair(contactName, contactNumber)))
@@ -205,773 +206,138 @@ fun ActiveCallScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top Status Info
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                val simDisplay = if (preferredSim.equals("Ask", ignoreCase = true)) {
-                    stringResource(R.string.sim_ask)
-                } else {
-                    preferredSim
-                }
+            InCallHeader(
+                isOnHold = isOnHold,
+                callState = callState,
+                participants = participants,
+                preferredSim = preferredSim,
+                contactName = contactName,
+                contactNumber = contactNumber,
+                formattedTime = formattedTime,
+                heldCall = heldCall,
+                contacts = contacts
+            )
 
-                val displayHeader = when {
-                    isOnHold || callState == android.telecom.Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
-                    callState == android.telecom.Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
-                    callState == android.telecom.Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
-                    callState == android.telecom.Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
-                    participants.size > 1 -> "${stringResource(R.string.call_status_conference)} • $simDisplay"
-                    else -> "${stringResource(R.string.call_status_ongoing)} • $simDisplay"
-                }
-
-                Text(
-                    text = displayHeader,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                val displayName = if (participants.size > 1) {
-                    if (participants.size == 2) {
-                        "${participants[0].first.ifEmpty { participants[0].second }} & ${participants[1].first.ifEmpty { participants[1].second }}"
-                    } else {
-                        "Conference (${participants.size})"
-                    }
-                } else {
-                    contactName.ifEmpty { contactNumber }
-                }
-
-                Text(
-                    text = displayName,
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                val displaySubtitle = if (participants.size > 1) {
-                    if (participants.size > 2) {
-                        participants.joinToString(", ") { it.first.ifEmpty { it.second } }
-                    } else {
-                        "${participants[0].second} • ${participants[1].second}"
-                    }
-                } else {
-                    if (contactName.isNotEmpty() && contactNumber.isNotEmpty() && contactName != contactNumber) contactNumber else ""
-                }
-
-                if (displaySubtitle.isNotEmpty()) {
-                    Text(
-                        text = displaySubtitle,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = formattedTime,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                if (heldCall != null) {
-                    Spacer(modifier = Modifier.height(16.dp))
-                    val heldNumber = heldCall.details?.handle?.schemeSpecificPart ?: ""
-                    val heldName = remember(heldNumber, contacts) {
-                        contacts.find { it.number == heldNumber }?.name ?: heldNumber
-                    }
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Text("⏸️", fontSize = 18.sp)
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Column {
-                                    Text(
-                                        text = "${stringResource(R.string.on_hold_prefix)} $heldName",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                                    )
-                                    if (heldName != heldNumber) {
-                                        Text(
-                                            text = heldNumber,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
-                                        )
-                                    }
-                                }
-                            }
-                            Button(
-                                onClick = {
-                                    try {
-                                        val activeCall = CallManager.currentCall.value
-                                        activeCall?.hold()
-                                        heldCall.unhold()
-                                        CallManager.updateCall(heldCall)
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
-                                },
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                modifier = Modifier.height(32.dp)
-                            ) {
-                                Text(stringResource(R.string.btn_swap), style = MaterialTheme.typography.labelMedium)
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (waitingCall != null) {
-                val waitingNumber = waitingCall?.details?.handle?.schemeSpecificPart ?: ""
-                val waitingName = remember(waitingNumber, contacts) {
-                    contacts.find { it.number == waitingNumber }?.name ?: waitingNumber
-                }
-                AlertDialog(
-                    onDismissRequest = { /* Force explicit choice */ },
-                    title = { Text(stringResource(R.string.call_waiting_title), fontWeight = FontWeight.Bold) },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(stringResource(R.string.call_waiting_incoming_from), style = MaterialTheme.typography.bodyMedium)
-                            Text(waitingName, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                            if (waitingName != waitingNumber) {
-                                Text(waitingNumber, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Text(stringResource(R.string.call_waiting_notice), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
-                        }
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                try {
-                                    val activeCall = CallManager.currentCall.value
-                                    activeCall?.hold()
-                                    waitingCall?.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
-                                    CallManager.updateCall(waitingCall)
-                                    CallManager.updateWaitingCall(null)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                        ) {
-                            Text(stringResource(R.string.btn_answer_hold))
-                        }
-                    },
-                    dismissButton = {
-                        Button(
-                            onClick = {
-                                try {
-                                    waitingCall?.reject(false, null)
-                                    CallManager.updateWaitingCall(null)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                        ) {
-                            Text(stringResource(R.string.btn_decline))
-                        }
-                    }
+            waitingCall?.let { call ->
+                InCallWaitingCallDialog(
+                    waitingCall = call,
+                    contacts = contacts
                 )
             }
 
             // Middle Call Screen options
             if (isIncoming && isQuickDeclineMenuOpen) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Column(modifier = Modifier.padding(20.dp)) {
-                        Text(
-                            text = stringResource(R.string.quick_responses),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            items(quickResponses, key = { it }) { resp ->
-                                Card(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            try {
-                                                val smsManager = context.getSystemService(android.telephony.SmsManager::class.java)
-                                                smsManager.sendTextMessage(contactNumber, null, resp, null, null)
-                                                Toast.makeText(context, context.getString(R.string.sms_sent), Toast.LENGTH_SHORT).show()
-                                            } catch (e: Exception) {
-                                                Toast.makeText(context, context.getString(R.string.sms_failed), Toast.LENGTH_SHORT).show()
-                                            }
-                                            onQuickDecline(resp)
-                                        },
-                                    colors = CardDefaults.cardColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                                    ),
-                                    shape = MaterialTheme.shapes.medium
-                                ) {
-                                    Text(
-                                        resp,
-                                        modifier = Modifier.padding(16.dp),
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        TextButton(
-                            onClick = { isQuickDeclineMenuOpen = false },
-                            modifier = Modifier.align(Alignment.End)
-                        ) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    }
-                }
+                InCallQuickDeclineSheet(
+                    contactNumber = contactNumber,
+                    quickResponses = quickResponses,
+                    onClose = { isQuickDeclineMenuOpen = false },
+                    onQuickDecline = onQuickDecline
+                )
             } else if (isInCallDialpadOpen) {
                 // Interactive In-Call Keypad for DTMF entry
-                ElevatedCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    shape = MaterialTheme.shapes.large
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.padding(20.dp)
-                    ) {
-                        Text(
-                            text = inCallDialpadInput.ifEmpty { "Dialpad" },
-                            style = MaterialTheme.typography.headlineSmall,
-                            modifier = Modifier.padding(bottom = 16.dp),
-                            textAlign = TextAlign.Center
-                        )
-
-                        val inCallKeys = listOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#")
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            for (r in 0 until 4) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                    for (c in 0 until 3) {
-                                        val key = inCallKeys[r * 3 + c]
-                                        Surface(
-                                            modifier = Modifier
-                                                .size(width = 72.dp, height = 48.dp)
-                                                .clickable {
-                                                    inCallDialpadInput += key
-                                                    CallManager.playDtmf(key[0])
-                                                },
-                                            shape = MaterialTheme.shapes.small,
-                                            color = MaterialTheme.colorScheme.surfaceVariant
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Text(key, style = MaterialTheme.typography.titleLarge)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        TextButton(onClick = { isInCallDialpadOpen = false }) {
-                            Text(stringResource(R.string.close))
-                        }
-                    }
-                }
+                InCallKeypad(
+                    onClose = { isInCallDialpadOpen = false }
+                )
             } else {
-                Surface(
-                    modifier = Modifier.size(120.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (participants.size > 1) {
-                            Text(text = "👥", fontSize = 64.sp)
-                        } else {
-                            val matchedContact = remember(contactNumber, contacts) {
-                                contacts.find { it.number == contactNumber }
-                            }
-                            if (matchedContact != null && matchedContact.photoUri.isNotEmpty()) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(context)
-                                        .data(matchedContact.photoUri)
-                                        .size(256, 256)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = "Contact Photo",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                val pName = participants.firstOrNull()?.first ?: contactName
-                                val isSaved = matchedContact != null || (pName != contactNumber && pName != "Unknown" && pName.isNotBlank() && pName.any { it.isLetter() })
-                                if (isSaved) {
-                                    val avatarText = getInitials(pName)
-                                    Text(
-                                        text = avatarText,
-                                        style = MaterialTheme.typography.displayLarge,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Unsaved Contact Icon",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(64.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                InCallAvatarDisplay(
+                    participants = participants,
+                    contactName = contactName,
+                    contactNumber = contactNumber,
+                    contacts = contacts
+                )
             }
 
             // Add Call Dialog
             if (isAddCallDialogOpen) {
-                AlertDialog(
-                    onDismissRequest = { isAddCallDialogOpen = false },
-                    confirmButton = {
-                        Button(
-                            onClick = {
-                                if (addCallNumberInput.isNotBlank()) {
-                                    val finalName = if (selectedAddCallContactName.isNotBlank()) {
-                                        selectedAddCallContactName
-                                    } else {
-                                        contacts.find { it.number == addCallNumberInput }?.name ?: addCallNumberInput
-                                    }
-                                    participants = participants + Pair(finalName, addCallNumberInput)
-                                    Toast.makeText(context, "📞 Merged call with $finalName", Toast.LENGTH_LONG).show()
-                                    isAddCallDialogOpen = false
-                                    addCallNumberInput = ""
-                                    selectedAddCallContactName = ""
-                                } else {
-                                    Toast.makeText(context, "Please select or enter a valid number", Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        ) {
-                            Text(stringResource(R.string.btn_add_merge))
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { isAddCallDialogOpen = false }) {
-                            Text(stringResource(R.string.btn_cancel))
-                        }
-                    },
-                    title = {
-                        Text(
-                            stringResource(R.string.add_call),
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                    },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            OutlinedTextField(
-                                value = addCallNumberInput,
-                                onValueChange = {
-                                    addCallNumberInput = it
-                                    selectedAddCallContactName = ""
-                                },
-                                label = { Text(stringResource(R.string.add_call_search_hint)) },
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-
-                            val filteredContacts = if (addCallNumberInput.isBlank()) {
-                                contacts
-                            } else {
-                                contacts.filter {
-                                    it.name.contains(addCallNumberInput, ignoreCase = true) ||
-                                            it.number.contains(addCallNumberInput)
-                                }
-                            }
-
-                            LazyColumn(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 200.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                items(
-                                    items = filteredContacts,
-                                    key = { it.number },
-                                    contentType = { "add_call_contact" }
-                                ) { contact ->
-                                    Surface(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onClick = {
-                                            addCallNumberInput = contact.number
-                                            selectedAddCallContactName = contact.name
-                                        },
-                                        shape = MaterialTheme.shapes.small,
-                                        color = if (addCallNumberInput == contact.number) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(8.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Surface(
-                                                modifier = Modifier.size(32.dp),
-                                                shape = RoundedCornerShape(16.dp),
-                                                color = contact.avatarBg
-                                            ) {
-                                                Box(contentAlignment = Alignment.Center) {
-                                                    if (contact.photoUri.isNotEmpty()) {
-                                                        AsyncImage(
-                                                            model = ImageRequest.Builder(context)
-                                                                .data(contact.photoUri)
-                                                                .size(256, 256)
-                                                                .crossfade(true)
-                                                                .build(),
-                                                            contentDescription = "Contact Photo",
-                                                            modifier = Modifier.fillMaxSize(),
-                                                            contentScale = ContentScale.Crop
-                                                        )
-                                                    } else {
-                                                        Text(
-                                                            text = contact.avatarText.ifEmpty { getInitials(contact.name) },
-                                                            color = contact.avatarTextColor,
-                                                            style = MaterialTheme.typography.labelSmall
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                            Spacer(modifier = Modifier.width(12.dp))
-                                            Column {
-                                                Text(
-                                                    text = contact.name,
-                                                    style = MaterialTheme.typography.bodyMedium
-                                                )
-                                                Text(
-                                                    text = contact.number,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    shape = MaterialTheme.shapes.large
+                InCallAddCallDialog(
+                    contacts = contacts,
+                    onDismiss = { isAddCallDialogOpen = false },
+                    onAddCall = { finalName, number ->
+                        participants = participants + Pair(finalName, number)
+                    }
                 )
             }
 
             // Call Option buttons: keypad, mute, speaker, hold, bluetooth
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Row 1: Keypad, Mute, Speaker
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        InCallButton(
-                            icon = Icons.Default.Dialpad,
-                            label = stringResource(R.string.keypad),
-                            isActive = isInCallDialpadOpen,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isInCallDialpadOpen = !isInCallDialpadOpen
-                            }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        InCallButton(
-                            icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                            label = stringResource(R.string.mute),
-                            isActive = isMuted,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isMuted = !isMuted
-                                CallManager.setMuted(isMuted)
-                            }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        InCallButton(
-                            icon = Icons.Default.VolumeUp,
-                            label = stringResource(R.string.speaker),
-                            isActive = isSpeakerOn,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isSpeakerOn = !isSpeakerOn
-                                CallManager.setSpeaker(isSpeakerOn)
-                            }
-                        )
-                    }
-                }
+            var isNoteDialogOpen by remember { mutableStateOf(false) }
 
-                // Row 2: Hold, Bluetooth, Add Call
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        InCallButton(
-                            icon = Icons.Default.Pause,
-                            label = stringResource(R.string.hold),
-                            isActive = isOnHold,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isOnHold = !isOnHold
-                                CallManager.setHold(isOnHold)
-                            }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        InCallButton(
-                            icon = Icons.Default.Bluetooth,
-                            label = stringResource(R.string.bluetooth),
-                            isActive = isBluetoothOn,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isBluetoothOn = !isBluetoothOn
-                                CallManager.setBluetooth(isBluetoothOn)
-                            }
-                        )
-                    }
-                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        InCallButton(
-                            icon = Icons.Default.GroupAdd,
-                            label = stringResource(R.string.add_call),
-                            isActive = isAddCallDialogOpen,
-                            onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                isAddCallDialogOpen = true
-                            }
-                        )
-                    }
-                }
-
-                // Row 3: Record & Note
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (recordingEnabled) {
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            InCallButton(
-                                icon = Icons.Default.Mic,
-                                label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
-                                isActive = isRecording,
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    if (isRecording) {
-                                        val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
-                                        val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
-                                        val localFile = java.io.File(context.filesDir, fileName)
-                                        try {
-                                            localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
-                                        } catch (e: Exception) {
-                                            e.printStackTrace()
-                                        }
-                                        onSaveRecording(duration, localFile.absolutePath)
-                                        Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
-                                        isRecording = false
-                                    } else {
-                                        recordingStartTime = System.currentTimeMillis()
-                                        isRecording = true
-                                        Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
-                                    }
-                                }
-                            )
+            InCallControlGrid(
+                isInCallDialpadOpen = isInCallDialpadOpen,
+                onToggleDialpad = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isInCallDialpadOpen = !isInCallDialpadOpen
+                },
+                isMuted = isMuted,
+                onToggleMute = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isMuted = !isMuted
+                    CallManager.setMuted(isMuted)
+                },
+                isSpeakerOn = isSpeakerOn,
+                onToggleSpeaker = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isSpeakerOn = !isSpeakerOn
+                    CallManager.setSpeaker(isSpeakerOn)
+                },
+                isOnHold = isOnHold,
+                onToggleHold = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isOnHold = !isOnHold
+                    CallManager.setHold(isOnHold)
+                },
+                isBluetoothOn = isBluetoothOn,
+                onToggleBluetooth = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isBluetoothOn = !isBluetoothOn
+                    CallManager.setBluetooth(isBluetoothOn)
+                },
+                isAddCallDialogOpen = isAddCallDialogOpen,
+                onOpenAddCallDialog = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isAddCallDialogOpen = true
+                },
+                recordingEnabled = recordingEnabled,
+                isRecording = isRecording,
+                onToggleRecording = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (isRecording) {
+                        val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
+                        val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
+                        val localFile = java.io.File(context.filesDir, fileName)
+                        try {
+                            localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
+                        } catch (e: Exception) {
+                            e.printStackTrace()
                         }
-
-                        var isNoteDialogOpen by remember { mutableStateOf(false) }
-                        var noteText by remember { mutableStateOf("") }
-
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            InCallButton(
-                                icon = Icons.Default.EditNote,
-                                label = stringResource(R.string.call_note),
-                                isActive = isNoteDialogOpen,
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    isNoteDialogOpen = true
-                                }
-                            )
-                        }
-
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            // Spacer to align symmetrically
-                        }
-
-                        if (isNoteDialogOpen) {
-                            AlertDialog(
-                                onDismissRequest = { isNoteDialogOpen = false },
-                                title = { Text(stringResource(R.string.jot_call_note_title)) },
-                                text = {
-                                    OutlinedTextField(
-                                        value = noteText,
-                                        onValueChange = { noteText = it },
-                                        label = { Text(stringResource(R.string.note_placeholder)) },
-                                        modifier = Modifier.fillMaxWidth().height(120.dp)
-                                    )
-                                },
-                                confirmButton = {
-                                    Button(
-                                        onClick = {
-                                            if (noteText.isNotBlank()) {
-                                                onSaveNote(noteText)
-                                                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
-                                            }
-                                            isNoteDialogOpen = false
-                                        }
-                                    ) {
-                                        Text(stringResource(R.string.btn_save_note))
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { isNoteDialogOpen = false }) {
-                                        Text(stringResource(R.string.btn_discard))
-                                    }
-                                }
-                            )
-                        }
+                        onSaveRecording(duration, localFile.absolutePath)
+                        Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
+                        isRecording = false
                     } else {
-                        // If recording is disabled, place Call Note in the middle to look perfect
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            // Empty slot
-                        }
-
-                        var isNoteDialogOpen by remember { mutableStateOf(false) }
-                        var noteText by remember { mutableStateOf("") }
-
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            InCallButton(
-                                icon = Icons.Default.EditNote,
-                                label = stringResource(R.string.call_note),
-                                isActive = isNoteDialogOpen,
-                                onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    isNoteDialogOpen = true
-                                }
-                            )
-                        }
-
-                        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                            // Empty slot
-                        }
-
-                        if (isNoteDialogOpen) {
-                            AlertDialog(
-                                onDismissRequest = { isNoteDialogOpen = false },
-                                title = { Text(stringResource(R.string.jot_call_note_title)) },
-                                text = {
-                                    OutlinedTextField(
-                                        value = noteText,
-                                        onValueChange = { noteText = it },
-                                        label = { Text(stringResource(R.string.note_placeholder)) },
-                                        modifier = Modifier.fillMaxWidth().height(120.dp)
-                                    )
-                                },
-                                confirmButton = {
-                                    Button(
-                                        onClick = {
-                                            if (noteText.isNotBlank()) {
-                                                onSaveNote(noteText)
-                                                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
-                                            }
-                                            isNoteDialogOpen = false
-                                        }
-                                    ) {
-                                        Text(stringResource(R.string.btn_save_note))
-                                    }
-                                },
-                                dismissButton = {
-                                    TextButton(onClick = { isNoteDialogOpen = false }) {
-                                        Text(stringResource(R.string.btn_discard))
-                                    }
-                                }
-                            )
-                        }
+                        recordingStartTime = System.currentTimeMillis()
+                        isRecording = true
+                        Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
                     }
+                },
+                isNoteDialogOpen = isNoteDialogOpen,
+                onOpenNoteDialog = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isNoteDialogOpen = true
                 }
+            )
+
+            if (isNoteDialogOpen) {
+                InCallNoteDialog(
+                    onDismiss = { isNoteDialogOpen = false },
+                    onSaveNote = onSaveNote
+                )
             }
 
-                // Styled "Quick Decline SMS" text link/button below the main buttons
-                if (isIncoming) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        TextButton(
-                            onClick = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen }
-                        ) {
-                            Text(
-                                text = stringResource(R.string.send_quick_response),
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
-                    }
-                }
-
-            // Actions: Answer and Hang Up
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (isIncoming) {
-                    // Green Answer Button
-                    LargeFloatingActionButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onAnswer()
-                        },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.testTag("answer_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Answer",
-                            modifier = Modifier.size(32.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(48.dp))
-                }
-
-                // Red Hang Up / Decline Button
-                LargeFloatingActionButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onHangUp()
-                    },
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("hangup_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CallEnd,
-                        contentDescription = "Hang up",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
+            InCallBottomBar(
+                isIncoming = isIncoming,
+                onAnswer = onAnswer,
+                onHangUp = onHangUp,
+                onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen }
+            )
         }
         }
 
@@ -987,44 +353,5 @@ fun ActiveCallScreen(
                     )
             )
         }
-    }
-}
-
-@Composable
-fun InCallButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    label: String,
-    isActive: Boolean,
-    onClick: () -> Unit
-) {
-    val btnColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Surface(
-            modifier = Modifier
-                .size(64.dp)
-                .clickable { onClick() },
-            shape = RoundedCornerShape(16.dp),
-            color = btnColor
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = contentColor,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

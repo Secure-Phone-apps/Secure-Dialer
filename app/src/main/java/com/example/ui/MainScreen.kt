@@ -218,19 +218,7 @@ fun MainScreen(
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             Column(modifier = Modifier.fillMaxSize()) {
                 if (!isDefaultDialer) {
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp).clickable { onShowRestrictedSettings() },
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    ) {
-                        Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Warning, stringResource(R.string.warning), tint = MaterialTheme.colorScheme.onPrimaryContainer)
-                            Spacer(Modifier.width(16.dp))
-                            Text(stringResource(R.string.default_dialer_warning), color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Medium)
-                        }
-                    }
+                    DefaultDialerWarningCard(onShowRestrictedSettings = onShowRestrictedSettings)
                 }
 
                 AnimatedVisibility(
@@ -388,35 +376,7 @@ fun MainScreen(
                 )
             }
 
-        if (isAddContactDialogVisible) {
-            AddContactDialog(
-                initialName = newContactName,
-                initialNumber = newContactNumber,
-                initialLabel = newContactLabel,
-                initialEmail = "",
-                onDismiss = { isAddContactDialogVisible = false },
-                onConfirm = { name, number, label, email ->
-                    viewModel.addContact(name, number, label, email)
-                    isAddContactDialogVisible = false
-                }
-            )
-        }
-
-        if (isEditContactDialogVisible && oldContactToEdit != null) {
-            AddContactDialog(
-                initialName = oldContactToEdit!!.name,
-                initialNumber = oldContactToEdit!!.number,
-                initialLabel = oldContactToEdit!!.label,
-                initialEmail = oldContactToEdit!!.email,
-                onDismiss = { isEditContactDialogVisible = false },
-                onConfirm = { name, number, label, email ->
-                    // Use delete then add for simple update in this context
-                    viewModel.deleteContact(oldContactToEdit!!.number)
-                    viewModel.addContact(name, number, label, email)
-                    isEditContactDialogVisible = false
-                }
-            )
-        }
+            MainScreenContactDialogs(viewModel = viewModel)
         }
     }
 }

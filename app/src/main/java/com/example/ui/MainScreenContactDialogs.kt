@@ -1,0 +1,51 @@
+package com.example.ui
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import com.example.ui.components.AddContactDialog
+import com.example.ui.viewmodel.DialerViewModel
+
+@Composable
+fun MainScreenContactDialogs(
+    viewModel: DialerViewModel
+) {
+    var isAddContactDialogVisible by viewModel.isAddContactDialogVisible
+    var isEditContactDialogVisible by viewModel.isEditContactDialogVisible
+    var oldContactToEdit by viewModel.oldContactToEdit
+    val newContactName by viewModel.newContactName
+    val newContactNumber by viewModel.newContactNumber
+    val newContactLabel by viewModel.newContactLabel
+
+    if (isAddContactDialogVisible) {
+        AddContactDialog(
+            initialName = newContactName,
+            initialNumber = newContactNumber,
+            initialLabel = newContactLabel,
+            initialEmail = "",
+            onDismiss = { isAddContactDialogVisible = false },
+            onConfirm = { name, number, label, email ->
+                viewModel.addContact(name, number, label, email)
+                isAddContactDialogVisible = false
+            }
+        )
+    }
+
+    if (isEditContactDialogVisible && oldContactToEdit != null) {
+        val currentOldContact = oldContactToEdit
+        if (currentOldContact != null) {
+            AddContactDialog(
+                initialName = currentOldContact.name,
+                initialNumber = currentOldContact.number,
+                initialLabel = currentOldContact.label,
+                initialEmail = currentOldContact.email,
+                onDismiss = { isEditContactDialogVisible = false },
+                onConfirm = { name, number, label, email ->
+                    viewModel.deleteContact(currentOldContact.number)
+                    viewModel.addContact(name, number, label, email)
+                    isEditContactDialogVisible = false
+                }
+            )
+        }
+    }
+}
