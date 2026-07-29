@@ -316,7 +316,7 @@ fun CallHistoryDetailsScreen(
             }
             
             item {
-                ContactCallSummaryDashboard(callRecords = logs)
+                CallLogSummaryDashboard(callRecords = logs)
             }
             
             item {

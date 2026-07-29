@@ -43,10 +43,6 @@ import com.example.model.*
 import com.example.ui.theme.LocalM3Expressive
 import kotlinx.coroutines.delay
 
-import android.hardware.Sensor
-import android.hardware.SensorEvent
-import android.hardware.SensorEventListener
-import android.hardware.SensorManager
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 
@@ -142,30 +138,20 @@ fun ActiveCallScreen(
     var isNear by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
-        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
-        val proximitySensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PROXIMITY)
-        
-        val listener = object : SensorEventListener {
-            override fun onSensorChanged(event: SensorEvent?) {
-                if (event != null && event.sensor.type == Sensor.TYPE_PROXIMITY) {
-                    val distance = event.values[0]
-                    isNear = distance < event.sensor.maximumRange && distance < 5f
+        val gestureManager = com.example.util.CallGestureSensorManager(
+            context = context,
+            onProximityChanged = { near -> isNear = near },
+            onFlipFaceDown = {
+                if (callState == android.telecom.Call.STATE_RINGING && !isMuted) {
+                    isMuted = true
+                    CallManager.setMuted(true)
                 }
             }
-
-            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
-        }
-
-        if (sensorManager != null && proximitySensor != null) {
-            sensorManager.registerListener(
-                listener,
-                proximitySensor,
-                SensorManager.SENSOR_DELAY_NORMAL
-            )
-        }
+        )
+        gestureManager.startListening()
 
         onDispose {
-            sensorManager?.unregisterListener(listener)
+            gestureManager.stopListening()
         }
     }
 

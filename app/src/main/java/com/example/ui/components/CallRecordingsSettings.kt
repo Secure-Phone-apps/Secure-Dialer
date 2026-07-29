@@ -1,12 +1,14 @@
 package com.example.ui.components
 
+import android.content.Intent
+import android.media.MediaPlayer
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -22,10 +24,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
 import kotlinx.coroutines.delay
+import java.io.File
 
 @Composable
 fun CallRecordingsSettings(
@@ -36,7 +40,16 @@ fun CallRecordingsSettings(
     val haptic = LocalHapticFeedback.current
     val recordings by viewModel.recordingsFlow.collectAsState()
     var playingId by remember { mutableIntStateOf(-1) }
-    var playbackProgress by remember { mutableFloatStateOf(0f) }
+    var currentPosMs by remember { mutableIntStateOf(0) }
+    var durationMs by remember { mutableIntStateOf(1) }
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaPlayer?.release()
+            mediaPlayer = null
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -111,10 +124,34 @@ fun CallRecordingsSettings(
                                         IconButton(onClick = {
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             if (isPlaying) {
+                                                mediaPlayer?.stop()
+                                                mediaPlayer?.release()
+                                                mediaPlayer = null
                                                 playingId = -1
                                             } else {
-                                                playingId = rec.id
-                                                playbackProgress = 0f
+                                                mediaPlayer?.release()
+                                                val file = File(rec.filePath)
+                                                if (!file.exists()) {
+                                                    Toast.makeText(context, "Audio file not found on disk", Toast.LENGTH_SHORT).show()
+                                                    return@IconButton
+                                                }
+                                                try {
+                                                    val mp = MediaPlayer().apply {
+                                                        setDataSource(rec.filePath)
+                                                        prepare()
+                                                        start()
+                                                        setOnCompletionListener {
+                                                            playingId = -1
+                                                            currentPosMs = 0
+                                                        }
+                                                    }
+                                                    mediaPlayer = mp
+                                                    durationMs = mp.duration.coerceAtLeast(1)
+                                                    playingId = rec.id
+                                                } catch (e: Exception) {
+                                                    Toast.makeText(context, "Error playing recording", Toast.LENGTH_SHORT).show()
+                                                    e.printStackTrace()
+                                                }
                                             }
                                         }) {
                                             Icon(
@@ -132,23 +169,19 @@ fun CallRecordingsSettings(
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onSurface
                                         )
-                                        if (rec.name.isNotEmpty()) {
+                                        if (rec.name.isNotEmpty() && rec.name != rec.number) {
                                             Text(
                                                 text = rec.number,
                                                 style = MaterialTheme.typography.bodySmall,
                                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
-                                        val dateStr = remember(rec.timestamp) {
-                                            try {
-                                                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
-                                                sdf.format(java.util.Date(rec.timestamp.toLong()))
-                                            } catch (e: Exception) {
-                                                "Unknown Date"
-                                            }
+                                        val formattedSize = remember(rec.filePath) {
+                                            val f = File(rec.filePath)
+                                            if (f.exists()) "${f.length() / 1024} KB" else ""
                                         }
                                         Text(
-                                            text = "$dateStr • ${rec.duration}s",
+                                            text = "${rec.timestamp} • ${rec.duration}s${if (formattedSize.isNotEmpty()) " • $formattedSize" else ""}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
@@ -167,13 +200,44 @@ fun CallRecordingsSettings(
                                     }
                                     IconButton(onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        val file = File(rec.filePath)
+                                        if (file.exists()) {
+                                            try {
+                                                val uri: Uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+                                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "audio/*"
+                                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                }
+                                                context.startActivity(Intent.createChooser(intent, "Share Call Recording"))
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, "Unable to share audio file", Toast.LENGTH_SHORT).show()
+                                            }
+                                        } else {
+                                            Toast.makeText(context, "File does not exist", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }) {
+                                        Icon(
+                                            imageVector = Icons.Default.Share,
+                                            contentDescription = "Share Recording",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    IconButton(onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (isPlaying) {
+                                            mediaPlayer?.stop()
+                                            mediaPlayer?.release()
+                                            mediaPlayer = null
+                                            playingId = -1
+                                        }
                                         viewModel.deleteCallRecording(rec.id)
-                                        if (isPlaying) playingId = -1
+                                        try { File(rec.filePath).delete() } catch (e: Exception) {}
                                         Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
                                     }) {
                                         Icon(
                                             imageVector = Icons.Default.Delete,
-                                            contentDescription = stringResource(R.string.delete_key, rec.id),
+                                            contentDescription = "Delete recording",
                                             tint = MaterialTheme.colorScheme.error
                                         )
                                     }
@@ -182,35 +246,29 @@ fun CallRecordingsSettings(
 
                             if (isPlaying) {
                                 LaunchedEffect(playingId) {
-                                    playbackProgress = 0f
-                                    val steps = rec.duration * 10
-                                    for (i in 1..steps) {
-                                        if (playingId != rec.id) break
-                                        delay(100)
-                                        playbackProgress = i.toFloat() / steps
-                                    }
-                                    if (playingId == rec.id) {
-                                        playingId = -1
-                                        playbackProgress = 0f
+                                    while (playingId == rec.id && mediaPlayer?.isPlaying == true) {
+                                        currentPosMs = mediaPlayer?.currentPosition ?: 0
+                                        delay(200)
                                     }
                                 }
+                                val progress = (currentPosMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f)
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     LinearProgressIndicator(
-                                        progress = playbackProgress,
+                                        progress = { progress },
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(4.dp)
                                             .clip(MaterialTheme.shapes.extraSmall),
                                         color = MaterialTheme.colorScheme.primary,
-                                        trackColor = MaterialTheme.colorScheme.surfaceVariant
+                                        trackColor = MaterialTheme.colorScheme.surfaceVariant,
                                     )
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(
-                                        text = "${(playbackProgress * rec.duration).toInt()}s / ${rec.duration}s",
+                                        text = "${currentPosMs / 1000}s / ${durationMs / 1000}s",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )

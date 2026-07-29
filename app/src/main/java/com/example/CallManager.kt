@@ -77,12 +77,45 @@ object CallManager {
         }
     }
 
+    fun autoStopRecordingIfNeeded() {
+        if (com.example.util.CallAudioRecorder.isRecording.value) {
+            val file = com.example.util.CallAudioRecorder.stopRecording()
+            if (file != null && file.exists()) {
+                val durationSec = com.example.util.CallAudioRecorder.recordingDuration.value.toLong()
+                val number = _callerNumber.value.ifEmpty { "Unknown" }
+                val name = _callerName.value.ifEmpty { number }
+                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", java.util.Locale.getDefault())
+                val timestamp = sdf.format(java.util.Date())
+
+                val recording = com.example.model.CallRecording(
+                    number = number,
+                    name = name,
+                    timestamp = timestamp,
+                    duration = durationSec,
+                    filePath = file.absolutePath
+                )
+
+                inCallService?.let { ctx ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val db = com.example.data.AppDatabase.getDatabase(ctx)
+                            db.dialerDao().insertCallRecording(recording)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     fun removeCall(call: Call) {
         if (call in _calls.value) {
             _calls.value = _calls.value - call
             call.unregisterCallback(callCallback)
         }
         if (_currentCall.value == call) {
+            autoStopRecordingIfNeeded()
             val nextCall = _calls.value.firstOrNull { it.state != Call.STATE_DISCONNECTED }
             updateCall(nextCall)
         }
@@ -114,6 +147,7 @@ object CallManager {
                 }
             }
         } else {
+            autoStopRecordingIfNeeded()
             _callState.value = Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""

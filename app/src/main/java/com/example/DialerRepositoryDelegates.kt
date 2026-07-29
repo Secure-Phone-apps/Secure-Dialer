@@ -9,9 +9,15 @@ import com.example.model.SpeedDial
 import kotlinx.coroutines.flow.Flow
 
 fun DialerRepository.getBlockedNumbers(): Flow<List<BlockedNumber>> = dao.getBlockedNumbersFlow()
-suspend fun DialerRepository.addBlockedNumber(number: String) = dao.insertBlockedNumber(BlockedNumber(number))
-suspend fun DialerRepository.removeBlockedNumber(number: String) = dao.deleteBlockedNumber(BlockedNumber(number))
-suspend fun DialerRepository.isBlocked(number: String): Boolean = CallBlockerService.isNumberBlocked(dao, number)
+suspend fun DialerRepository.addBlockedNumber(number: String) {
+    com.example.util.BlockedNumberContractManager.blockNumber(context, number, dao)
+}
+suspend fun DialerRepository.removeBlockedNumber(number: String) {
+    com.example.util.BlockedNumberContractManager.unblockNumber(context, number, dao)
+}
+suspend fun DialerRepository.isBlocked(number: String): Boolean {
+    return com.example.util.BlockedNumberContractManager.isBlocked(context, number, dao)
+}
 
 suspend fun DialerRepository.exportBackup(password: String = ""): String = com.example.data.BackupRestoreManager.exportBackup(context, password)
 suspend fun DialerRepository.importBackup(rawData: String, password: String = ""): Boolean = com.example.data.BackupRestoreManager.importBackup(context, rawData, password)

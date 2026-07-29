@@ -97,10 +97,14 @@ class MyInCallService : InCallService() {
         val number = handle?.schemeSpecificPart ?: ""
         val cnapName = call.details?.callerDisplayName
         val contactName = if (number.isNotEmpty()) getContactNameFromNumber(this, number) else null
+        val savedCnap = if (number.isNotEmpty() && contactName == null && cnapName.isNullOrBlank()) {
+            getSavedCnapName(this, number)
+        } else null
         
         val displayName = when {
             contactName != null -> contactName
             !cnapName.isNullOrBlank() -> cnapName
+            !savedCnap.isNullOrBlank() -> savedCnap
             number.isNotEmpty() -> number
             else -> "Unknown"
         }
@@ -140,10 +144,14 @@ class MyInCallService : InCallService() {
         val number = handle?.schemeSpecificPart ?: "Unknown"
         val cnapName = call.details?.callerDisplayName
         val contactName = getContactNameFromNumber(this, number)
+        val savedCnap = if (number != "Unknown" && number.isNotEmpty() && contactName == null && cnapName.isNullOrBlank()) {
+            getSavedCnapName(this, number)
+        } else null
         
         val name = when {
             contactName != null -> contactName
             !cnapName.isNullOrBlank() -> cnapName
+            !savedCnap.isNullOrBlank() -> savedCnap
             else -> number
         }
 

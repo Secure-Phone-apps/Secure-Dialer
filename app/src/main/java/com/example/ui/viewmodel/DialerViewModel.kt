@@ -331,6 +331,27 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun toggleCallRecording(context: android.content.Context, phoneNumber: String, callerName: String = "Unknown") {
+        if (com.example.util.CallAudioRecorder.isRecording.value) {
+            val file = com.example.util.CallAudioRecorder.stopRecording()
+            if (file != null && file.exists()) {
+                val durationSec = com.example.util.CallAudioRecorder.recordingDuration.value.toLong()
+                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", java.util.Locale.getDefault())
+                val timestamp = sdf.format(java.util.Date())
+                val recording = CallRecording(
+                    number = phoneNumber,
+                    name = if (callerName.isBlank()) phoneNumber else callerName,
+                    timestamp = timestamp,
+                    duration = durationSec,
+                    filePath = file.absolutePath
+                )
+                saveCallRecording(recording)
+            }
+        } else {
+            com.example.util.CallAudioRecorder.startRecording(context, phoneNumber)
+        }
+    }
+
     fun saveCallRecording(recording: CallRecording) {
         viewModelScope.launch {
             repository.saveCallRecording(recording)

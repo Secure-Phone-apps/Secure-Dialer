@@ -26,11 +26,16 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import androidx.compose.material3.*
@@ -184,12 +189,15 @@ fun MainScreen(
             if (systemCallerNumber.isNotEmpty()) {
                 callingContactNumber = systemCallerNumber
                 val contactName = getContactNameFromNumber(context, systemCallerNumber)
-                callingContactName = if (contactName != null) {
-                    contactName
+                if (contactName != null) {
+                    callingContactName = contactName
                 } else if (systemCallerCnapName.isNotEmpty()) {
-                    systemCallerCnapName
+                    callingContactName = systemCallerCnapName
                 } else {
-                    systemCallerNumber
+                    val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        com.example.getSavedCnapName(context, systemCallerNumber)
+                    }
+                    callingContactName = savedCnap ?: systemCallerNumber
                 }
             }
         } else {
@@ -197,15 +205,56 @@ fun MainScreen(
         }
     }
 
+    var showSimSelectDialog by remember { mutableStateOf(false) }
+    var pendingCallNumber by remember { mutableStateOf("") }
+    var pendingCallName by remember { mutableStateOf("") }
+
     fun initiateCall(name: String, number: String, label: String = "Mobile") {
         if (blockedNumbers.contains(number)) {
             Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
         }
-        callingContactName = name
-        callingContactNumber = number
-        isCallActive = true
-        CallManager.placeCall(context, number, preferredSim)
+        
+        var resolvedName = name
+        if (resolvedName == "Unknown" || resolvedName.isEmpty()) {
+            val contactName = getContactNameFromNumber(context, number)
+            if (contactName != null) {
+                resolvedName = contactName
+            }
+        }
+        
+        if (preferredSim == "Ask") {
+            pendingCallName = resolvedName
+            pendingCallNumber = number
+            showSimSelectDialog = true
+            
+            if (resolvedName == "Unknown" || resolvedName.isEmpty()) {
+                coroutineScope.launch {
+                    val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        com.example.getSavedCnapName(context, number)
+                    }
+                    if (!savedCnap.isNullOrBlank()) {
+                        pendingCallName = savedCnap
+                    }
+                }
+            }
+        } else {
+            callingContactName = resolvedName
+            callingContactNumber = number
+            isCallActive = true
+            CallManager.placeCall(context, number, preferredSim)
+            
+            if (resolvedName == "Unknown" || resolvedName.isEmpty()) {
+                coroutineScope.launch {
+                    val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        com.example.getSavedCnapName(context, number)
+                    }
+                    if (!savedCnap.isNullOrBlank()) {
+                        callingContactName = savedCnap
+                    }
+                }
+            }
+        }
     }
 
     val isDark by viewModel.isDarkTheme
@@ -216,6 +265,150 @@ fun MainScreen(
         contentWindowInsets = WindowInsets.safeDrawing
     ) { paddingValues ->
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            if (showSimSelectDialog) {
+                Dialog(
+                    onDismissRequest = { showSimSelectDialog = false },
+                    properties = DialogProperties(
+                        usePlatformDefaultWidth = false
+                    )
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.4f))
+                            .clickable { showSimSelectDialog = false },
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable(enabled = false) {}
+                                .padding(16.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            tonalElevation = 8.dp
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp, 4.dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                            shape = RoundedCornerShape(2.dp)
+                                        )
+                                )
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                Text(
+                                    text = "Select SIM Card",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                
+                                Spacer(modifier = Modifier.height(8.dp))
+                                
+                                Text(
+                                    text = "Choose which SIM card to make this call to ${pendingCallNumber}:",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                
+                                Spacer(modifier = Modifier.height(20.dp))
+                                
+                                val simList = remember { com.example.util.MultiSimManager.getActiveSimAccounts(context) }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    simList.take(2).forEachIndexed { index, sim ->
+                                        val simLabel = "SIM ${index + 1}"
+                                        Surface(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .height(100.dp)
+                                                .clip(RoundedCornerShape(16.dp))
+                                                .clickable {
+                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                    showSimSelectDialog = false
+                                                    callingContactName = pendingCallName
+                                                    callingContactNumber = pendingCallNumber
+                                                    isCallActive = true
+                                                    CallManager.placeCall(context, pendingCallNumber, simLabel)
+                                                },
+                                            color = if (index == 0) {
+                                                MaterialTheme.colorScheme.primaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.secondaryContainer
+                                            },
+                                            contentColor = if (index == 0) {
+                                                MaterialTheme.colorScheme.onPrimaryContainer
+                                            } else {
+                                                MaterialTheme.colorScheme.onSecondaryContainer
+                                            },
+                                            shape = RoundedCornerShape(16.dp),
+                                            tonalElevation = 2.dp
+                                        ) {
+                                            Column(
+                                                modifier = Modifier.fillMaxSize().padding(8.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally,
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.SimCard,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(24.dp),
+                                                    tint = if (index == 0) {
+                                                        MaterialTheme.colorScheme.primary
+                                                    } else {
+                                                        MaterialTheme.colorScheme.secondary
+                                                    }
+                                                )
+                                                Spacer(modifier = Modifier.height(6.dp))
+                                                Text(
+                                                    text = simLabel,
+                                                    style = MaterialTheme.typography.labelLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                                Text(
+                                                    text = sim.carrierName.ifEmpty { sim.displayName },
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    maxLines = 1,
+                                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                TextButton(
+                                    onClick = { showSimSelectDialog = false },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(16.dp)
+                                ) {
+                                    Text(
+                                        text = "Cancel",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             Column(modifier = Modifier.fillMaxSize()) {
                 if (!isDefaultDialer) {
                     DefaultDialerWarningCard(onShowRestrictedSettings = onShowRestrictedSettings)
