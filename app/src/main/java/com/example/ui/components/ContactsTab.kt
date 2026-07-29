@@ -44,7 +44,7 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.example.model.Contact
+import com.example.model.*
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
@@ -457,11 +457,22 @@ fun ContactRow(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Text(
-                                    text = if (contact.name.length >= 2) contact.name.substring(0, 2).uppercase() else contact.name.take(1).uppercase(),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = contact.avatarTextColor
-                                )
+                                val isSaved = contact.name.isNotBlank() && contact.name != contact.number && contact.name != "Unknown"
+                                if (isSaved) {
+                                    Text(
+                                        text = contact.avatarText.ifEmpty { getInitials(contact.name) },
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = contact.avatarTextColor,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Unsaved Contact Icon",
+                                        tint = contact.avatarTextColor,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
                             }
                         }
                     }

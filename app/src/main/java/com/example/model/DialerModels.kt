@@ -3,6 +3,24 @@ package com.example.model
 import androidx.compose.ui.graphics.Color
 import androidx.room.*
 
+fun getInitials(name: String): String {
+    val trimmed = name.trim()
+    if (trimmed.isEmpty()) return "?"
+    
+    val parts = trimmed.split(Regex("\\s+")).filter { it.isNotBlank() }
+    return if (parts.size >= 2) {
+        val firstChar = parts[0].firstOrNull()?.toString()?.uppercase() ?: ""
+        val secondChar = parts[1].firstOrNull()?.toString()?.uppercase() ?: ""
+        firstChar + secondChar
+    } else {
+        if (trimmed.length >= 2) {
+            trimmed.substring(0, 2).uppercase()
+        } else {
+            trimmed.take(1).uppercase()
+        }
+    }
+}
+
 @Entity(
     tableName = "call_history",
     indices = [Index(value = ["number"]), Index(value = ["timestamp"])]

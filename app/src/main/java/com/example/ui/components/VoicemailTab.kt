@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -118,11 +119,22 @@ fun VoicemailTabContent(
                                                     contentScale = ContentScale.Crop
                                                 )
                                             } else {
-                                                Text(
-                                                    record.avatarText,
-                                                    style = MaterialTheme.typography.titleSmall,
-                                                    color = record.avatarTextColor
-                                                )
+                                                val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
+                                                if (isSaved) {
+                                                    Text(
+                                                        record.avatarText,
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        color = record.avatarTextColor,
+                                                        fontWeight = FontWeight.SemiBold
+                                                    )
+                                                } else {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Person,
+                                                        contentDescription = "Unsaved Contact Icon",
+                                                        tint = record.avatarTextColor,
+                                                        modifier = Modifier.size(22.dp)
+                                                    )
+                                                }
                                             }
                                         }
                                     }

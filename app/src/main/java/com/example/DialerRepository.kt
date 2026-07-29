@@ -233,7 +233,7 @@ class DialerRepository(rawContext: Context) {
                     val contactId = if (cidIdx != -1) cursor.getString(cidIdx) ?: "" else ""
                     val email = emailMap[contactId] ?: ""
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                    contacts.add(Contact(num, name, "Mobile", fav, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name), email, photoUri))
+                    contacts.add(Contact(num, name, "Mobile", fav, getInitials(name), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name), email, photoUri))
                 }
             }
         } catch (e: SecurityException) {
@@ -326,7 +326,7 @@ class DialerRepository(rawContext: Context) {
 
                     val pair = colors[Math.abs(name.hashCode()) % colors.size]
                     val photoUriVal = matchingContact?.photoUri ?: ""
-                    logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, name.take(1), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal))
+                    logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, getInitials(name), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal))
                 }
             }
         } catch (e: SecurityException) {

@@ -38,8 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.model.Contact
-import com.example.model.DialpadMatch
+import com.example.model.*
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import androidx.paging.compose.LazyPagingItems
@@ -151,12 +150,22 @@ fun DialpadTabContent(
                                                         contentScale = ContentScale.Crop
                                                     )
                                                 } else {
-                                                    Text(
-                                                        text = if (match.name.length >= 2) match.name.substring(0, 2).uppercase() else match.name.take(1).uppercase(),
-                                                        style = MaterialTheme.typography.titleSmall,
-                                                        color = match.avatarTextColor,
-                                                        fontWeight = FontWeight.SemiBold
-                                                    )
+                                                    val isSaved = match.name.isNotBlank() && match.name != match.number && match.name != "Unknown"
+                                                    if (isSaved) {
+                                                        Text(
+                                                            text = match.avatarText.ifEmpty { getInitials(match.name) },
+                                                            style = MaterialTheme.typography.titleSmall,
+                                                            color = match.avatarTextColor,
+                                                            fontWeight = FontWeight.SemiBold
+                                                        )
+                                                    } else {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Person,
+                                                            contentDescription = "Unsaved Contact Icon",
+                                                            tint = match.avatarTextColor,
+                                                            modifier = Modifier.size(22.dp)
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }

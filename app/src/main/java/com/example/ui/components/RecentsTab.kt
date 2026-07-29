@@ -387,12 +387,22 @@ fun RecentCallRow(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Text(
-                                    text = record.avatarText,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = record.avatarTextColor,
-                                    fontWeight = FontWeight.SemiBold
-                                )
+                                val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
+                                if (isSaved) {
+                                    Text(
+                                        text = record.avatarText,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = record.avatarTextColor,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Unsaved Contact Icon",
+                                        tint = record.avatarTextColor,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -1136,12 +1146,22 @@ fun CallHistoryDetailsScreen(
                                     contentScale = ContentScale.Crop
                                 )
                             } else {
-                                Text(
-                                    text = primaryRecord.avatarText,
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    color = primaryRecord.avatarTextColor,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                val isSaved = primaryRecord.name != primaryRecord.number && primaryRecord.name != "Unknown" && primaryRecord.name.isNotBlank()
+                                if (isSaved) {
+                                    Text(
+                                        text = primaryRecord.avatarText,
+                                        style = MaterialTheme.typography.headlineSmall,
+                                        color = primaryRecord.avatarTextColor,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Unsaved Contact Icon",
+                                        tint = primaryRecord.avatarTextColor,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                }
                             }
                         }
                     }

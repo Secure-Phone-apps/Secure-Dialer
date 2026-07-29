@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.CallManager
-import com.example.model.Contact
+import com.example.model.*
 import com.example.ui.theme.LocalM3Expressive
 import kotlinx.coroutines.delay
 
@@ -514,19 +514,22 @@ fun ActiveCallScreen(
                                 )
                             } else {
                                 val pName = participants.firstOrNull()?.first ?: contactName
-                                val isRawNumber = pName.none { it.isLetter() }
-                                val avatarText = if (!isRawNumber && pName.length >= 2) {
-                                    pName.substring(0, 2).uppercase()
-                                } else if (!isRawNumber && pName.isNotEmpty()) {
-                                    pName.take(1).uppercase()
+                                val isSaved = matchedContact != null || (pName != contactNumber && pName != "Unknown" && pName.isNotBlank() && pName.any { it.isLetter() })
+                                if (isSaved) {
+                                    val avatarText = getInitials(pName)
+                                    Text(
+                                        text = avatarText,
+                                        style = MaterialTheme.typography.displayLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 } else {
-                                    "📞"
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Unsaved Contact Icon",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(64.dp)
+                                    )
                                 }
-                                Text(
-                                    text = avatarText,
-                                    style = MaterialTheme.typography.displayLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
                         }
                     }
@@ -622,11 +625,24 @@ fun ActiveCallScreen(
                                                 color = contact.avatarBg
                                             ) {
                                                 Box(contentAlignment = Alignment.Center) {
-                                                    Text(
-                                                        text = if (contact.name.isNotEmpty()) contact.name.take(1).uppercase() else "?",
-                                                        color = contact.avatarTextColor,
-                                                        style = MaterialTheme.typography.labelSmall
-                                                    )
+                                                    if (contact.photoUri.isNotEmpty()) {
+                                                        AsyncImage(
+                                                            model = ImageRequest.Builder(context)
+                                                                .data(contact.photoUri)
+                                                                .size(256, 256)
+                                                                .crossfade(true)
+                                                                .build(),
+                                                            contentDescription = "Contact Photo",
+                                                            modifier = Modifier.fillMaxSize(),
+                                                            contentScale = ContentScale.Crop
+                                                        )
+                                                    } else {
+                                                        Text(
+                                                            text = contact.avatarText.ifEmpty { getInitials(contact.name) },
+                                                            color = contact.avatarTextColor,
+                                                            style = MaterialTheme.typography.labelSmall
+                                                        )
+                                                    }
                                                 }
                                             }
                                             Spacer(modifier = Modifier.width(12.dp))
