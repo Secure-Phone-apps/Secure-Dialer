@@ -216,27 +216,7 @@ fun RecentsTabContent(
                 // 3. Consolidated Call Logs list or search results state
                 val query by viewModel.searchQuery
                 val consolidatedRecords = remember(callRecords, currentFilter, query) {
-                    val baseFiltered = callRecords
-                        .filter { record ->
-                            when (currentFilter) {
-                                RecentsFilter.ALL -> true
-                                RecentsFilter.MISSED -> record.type == CallType.MISSED
-                                RecentsFilter.DIALED -> record.type == CallType.OUTGOING
-                                RecentsFilter.RECEIVED -> record.type == CallType.INCOMING
-                            }
-                        }
-                        .filter { record ->
-                            if (query.isBlank()) {
-                                true
-                            } else {
-                                record.name.contains(query, ignoreCase = true) ||
-                                record.number.contains(query, ignoreCase = true)
-                            }
-                        }
-                    
-                    baseFiltered.groupBy { it.number }.map { (_, records) ->
-                        CallGroup(records.first(), records)
-                    }
+                    groupCallRecords(callRecords, currentFilter, query)
                 }
 
                 if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
@@ -668,6 +648,70 @@ data class CallGroup(
     val primary: CallRecord,
     val calls: List<CallRecord>
 )
+
+private fun normalizePhoneNumberForKey(number: String, name: String): String {
+    val cleanName = name.trim()
+    val digits = number.filter { it.isDigit() }
+    return when {
+        cleanName.isNotBlank() && cleanName != number && cleanName != "Unknown" -> cleanName.lowercase(Locale.ROOT)
+        digits.length >= 7 -> digits.takeLast(10)
+        digits.isNotEmpty() -> digits
+        else -> number.trim().lowercase(Locale.ROOT)
+    }
+}
+
+fun groupCallRecords(
+    callRecords: List<CallRecord>,
+    filter: RecentsFilter,
+    query: String
+): List<CallGroup> {
+    if (callRecords.isEmpty()) return emptyList()
+
+    val cleanQuery = query.trim()
+    val hasQuery = cleanQuery.isNotEmpty()
+
+    // Map maintaining order of insertion (latest call for each contact appears first)
+    val groupedMap = LinkedHashMap<String, MutableList<CallRecord>>()
+
+    for (i in callRecords.indices) {
+        val record = callRecords[i]
+
+        // 1. Filter by Call Type
+        val matchesFilter = when (filter) {
+            RecentsFilter.ALL -> true
+            RecentsFilter.MISSED -> record.type == CallType.MISSED
+            RecentsFilter.DIALED -> record.type == CallType.OUTGOING
+            RecentsFilter.RECEIVED -> record.type == CallType.INCOMING
+        }
+        if (!matchesFilter) continue
+
+        // 2. Filter by Search Query
+        if (hasQuery) {
+            val matchesQuery = record.name.contains(cleanQuery, ignoreCase = true) ||
+                    record.number.contains(cleanQuery, ignoreCase = true)
+            if (!matchesQuery) continue
+        }
+
+        // 3. Determine unique grouping key
+        val key = normalizePhoneNumberForKey(record.number, record.name)
+
+        var list = groupedMap[key]
+        if (list == null) {
+            list = ArrayList()
+            groupedMap[key] = list
+        }
+        list.add(record)
+    }
+
+    if (groupedMap.isEmpty()) return emptyList()
+
+    val result = ArrayList<CallGroup>(groupedMap.size)
+    for (list in groupedMap.values) {
+        result.add(CallGroup(list.first(), list))
+    }
+
+    return result
+}
 
 enum class SummaryTimeRange(val label: String) {
     TODAY("Today"),
