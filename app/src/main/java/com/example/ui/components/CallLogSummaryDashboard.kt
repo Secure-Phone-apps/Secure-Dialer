@@ -69,15 +69,17 @@ fun CallLogSummaryDashboard(
     val startOfMonth = remember(now) { now - 30L * 24 * 60 * 60 * 1000 }
     val startOfYear = remember(now) { now - 365L * 24 * 60 * 60 * 1000 }
 
-    val filteredRecords = remember(callRecords, selectedRange, startOfWeek, startOfMonth, startOfYear) {
-        val todayPrefix = SimpleDateFormat("MMM d", Locale.getDefault()).format(Date())
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val filteredRecords = remember(callRecords, selectedRange, startOfWeek, startOfMonth, startOfYear, context) {
+        val currentLocale = getCurrentLocale(context)
+        val todayPrefix = SimpleDateFormat("MMM d", currentLocale).format(Date())
         
         when (selectedRange) {
             SummaryTimeRange.TODAY -> {
                 callRecords.filter { it.timestamp.startsWith(todayPrefix) }
             }
             SummaryTimeRange.WEEK -> {
-                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
                 val calCurrent = java.util.Calendar.getInstance()
                 val currentYear = calCurrent.get(java.util.Calendar.YEAR)
                 val currentMillis = calCurrent.timeInMillis
@@ -100,7 +102,7 @@ fun CallLogSummaryDashboard(
                 }
             }
             SummaryTimeRange.MONTH -> {
-                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
                 val calCurrent = java.util.Calendar.getInstance()
                 val currentYear = calCurrent.get(java.util.Calendar.YEAR)
                 val currentMillis = calCurrent.timeInMillis
@@ -123,7 +125,7 @@ fun CallLogSummaryDashboard(
                 }
             }
             SummaryTimeRange.YEAR -> {
-                val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+                val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
                 val calCurrent = java.util.Calendar.getInstance()
                 val currentYear = calCurrent.get(java.util.Calendar.YEAR)
                 val currentMillis = calCurrent.timeInMillis

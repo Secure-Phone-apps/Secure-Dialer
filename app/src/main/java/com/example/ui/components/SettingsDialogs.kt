@@ -19,17 +19,17 @@ import com.example.R
 fun AboutDialog(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("About Secure Dialer") },
+        title = { Text(stringResource(R.string.settings_about)) },
         text = {
             Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                Text("Secure Dialer v1.0.0", style = MaterialTheme.typography.titleMedium)
-                Text("A privacy-first, lightning-fast dialer with advanced call management and Material 3 design.", style = MaterialTheme.typography.bodyMedium)
-                Text("100% Offline & Local Processing", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                Text("Secure Dialer v1.2.0", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.about_app_desc), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.about_mission_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(R.string.close))
             }
         }
     )
@@ -47,19 +47,18 @@ fun PrivacyDialog(onDismiss: () -> Unit) {
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
             ) {
-                Text("Your privacy is our highest priority.", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.privacy_intro), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "• No telemetry or data collection.\n" +
-                            "• All contacts, call logs, and notes stay strictly on your device.\n" +
-                            "• Zero external network requests or third-party tracking.\n" +
-                            "• Full local encryption and secure storage.",
+                    "• " + stringResource(R.string.privacy_section_1_desc) + "\n" +
+                    "• " + stringResource(R.string.privacy_section_2_desc) + "\n" +
+                    "• " + stringResource(R.string.privacy_section_3_desc),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("I Understand")
+                Text(stringResource(R.string.close))
             }
         }
     )

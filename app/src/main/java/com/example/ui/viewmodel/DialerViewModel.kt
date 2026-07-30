@@ -344,7 +344,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             val file = com.example.util.CallAudioRecorder.stopRecording()
             if (file != null && file.exists()) {
                 val durationSec = com.example.util.CallAudioRecorder.recordingDuration.value.toLong()
-                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", java.util.Locale.getDefault())
+                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
                 val timestamp = sdf.format(java.util.Date())
                 val recording = CallRecording(
                     number = phoneNumber,

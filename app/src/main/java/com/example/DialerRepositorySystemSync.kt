@@ -98,7 +98,7 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
 suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withContext(Dispatchers.IO) {
     val logs = mutableListOf<CallRecord>()
     val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
-    val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+    val sdf = SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
 
     val allContacts = try {
         dao.getAllContactsList()

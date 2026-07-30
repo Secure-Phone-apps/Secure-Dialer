@@ -93,7 +93,8 @@ object CallManager {
                 val durationSec = com.example.util.CallAudioRecorder.recordingDuration.value.toLong()
                 val number = _callerNumber.value.ifEmpty { "Unknown" }
                 val name = _callerName.value.ifEmpty { number }
-                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", java.util.Locale.getDefault())
+                val locale = inCallService?.let { com.example.ui.components.getCurrentLocale(it) } ?: java.util.Locale.getDefault()
+                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", locale)
                 val timestamp = sdf.format(java.util.Date())
 
                 val recording = com.example.model.CallRecording(

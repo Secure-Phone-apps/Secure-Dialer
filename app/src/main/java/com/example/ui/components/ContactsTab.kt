@@ -227,8 +227,8 @@ fun ContactsTabContent(
                     contentAlignment = Alignment.Center
                 ) {
                     EmptyStateIllustration(
-                        title = if (showOnlyFavorites) "No Favorites" else stringResource(R.string.no_contacts_title),
-                        subtitle = if (showOnlyFavorites) "Favorites will show up here" else stringResource(R.string.no_contacts_subtitle)
+                        title = if (showOnlyFavorites) stringResource(R.string.no_favorites_title) else stringResource(R.string.no_contacts_title),
+                        subtitle = if (showOnlyFavorites) stringResource(R.string.no_favorites_subtitle) else stringResource(R.string.no_contacts_subtitle)
                     )
                 }
             } else {
