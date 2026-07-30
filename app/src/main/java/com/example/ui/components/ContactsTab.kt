@@ -79,18 +79,50 @@ fun ContactsTabContent(
 ) {
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    val alphabet = ('A'..'Z').toList() + '#'
+    
+    val allContacts by viewModel.allContactsFlow.collectAsState()
+    val alphabet = remember(allContacts) {
+        val uniqueLetters = allContacts.asSequence()
+            .map { it.name.trim() }
+            .filter { it.isNotEmpty() }
+            .map { it.first().uppercaseChar() }
+            .distinct()
+            .toMutableList()
+
+        val letterChars = uniqueLetters.filter { it.isLetter() }.sorted()
+        val otherChars = uniqueLetters.filter { !it.isLetter() }
+
+        val result = mutableListOf<Char>()
+        result.addAll(letterChars)
+        if (otherChars.isNotEmpty() || result.isEmpty()) {
+            result.add('#')
+        }
+        
+        if (result.size <= 1) {
+            ('A'..'Z').toList() + '#'
+        } else {
+            result
+        }
+    }
+
     var showOnlyFavorites by remember { mutableStateOf(false) }
     val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
 
-    val activeLetter = remember(listState) {
+    val activeLetter = remember(listState, alphabet) {
         derivedStateOf {
             val firstVisibleIndex = listState.firstVisibleItemIndex
             if (firstVisibleIndex < contactsPaged.itemCount) {
                 val contact = contactsPaged.peek(firstVisibleIndex)
-                contact?.name?.firstOrNull()?.uppercaseChar() ?: 'A'
+                val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
+                if (alphabet.contains(firstChar)) {
+                    firstChar
+                } else if (!firstChar.isLetter() && alphabet.contains('#')) {
+                    '#'
+                } else {
+                    alphabet.firstOrNull() ?: '#'
+                }
             } else {
-                'A'
+                alphabet.firstOrNull() ?: '#'
             }
         }
     }

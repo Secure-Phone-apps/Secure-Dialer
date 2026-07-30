@@ -292,7 +292,8 @@ fun DialpadTabContent(
                             voicemailNumber = voicemailNumber,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(70.dp)
+                                .height(70.dp),
+                            viewModel = viewModel
                         )
                     }
                 }
@@ -303,88 +304,119 @@ fun DialpadTabContent(
 
 
 
-        // Action Row (Call & Backspace inline)
+        // Action Row (Call & Backspace inline) - Made symmetrically and geometrically same to other dialpad buttons
+        val actionButtonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Symmetrical Paste button on the left to keep call button perfectly centered
-            Box(
-                modifier = Modifier.size(78.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
-                IconButton(
-                    onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        try {
-                            val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-                            val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
-                            if (filteredDigits.isNotEmpty()) {
-                                onValueChange(filteredDigits)
-                                Toast.makeText(context, "Pasted: $filteredDigits", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "No valid number in clipboard", Toast.LENGTH_SHORT).show()
-                            }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+            val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
+            Surface(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    try {
+                        val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                        val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                        if (filteredDigits.isNotEmpty()) {
+                            onValueChange(filteredDigits)
+                            Toast.makeText(context, "Pasted: $filteredDigits", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "No valid number in clipboard", Toast.LENGTH_SHORT).show()
                         }
-                    },
-                    modifier = Modifier.size(48.dp)
-                ) {
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                },
+                shape = actionButtonShape,
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                contentColor = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(70.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.ContentPaste,
                         contentDescription = "Paste number",
-                        tint = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            // Central green call button
-            val callFabShape = RoundedCornerShape(16.dp)
-
-            LargeFloatingActionButton(
+            // Central primary call button matching DialButton shape and size perfectly
+            Surface(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCallClick(inputValue)
                 },
-                shape = callFabShape,
-                containerColor = MaterialTheme.colorScheme.primary,
+                shape = actionButtonShape,
+                color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
-                    .size(78.dp)
+                    .weight(1f)
+                    .height(70.dp)
                     .testTag("dialpad_call_button")
             ) {
-                Icon(
-                    imageVector = Icons.Default.Call,
-                    contentDescription = "Place call",
-                    modifier = Modifier.size(30.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Place call",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
-            // Backspace button on the right
+            // Backspace button on the right matching shape and size perfectly
             Box(
-                modifier = Modifier.size(78.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(70.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (inputValue.isNotEmpty()) {
-                    IconButton(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            onValueChange(inputValue.dropLast(1))
-                        },
-                        modifier = Modifier.size(48.dp)
+                    val backspaceInteractionSource = remember { MutableInteractionSource() }
+                    val isBackspacePressed by backspaceInteractionSource.collectIsPressedAsState()
+                    val backspaceScale by animateFloatAsState(
+                        targetValue = if (isBackspacePressed) 0.92f else 1.0f,
+                        animationSpec = spring(
+                            stiffness = Spring.StiffnessHigh,
+                            dampingRatio = Spring.DampingRatioMediumBouncy
+                        ),
+                        label = "backspace_button_scale"
+                    )
+
+                    Surface(
+                        shape = actionButtonShape,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .scale(backspaceScale)
+                            .clip(actionButtonShape)
+                            .combinedClickable(
+                                interactionSource = backspaceInteractionSource,
+                                indication = ripple(),
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onValueChange(inputValue.dropLast(1))
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onValueChange("")
+                                }
+                            )
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Backspace,
-                            contentDescription = "Backspace",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                contentDescription = "Backspace",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
                     }
                 }
             }

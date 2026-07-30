@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
+import com.example.model.*
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -42,10 +43,12 @@ fun DialpadOverlay(
     onCallClick: (String) -> Unit,
     onSpeedDialCall: (String) -> Unit,
     speedDialMap: Map<Int, String>,
-    voicemailNumber: String
+    voicemailNumber: String,
+    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+
 
     Surface(
         modifier = Modifier
@@ -153,10 +156,22 @@ fun DialpadOverlay(
                 }
 
                 if (inputValue.isNotEmpty()) {
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        onValueChange(inputValue.dropLast(1))
-                    }) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .combinedClickable(
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    onValueChange(inputValue.dropLast(1))
+                                },
+                                onLongClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onValueChange("")
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Backspace",
@@ -188,7 +203,8 @@ fun DialpadOverlay(
                                 onSpeedDialCall = onSpeedDialCall,
                                 speedDialMap = speedDialMap,
                                 voicemailNumber = voicemailNumber,
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f),
+                                viewModel = viewModel
                             )
                         }
                     }
@@ -197,26 +213,29 @@ fun DialpadOverlay(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Call Action Button
-            val overlayFabShape = RoundedCornerShape(16.dp)
+            // Call Action Button - Geometrically identical to the other buttons
+            val overlayCallShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
 
-            LargeFloatingActionButton(
+            Surface(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onCallClick(inputValue)
                 },
-                shape = overlayFabShape,
-                containerColor = MaterialTheme.colorScheme.primary,
+                shape = overlayCallShape,
+                color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
-                    .size(78.dp)
+                    .fillMaxWidth()
+                    .height(64.dp)
                     .testTag("dialpad_call_button")
             ) {
-                Icon(
-                    imageVector = Icons.Default.Call,
-                    contentDescription = "Place call",
-                    modifier = Modifier.size(30.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = "Place call",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -233,12 +252,13 @@ fun DialButton(
     onSpeedDialCall: (String) -> Unit,
     speedDialMap: Map<Int, String>,
     voicemailNumber: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
-    val buttonShape = RoundedCornerShape(16.dp)
+    val buttonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
     val buttonColor = if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
