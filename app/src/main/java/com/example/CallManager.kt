@@ -42,12 +42,21 @@ object CallManager {
     private val _callerCnapName = MutableStateFlow("")
     val callerCnapName: StateFlow<String> = _callerCnapName
 
+    private val _activeStartTimestamp = MutableStateFlow<Long>(0L)
+    val activeStartTimestamp: StateFlow<Long> = _activeStartTimestamp
+
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
             _calls.value = _calls.value // force emit
             if (call == _currentCall.value) {
                 _callState.value = state
+                if (state == Call.STATE_ACTIVE) {
+                    if (_activeStartTimestamp.value == 0L) {
+                        val connectTime = call.details?.connectTimeMillis ?: 0L
+                        _activeStartTimestamp.value = if (connectTime > 0L) connectTime else System.currentTimeMillis()
+                    }
+                }
                 if (state == Call.STATE_DISCONNECTED) {
                     removeCall(call)
                 }
@@ -128,6 +137,14 @@ object CallManager {
         _currentCall.value = call
         if (call != null) {
             _callState.value = call.state
+            if (call.state == Call.STATE_ACTIVE) {
+                if (_activeStartTimestamp.value == 0L) {
+                    val connectTime = call.details?.connectTimeMillis ?: 0L
+                    _activeStartTimestamp.value = if (connectTime > 0L) connectTime else System.currentTimeMillis()
+                }
+            } else {
+                _activeStartTimestamp.value = 0L
+            }
             val number = call.details?.handle?.schemeSpecificPart ?: ""
             _callerNumber.value = number
             _callerName.value = "" 
@@ -152,6 +169,7 @@ object CallManager {
             _callerNumber.value = ""
             _callerName.value = ""
             _callerCnapName.value = ""
+            _activeStartTimestamp.value = 0L
             if (_calls.value.isEmpty()) {
                 inCallService = null
             }

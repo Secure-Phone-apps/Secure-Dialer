@@ -20,12 +20,20 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var searchQuery = mutableStateOf("")
     private val _searchQueryFlow = MutableStateFlow("")
 
+    // Dialpad Input Flow
+    private val _dialpadInputFlow = MutableStateFlow("")
+
     // Details Screen state (to hide global search bar)
     var isCallHistoryDetailsOpen = mutableStateOf(false)
 
     fun onSearchQueryChange(newQuery: String) {
         searchQuery.value = newQuery
         _searchQueryFlow.value = newQuery
+    }
+
+    fun onDialpadInputChange(newInput: String) {
+        dialpadInput.value = newInput
+        _dialpadInputFlow.value = newInput
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -48,7 +56,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val dialpadMatches: StateFlow<List<DialpadMatch>> = combine(
         allContactsFlow,
         allCallHistoryFlow,
-        _searchQueryFlow
+        _dialpadInputFlow
     ) { contacts, recents, query ->
         if (query.isBlank()) {
             emptyList()

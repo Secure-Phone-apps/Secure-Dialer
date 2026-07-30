@@ -60,11 +60,13 @@ fun ActiveCallScreen(
     callState: Int = android.telecom.Call.STATE_DISCONNECTED,
     recordingEnabled: Boolean = false,
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
-    onSaveNote: (String) -> Unit = {}
+    onSaveNote: (String) -> Unit = {},
+    onMinimize: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    var callDuration by remember { mutableStateOf(0) }
+    val activeStartTimestamp by CallManager.activeStartTimestamp.collectAsStateWithLifecycle()
+    var tickTrigger by remember { mutableStateOf(0) }
     var isMuted by remember { mutableStateOf(false) }
     var isSpeakerOn by remember { mutableStateOf(false) }
     var isBluetoothOn by remember { mutableStateOf(false) }
@@ -102,8 +104,18 @@ fun ActiveCallScreen(
         if (callState == android.telecom.Call.STATE_ACTIVE) {
             while (true) {
                 delay(1000)
-                callDuration++
+                tickTrigger++
             }
+        }
+    }
+
+    val callDuration = remember(activeStartTimestamp, tickTrigger, callState) {
+        if (callState == android.telecom.Call.STATE_ACTIVE) {
+            val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
+            val durationMs = System.currentTimeMillis() - start
+            (durationMs / 1000).coerceAtLeast(0L).toInt()
+        } else {
+            0
         }
     }
 
@@ -325,6 +337,26 @@ fun ActiveCallScreen(
                 onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen }
             )
         }
+        }
+
+        if (onMinimize != null) {
+            IconButton(
+                onClick = {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    onMinimize()
+                },
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Minimize Call",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
         }
 
         if (isNear) {

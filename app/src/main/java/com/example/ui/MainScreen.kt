@@ -14,9 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -34,8 +32,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.SimCard
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import androidx.compose.material3.*
@@ -90,6 +88,13 @@ fun MainScreen(
     var dialpadInput by viewModel.dialpadInput
     var isSettingsVisible by viewModel.isSettingsVisible
     var isCallActive by viewModel.isCallActive
+    var isCallMinimized by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isCallActive) {
+        if (!isCallActive) {
+            isCallMinimized = false
+        }
+    }
     var callingContactName by viewModel.callingContactName
     var callingContactNumber by viewModel.callingContactNumber
     var isAddContactDialogVisible by viewModel.isAddContactDialogVisible
@@ -492,10 +497,9 @@ fun MainScreen(
                                             if (dialpadTonesEnabled) playDtmf(it.last().toString())
                                             if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         }
-                                        dialpadInput = it
-                                        viewModel.onSearchQueryChange(it)
+                                        viewModel.onDialpadInputChange(it)
                                     } ,
-                                    onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); dialpadInput = "" } },
+                                    onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); viewModel.onDialpadInputChange("") } },
                                     onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                                     voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
                                     dialpadMatches = dialpadMatches,
@@ -505,6 +509,16 @@ fun MainScreen(
                             }
                         }
                     }
+                }
+
+                if (isCallActive && isCallMinimized) {
+                    MinimizedCallBanner(
+                        contactName = callingContactName,
+                        contactNumber = callingContactNumber,
+                        callState = systemCallState,
+                        onExpand = { isCallMinimized = false },
+                        onHangUp = { CallManager.disconnect(); isCallActive = false }
+                    )
                 }
 
                 BottomNavBar(
@@ -519,7 +533,7 @@ fun MainScreen(
             }
 
             AnimatedVisibility(
-                visible = isCallActive,
+                visible = isCallActive && !isCallMinimized,
                 enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
                 exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
             ) {
@@ -549,7 +563,8 @@ fun MainScreen(
                     },
                     onSaveNote = { content ->
                         viewModel.saveCallNote(callingContactNumber, content)
-                    }
+                    },
+                    onMinimize = { isCallMinimized = true }
                 )
             }
 
@@ -570,6 +585,160 @@ fun MainScreen(
             }
 
             MainScreenContactDialogs(viewModel = viewModel)
+        }
+    }
+}
+
+@Composable
+fun MinimizedCallBanner(
+    contactName: String,
+    contactNumber: String,
+    callState: Int,
+    onExpand: () -> Unit,
+    onHangUp: () -> Unit
+) {
+    val activeStartTimestamp by CallManager.activeStartTimestamp.collectAsState()
+    var tickTrigger by remember { mutableStateOf(0) }
+
+    LaunchedEffect(callState) {
+        if (callState == android.telecom.Call.STATE_ACTIVE) {
+            while (true) {
+                kotlinx.coroutines.delay(1000)
+                tickTrigger++
+            }
+        }
+    }
+
+    val callDuration = remember(activeStartTimestamp, tickTrigger, callState) {
+        if (callState == android.telecom.Call.STATE_ACTIVE) {
+            val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
+            val durationMs = System.currentTimeMillis() - start
+            (durationMs / 1000).coerceAtLeast(0L).toInt()
+        } else {
+            0
+        }
+    }
+
+    val formattedTime = remember(callDuration) {
+        val mins = callDuration / 60
+        val secs = callDuration % 60
+        "%02d:%02d".format(mins, secs)
+    }
+
+    val statusText = when (callState) {
+        android.telecom.Call.STATE_RINGING -> "Incoming..."
+        android.telecom.Call.STATE_DIALING -> "Dialing..."
+        android.telecom.Call.STATE_CONNECTING -> "Connecting..."
+        android.telecom.Call.STATE_HOLDING -> "On Hold"
+        else -> formattedTime
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onExpand() },
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Pulsing indicator
+                Box(contentAlignment = Alignment.Center) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+                    val scale by infiniteTransition.animateFloat(
+                        initialValue = 1.0f,
+                        targetValue = 1.6f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1200, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart
+                        ),
+                        label = "scale"
+                    )
+                    val alpha by infiniteTransition.animateFloat(
+                        initialValue = 0.6f,
+                        targetValue = 0.0f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(1200, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart
+                        ),
+                        label = "alpha"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .graphicsLayer(scaleX = scale, scaleY = scale, alpha = alpha)
+                            .background(
+                                color = if (callState == android.telecom.Call.STATE_RINGING) Color.Red else Color.Green,
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            )
+                    )
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = if (callState == android.telecom.Call.STATE_RINGING) Color.Red else Color.Green
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = contactName.ifEmpty { contactNumber },
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                    )
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onExpand,
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowUp,
+                        contentDescription = "Expand Call Screen",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(
+                    onClick = onHangUp,
+                    modifier = Modifier.size(36.dp),
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CallEnd,
+                        contentDescription = "End Call",
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
         }
     }
 }
