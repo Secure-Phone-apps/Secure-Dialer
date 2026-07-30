@@ -267,4 +267,39 @@
     <string name="action_message">رسالة</string>
     <string name="action_add_contact">إضافة جهة اتصال</string>
     <string name="app_version_name">الإصدار 1.0.2</string>
+
+    <!-- Complete App Localization Keys -->
+    <string name="unknown">غير معروف</string>
+    <string name="send_sms">إرسال رسالة قصيرة</string>
+    <string name="block">حظر</string>
+    <string name="history">السجل</string>
+    <string name="add">إضافة</string>
+    <string name="edit">تعديل</string>
+    <string name="call_details">تفاصيل المكالمة</string>
+    <string name="delete_all_history">حذف السجل بالكامل</string>
+    <string name="unblock_number">إلغاء حظر الرقم</string>
+    <string name="block_number">حظر الرقم</string>
+    <string name="history_timeline">مخطط السجل الزمني</string>
+    <string name="calls_count">%1$d مكالمات</string>
+    <string name="clear_history_with_number">مسح السجل الخاص بهذا الرقم</string>
+    <string name="select_sim_card">تحديد بطاقة SIM</string>
+    <string name="choose_sim_card">اختر بطاقة SIM لإجراء هذه المكالمة إلى %1$s:</string>
+    <string name="no_answer">بلا إجابة</string>
+    <string name="conference">مكالمة جماعية (%1$d)</string>
+    
+    <!-- Call Log Summary Dashboard -->
+    <string name="call_summary_prefix">ملخص مكالمات %1$s</string>
+    <string name="today_call_summary">ملخص مكالمات اليوم</string>
+    <string name="summary_missed_and_time">الفائتة: %1$d • الوقت: %2$s</string>
+    <string name="summary_range_today">اليوم</string>
+    <string name="summary_range_this_week">هذا الأسبوع</string>
+    <string name="summary_range_this_month">هذا الشهر</string>
+    <string name="summary_range_this_year">هذه السنة</string>
+    <string name="summary_range_total">الإجمالي</string>
+    <string name="total_talk_time">إجمالي وقت التحدث</string>
+    <string name="summary_range_week_tab">أسبوع</string>
+    <string name="summary_range_month_tab">شهر</string>
+    <string name="summary_range_year_tab">سنة</string>
+    <string name="summary_range_all_tab">الكل</string>
+    <string name="recent_label_format">الأخيرة • %1$s</string>
 </resources>

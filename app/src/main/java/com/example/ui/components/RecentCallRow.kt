@@ -28,6 +28,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.model.CallType
@@ -82,7 +84,7 @@ fun RecentCallRow(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = record.name,
+                                text = if (record.name == "Unknown") stringResource(R.string.unknown) else record.name,
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
                                 lineHeight = 18.sp,
@@ -113,9 +115,11 @@ fun RecentCallRow(
                                 modifier = Modifier.size(14.dp)
                             )
                             
-                            val label = if (record.label.isNotBlank()) "${record.label} • " else ""
+                            val labelText = if (record.label.isNotBlank()) {
+                                "${localizeContactLabel(record.label)} • "
+                            } else ""
                             Text(
-                                text = "$label${record.timestamp}",
+                                text = "$labelText${record.timestamp}",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -215,7 +219,7 @@ fun RecentCallRow(
                         // 1. Send SMS
                         RecentActionItem(
                             icon = Icons.Default.Message,
-                            label = "Send SMS",
+                            label = stringResource(R.string.send_sms),
                             tint = MaterialTheme.colorScheme.primary,
                             onClick = {
                                 val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -232,7 +236,7 @@ fun RecentCallRow(
                         // 2. Block/Spam
                         RecentActionItem(
                             icon = Icons.Default.Block,
-                            label = if (isBlocked) "Unblock" else "Block",
+                            label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
                             tint = if (isBlocked) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
                             onClick = {
                                 if (isBlocked) {
@@ -246,7 +250,7 @@ fun RecentCallRow(
                         // 3. History
                         RecentActionItem(
                             icon = Icons.Default.History,
-                            label = "History",
+                            label = stringResource(R.string.history),
                             tint = MaterialTheme.colorScheme.secondary,
                             onClick = {
                                 onHistoryClick(record.number)
@@ -256,7 +260,7 @@ fun RecentCallRow(
                         // 4. Add/Edit Contact
                         RecentActionItem(
                             icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
-                            label = if (isContact) "Edit" else "Add",
+                            label = if (isContact) stringResource(R.string.edit) else stringResource(R.string.add),
                             tint = MaterialTheme.colorScheme.tertiary,
                             onClick = {
                                 if (isContact) {

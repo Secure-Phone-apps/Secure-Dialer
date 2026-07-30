@@ -127,7 +127,7 @@ fun DialpadTabContent(
                                     },
                                     supportingContent = {
                                         Text(
-                                            text = "${match.label} • ${match.number}",
+                                            text = "${localizeContactLabel(match.label)} • ${match.number}",
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )

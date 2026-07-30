@@ -267,4 +267,39 @@
     <string name="action_message">संदेश</string>
     <string name="action_add_contact">संपर्क जोड़ें</string>
     <string name="app_version_name">संस्करण 1.0.2</string>
+
+    <!-- Complete App Localization Keys -->
+    <string name="unknown">अज्ञात</string>
+    <string name="send_sms">एसएमएस भेजें</string>
+    <string name="block">ब्लॉक करें</string>
+    <string name="history">इतिहास</string>
+    <string name="add">जोड़ें</string>
+    <string name="edit">संपादित करें</string>
+    <string name="call_details">कॉल विवरण</string>
+    <string name="delete_all_history">सभी इतिहास हटाएं</string>
+    <string name="unblock_number">नंबर अनब्लॉक करें</string>
+    <string name="block_number">नंबर ब्लॉक करें</string>
+    <string name="history_timeline">इतिहास समयरेखा</string>
+    <string name="calls_count">%1$d कॉल</string>
+    <string name="clear_history_with_number">इस नंबर के साथ इतिहास मिटाएं</string>
+    <string name="select_sim_card">सिम कार्ड चुनें</string>
+    <string name="choose_sim_card">%1$s को इस सिम कार्ड से कॉल करना चुनें:</string>
+    <string name="no_answer">कोई उत्तर नहीं</string>
+    <string name="conference">कांफ्रेंस कॉल (%1$d)</string>
+    
+    <!-- Call Log Summary Dashboard -->
+    <string name="call_summary_prefix">%1$s कॉल सारांश</string>
+    <string name="today_call_summary">आज का कॉल सारांश</string>
+    <string name="summary_missed_and_time">मिस कॉल: %1$d • समय: %2$s</string>
+    <string name="summary_range_today">आज</string>
+    <string name="summary_range_this_week">इस सप्ताह</string>
+    <string name="summary_range_this_month">इस महीने</string>
+    <string name="summary_range_this_year">इस साल</string>
+    <string name="summary_range_total">कुल</string>
+    <string name="total_talk_time">कुल बात करने का समय</string>
+    <string name="summary_range_week_tab">सप्ताह</string>
+    <string name="summary_range_month_tab">महीना</string>
+    <string name="summary_range_year_tab">वर्ष</string>
+    <string name="summary_range_all_tab">सभी</string>
+    <string name="recent_label_format">हालिया • %1$s</string>
 </resources>

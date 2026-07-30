@@ -57,10 +57,11 @@ fun InCallHeader(
             if (participants.size == 2) {
                 "${participants[0].first.ifEmpty { participants[0].second }} & ${participants[1].first.ifEmpty { participants[1].second }}"
             } else {
-                "Conference (${participants.size})"
+                stringResource(R.string.conference, participants.size)
             }
         } else {
-            contactName.ifEmpty { contactNumber }
+            val rawName = contactName.ifEmpty { contactNumber }
+            if (rawName == "Unknown") stringResource(R.string.unknown) else rawName
         }
 
         Text(

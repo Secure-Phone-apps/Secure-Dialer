@@ -90,7 +90,7 @@ fun ContactRow(
                             lineHeight = 18.sp
                         )
                         Text(
-                            text = "${contact.label} • ${contact.number}",
+                            text = "${localizeContactLabel(contact.label)} • ${contact.number}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

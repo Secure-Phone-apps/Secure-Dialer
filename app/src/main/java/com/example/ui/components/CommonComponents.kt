@@ -203,3 +203,30 @@ fun EmptyStateIllustration(
         )
     }
 }
+
+@Composable
+fun localizeContactLabel(label: String): String {
+    val cleanLabel = label.trim()
+    return when {
+        cleanLabel.startsWith("Recent • ", ignoreCase = true) -> {
+            val subLabel = cleanLabel.substringAfter("Recent • ").trim()
+            val localizedSub = when (subLabel.lowercase(java.util.Locale.ROOT)) {
+                "mobile" -> stringResource(R.string.label_mobile)
+                "work" -> stringResource(R.string.label_work)
+                "home" -> stringResource(R.string.label_home)
+                "other" -> stringResource(R.string.label_other)
+                else -> subLabel
+            }
+            stringResource(R.string.recent_label_format, localizedSub)
+        }
+        else -> {
+            when (cleanLabel.lowercase(java.util.Locale.ROOT)) {
+                "mobile" -> stringResource(R.string.label_mobile)
+                "work" -> stringResource(R.string.label_work)
+                "home" -> stringResource(R.string.label_home)
+                "other" -> stringResource(R.string.label_other)
+                else -> label
+            }
+        }
+    }
+}

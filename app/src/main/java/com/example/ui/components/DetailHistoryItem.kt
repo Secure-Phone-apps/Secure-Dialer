@@ -10,6 +10,8 @@ import androidx.compose.material.icons.filled.CallMissed
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -84,9 +86,9 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                 )
                 
                 val typeStr = when (record.type) {
-                    CallType.MISSED -> "Missed Call"
-                    CallType.OUTGOING -> "Outgoing Call"
-                    CallType.INCOMING -> "Incoming Call"
+                    CallType.MISSED -> stringResource(R.string.call_type_missed)
+                    CallType.OUTGOING -> stringResource(R.string.call_type_outgoing)
+                    CallType.INCOMING -> stringResource(R.string.call_type_incoming)
                 }
                 
                 val durationText = if (record.duration > 0) {
@@ -114,7 +116,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                         )
                     } else if (record.type != CallType.MISSED) {
                         Text(
-                            text = " • No Answer",
+                            text = " • " + stringResource(R.string.no_answer),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

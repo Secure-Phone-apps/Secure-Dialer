@@ -271,4 +271,39 @@
     <string name="action_message">Message</string>
     <string name="action_add_contact">Add Contact</string>
     <string name="app_version_name">Version 1.0.2</string>
+
+    <!-- Complete App Localization Keys -->
+    <string name="unknown">Unknown</string>
+    <string name="send_sms">Send SMS</string>
+    <string name="block">Block</string>
+    <string name="history">History</string>
+    <string name="add">Add</string>
+    <string name="edit">Edit</string>
+    <string name="call_details">Call Details</string>
+    <string name="delete_all_history">Delete all history</string>
+    <string name="unblock_number">Unblock number</string>
+    <string name="block_number">Block number</string>
+    <string name="history_timeline">History Timeline</string>
+    <string name="calls_count">%1$d calls</string>
+    <string name="clear_history_with_number">Clear History with this Number</string>
+    <string name="select_sim_card">Select SIM Card</string>
+    <string name="choose_sim_card">Choose which SIM card to make this call to %1$s:</string>
+    <string name="no_answer">No Answer</string>
+    <string name="conference">Conference (%1$d)</string>
+    
+    <!-- Call Log Summary Dashboard -->
+    <string name="call_summary_prefix">%1$s Call Summary</string>
+    <string name="today_call_summary">Today\'s Call Summary</string>
+    <string name="summary_missed_and_time">Missed: %1$d • Time: %2$s</string>
+    <string name="summary_range_today">Today</string>
+    <string name="summary_range_this_week">This Week</string>
+    <string name="summary_range_this_month">This Month</string>
+    <string name="summary_range_this_year">This Year</string>
+    <string name="summary_range_total">Total</string>
+    <string name="total_talk_time">Total Talk Time</string>
+    <string name="summary_range_week_tab">Week</string>
+    <string name="summary_range_month_tab">Month</string>
+    <string name="summary_range_year_tab">Year</string>
+    <string name="summary_range_all_tab">All</string>
+    <string name="recent_label_format">Recent • %1$s</string>
 </resources>

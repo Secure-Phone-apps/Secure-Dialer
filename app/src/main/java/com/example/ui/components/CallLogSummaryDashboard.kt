@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.ui.theme.LocalM3Expressive
@@ -41,6 +43,17 @@ enum class SummaryTimeRange(val label: String) {
     MONTH("Month"),
     YEAR("Year"),
     ALL("All")
+}
+
+@Composable
+fun SummaryTimeRange.getLabel(): String {
+    return when (this) {
+        SummaryTimeRange.TODAY -> stringResource(R.string.summary_range_today)
+        SummaryTimeRange.WEEK -> stringResource(R.string.summary_range_week_tab)
+        SummaryTimeRange.MONTH -> stringResource(R.string.summary_range_month_tab)
+        SummaryTimeRange.YEAR -> stringResource(R.string.summary_range_year_tab)
+        SummaryTimeRange.ALL -> stringResource(R.string.summary_range_all_tab)
+    }
 }
 
 @Composable
@@ -191,7 +204,7 @@ fun CallLogSummaryDashboard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (selectedRange == SummaryTimeRange.TODAY) "Today's Call Summary" else "${selectedRange.label} Call Summary",
+                        text = if (selectedRange == SummaryTimeRange.TODAY) stringResource(R.string.today_call_summary) else stringResource(R.string.call_summary_prefix, selectedRange.getLabel()),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -201,7 +214,7 @@ fun CallLogSummaryDashboard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (!isExpanded) {
                         Text(
-                            text = "Missed: $missedCallsCount • Time: $formattedTotalDuration",
+                            text = stringResource(R.string.summary_missed_and_time, missedCallsCount, formattedTotalDuration),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(end = 8.dp)
@@ -247,7 +260,7 @@ fun CallLogSummaryDashboard(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = range.label,
+                                    text = range.getLabel(),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -266,11 +279,11 @@ fun CallLogSummaryDashboard(
                         SummaryBox(
                             value = totalCallsCount.toString(),
                             label = when (selectedRange) {
-                                SummaryTimeRange.TODAY -> "Today"
-                                SummaryTimeRange.WEEK -> "This Week"
-                                SummaryTimeRange.MONTH -> "This Month"
-                                SummaryTimeRange.YEAR -> "This Year"
-                                SummaryTimeRange.ALL -> "Total"
+                                SummaryTimeRange.TODAY -> stringResource(R.string.summary_range_today)
+                                SummaryTimeRange.WEEK -> stringResource(R.string.summary_range_this_week)
+                                SummaryTimeRange.MONTH -> stringResource(R.string.summary_range_this_month)
+                                SummaryTimeRange.YEAR -> stringResource(R.string.summary_range_this_year)
+                                SummaryTimeRange.ALL -> stringResource(R.string.summary_range_total)
                             },
                             icon = Icons.Default.Call,
                             iconColor = MaterialTheme.colorScheme.primary,
@@ -279,7 +292,7 @@ fun CallLogSummaryDashboard(
 
                         SummaryBox(
                             value = missedCallsCount.toString(),
-                            label = "Missed",
+                            label = stringResource(R.string.filter_missed),
                             icon = Icons.Default.CallMissed,
                             iconColor = MaterialTheme.colorScheme.error,
                             modifier = Modifier.weight(1f)
@@ -287,7 +300,7 @@ fun CallLogSummaryDashboard(
 
                         SummaryBox(
                             value = outgoingCallsCount.toString(),
-                            label = "Outgoing",
+                            label = stringResource(R.string.filter_dialed),
                             icon = Icons.AutoMirrored.Filled.CallMade,
                             iconColor = Color(0xFF2E7D32),
                             modifier = Modifier.weight(1f)
@@ -295,7 +308,7 @@ fun CallLogSummaryDashboard(
 
                         SummaryBox(
                             value = receivedCallsCount.toString(),
-                            label = "Received",
+                            label = stringResource(R.string.filter_received),
                             icon = Icons.AutoMirrored.Filled.CallReceived,
                             iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f)
@@ -322,7 +335,7 @@ fun CallLogSummaryDashboard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Total Talk Time",
+                                text = stringResource(R.string.total_talk_time),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Medium

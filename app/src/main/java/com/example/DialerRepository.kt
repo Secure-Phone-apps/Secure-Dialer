@@ -161,9 +161,12 @@ class DialerRepository(rawContext: Context) {
             
             val lastSyncedMaxId = prefs.getInt("last_synced_call_log_max_id", -1)
             val lastSyncedCount = prefs.getInt("last_synced_call_log_count", -1)
+            val currentLang = Locale.getDefault().language
+            val lastSyncedLang = prefs.getString("last_synced_locale_lang", "")
+            val localeChanged = currentLang != lastSyncedLang
             
-            if (localCount > 0 && localCount == expectedLocalCount && systemMaxId == lastSyncedMaxId && systemCount == lastSyncedCount) {
-                // No new logs; skip heavy sync
+            if (localCount > 0 && localCount == expectedLocalCount && systemMaxId == lastSyncedMaxId && systemCount == lastSyncedCount && !localeChanged) {
+                // No new logs and no locale change; skip heavy sync
                 return@withContext
             }
             
@@ -174,6 +177,7 @@ class DialerRepository(rawContext: Context) {
             prefs.edit()
                 .putInt("last_synced_call_log_max_id", systemMaxId)
                 .putInt("last_synced_call_log_count", systemCount)
+                .putString("last_synced_locale_lang", currentLang)
                 .apply()
         } catch (e: Exception) {
             e.printStackTrace()

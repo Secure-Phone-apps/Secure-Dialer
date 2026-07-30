@@ -44,6 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.model.CallRecord
@@ -81,7 +83,7 @@ fun CallHistoryDetailsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Call Details",
+                        text = stringResource(R.string.call_details),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -107,7 +109,7 @@ fun CallHistoryDetailsScreen(
                         onDismissRequest = { showMenu = false }
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Delete all history") },
+                            text = { Text(stringResource(R.string.delete_all_history)) },
                             onClick = {
                                 showMenu = false
                                 logs.forEach { log -> viewModel.deleteCallLog(log.id) }
@@ -122,7 +124,7 @@ fun CallHistoryDetailsScreen(
                             }
                         )
                         DropdownMenuItem(
-                            text = { Text(if (isBlocked) "Unblock number" else "Block number") },
+                            text = { Text(if (isBlocked) stringResource(R.string.unblock_number) else stringResource(R.string.block_number)) },
                             onClick = {
                                 showMenu = false
                                 if (isBlocked) {
@@ -200,7 +202,7 @@ fun CallHistoryDetailsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     
                     Text(
-                        text = primaryRecord.name,
+                        text = if (primaryRecord.name == "Unknown") stringResource(R.string.unknown) else primaryRecord.name,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
@@ -220,8 +222,9 @@ fun CallHistoryDetailsScreen(
                             shape = RoundedCornerShape(100.dp),
                             modifier = Modifier.padding(top = 6.dp)
                         ) {
+                            val labelRes = localizeContactLabel(primaryRecord.label)
                             Text(
-                                text = primaryRecord.label.uppercase(),
+                                text = labelRes.uppercase(java.util.Locale.ROOT),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
@@ -243,7 +246,7 @@ fun CallHistoryDetailsScreen(
                 ) {
                     DetailActionItem(
                         icon = Icons.Default.Call,
-                        label = "Call",
+                        label = stringResource(R.string.action_call),
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         onClick = {
@@ -254,7 +257,7 @@ fun CallHistoryDetailsScreen(
 
                     DetailActionItem(
                         icon = Icons.Default.Message,
-                        label = "Message",
+                        label = stringResource(R.string.action_message),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = {
@@ -271,7 +274,7 @@ fun CallHistoryDetailsScreen(
 
                     DetailActionItem(
                         icon = Icons.Default.Block,
-                        label = if (isBlocked) "Unblock" else "Block",
+                        label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
                         containerColor = if (isBlocked) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
                         contentColor = if (isBlocked) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
                         onClick = {
@@ -285,7 +288,7 @@ fun CallHistoryDetailsScreen(
 
                     DetailActionItem(
                         icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
-                        label = if (isContact) "Edit" else "Add",
+                        label = if (isContact) stringResource(R.string.edit) else stringResource(R.string.add),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         onClick = {
@@ -327,14 +330,14 @@ fun CallHistoryDetailsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "History Timeline",
+                        text = stringResource(R.string.history_timeline),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     
                     Text(
-                        text = "${logs.size} calls",
+                        text = stringResource(R.string.calls_count, logs.size),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -378,7 +381,7 @@ fun CallHistoryDetailsScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Clear History with this Number",
+                        text = stringResource(R.string.clear_history_with_number),
                         style = MaterialTheme.typography.labelLarge,
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold

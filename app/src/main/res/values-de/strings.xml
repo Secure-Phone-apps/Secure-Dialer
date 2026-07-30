@@ -267,4 +267,39 @@
     <string name="action_message">Nachricht</string>
     <string name="action_add_contact">Kontakt hinzufügen</string>
     <string name="app_version_name">Version 1.0.2</string>
+
+    <!-- Complete App Localization Keys -->
+    <string name="unknown">Unbekannt</string>
+    <string name="send_sms">SMS senden</string>
+    <string name="block">Blockieren</string>
+    <string name="history">Verlauf</string>
+    <string name="add">Hinzufügen</string>
+    <string name="edit">Bearbeiten</string>
+    <string name="call_details">Anrufdetails</string>
+    <string name="delete_all_history">Gesamten Verlauf löschen</string>
+    <string name="unblock_number">Nummer freigeben</string>
+    <string name="block_number">Nummer blockieren</string>
+    <string name="history_timeline">Verlaufs-Zeitleiste</string>
+    <string name="calls_count">%1$d Anrufe</string>
+    <string name="clear_history_with_number">Verlauf mit dieser Nummer löschen</string>
+    <string name="select_sim_card">SIM-Karte auswählen</string>
+    <string name="choose_sim_card">Wählen Sie die SIM-Karte für Anrufe an %1$s:</string>
+    <string name="no_answer">Keine Antwort</string>
+    <string name="conference">Konferenz (%1$d)</string>
+    
+    <!-- Call Log Summary Dashboard -->
+    <string name="call_summary_prefix">%1$s Anrufliste Zusammenfassung</string>
+    <string name="today_call_summary">Heutige Anrufzusammenfassung</string>
+    <string name="summary_missed_and_time">Verpasst: %1$d • Zeit: %2$s</string>
+    <string name="summary_range_today">Heute</string>
+    <string name="summary_range_this_week">Diese Woche</string>
+    <string name="summary_range_this_month">Diesen Monat</string>
+    <string name="summary_range_this_year">Dieses Jahr</string>
+    <string name="summary_range_total">Gesamt</string>
+    <string name="total_talk_time">Gesamtsprechzeit</string>
+    <string name="summary_range_week_tab">Woche</string>
+    <string name="summary_range_month_tab">Monat</string>
+    <string name="summary_range_year_tab">Jahr</string>
+    <string name="summary_range_all_tab">Alle</string>
+    <string name="recent_label_format">Letzte • %1$s</string>
 </resources>

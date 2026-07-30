@@ -311,7 +311,7 @@ fun MainScreen(
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
                                 Text(
-                                    text = "Select SIM Card",
+                                    text = stringResource(R.string.select_sim_card),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -320,7 +320,7 @@ fun MainScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 
                                 Text(
-                                    text = "Choose which SIM card to make this call to ${pendingCallNumber}:",
+                                    text = stringResource(R.string.choose_sim_card, pendingCallNumber),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     textAlign = TextAlign.Center
