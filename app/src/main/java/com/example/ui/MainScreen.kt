@@ -65,7 +65,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun MainScreen(
     viewModel: DialerViewModel,
@@ -521,15 +521,17 @@ fun MainScreen(
                     )
                 }
 
-                BottomNavBar(
-                    selectedTab = selectedTab,
-                    onTabSelected = { targetTab ->
-                        selectedTab = targetTab
-                        coroutineScope.launch {
-                            pagerState.scrollToPage(targetTab)
+                if (!WindowInsets.isImeVisible) {
+                    BottomNavBar(
+                        selectedTab = selectedTab,
+                        onTabSelected = { targetTab ->
+                            selectedTab = targetTab
+                            coroutineScope.launch {
+                                pagerState.scrollToPage(targetTab)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
 
             AnimatedVisibility(
