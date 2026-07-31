@@ -22,19 +22,21 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.model.Contact
 import com.example.model.getInitials
+import com.example.model.getAvatarShape
 
 @Composable
 fun InCallAvatarDisplay(
     participants: List<Pair<String, String>>,
     contactName: String,
     contactNumber: String,
-    contacts: List<Contact>
+    contacts: List<Contact>,
+    avatarShapeType: String = "circular"
 ) {
     val context = LocalContext.current
 
     Surface(
         modifier = Modifier.size(120.dp),
-        shape = RoundedCornerShape(16.dp),
+        shape = getAvatarShape(avatarShapeType),
         color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Box(contentAlignment = Alignment.Center) {

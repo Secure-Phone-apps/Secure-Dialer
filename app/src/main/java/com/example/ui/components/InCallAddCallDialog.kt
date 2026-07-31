@@ -19,12 +19,14 @@ import coil.request.ImageRequest
 import com.example.R
 import com.example.model.Contact
 import com.example.model.getInitials
+import com.example.model.getAvatarShape
 
 @Composable
 fun InCallAddCallDialog(
     contacts: List<Contact>,
     onDismiss: () -> Unit,
-    onAddCall: (name: String, number: String) -> Unit
+    onAddCall: (name: String, number: String) -> Unit,
+    avatarShapeType: String = "circular"
 ) {
     val context = LocalContext.current
     var addCallNumberInput by remember { mutableStateOf("") }
@@ -111,7 +113,7 @@ fun InCallAddCallDialog(
                             ) {
                                 Surface(
                                     modifier = Modifier.size(32.dp),
-                                    shape = RoundedCornerShape(16.dp),
+                                    shape = getAvatarShape(avatarShapeType),
                                     color = contact.avatarBg
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {

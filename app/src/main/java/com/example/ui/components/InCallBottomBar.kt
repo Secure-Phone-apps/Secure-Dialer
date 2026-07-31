@@ -15,15 +15,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.model.getAvatarShape
 
 @Composable
 fun InCallBottomBar(
     isIncoming: Boolean,
     onAnswer: () -> Unit,
     onHangUp: () -> Unit,
-    onToggleQuickDeclineMenu: () -> Unit
+    onToggleQuickDeclineMenu: () -> Unit,
+    avatarShapeType: String = "circular"
 ) {
     val haptic = LocalHapticFeedback.current
+    val buttonShape = getAvatarShape(avatarShapeType)
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -53,40 +56,48 @@ fun InCallBottomBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isIncoming) {
-                LargeFloatingActionButton(
+                Surface(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onAnswer()
                     },
-                    containerColor = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.testTag("answer_button")
+                    shape = buttonShape,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .testTag("answer_button")
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = "Answer",
-                        modifier = Modifier.size(32.dp)
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.Call,
+                            contentDescription = "Answer",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.width(48.dp))
             }
 
-            LargeFloatingActionButton(
+            Surface(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onHangUp()
                 },
-                containerColor = MaterialTheme.colorScheme.error,
+                color = MaterialTheme.colorScheme.error,
                 contentColor = MaterialTheme.colorScheme.onError,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.testTag("hangup_button")
+                shape = buttonShape,
+                modifier = Modifier
+                    .size(72.dp)
+                    .testTag("hangup_button")
             ) {
-                Icon(
-                    imageVector = Icons.Default.CallEnd,
-                    contentDescription = "Hang up",
-                    modifier = Modifier.size(32.dp)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.CallEnd,
+                        contentDescription = "Hang up",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         }
     }

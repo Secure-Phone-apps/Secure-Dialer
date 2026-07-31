@@ -61,7 +61,8 @@ fun ActiveCallScreen(
     recordingEnabled: Boolean = false,
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
     onSaveNote: (String) -> Unit = {},
-    onMinimize: (() -> Unit)? = null
+    onMinimize: (() -> Unit)? = null,
+    avatarShapeType: String = "circular"
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -241,7 +242,8 @@ fun ActiveCallScreen(
                     participants = participants,
                     contactName = contactName,
                     contactNumber = contactNumber,
-                    contacts = contacts
+                    contacts = contacts,
+                    avatarShapeType = avatarShapeType
                 )
             }
 
@@ -252,7 +254,8 @@ fun ActiveCallScreen(
                     onDismiss = { isAddCallDialogOpen = false },
                     onAddCall = { finalName, number ->
                         participants = participants + Pair(finalName, number)
-                    }
+                    },
+                    avatarShapeType = avatarShapeType
                 )
             }
 
@@ -320,7 +323,8 @@ fun ActiveCallScreen(
                 onOpenNoteDialog = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     isNoteDialogOpen = true
-                }
+                },
+                avatarShapeType = avatarShapeType
             )
 
             if (isNoteDialogOpen) {
@@ -334,7 +338,8 @@ fun ActiveCallScreen(
                 isIncoming = isIncoming,
                 onAnswer = onAnswer,
                 onHangUp = onHangUp,
-                onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen }
+                onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen },
+                avatarShapeType = avatarShapeType
             )
         }
         }

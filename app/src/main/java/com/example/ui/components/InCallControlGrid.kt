@@ -15,6 +15,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.CallManager
 import com.example.R
+import com.example.model.getAvatarShape
 
 @Composable
 fun InCallControlGrid(
@@ -34,9 +35,11 @@ fun InCallControlGrid(
     isRecording: Boolean,
     onToggleRecording: () -> Unit,
     isNoteDialogOpen: Boolean,
-    onOpenNoteDialog: () -> Unit
+    onOpenNoteDialog: () -> Unit,
+    avatarShapeType: String = "circular"
 ) {
     val haptic = LocalHapticFeedback.current
+    val btnShape = getAvatarShape(avatarShapeType)
 
     Column(
         modifier = Modifier
@@ -54,7 +57,8 @@ fun InCallControlGrid(
                     icon = Icons.Default.Dialpad,
                     label = stringResource(R.string.keypad),
                     isActive = isInCallDialpadOpen,
-                    onClick = onToggleDialpad
+                    onClick = onToggleDialpad,
+                    shape = btnShape
                 )
             }
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -62,7 +66,8 @@ fun InCallControlGrid(
                     icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
                     label = stringResource(R.string.mute),
                     isActive = isMuted,
-                    onClick = onToggleMute
+                    onClick = onToggleMute,
+                    shape = btnShape
                 )
             }
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -70,7 +75,8 @@ fun InCallControlGrid(
                     icon = Icons.AutoMirrored.Filled.VolumeUp,
                     label = stringResource(R.string.speaker),
                     isActive = isSpeakerOn,
-                    onClick = onToggleSpeaker
+                    onClick = onToggleSpeaker,
+                    shape = btnShape
                 )
             }
         }
@@ -85,7 +91,8 @@ fun InCallControlGrid(
                     icon = Icons.Default.Pause,
                     label = stringResource(R.string.hold),
                     isActive = isOnHold,
-                    onClick = onToggleHold
+                    onClick = onToggleHold,
+                    shape = btnShape
                 )
             }
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -93,7 +100,8 @@ fun InCallControlGrid(
                     icon = Icons.Default.Bluetooth,
                     label = stringResource(R.string.bluetooth),
                     isActive = isBluetoothOn,
-                    onClick = onToggleBluetooth
+                    onClick = onToggleBluetooth,
+                    shape = btnShape
                 )
             }
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
@@ -101,7 +109,8 @@ fun InCallControlGrid(
                     icon = Icons.Default.GroupAdd,
                     label = stringResource(R.string.add_call),
                     isActive = isAddCallDialogOpen,
-                    onClick = onOpenAddCallDialog
+                    onClick = onOpenAddCallDialog,
+                    shape = btnShape
                 )
             }
         }
@@ -117,7 +126,8 @@ fun InCallControlGrid(
                         icon = Icons.Default.Mic,
                         label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
                         isActive = isRecording,
-                        onClick = onToggleRecording
+                        onClick = onToggleRecording,
+                        shape = btnShape
                     )
                 }
 
@@ -126,7 +136,8 @@ fun InCallControlGrid(
                         icon = Icons.Default.EditNote,
                         label = stringResource(R.string.call_note),
                         isActive = isNoteDialogOpen,
-                        onClick = onOpenNoteDialog
+                        onClick = onOpenNoteDialog,
+                        shape = btnShape
                     )
                 }
 
@@ -141,7 +152,8 @@ fun InCallControlGrid(
                         icon = Icons.Default.EditNote,
                         label = stringResource(R.string.call_note),
                         isActive = isNoteDialogOpen,
-                        onClick = onOpenNoteDialog
+                        onClick = onOpenNoteDialog,
+                        shape = btnShape
                     )
                 }
 

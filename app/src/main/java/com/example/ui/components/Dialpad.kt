@@ -199,86 +199,105 @@ fun DialpadTabContent(
         }
 
         // Elegant Display Screen
+        val isExpressive = LocalM3Expressive.current
+        val dialKeyColor = if (isExpressive) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+        } else {
+            MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+        }
+        val actionButtonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
         var expandedClipboardMenu by remember { mutableStateOf(false) }
         val clipboardManager = remember { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager }
 
-        Box(
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .padding(horizontal = 16.dp)
-                .clickable {
-                    expandedClipboardMenu = true
-                },
-            contentAlignment = Alignment.Center
+                .padding(horizontal = 12.dp),
+            shape = actionButtonShape,
+            color = Color.Transparent,
+            border = androidx.compose.foundation.BorderStroke(
+                width = 6.dp,
+                color = dialKeyColor
+            ),
+            onClick = {
+                expandedClipboardMenu = true
+            }
         ) {
-            Text(
-                text = inputValue.ifEmpty { stringResource(R.string.dialpad_enter_number) },
-                style = if (inputValue.isEmpty()) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge,
-                fontWeight = if (inputValue.isEmpty()) FontWeight.Normal else FontWeight.Bold,
-                color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            DropdownMenu(
-                expanded = expandedClipboardMenu,
-                onDismissRequest = { expandedClipboardMenu = false }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
             ) {
-                val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
-                if (hasClipboardText) {
-                    val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-                    val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
-                    if (filteredDigits.isNotEmpty()) {
+                Text(
+                    text = inputValue.ifEmpty { stringResource(R.string.dialpad_enter_number) },
+                    style = if (inputValue.isEmpty()) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineLarge,
+                    fontWeight = if (inputValue.isEmpty()) FontWeight.Normal else FontWeight.Bold,
+                    color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                DropdownMenu(
+                    expanded = expandedClipboardMenu,
+                    onDismissRequest = { expandedClipboardMenu = false }
+                ) {
+                    val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
+                    if (hasClipboardText) {
+                        val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                        val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                        if (filteredDigits.isNotEmpty()) {
+                            DropdownMenuItem(
+                                text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
+                                onClick = {
+                                    onValueChange(filteredDigits)
+                                    expandedClipboardMenu = false
+                                }
+                            )
+                        }
+                    }
+                    if (inputValue.isNotEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
+                            text = { Text(stringResource(R.string.dialpad_copy)) },
                             onClick = {
-                                onValueChange(filteredDigits)
+                                try {
+                                    val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
+                                    clipboardManager?.setPrimaryClip(clip)
+                                    Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                                expandedClipboardMenu = false
+                            }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.dialpad_clear)) },
+                            onClick = {
+                                onValueChange("")
                                 expandedClipboardMenu = false
                             }
                         )
                     }
                 }
-                if (inputValue.isNotEmpty()) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.dialpad_copy)) },
-                        onClick = {
-                            try {
-                                val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
-                                clipboardManager?.setPrimaryClip(clip)
-                                Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                            expandedClipboardMenu = false
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(R.string.dialpad_clear)) },
-                        onClick = {
-                            onValueChange("")
-                            expandedClipboardMenu = false
-                        }
-                    )
-                }
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(2.dp))
 
         // Dialer Grid
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             for (i in 0 until 4) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     for (j in 0 until 3) {
                         val index = i * 3 + j
@@ -292,7 +311,7 @@ fun DialpadTabContent(
                             voicemailNumber = voicemailNumber,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(70.dp),
+                                .height(64.dp),
                             viewModel = viewModel
                         )
                     }
@@ -300,17 +319,16 @@ fun DialpadTabContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
 
 
         // Action Row (Call & Backspace inline) - Made symmetrically and geometrically same to other dialpad buttons
-        val actionButtonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Symmetrical Paste button on the left to keep call button perfectly centered
@@ -336,7 +354,7 @@ fun DialpadTabContent(
                 contentColor = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 modifier = Modifier
                     .weight(1f)
-                    .height(70.dp)
+                    .height(64.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -358,7 +376,7 @@ fun DialpadTabContent(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .weight(1f)
-                    .height(70.dp)
+                    .height(64.dp)
                     .testTag("dialpad_call_button")
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -374,7 +392,7 @@ fun DialpadTabContent(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(70.dp),
+                    .height(64.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (inputValue.isNotEmpty()) {

@@ -566,7 +566,8 @@ fun MainScreen(
                     onSaveNote = { content ->
                         viewModel.saveCallNote(callingContactNumber, content)
                     },
-                    onMinimize = { isCallMinimized = true }
+                    onMinimize = { isCallMinimized = true },
+                    avatarShapeType = viewModel.avatarShapeType.value
                 )
             }
 

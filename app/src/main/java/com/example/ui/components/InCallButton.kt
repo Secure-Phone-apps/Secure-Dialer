@@ -18,12 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.ui.graphics.Shape
+
 @Composable
 fun InCallButton(
     icon: ImageVector,
     label: String,
     isActive: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    shape: Shape = MaterialTheme.shapes.medium
 ) {
     val btnColor = if (isActive) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
     val contentColor = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -36,7 +39,7 @@ fun InCallButton(
             modifier = Modifier
                 .size(64.dp)
                 .clickable { onClick() },
-            shape = RoundedCornerShape(16.dp),
+            shape = shape,
             color = btnColor
         ) {
             Box(contentAlignment = Alignment.Center) {
