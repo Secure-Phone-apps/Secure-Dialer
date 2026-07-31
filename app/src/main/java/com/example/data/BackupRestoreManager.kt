@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Base64
 import com.example.model.*
 import com.example.DialerRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -13,7 +15,7 @@ import javax.crypto.spec.SecretKeySpec
 
 object BackupRestoreManager {
 
-    suspend fun exportBackup(context: Context, password: String = ""): String {
+    suspend fun exportBackup(context: Context, password: String = ""): String = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context)
         val dao = db.dialerDao()
 
@@ -65,14 +67,14 @@ object BackupRestoreManager {
         }
 
         val jsonString = json.toString(2)
-        return if (password.isNotBlank()) {
+        if (password.isNotBlank()) {
             encryptData(jsonString, password)
         } else {
             jsonString
         }
     }
 
-    suspend fun importBackup(context: Context, rawData: String, password: String = ""): Boolean {
+    suspend fun importBackup(context: Context, rawData: String, password: String = ""): Boolean = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context)
         val dao = db.dialerDao()
 
@@ -134,14 +136,14 @@ object BackupRestoreManager {
                 }
             }
 
-            return true
+            true
         } catch (e: Exception) {
             e.printStackTrace()
-            return false
+            false
         }
     }
 
-    suspend fun exportContactsToVcf(context: Context): String {
+    suspend fun exportContactsToVcf(context: Context): String = withContext(Dispatchers.IO) {
         try {
             val db = AppDatabase.getDatabase(context)
             val dao = db.dialerDao()
@@ -157,14 +159,14 @@ object BackupRestoreManager {
                 }
                 sb.append("END:VCARD\r\n")
             }
-            return sb.toString()
+            sb.toString()
         } catch (e: Exception) {
             e.printStackTrace()
-            return ""
+            ""
         }
     }
 
-    suspend fun importContactsFromVcf(context: Context, vcfContent: String): Boolean {
+    suspend fun importContactsFromVcf(context: Context, vcfContent: String): Boolean = withContext(Dispatchers.IO) {
         try {
             val lines = vcfContent.split(Regex("\\r?\\n"))
             var currentName = ""
@@ -213,10 +215,10 @@ object BackupRestoreManager {
                     }
                 }
             }
-            return count > 0
+            count > 0
         } catch (e: Exception) {
             e.printStackTrace()
-            return false
+            false
         }
     }
 

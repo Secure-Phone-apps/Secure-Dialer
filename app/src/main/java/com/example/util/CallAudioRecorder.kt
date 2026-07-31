@@ -91,9 +91,13 @@ object CallAudioRecorder {
         val file = currentOutputFile
 
         try {
-            mediaRecorder?.apply {
-                stop()
-                release()
+            mediaRecorder?.let { recorder ->
+                try {
+                    recorder.stop()
+                } catch (stopEx: Exception) {
+                    stopEx.printStackTrace()
+                }
+                recorder.release()
             }
         } catch (e: Exception) {
             e.printStackTrace()

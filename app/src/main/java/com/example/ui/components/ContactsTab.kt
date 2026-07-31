@@ -105,6 +105,19 @@ fun ContactsTabContent(
         }
     }
 
+    val letterToIndex = remember(allContacts) {
+        val map = HashMap<Char, Int>()
+        for (i in allContacts.indices) {
+            val contact = allContacts[i]
+            val firstChar = contact.name.trim().firstOrNull()?.uppercaseChar() ?: '#'
+            val key = if (firstChar.isLetter()) firstChar else '#'
+            if (!map.containsKey(key)) {
+                map[key] = i
+            }
+        }
+        map
+    }
+
     var showOnlyFavorites by remember { mutableStateOf(false) }
     val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
 
@@ -352,38 +365,30 @@ fun ContactsTabContent(
                     .fillMaxHeight()
                     .width(40.dp)
                     .padding(vertical = 40.dp)
-                    .pointerInput(alphabet) {
+                    .pointerInput(alphabet, letterToIndex) {
                         detectTapGestures { offset ->
                             val index = (offset.y / size.height * alphabet.size)
                                 .toInt()
                                 .coerceIn(0, alphabet.size - 1)
-                            val letter = alphabet[index].toString()
-                            for (i in 0 until contactsPaged.itemCount) {
-                                val c = contactsPaged.peek(i)
-                                if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
-                                    coroutineScope.launch {
-                                        listState.animateScrollToItem(i)
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    }
-                                    break
+                            val char = alphabet[index]
+                            letterToIndex[char]?.let { i ->
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(i)
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
                             }
                         }
                     }
-                    .pointerInput(alphabet) {
+                    .pointerInput(alphabet, letterToIndex) {
                         detectDragGestures { change, _ ->
                             val index = (change.position.y / size.height * alphabet.size)
                                 .toInt()
                                 .coerceIn(0, alphabet.size - 1)
-                            val letter = alphabet[index].toString()
-                            for (i in 0 until contactsPaged.itemCount) {
-                                val c = contactsPaged.peek(i)
-                                if (c != null && (c.name.startsWith(letter, ignoreCase = true) || (letter == "#" && !c.name[0].isLetter()))) {
-                                    coroutineScope.launch {
-                                        listState.scrollToItem(i)
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    }
-                                    break
+                            val char = alphabet[index]
+                            letterToIndex[char]?.let { i ->
+                                coroutineScope.launch {
+                                    listState.scrollToItem(i)
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 }
                             }
                         }

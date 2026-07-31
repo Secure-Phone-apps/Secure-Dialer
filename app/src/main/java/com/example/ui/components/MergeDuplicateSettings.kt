@@ -31,7 +31,7 @@ fun MergeDuplicateSettings(
     val haptic = LocalHapticFeedback.current
     val allContacts by viewModel.allContactsFlow.collectAsState()
     val duplicates = remember(allContacts) {
-        allContacts.groupBy { it.number.replace("[^0-9+]".toRegex(), "") }
+        allContacts.groupBy { contact -> contact.number.filter { it.isDigit() || it == '+' } }
             .filter { it.key.isNotEmpty() && it.value.size > 1 }
     }
 

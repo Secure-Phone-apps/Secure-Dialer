@@ -11,13 +11,33 @@ import com.example.model.*
 import com.example.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 
 class DialerRepository(rawContext: Context) {
     val context: Context = rawContext.applicationContext
     val db = AppDatabase.getDatabase(context)
     val dao = db.dialerDao()
+
+    init {
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+            try {
+                val initialContacts = dao.getAllContactsList()
+                val initialSettings = dao.getAllSettingsList()
+                ContactCache.init(initialContacts, initialSettings)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            try {
+                dao.getAllContactsFlow().collect { contacts ->
+                    val settings = dao.getAllSettingsList()
+                    ContactCache.init(contacts, settings)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     // --- Paging ---
 
@@ -94,17 +114,12 @@ class DialerRepository(rawContext: Context) {
             context.contentResolver.query(
                 ContactsContract.Contacts.CONTENT_URI,
                 arrayOf(ContactsContract.Contacts._ID, ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP),
-                null, null, null
+                null, null, "${ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP} DESC"
             )?.use { cursor ->
                 systemContactsCount = cursor.count
                 val tsCol = cursor.getColumnIndex(ContactsContract.Contacts.CONTACT_LAST_UPDATED_TIMESTAMP)
-                if (tsCol != -1) {
-                    while (cursor.moveToNext()) {
-                        val ts = cursor.getLong(tsCol)
-                        if (ts > maxTimestamp) {
-                            maxTimestamp = ts
-                        }
-                    }
+                if (tsCol != -1 && cursor.moveToFirst()) {
+                    maxTimestamp = cursor.getLong(tsCol)
                 }
             }
             

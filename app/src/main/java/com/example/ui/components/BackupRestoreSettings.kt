@@ -1,8 +1,5 @@
 package com.example.ui.components
 
-import android.app.role.RoleManager
-import android.content.Context
-import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

@@ -166,6 +166,8 @@ object CallManager {
             }
         } else {
             autoStopRecordingIfNeeded()
+            dtmfJob?.cancel()
+            dtmfJob = null
             _callState.value = Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""

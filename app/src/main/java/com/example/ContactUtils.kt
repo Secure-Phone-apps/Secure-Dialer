@@ -3,9 +3,80 @@ package com.example
 import android.content.Context
 import android.net.Uri
 import android.provider.ContactsContract
-import kotlinx.coroutines.runBlocking
+
+object ContactCache {
+    @Volatile
+    private var fullNumMap = HashMap<String, com.example.model.Contact>()
+    @Volatile
+    private var suffix10Map = HashMap<String, com.example.model.Contact>()
+    @Volatile
+    private var suffix8Map = HashMap<String, com.example.model.Contact>()
+    @Volatile
+    private var suffix7Map = HashMap<String, com.example.model.Contact>()
+    @Volatile
+    private var cnapMap = HashMap<String, String>()
+
+    fun init(contacts: List<com.example.model.Contact>, settings: List<com.example.model.AppSetting>) {
+        val fMap = HashMap<String, com.example.model.Contact>()
+        val s10Map = HashMap<String, com.example.model.Contact>()
+        val s8Map = HashMap<String, com.example.model.Contact>()
+        val s7Map = HashMap<String, com.example.model.Contact>()
+
+        for (contact in contacts) {
+            val clean = contact.number.filter { it.isDigit() }
+            if (clean.isEmpty()) continue
+            fMap[clean] = contact
+            val len = clean.length
+            if (len >= 10) s10Map[clean.takeLast(10)] = contact
+            if (len >= 8) s8Map[clean.takeLast(8)] = contact
+            if (len >= 7) s7Map[clean.takeLast(7)] = contact
+        }
+
+        val cMap = HashMap<String, String>()
+        val cnapPrefix = "cnap_"
+        for (setting in settings) {
+            if (setting.key.startsWith(cnapPrefix)) {
+                val cleanKey = setting.key.substring(cnapPrefix.length).filter { it.isDigit() }
+                if (cleanKey.isNotEmpty()) {
+                    cMap[cleanKey] = setting.value
+                }
+            }
+        }
+
+        fullNumMap = fMap
+        suffix10Map = s10Map
+        suffix8Map = s8Map
+        suffix7Map = s7Map
+        cnapMap = cMap
+    }
+
+    fun getContact(number: String): com.example.model.Contact? {
+        val clean = number.filter { it.isDigit() }
+        if (clean.isEmpty()) return null
+        val len = clean.length
+        return fullNumMap[clean] ?: when {
+            len >= 10 -> suffix10Map[clean.takeLast(10)]
+            len >= 8 -> suffix8Map[clean.takeLast(8)]
+            len >= 7 -> suffix7Map[clean.takeLast(7)]
+            else -> null
+        }
+    }
+
+    fun getCnapName(number: String): String? {
+        val clean = number.filter { it.isDigit() }
+        if (clean.isEmpty()) return null
+        return cnapMap[clean]
+    }
+}
 
 fun getContactNameFromNumber(context: Context, number: String): String? {
+    if (number.isBlank()) return null
+    
+    // 1. O(1) in-memory cache lookup (Ultra-fast, zero-IO, non-blocking)
+    val cached = ContactCache.getContact(number)
+    if (cached != null) return cached.name
+
+    // 2. Fast query of the system provider (ContentResolver)
     val attributionContext = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
         context.createAttributionContext("default")
     } else {
@@ -20,62 +91,10 @@ fun getContactNameFromNumber(context: Context, number: String): String? {
         e.printStackTrace()
     }
     
-    // Fallback: Query our local database contacts using robust matching
-    try {
-        val db = com.example.data.AppDatabase.getDatabase(context)
-        val dao = db.dialerDao()
-        val cleanInput = number.filter { it.isDigit() }
-        if (cleanInput.isNotEmpty()) {
-            val contacts = runBlocking { dao.getAllContactsList() }
-            val match = contacts.firstOrNull { contact ->
-                val cleanContact = contact.number.filter { it.isDigit() }
-                if (cleanContact.isEmpty()) false
-                else if (cleanInput == cleanContact) true
-                else {
-                    val minLen = minOf(cleanInput.length, cleanContact.length)
-                    if (minLen >= 7) {
-                        val matchLen = if (minLen >= 10) 10 else if (minLen >= 8) 8 else 7
-                        cleanInput.takeLast(matchLen) == cleanContact.takeLast(matchLen)
-                    } else false
-                }
-            }
-            if (match != null) return match.name
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
     return null
 }
 
 fun getSavedCnapName(context: Context, number: String): String? {
     if (number.isBlank()) return null
-    val cleanInput = number.filter { it.isDigit() }
-    if (cleanInput.isEmpty()) return null
-    try {
-        val db = com.example.data.AppDatabase.getDatabase(context)
-        val dao = db.dialerDao()
-        val allSettings = runBlocking { dao.getAllSettingsList() }
-        val cnapPrefix = "cnap_"
-        val cnapMap = allSettings.filter { it.key.startsWith(cnapPrefix) }
-            .associate { it.key.substring(cnapPrefix.length) to it.value }
-        
-        val match = cnapMap.entries.firstOrNull { entry ->
-            val cleanKey = entry.key.filter { it.isDigit() }
-            if (cleanKey.isEmpty()) false
-            else if (cleanInput == cleanKey) true
-            else {
-                val minLen = minOf(cleanInput.length, cleanKey.length)
-                if (minLen >= 7) {
-                    val matchLen = if (minLen >= 10) 10 else if (minLen >= 8) 8 else 7
-                    cleanInput.takeLast(matchLen) == cleanKey.takeLast(matchLen)
-                } else false
-            }
-        }
-        if (match != null && match.value.isNotBlank()) {
-            return match.value
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-    return null
+    return ContactCache.getCnapName(number)
 }

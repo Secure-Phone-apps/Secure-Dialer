@@ -116,17 +116,27 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
     val cnapMap = allSettings.filter { it.key.startsWith(cnapPrefix) }
         .associate { it.key.substring(cnapPrefix.length) to it.value }
 
-    fun numbersMatch(n1: String, n2: String): Boolean {
-        val c1 = n1.filter { it.isDigit() }
-        val c2 = n2.filter { it.isDigit() }
-        if (c1.isEmpty() || c2.isEmpty()) return false
-        if (c1 == c2) return true
-        val minLen = minOf(c1.length, c2.length)
-        if (minLen >= 7) {
-            val matchLen = if (minLen >= 10) 10 else if (minLen >= 8) 8 else 7
-            return c1.takeLast(matchLen) == c2.takeLast(matchLen)
+    val fullNumMap = HashMap<String, Contact>()
+    val suffix10Map = HashMap<String, Contact>()
+    val suffix8Map = HashMap<String, Contact>()
+    val suffix7Map = HashMap<String, Contact>()
+
+    for (contact in allContacts) {
+        val clean = contact.number.filter { it.isDigit() }
+        if (clean.isEmpty()) continue
+        fullNumMap[clean] = contact
+        val len = clean.length
+        if (len >= 10) suffix10Map[clean.takeLast(10)] = contact
+        if (len >= 8) suffix8Map[clean.takeLast(8)] = contact
+        if (len >= 7) suffix7Map[clean.takeLast(7)] = contact
+    }
+
+    val cnapIndex = HashMap<String, String>()
+    for (entry in cnapMap.entries) {
+        val cleanKey = entry.key.filter { it.isDigit() }
+        if (cleanKey.isNotEmpty()) {
+            cnapIndex[cleanKey] = entry.value
         }
-        return false
     }
 
     try {
@@ -148,13 +158,20 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
             while (cursor.moveToNext()) {
                 val num = if (numIdx != -1) cursor.getString(numIdx) ?: "" else ""
                 val cachedName = if (nameIdx != -1) cursor.getString(nameIdx) else null
+                val cleanNum = num.filter { it.isDigit() }
 
-                val matchingContact = if (num.isNotEmpty()) {
-                    allContacts.firstOrNull { numbersMatch(it.number, num) }
+                val matchingContact = if (cleanNum.isNotEmpty()) {
+                    val len = cleanNum.length
+                    fullNumMap[cleanNum] ?: when {
+                        len >= 10 -> suffix10Map[cleanNum.takeLast(10)]
+                        len >= 8 -> suffix8Map[cleanNum.takeLast(8)]
+                        len >= 7 -> suffix7Map[cleanNum.takeLast(7)]
+                        else -> null
+                    }
                 } else null
 
-                val matchingCnapName = if (num.isNotEmpty()) {
-                    cnapMap.entries.firstOrNull { numbersMatch(it.key, num) }?.value
+                val matchingCnapName = if (cleanNum.isNotEmpty()) {
+                    cnapIndex[cleanNum]
                 } else null
 
                 val name = when {
