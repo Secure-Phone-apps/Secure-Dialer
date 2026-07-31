@@ -78,6 +78,13 @@ fun DialpadTabContent(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
+    val isExpressive = LocalM3Expressive.current
+    val dialKeyColor = if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+    } else {
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -91,7 +98,7 @@ fun DialpadTabContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(vertical = 4.dp)
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 if (dialpadMatches.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -115,7 +122,8 @@ fun DialpadTabContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable { onCallClick(match.number) },
-                                colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+                                colors = CardDefaults.cardColors(containerColor = dialKeyColor),
+                                shape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: MaterialTheme.shapes.medium
                             ) {
                                 ListItem(
                                     headlineContent = {
@@ -199,12 +207,6 @@ fun DialpadTabContent(
         }
 
         // Elegant Display Screen
-        val isExpressive = LocalM3Expressive.current
-        val dialKeyColor = if (isExpressive) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
-        } else {
-            MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-        }
         val actionButtonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
         var expandedClipboardMenu by remember { mutableStateOf(false) }
         val clipboardManager = remember { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager }
@@ -311,7 +313,7 @@ fun DialpadTabContent(
                             voicemailNumber = voicemailNumber,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(64.dp),
+                                .height(60.dp),
                             viewModel = viewModel
                         )
                     }
@@ -354,7 +356,7 @@ fun DialpadTabContent(
                 contentColor = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 modifier = Modifier
                     .weight(1f)
-                    .height(64.dp)
+                    .height(60.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -376,7 +378,7 @@ fun DialpadTabContent(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 modifier = Modifier
                     .weight(1f)
-                    .height(64.dp)
+                    .height(60.dp)
                     .testTag("dialpad_call_button")
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -392,7 +394,7 @@ fun DialpadTabContent(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(64.dp),
+                    .height(60.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (inputValue.isNotEmpty()) {
