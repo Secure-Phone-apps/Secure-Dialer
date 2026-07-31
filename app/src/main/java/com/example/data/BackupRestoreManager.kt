@@ -3,6 +3,7 @@ package com.example.data
 import android.content.Context
 import android.util.Base64
 import com.example.model.*
+import com.example.DialerRepository
 import org.json.JSONArray
 import org.json.JSONObject
 import java.security.MessageDigest
@@ -134,6 +135,85 @@ object BackupRestoreManager {
             }
 
             return true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    suspend fun exportContactsToVcf(context: Context): String {
+        try {
+            val db = AppDatabase.getDatabase(context)
+            val dao = db.dialerDao()
+            val contacts = dao.getAllContactsList()
+            val sb = StringBuilder()
+            contacts.forEach { contact ->
+                sb.append("BEGIN:VCARD\r\n")
+                sb.append("VERSION:3.0\r\n")
+                sb.append("FN:${contact.name}\r\n")
+                sb.append("TEL;TYPE=CELL:${contact.number}\r\n")
+                if (contact.email.isNotEmpty()) {
+                    sb.append("EMAIL;TYPE=HOME:${contact.email}\r\n")
+                }
+                sb.append("END:VCARD\r\n")
+            }
+            return sb.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return ""
+        }
+    }
+
+    suspend fun importContactsFromVcf(context: Context, vcfContent: String): Boolean {
+        try {
+            val lines = vcfContent.split(Regex("\\r?\\n"))
+            var currentName = ""
+            var currentNum = ""
+            var currentEmail = ""
+            val db = AppDatabase.getDatabase(context)
+            val dao = db.dialerDao()
+            val repo = DialerRepository(context)
+            var count = 0
+            
+            lines.forEach { line ->
+                val trimmed = line.trim()
+                when {
+                    trimmed.startsWith("BEGIN:VCARD", ignoreCase = true) -> {
+                        currentName = ""
+                        currentNum = ""
+                        currentEmail = ""
+                    }
+                    trimmed.startsWith("FN:", ignoreCase = true) -> {
+                        currentName = trimmed.substring(3).trim()
+                    }
+                    trimmed.startsWith("TEL;", ignoreCase = true) -> {
+                        val index = trimmed.indexOf(":")
+                        if (index != -1) {
+                            currentNum = trimmed.substring(index + 1).trim()
+                        }
+                    }
+                    trimmed.startsWith("TEL:", ignoreCase = true) -> {
+                        currentNum = trimmed.substring(4).trim()
+                    }
+                    trimmed.startsWith("EMAIL;", ignoreCase = true) -> {
+                        val index = trimmed.indexOf(":")
+                        if (index != -1) {
+                            currentEmail = trimmed.substring(index + 1).trim()
+                        }
+                    }
+                    trimmed.startsWith("EMAIL:", ignoreCase = true) -> {
+                        currentEmail = trimmed.substring(6).trim()
+                    }
+                    trimmed.startsWith("END:VCARD", ignoreCase = true) -> {
+                        if (currentNum.isNotBlank()) {
+                            if (currentName.isBlank()) currentName = currentNum
+                            repo.addContact(currentName, currentNum, "Mobile", currentEmail)
+                            count++
+                        }
+                    }
+                }
+            }
+            return count > 0
         } catch (e: Exception) {
             e.printStackTrace()
             return false

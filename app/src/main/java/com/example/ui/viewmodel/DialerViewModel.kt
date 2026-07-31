@@ -162,7 +162,6 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             preferredSim.value = repository.getPreferredSim()
             voicemailNumber.value = repository.getVoicemailNumber()
-            refreshServiceHealth()
             
             // Add default quick responses if empty
             val currentResponses = repository.getQuickResponses().first()
@@ -235,15 +234,6 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch { repository.removeBlockedNumber(num) }
     }
 
-    // Service Watchdog & Health
-    var serviceHealth = mutableStateOf<com.example.ServiceHealth?>(null)
-
-    fun refreshServiceHealth() {
-        viewModelScope.launch {
-            serviceHealth.value = repository.getServiceHealth()
-        }
-    }
-
     // Encrypted Backup & Restore
     fun exportBackup(password: String = "", onResult: (String) -> Unit) {
         viewModelScope.launch {
@@ -255,6 +245,23 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun importBackup(rawData: String, password: String = "", onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             val success = repository.importBackup(rawData, password)
+            if (success) {
+                syncData()
+            }
+            onResult(success)
+        }
+    }
+
+    fun exportContactsVcf(onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val data = com.example.data.BackupRestoreManager.exportContactsToVcf(getApplication())
+            onResult(data)
+        }
+    }
+
+    fun importContactsVcf(rawData: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = com.example.data.BackupRestoreManager.importContactsFromVcf(getApplication(), rawData)
             if (success) {
                 syncData()
             }

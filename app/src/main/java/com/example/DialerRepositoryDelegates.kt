@@ -22,8 +22,6 @@ suspend fun DialerRepository.isBlocked(number: String): Boolean {
 suspend fun DialerRepository.exportBackup(password: String = ""): String = com.example.data.BackupRestoreManager.exportBackup(context, password)
 suspend fun DialerRepository.importBackup(rawData: String, password: String = ""): Boolean = com.example.data.BackupRestoreManager.importBackup(context, rawData, password)
 
-suspend fun DialerRepository.getServiceHealth(): ServiceHealth = CallBlockerService.getServiceHealthStatus(context)
-
 fun DialerRepository.getSpeedDial(): Flow<List<SpeedDial>> = dao.getSpeedDialFlow()
 suspend fun DialerRepository.saveSpeedDial(key: Int, number: String, name: String) = dao.insertSpeedDial(SpeedDial(key, number, name))
 suspend fun DialerRepository.deleteSpeedDial(key: Int) = dao.deleteSpeedDial(key)

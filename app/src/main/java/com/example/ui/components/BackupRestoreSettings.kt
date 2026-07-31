@@ -1,5 +1,8 @@
 package com.example.ui.components
 
+import android.app.role.RoleManager
+import android.content.Context
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -34,8 +37,6 @@ fun BackupRestoreSettings(
 ) {
     val context = LocalContext.current
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
-    val serviceHealth by viewModel.serviceHealth
-
     var exportPassword by remember { mutableStateOf("") }
     var importPassword by remember { mutableStateOf("") }
     var importDataInput by remember { mutableStateOf("") }
@@ -43,9 +44,9 @@ fun BackupRestoreSettings(
     var exportedDataDialog by remember { mutableStateOf<String?>(null) }
     var showImportDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.refreshServiceHealth()
-    }
+    var exportedVcfDialog by remember { mutableStateOf<String?>(null) }
+    var showImportVcfDialog by remember { mutableStateOf(false) }
+    var importVcfInput by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -54,67 +55,6 @@ fun BackupRestoreSettings(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // --- Watchdog & Service Health Card ---
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (serviceHealth?.isHealthy == true) MaterialTheme.colorScheme.primaryContainer
-                                    else MaterialTheme.colorScheme.errorContainer
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (serviceHealth?.isHealthy == true) Icons.Default.Shield else Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = if (serviceHealth?.isHealthy == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = stringResource(R.string.service_health_header),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = if (serviceHealth?.isHealthy == true) stringResource(R.string.service_health_active) else stringResource(R.string.service_health_action_req),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (serviceHealth?.isHealthy == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
-                    IconButton(onClick = { viewModel.refreshServiceHealth() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh Health")
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (serviceHealth?.isRoleGranted == true) stringResource(R.string.service_health_role_granted) else stringResource(R.string.service_health_role_not_granted),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
         // --- Encrypted Backup Card ---
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -195,6 +135,60 @@ fun BackupRestoreSettings(
                     Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(stringResource(R.string.backup_import_btn), fontWeight = FontWeight.SemiBold)
+                }
+            }
+        }
+
+        // --- vCard (VCF) Contacts Migration Card ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = "vCard (VCF) Contacts Migration",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Export your local contacts as a standard vCard (.vcf) file or import contacts from an existing vCard file.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            viewModel.exportContactsVcf { data ->
+                                exportedVcfDialog = data
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Export VCF", fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = { showImportVcfDialog = true },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Import VCF", fontWeight = FontWeight.SemiBold)
+                    }
                 }
             }
         }
@@ -290,6 +284,91 @@ fun BackupRestoreSettings(
             dismissButton = {
                 TextButton(onClick = { showImportDialog = false }) {
                     Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
+    // Exported VCF Dialog
+    if (exportedVcfDialog != null) {
+        val dataStr = exportedVcfDialog ?: ""
+        AlertDialog(
+            onDismissRequest = { exportedVcfDialog = null },
+            title = { Text("vCard (VCF) Contacts Exported") },
+            text = {
+                Column {
+                    Text(
+                        "Your contacts have been exported to standard vCard format. Copy this text and save it to a .vcf file to import into other devices.",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = dataStr,
+                        onValueChange = {},
+                        readOnly = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(140.dp),
+                        shape = MaterialTheme.shapes.small
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    clipboardManager.setText(AnnotatedString(dataStr))
+                    Toast.makeText(context, "vCard content copied to clipboard!", Toast.LENGTH_SHORT).show()
+                    exportedVcfDialog = null
+                }) {
+                    Text("Copy to Clipboard")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { exportedVcfDialog = null }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    // Import VCF Dialog
+    if (showImportVcfDialog) {
+        AlertDialog(
+            onDismissRequest = { showImportVcfDialog = false },
+            title = { Text("Import Contacts from vCard") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Paste the content of a standard .vcf (vCard) file below to import the contacts into your system database.")
+                    OutlinedTextField(
+                        value = importVcfInput,
+                        onValueChange = { importVcfInput = it },
+                        label = { Text("vCard (VCF) Content") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp),
+                        shape = MaterialTheme.shapes.small
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (importVcfInput.isNotBlank()) {
+                        viewModel.importContactsVcf(importVcfInput.trim()) { success ->
+                            if (success) {
+                                Toast.makeText(context, "Contacts imported successfully!", Toast.LENGTH_LONG).show()
+                                showImportVcfDialog = false
+                                importVcfInput = ""
+                            } else {
+                                Toast.makeText(context, "Failed to import contacts. Please verify the vCard format.", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                }) {
+                    Text("Import Contacts")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showImportVcfDialog = false }) {
+                    Text("Cancel")
                 }
             }
         )
