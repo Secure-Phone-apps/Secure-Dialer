@@ -235,7 +235,8 @@ fun ActiveCallScreen(
             } else if (isInCallDialpadOpen) {
                 // Interactive In-Call Keypad for DTMF entry
                 InCallKeypad(
-                    onClose = { isInCallDialpadOpen = false }
+                    onClose = { isInCallDialpadOpen = false },
+                    avatarShapeType = avatarShapeType
                 )
             } else {
                 InCallAvatarDisplay(

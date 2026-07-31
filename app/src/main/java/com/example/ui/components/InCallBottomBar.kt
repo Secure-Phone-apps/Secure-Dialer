@@ -1,5 +1,10 @@
 package com.example.ui.components
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -7,8 +12,11 @@ import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
@@ -51,52 +59,149 @@ fun InCallBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.Center,
+                .padding(start = 12.dp, end = 12.dp, bottom = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isIncoming) {
+                val answerInteractionSource = remember { MutableInteractionSource() }
+                val isAnswerPressed by answerInteractionSource.collectIsPressedAsState()
+                val answerScale by animateFloatAsState(
+                    targetValue = if (isAnswerPressed) 0.92f else 1.0f,
+                    animationSpec = spring(
+                        stiffness = Spring.StiffnessHigh,
+                        dampingRatio = Spring.DampingRatioMediumBouncy
+                    ),
+                    label = "answer_button_scale"
+                )
+
                 Surface(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         onAnswer()
                     },
+                    interactionSource = answerInteractionSource,
                     color = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = buttonShape,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
                     modifier = Modifier
-                        .size(72.dp)
+                        .weight(1f)
+                        .height(64.dp)
+                        .scale(answerScale)
                         .testTag("answer_button")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Call,
                             contentDescription = "Answer",
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
                 }
-                Spacer(modifier = Modifier.width(48.dp))
-            }
 
-            Surface(
-                onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onHangUp()
-                },
-                color = MaterialTheme.colorScheme.error,
-                contentColor = MaterialTheme.colorScheme.onError,
-                shape = buttonShape,
-                modifier = Modifier
-                    .size(72.dp)
-                    .testTag("hangup_button")
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.CallEnd,
-                        contentDescription = "Hang up",
-                        modifier = Modifier.size(32.dp)
-                    )
+                // Center spacer matching DialButton dimensions for absolute symmetry
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Empty center space
+                }
+
+                val hangUpInteractionSource = remember { MutableInteractionSource() }
+                val isHangUpPressed by hangUpInteractionSource.collectIsPressedAsState()
+                val hangUpScale by animateFloatAsState(
+                    targetValue = if (isHangUpPressed) 0.92f else 1.0f,
+                    animationSpec = spring(
+                        stiffness = Spring.StiffnessHigh,
+                        dampingRatio = Spring.DampingRatioMediumBouncy
+                    ),
+                    label = "hangup_button_scale"
+                )
+
+                Surface(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onHangUp()
+                    },
+                    interactionSource = hangUpInteractionSource,
+                    color = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    shape = buttonShape,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp)
+                        .scale(hangUpScale)
+                        .testTag("hangup_button")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.CallEnd,
+                            contentDescription = "Hang up",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            } else {
+                // Outgoing/Active: Symmetrical 3-slot layout with centered Hang Up
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Empty Left Slot
+                }
+
+                val hangUpInteractionSource = remember { MutableInteractionSource() }
+                val isHangUpPressed by hangUpInteractionSource.collectIsPressedAsState()
+                val hangUpScale by animateFloatAsState(
+                    targetValue = if (isHangUpPressed) 0.92f else 1.0f,
+                    animationSpec = spring(
+                        stiffness = Spring.StiffnessHigh,
+                        dampingRatio = Spring.DampingRatioMediumBouncy
+                    ),
+                    label = "hangup_button_scale"
+                )
+
+                Surface(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onHangUp()
+                    },
+                    interactionSource = hangUpInteractionSource,
+                    color = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError,
+                    shape = buttonShape,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp)
+                        .scale(hangUpScale)
+                        .testTag("hangup_button")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.CallEnd,
+                            contentDescription = "Hang up",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Empty Right Slot
                 }
             }
         }

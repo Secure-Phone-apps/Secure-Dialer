@@ -44,120 +44,129 @@ fun InCallControlGrid(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         // Row 1: Keypad, Mute, Speaker
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                InCallButton(
-                    icon = Icons.Default.Dialpad,
-                    label = stringResource(R.string.keypad),
-                    isActive = isInCallDialpadOpen,
-                    onClick = onToggleDialpad,
-                    shape = btnShape
-                )
-            }
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                InCallButton(
-                    icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                    label = stringResource(R.string.mute),
-                    isActive = isMuted,
-                    onClick = onToggleMute,
-                    shape = btnShape
-                )
-            }
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                InCallButton(
-                    icon = Icons.AutoMirrored.Filled.VolumeUp,
-                    label = stringResource(R.string.speaker),
-                    isActive = isSpeakerOn,
-                    onClick = onToggleSpeaker,
-                    shape = btnShape
-                )
-            }
+            InCallButton(
+                icon = Icons.Default.Dialpad,
+                label = stringResource(R.string.keypad),
+                isActive = isInCallDialpadOpen,
+                onClick = onToggleDialpad,
+                shape = btnShape,
+                modifier = Modifier.weight(1f).height(64.dp)
+            )
+            InCallButton(
+                icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                label = stringResource(R.string.mute),
+                isActive = isMuted,
+                onClick = onToggleMute,
+                shape = btnShape,
+                modifier = Modifier.weight(1f).height(64.dp)
+            )
+            InCallButton(
+                icon = Icons.AutoMirrored.Filled.VolumeUp,
+                label = stringResource(R.string.speaker),
+                isActive = isSpeakerOn,
+                onClick = onToggleSpeaker,
+                shape = btnShape,
+                modifier = Modifier.weight(1f).height(64.dp)
+            )
         }
 
         // Row 2: Hold, Bluetooth, Add Call
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                InCallButton(
-                    icon = Icons.Default.Pause,
-                    label = stringResource(R.string.hold),
-                    isActive = isOnHold,
-                    onClick = onToggleHold,
-                    shape = btnShape
-                )
-            }
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                InCallButton(
-                    icon = Icons.Default.Bluetooth,
-                    label = stringResource(R.string.bluetooth),
-                    isActive = isBluetoothOn,
-                    onClick = onToggleBluetooth,
-                    shape = btnShape
-                )
-            }
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                InCallButton(
-                    icon = Icons.Default.GroupAdd,
-                    label = stringResource(R.string.add_call),
-                    isActive = isAddCallDialogOpen,
-                    onClick = onOpenAddCallDialog,
-                    shape = btnShape
-                )
-            }
+            InCallButton(
+                icon = Icons.Default.Pause,
+                label = stringResource(R.string.hold),
+                isActive = isOnHold,
+                onClick = onToggleHold,
+                shape = btnShape,
+                modifier = Modifier.weight(1f).height(64.dp)
+            )
+            InCallButton(
+                icon = Icons.Default.Bluetooth,
+                label = stringResource(R.string.bluetooth),
+                isActive = isBluetoothOn,
+                onClick = onToggleBluetooth,
+                shape = btnShape,
+                modifier = Modifier.weight(1f).height(64.dp)
+            )
+            InCallButton(
+                icon = Icons.Default.GroupAdd,
+                label = stringResource(R.string.add_call),
+                isActive = isAddCallDialogOpen,
+                onClick = onOpenAddCallDialog,
+                shape = btnShape,
+                modifier = Modifier.weight(1f).height(64.dp)
+            )
         }
 
         // Row 3: Record & Note
         Row(
             modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (recordingEnabled) {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    InCallButton(
-                        icon = Icons.Default.Mic,
-                        label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
-                        isActive = isRecording,
-                        onClick = onToggleRecording,
-                        shape = btnShape
-                    )
-                }
+                InCallButton(
+                    icon = Icons.Default.Mic,
+                    label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
+                    isActive = isRecording,
+                    onClick = onToggleRecording,
+                    shape = btnShape,
+                    modifier = Modifier.weight(1f).height(64.dp)
+                )
 
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    InCallButton(
-                        icon = Icons.Default.EditNote,
-                        label = stringResource(R.string.call_note),
-                        isActive = isNoteDialogOpen,
-                        onClick = onOpenNoteDialog,
-                        shape = btnShape
-                    )
-                }
+                InCallButton(
+                    icon = Icons.Default.EditNote,
+                    label = stringResource(R.string.call_note),
+                    isActive = isNoteDialogOpen,
+                    onClick = onOpenNoteDialog,
+                    shape = btnShape,
+                    modifier = Modifier.weight(1f).height(64.dp)
+                )
 
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {
                     // Spacer to align symmetrically
                 }
             } else {
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {}
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {}
 
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    InCallButton(
-                        icon = Icons.Default.EditNote,
-                        label = stringResource(R.string.call_note),
-                        isActive = isNoteDialogOpen,
-                        onClick = onOpenNoteDialog,
-                        shape = btnShape
-                    )
-                }
+                InCallButton(
+                    icon = Icons.Default.EditNote,
+                    label = stringResource(R.string.call_note),
+                    isActive = isNoteDialogOpen,
+                    onClick = onOpenNoteDialog,
+                    shape = btnShape,
+                    modifier = Modifier.weight(1f).height(64.dp)
+                )
 
-                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {}
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(64.dp),
+                    contentAlignment = Alignment.Center
+                ) {}
             }
         }
     }

@@ -90,7 +90,7 @@ fun DialpadTabContent(
             .fillMaxSize()
             .padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // T9 Results Preview (Vertical list occupying remaining top space)
         if (inputValue.isNotEmpty()) {
@@ -287,14 +287,12 @@ fun DialpadTabContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(2.dp))
-
         // Dialer Grid
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             for (i in 0 until 4) {
                 Row(
@@ -320,10 +318,6 @@ fun DialpadTabContent(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-
 
         // Action Row (Call & Backspace inline) - Made symmetrically and geometrically same to other dialpad buttons
         Row(
@@ -441,8 +435,6 @@ fun DialpadTabContent(
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(4.dp))
     }
 }
 
