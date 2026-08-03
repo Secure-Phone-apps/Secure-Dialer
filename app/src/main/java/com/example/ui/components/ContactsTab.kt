@@ -81,8 +81,12 @@ fun ContactsTabContent(
     val coroutineScope = rememberCoroutineScope()
     
     val allContacts by viewModel.allContactsFlow.collectAsState()
-    val alphabet = remember(allContacts) {
-        val uniqueLetters = allContacts.asSequence()
+    var showOnlyFavorites by remember { mutableStateOf(false) }
+    val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
+
+    val alphabet = remember(allContacts, showOnlyFavorites, sortedFavorites) {
+        val contactsList = if (showOnlyFavorites) sortedFavorites else allContacts
+        val uniqueLetters = contactsList.asSequence()
             .map { it.name.trim() }
             .filter { it.isNotEmpty() }
             .map { it.first().uppercaseChar() }
@@ -105,10 +109,11 @@ fun ContactsTabContent(
         }
     }
 
-    val letterToIndex = remember(allContacts) {
+    val letterToIndex = remember(allContacts, showOnlyFavorites, sortedFavorites) {
+        val contactsList = if (showOnlyFavorites) sortedFavorites else allContacts
         val map = HashMap<Char, Int>()
-        for (i in allContacts.indices) {
-            val contact = allContacts[i]
+        for (i in contactsList.indices) {
+            val contact = contactsList[i]
             val firstChar = contact.name.trim().firstOrNull()?.uppercaseChar() ?: '#'
             val key = if (firstChar.isLetter()) firstChar else '#'
             if (!map.containsKey(key)) {
@@ -118,24 +123,37 @@ fun ContactsTabContent(
         map
     }
 
-    var showOnlyFavorites by remember { mutableStateOf(false) }
-    val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
-
-    val activeLetter = remember(listState, alphabet) {
+    val activeLetter = remember(listState, alphabet, showOnlyFavorites, sortedFavorites, contactsPaged) {
         derivedStateOf {
             val firstVisibleIndex = listState.firstVisibleItemIndex
-            if (firstVisibleIndex < contactsPaged.itemCount) {
-                val contact = contactsPaged.peek(firstVisibleIndex)
-                val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
-                if (alphabet.contains(firstChar)) {
-                    firstChar
-                } else if (!firstChar.isLetter() && alphabet.contains('#')) {
-                    '#'
+            if (showOnlyFavorites) {
+                if (firstVisibleIndex < sortedFavorites.size) {
+                    val contact = sortedFavorites.getOrNull(firstVisibleIndex)
+                    val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
+                    if (alphabet.contains(firstChar)) {
+                        firstChar
+                    } else if (!firstChar.isLetter() && alphabet.contains('#')) {
+                        '#'
+                    } else {
+                        alphabet.firstOrNull() ?: '#'
+                    }
                 } else {
                     alphabet.firstOrNull() ?: '#'
                 }
             } else {
-                alphabet.firstOrNull() ?: '#'
+                if (firstVisibleIndex < contactsPaged.itemCount) {
+                    val contact = contactsPaged.peek(firstVisibleIndex)
+                    val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
+                    if (alphabet.contains(firstChar)) {
+                        firstChar
+                    } else if (!firstChar.isLetter() && alphabet.contains('#')) {
+                        '#'
+                    } else {
+                        alphabet.firstOrNull() ?: '#'
+                    }
+                } else {
+                    alphabet.firstOrNull() ?: '#'
+                }
             }
         }
     }
@@ -357,7 +375,8 @@ fun ContactsTabContent(
 
 
         // A-Z Scroller Rail
-        if (contactsPaged.itemCount > 0 && !showOnlyFavorites) {
+        val hasItems = if (showOnlyFavorites) sortedFavorites.isNotEmpty() else contactsPaged.itemCount > 0
+        if (hasItems) {
             val haptic = LocalHapticFeedback.current
             Column(
                 modifier = Modifier

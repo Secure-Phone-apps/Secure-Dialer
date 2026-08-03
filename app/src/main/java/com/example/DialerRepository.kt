@@ -133,6 +133,15 @@ class DialerRepository(rawContext: Context) {
             }
             
             val systemContacts = fetchSystemContacts()
+            
+            // Delete local contacts that are no longer present in system contacts to prevent stale cached contacts from reappearing
+            val systemNumbers = systemContacts.map { it.number }.toSet()
+            val localContacts = dao.getAllContactsList()
+            val toDelete = localContacts.filter { it.number !in systemNumbers }
+            for (contact in toDelete) {
+                dao.deleteContact(contact)
+            }
+            
             dao.insertContacts(systemContacts)
             
             prefs.edit()
@@ -144,6 +153,12 @@ class DialerRepository(rawContext: Context) {
             try {
                 val systemContacts = fetchSystemContacts()
                 if (systemContacts.isNotEmpty()) {
+                    val systemNumbers = systemContacts.map { it.number }.toSet()
+                    val localContacts = dao.getAllContactsList()
+                    val toDelete = localContacts.filter { it.number !in systemNumbers }
+                    for (contact in toDelete) {
+                        dao.deleteContact(contact)
+                    }
                     dao.insertContacts(systemContacts)
                 }
             } catch (ex: Exception) {
@@ -198,6 +213,7 @@ class DialerRepository(rawContext: Context) {
             e.printStackTrace()
             try {
                 val systemLogs = fetchSystemCallLogs()
+                dao.clearCallLogs()
                 dao.insertCallLogs(systemLogs)
             } catch (ex: Exception) {
                 ex.printStackTrace()
@@ -226,17 +242,30 @@ class DialerRepository(rawContext: Context) {
 
     suspend fun deleteContact(number: String) {
         try {
+            // First, delete from system ContactsContract to propagate to other dialers and system
             val contactId = getContactIdFromNumber(number)
             if (contactId != null) {
+                // Delete using the Contacts content URI (the complete aggregated contact)
+                context.contentResolver.delete(
+                    ContactsContract.Contacts.CONTENT_URI,
+                    "${ContactsContract.Contacts._ID} = ?",
+                    arrayOf(contactId)
+                )
+                // Also delete from RawContacts to clean up any raw components
                 context.contentResolver.delete(
                     ContactsContract.RawContacts.CONTENT_URI,
                     "${ContactsContract.RawContacts.CONTACT_ID} = ?",
                     arrayOf(contactId)
                 )
+                // Attempt to delete via lookup URI if possible (recommended Android standard)
+                getContactLookupUriFromNumber(number)?.let { lookupUri ->
+                    context.contentResolver.delete(lookupUri, null, null)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
+        // Delete from the local database
         dao.getContactByNumber(number)?.let { dao.deleteContact(it) }
         syncContacts()
     }
@@ -244,6 +273,7 @@ class DialerRepository(rawContext: Context) {
     suspend fun deleteCallLog(id: Int) {
         dao.deleteCallLog(id)
         try {
+            // Delete from system CallLog so it vanishes from other dialers too
             context.contentResolver.delete(
                 CallLog.Calls.CONTENT_URI,
                 "${CallLog.Calls._ID} = ?",
@@ -278,12 +308,72 @@ class DialerRepository(rawContext: Context) {
         dao.getContactByNumber(number)?.let { dao.updateContact(it.copy(favorite = isFavorite)) }
     }
 
-    private fun getContactIdFromNumber(number: String): String? {
+    private fun getContactLookupUriFromNumber(number: String): Uri? {
+        if (number.isBlank()) return null
         return try {
             val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
-            context.contentResolver.query(uri, arrayOf(ContactsContract.PhoneLookup._ID), null, null, null)?.use { cursor ->
+            context.contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup.LOOKUP_KEY, ContactsContract.PhoneLookup._ID),
+                null,
+                null,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val lookupKey = cursor.getString(0)
+                    val id = cursor.getLong(1)
+                    ContactsContract.Contacts.getLookupUri(id, lookupKey)
+                } else null
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun getContactIdFromNumber(number: String): String? {
+        if (number.isBlank()) return null
+        return try {
+            // 1. Try PhoneLookup (Android's standard phone matching lookup)
+            val uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number))
+            val idFromLookup = context.contentResolver.query(
+                uri,
+                arrayOf(ContactsContract.PhoneLookup._ID),
+                null, null, null
+            )?.use { cursor ->
                 if (cursor.moveToFirst()) cursor.getString(0) else null
             }
+            if (idFromLookup != null) return idFromLookup
+
+            // 2. Try CommonDataKinds.Phone querying directly for exact match
+            val phoneUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+            val cleanedNumber = number.filter { it.isDigit() }
+            val selection = "${Phone.NUMBER} = ? OR ${Phone.NORMALIZED_NUMBER} = ? OR REPLACE(REPLACE(REPLACE(REPLACE(${Phone.NUMBER}, ' ', ''), '-', ''), '(', ''), ')', '') = ?"
+            val selectionArgs = arrayOf(number, number, cleanedNumber)
+            val idFromPhoneQuery = context.contentResolver.query(
+                phoneUri,
+                arrayOf(Phone.CONTACT_ID),
+                selection,
+                selectionArgs,
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+            if (idFromPhoneQuery != null) return idFromPhoneQuery
+
+            // 3. Fallback: query with selection LIKE in CommonDataKinds.Phone
+            if (cleanedNumber.length >= 7) {
+                val last7Digits = cleanedNumber.takeLast(7)
+                context.contentResolver.query(
+                    phoneUri,
+                    arrayOf(Phone.CONTACT_ID),
+                    "${Phone.NUMBER} LIKE ?",
+                    arrayOf("%$last7Digits"),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getString(0) else null
+                }
+            } else null
         } catch (e: Exception) {
             e.printStackTrace()
             null
