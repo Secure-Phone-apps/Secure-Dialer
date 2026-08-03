@@ -75,6 +75,8 @@ fun MainScreen(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
 
     // Localized state declarations for MainScreen
     val preferredSim by viewModel.preferredSim
@@ -89,6 +91,26 @@ fun MainScreen(
     var isSettingsVisible by viewModel.isSettingsVisible
     var isCallActive by viewModel.isCallActive
     var isCallMinimized by remember { mutableStateOf(false) }
+
+    // Automatically dismiss keyboard and clear focus on tab changes, settings visibility changes, and call transitions
+    LaunchedEffect(selectedTab) {
+        focusManager.clearFocus()
+        keyboardController?.hide()
+    }
+
+    LaunchedEffect(isSettingsVisible) {
+        if (isSettingsVisible) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+        }
+    }
+
+    LaunchedEffect(isCallActive, viewModel.isFakeCallActive.value) {
+        if (isCallActive || viewModel.isFakeCallActive.value) {
+            focusManager.clearFocus()
+            keyboardController?.hide()
+        }
+    }
 
     LaunchedEffect(isCallActive) {
         if (!isCallActive) {
@@ -215,6 +237,8 @@ fun MainScreen(
     var pendingCallName by remember { mutableStateOf("") }
 
     fun initiateCall(name: String, number: String, label: String = "Mobile") {
+        focusManager.clearFocus()
+        keyboardController?.hide()
         if (blockedNumbers.contains(number)) {
             Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
