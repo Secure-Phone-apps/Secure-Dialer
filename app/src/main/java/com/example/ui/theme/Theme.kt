@@ -19,7 +19,9 @@ package com.example.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Modifier
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -295,6 +297,15 @@ fun getColorSchemeForTheme(themeColor: String, darkTheme: Boolean): androidx.com
 }
 
 val LocalM3Expressive = staticCompositionLocalOf { true }
+val LocalImageToolboxStyle = staticCompositionLocalOf { false }
+
+val ImageToolboxShapes = Shapes(
+    extraSmall = RoundedCornerShape(14.dp),
+    small = RoundedCornerShape(18.dp),
+    medium = RoundedCornerShape(26.dp),
+    large = RoundedCornerShape(34.dp),
+    extraLarge = RoundedCornerShape(44.dp)
+)
 
 val ExpressiveShapes = Shapes(
     extraSmall = RoundedCornerShape(12.dp),
@@ -311,6 +322,170 @@ val StandardShapes = Shapes(
     large = RoundedCornerShape(16.dp),
     extraLarge = RoundedCornerShape(28.dp)
 )
+
+fun getImageToolboxColorScheme(palette: String, darkTheme: Boolean): ColorScheme {
+    return when (palette) {
+        "oled_obsidian" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFFFFFFFF),
+                    onPrimary = Color(0xFF000000),
+                    primaryContainer = Color(0xFF1E2130),
+                    onPrimaryContainer = Color(0xFFFFFFFF),
+                    secondary = Color(0xFF9CA3AF),
+                    onSecondary = Color(0xFF000000),
+                    secondaryContainer = Color(0xFF11131E),
+                    onSecondaryContainer = Color(0xFFE5E7EB),
+                    tertiary = Color(0xFFD1D5DB),
+                    onTertiary = Color(0xFF000000),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF0A0C10),
+                    surfaceVariant = Color(0xFF151821),
+                    onSurface = Color(0xFFF3F4F6),
+                    outline = Color(0xFF2A2E3D)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF111827),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFE5E7EB),
+                    onPrimaryContainer = Color(0xFF111827),
+                    secondary = Color(0xFF4B5563),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFF3F4F6),
+                    onSecondaryContainer = Color(0xFF111827),
+                    tertiary = Color(0xFF374151),
+                    onTertiary = Color(0xFFFFFFFF),
+                    background = Color(0xFFF3F4F6),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceVariant = Color(0xFFE5E7EB),
+                    onSurface = Color(0xFF111827),
+                    outline = Color(0xFF9CA3AF)
+                )
+            }
+        }
+        "nordic_forest" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFF86EFAC),
+                    onPrimary = Color(0xFF022C22),
+                    primaryContainer = Color(0xFF065F46),
+                    onPrimaryContainer = Color(0xFFD1FAE5),
+                    secondary = Color(0xFFA7F3D0),
+                    onSecondary = Color(0xFF042F1A),
+                    secondaryContainer = Color(0xFF0F3E26),
+                    onSecondaryContainer = Color(0xFFE6FDF4),
+                    tertiary = Color(0xFF6EE7B7),
+                    onTertiary = Color(0xFF022C22),
+                    background = Color(0xFF0D120F),
+                    surface = Color(0xFF141A16),
+                    surfaceVariant = Color(0xFF1D2821),
+                    onSurface = Color(0xFFF0FDF4),
+                    outline = Color(0xFF2F4538)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF065F46),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFD1FAE5),
+                    onPrimaryContainer = Color(0xFF042F1A),
+                    secondary = Color(0xFF0F5132),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFD2E7DF),
+                    onSecondaryContainer = Color(0xFF082E1B),
+                    tertiary = Color(0xFF1E5E3A),
+                    onTertiary = Color(0xFFFFFFFF),
+                    background = Color(0xFFF2F7F4),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceVariant = Color(0xFFE1ECE6),
+                    onSurface = Color(0xFF0F1A14),
+                    outline = Color(0xFF829A8E)
+                )
+            }
+        }
+        "lavender_dusk" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFFDDD6FE),
+                    onPrimary = Color(0xFF2E1065),
+                    primaryContainer = Color(0xFF5B21B6),
+                    onPrimaryContainer = Color(0xFFF5F3FF),
+                    secondary = Color(0xFFC7D2FE),
+                    onSecondary = Color(0xFF1E1B4B),
+                    secondaryContainer = Color(0xFF3730A3),
+                    onSecondaryContainer = Color(0xFFEEF2FF),
+                    tertiary = Color(0xFFC084FC),
+                    onTertiary = Color(0xFF3B0764),
+                    background = Color(0xFF0B0914),
+                    surface = Color(0xFF110E21),
+                    surfaceVariant = Color(0xFF1B1733),
+                    onSurface = Color(0xFFF5F3FF),
+                    outline = Color(0xFF322E4E)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF5B21B6),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFEDE9FE),
+                    onPrimaryContainer = Color(0xFF1E1B4B),
+                    secondary = Color(0xFF4338CA),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFE0E7FF),
+                    onSecondaryContainer = Color(0xFF1E1B4B),
+                    tertiary = Color(0xFF7C3AED),
+                    onTertiary = Color(0xFFFFFFFF),
+                    background = Color(0xFFF5F3F7),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceVariant = Color(0xFFEDE9FE),
+                    onSurface = Color(0xFF1E152A),
+                    outline = Color(0xFF9086B1)
+                )
+            }
+        }
+        "terracotta_desert" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFFFDBA74),
+                    onPrimary = Color(0xFF451A03),
+                    primaryContainer = Color(0xFF7C2D12),
+                    onPrimaryContainer = Color(0xFFFFEDD5),
+                    secondary = Color(0xFFFCD34D),
+                    onSecondary = Color(0xFF451A03),
+                    secondaryContainer = Color(0xFF78350F),
+                    onSecondaryContainer = Color(0xFFFEF3C7),
+                    tertiary = Color(0xFFFDA4AF),
+                    onTertiary = Color(0xFF4C0519),
+                    background = Color(0xFF130E0B),
+                    surface = Color(0xFF1C1410),
+                    surfaceVariant = Color(0xFF2D201A),
+                    onSurface = Color(0xFFFFF7ED),
+                    outline = Color(0xFF47342C)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF9E4E2A),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFFFEDD5),
+                    onPrimaryContainer = Color(0xFF431407),
+                    secondary = Color(0xFFB45309),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFFEF3C7),
+                    onSecondaryContainer = Color(0xFF451A03),
+                    tertiary = Color(0xFFBE123C),
+                    onTertiary = Color(0xFFFFFFFF),
+                    background = Color(0xFFFDF8F5),
+                    surface = Color(0xFFFFFFFF),
+                    surfaceVariant = Color(0xFFF5EBE6),
+                    onSurface = Color(0xFF24140D),
+                    outline = Color(0xFFA38C82)
+                )
+            }
+        }
+        else -> {
+            if (darkTheme) DarkColorScheme else LightColorScheme
+        }
+    }
+}
 
 fun getExpressiveColorScheme(colorScheme: ColorScheme, darkTheme: Boolean): ColorScheme {
     return if (darkTheme) {
@@ -339,10 +514,13 @@ fun MyApplicationTheme(
   dynamicColor: Boolean = false,
   themeColor: String = "classic_slate",
   isM3Expressive: Boolean = true,
+  isImageToolboxStyle: Boolean = false,
+  imageToolboxPalette: String = "oled_obsidian",
   content: @Composable () -> Unit,
 ) {
   var colorScheme =
     when {
+      isImageToolboxStyle -> getImageToolboxColorScheme(imageToolboxPalette, darkTheme)
       dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
         val context = LocalContext.current
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -351,16 +529,40 @@ fun MyApplicationTheme(
       else -> getColorSchemeForTheme(themeColor, darkTheme)
     }
 
-  if (isM3Expressive) {
+  if (isM3Expressive && !isImageToolboxStyle) {
       colorScheme = getExpressiveColorScheme(colorScheme, darkTheme)
   }
 
-  CompositionLocalProvider(LocalM3Expressive provides isM3Expressive) {
+  CompositionLocalProvider(
+      LocalM3Expressive provides isM3Expressive,
+      LocalImageToolboxStyle provides isImageToolboxStyle
+  ) {
       MaterialTheme(
           colorScheme = colorScheme,
-          shapes = if (isM3Expressive) ExpressiveShapes else StandardShapes,
+          shapes = when {
+              isImageToolboxStyle -> ImageToolboxShapes
+              isM3Expressive -> ExpressiveShapes
+              else -> StandardShapes
+          },
           typography = if (isM3Expressive) ExpressiveTypography else Typography,
           content = content
       )
   }
+}
+
+@Composable
+fun Modifier.imageToolboxBorder(
+    shape: androidx.compose.ui.graphics.Shape? = null
+): Modifier {
+    val enabled = LocalImageToolboxStyle.current
+    val targetShape = shape ?: MaterialTheme.shapes.medium
+    return if (enabled) {
+        this.border(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.22f),
+            shape = targetShape
+        )
+    } else {
+        this
+    }
 }

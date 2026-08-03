@@ -133,6 +133,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isSettingsVisible = mutableStateOf(false)
     var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
     var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
+    var isImageToolboxStyle = mutableStateOf(prefs.getBoolean("is_image_toolbox_style", false))
+    var imageToolboxPalette = mutableStateOf(prefs.getString("image_toolbox_palette", "oled_obsidian") ?: "oled_obsidian")
     var avatarShapeType = mutableStateOf(prefs.getString("avatar_shape_type", "circular") ?: "circular")
     var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
     var useDynamicColor = mutableStateOf(prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S))
@@ -222,6 +224,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updateM3Expressive(expressive: Boolean) {
         isM3Expressive.value = expressive
         prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
+    }
+
+    fun updateImageToolboxStyle(enabled: Boolean) {
+        isImageToolboxStyle.value = enabled
+        prefs.edit().putBoolean("is_image_toolbox_style", enabled).apply()
+    }
+
+    fun updateImageToolboxPalette(palette: String) {
+        imageToolboxPalette.value = palette
+        prefs.edit().putString("image_toolbox_palette", palette).apply()
     }
 
     fun updateAvatarShapeType(shapeType: String) {
