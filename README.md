@@ -2,7 +2,7 @@
 
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Kotlin Version](https://img.shields.io/badge/Kotlin-2.0.0-purple?style=flat-square&logo=kotlin)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/UI-Jetpack%20Compose-3DDC84?style=flat-square&logo=android)](https://developer.android.com/jetpack/compose)
 [![Android SDK](https://img.shields.io/badge/Android-SDK%2024%20to%2036-green?style=flat-square&logo=android)](https://developer.android.com)
