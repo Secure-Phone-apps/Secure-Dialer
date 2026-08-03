@@ -62,7 +62,8 @@ fun ActiveCallScreen(
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
     onSaveNote: (String) -> Unit = {},
     onMinimize: (() -> Unit)? = null,
-    avatarShapeType: String = "circular"
+    avatarShapeType: String = "circular",
+    isPocketProtectionEnabled: Boolean = false
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -365,7 +366,7 @@ fun ActiveCallScreen(
             }
         }
 
-        if (isNear) {
+        if (isNear && isPocketProtectionEnabled) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -374,8 +375,34 @@ fun ActiveCallScreen(
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         indication = null,
                         onClick = { /* Consume clicks to prevent accidental touch */ }
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Pocket Lock Active",
+                        tint = Color.White.copy(alpha = 0.6f),
+                        modifier = Modifier.size(64.dp)
                     )
-            )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Pocket Lock Active",
+                        color = Color.White.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Keep proximity sensor clear to unlock",
+                        color = Color.White.copy(alpha = 0.5f),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
         }
     }
 }

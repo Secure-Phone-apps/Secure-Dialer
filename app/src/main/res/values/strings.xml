@@ -164,6 +164,13 @@
     <string name="settings_call_recording_sub">Enable in-call recording controls &amp; save locally</string>
     <string name="settings_view_saved_recordings">View Saved Recordings</string>
     <string name="settings_view_saved_recordings_sub">Listen to and manage your call recordings</string>
+    
+    <!-- Security & Protection -->
+    <string name="settings_security_protection">Security &amp; Protection</string>
+    <string name="settings_biometric_lock">App Lock</string>
+    <string name="settings_biometric_lock_sub">Require device lock (PIN/Pattern/Biometric) to open the app</string>
+    <string name="settings_pocket_protection">Pocket Touch Protection</string>
+    <string name="settings_pocket_protection_sub">Block touch input during calls when proximity sensor detects proximity (e.g., in pocket)</string>
     <string name="settings_info_utilities">Information &amp; Utilities</string>
     <string name="settings_merge_duplicate_contacts">Merge Duplicate Contacts</string>
     <string name="settings_merge_duplicate_contacts_sub">Scan and clean duplicate contact listings</string>

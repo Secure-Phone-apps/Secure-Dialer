@@ -122,6 +122,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
     var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
+    var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
+    var isPocketProtectionEnabled = mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false))
     var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var dialpadTonesEnabled = mutableStateOf(true)
     var vibrateOnClickEnabled = mutableStateOf(true)
@@ -219,6 +221,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updateRecordingEnabled(enabled: Boolean) {
         recordingEnabled.value = enabled
         prefs.edit().putBoolean("recording_enabled", enabled).apply()
+    }
+
+    fun updateBiometricLockEnabled(enabled: Boolean) {
+        isBiometricLockEnabled.value = enabled
+        prefs.edit().putBoolean("is_biometric_lock_enabled", enabled).apply()
+    }
+
+    fun updatePocketProtectionEnabled(enabled: Boolean) {
+        isPocketProtectionEnabled.value = enabled
+        prefs.edit().putBoolean("is_pocket_protection_enabled", enabled).apply()
     }
 
     fun updateVoicemailNumber(num: String) {

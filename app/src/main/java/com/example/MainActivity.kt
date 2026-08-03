@@ -20,13 +20,90 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.ui.MainScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
+import android.app.KeyguardManager
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: DialerViewModel by viewModels()
+    private val isAppAuthenticated = mutableStateOf(false)
+    private var isAuthenticating = false
+    private var isAppStopped = false
+
+    companion object {
+        private const val REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL = 4224
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean("is_authenticated", isAppAuthenticated.value)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        isAppStopped = true
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (isAppStopped) {
+            isAppStopped = false
+            if (viewModel.isBiometricLockEnabled.value) {
+                isAppAuthenticated.value = false
+            }
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL) {
+            isAuthenticating = false
+            if (resultCode == RESULT_OK) {
+                isAppAuthenticated.value = true
+            } else {
+                isAppAuthenticated.value = false
+            }
+        }
+    }
+
+    private fun triggerDeviceAuthentication() {
+        if (isAuthenticating) return
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager ?: return
+        if (keyguardManager.isDeviceSecure) {
+            val intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                "Secure Dialer",
+                "Authenticate to open Secure Dialer"
+            )
+            if (intent != null) {
+                isAuthenticating = true
+                startActivityForResult(intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL)
+            } else {
+                isAppAuthenticated.value = true
+            }
+        } else {
+            isAppAuthenticated.value = true
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState != null) {
+            isAppAuthenticated.value = savedInstanceState.getBoolean("is_authenticated", false)
+        } else {
+            isAppAuthenticated.value = !viewModel.isBiometricLockEnabled.value
+        }
+
         enableEdgeToEdge()
         try {
             checkDefaultDialerRole()
@@ -53,12 +130,19 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            // Observe lifecycle to refresh default dialer status
+            // Observe lifecycle to refresh default dialer status and handle authentication
             val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
             DisposableEffect(lifecycleOwner) {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                         updateDefaultDialerStatus(context)
+                        if (viewModel.isBiometricLockEnabled.value) {
+                            if (!isAuthenticating && !isAppAuthenticated.value) {
+                                triggerDeviceAuthentication()
+                            }
+                        } else {
+                            isAppAuthenticated.value = true
+                        }
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
@@ -95,11 +179,78 @@ class MainActivity : ComponentActivity() {
                 themeColor = currentThemeColor,
                 isM3Expressive = isM3Expressive
             ) {
-                MainScreen(
-                    viewModel = viewModel,
-                    onShowRestrictedSettings = { showRestrictedSettingsDialog = true },
-                    isDefaultDialer = viewModel.isDefaultDialer.value
-                )
+                if (isAppAuthenticated.value) {
+                    MainScreen(
+                        viewModel = viewModel,
+                        onShowRestrictedSettings = { showRestrictedSettingsDialog = true },
+                        isDefaultDialer = viewModel.isDefaultDialer.value
+                    )
+                } else {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                    tonalElevation = 4.dp,
+                                    modifier = Modifier.size(96.dp)
+                                ) {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Lock,
+                                            contentDescription = "App Locked",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.size(24.dp))
+
+                                Text(
+                                    text = "Secure Dialer Locked",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                Spacer(modifier = Modifier.size(12.dp))
+
+                                Text(
+                                    text = "This app is secured to protect your privacy. Please authenticate with your device lock to continue.",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+
+                                Spacer(modifier = Modifier.size(36.dp))
+
+                                Button(
+                                    onClick = { triggerDeviceAuthentication() },
+                                    modifier = Modifier.fillMaxWidth(0.7f)
+                                ) {
+                                    Text(
+                                        text = "Unlock Dialer",
+                                        style = MaterialTheme.typography.titleMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

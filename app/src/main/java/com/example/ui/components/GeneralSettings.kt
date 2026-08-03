@@ -57,6 +57,8 @@ fun GeneralSettings(
     val preferredSim by viewModel.preferredSim
     val onSimChange = { newVal: String -> viewModel.updatePreferredSim(newVal) }
     val voicemailNumber by viewModel.voicemailNumber
+    val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
+    val isPocketProtectionEnabled by viewModel.isPocketProtectionEnabled
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -285,6 +287,41 @@ fun GeneralSettings(
                         icon = Icons.Default.Audiotrack,
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                         iconTint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+        }
+
+        // Security & Protection Card
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            PreferenceHeader(stringResource(R.string.settings_security_protection))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column {
+                    SettingsRowToggle(
+                        title = stringResource(R.string.settings_biometric_lock),
+                        subtitle = stringResource(R.string.settings_biometric_lock_sub),
+                        checked = isBiometricLockEnabled,
+                        onCheckedChange = { viewModel.updateBiometricLockEnabled(it) },
+                        icon = Icons.Default.Lock,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.primary
+                    )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsRowToggle(
+                        title = stringResource(R.string.settings_pocket_protection),
+                        subtitle = stringResource(R.string.settings_pocket_protection_sub),
+                        checked = isPocketProtectionEnabled,
+                        onCheckedChange = { viewModel.updatePocketProtectionEnabled(it) },
+                        icon = Icons.Default.ScreenLockPortrait,
+                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                        iconTint = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
