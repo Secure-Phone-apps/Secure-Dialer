@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.CallMade
@@ -30,6 +32,14 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import java.util.Calendar
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,7 +67,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun CallHistoryDetailsScreen(
     number: String,
@@ -77,6 +87,11 @@ fun CallHistoryDetailsScreen(
     }
     
     val isContact = primaryRecord.name != primaryRecord.number
+
+    var showReminderDialog by remember { mutableStateOf(false) }
+    var reminderNoteText by remember { mutableStateOf("") }
+    var reminderDelayValue by remember { mutableStateOf("15") }
+    var reminderDelayUnit by remember { mutableStateOf("min") } // "sec", "min", "hour", "day"
 
     Scaffold(
         topBar = {
@@ -320,6 +335,168 @@ fun CallHistoryDetailsScreen(
             
             item {
                 CallLogSummaryDashboard(callRecords = logs)
+            }
+            
+            item {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showReminderDialog = true }
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Alarm,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Schedule Callback Reminder",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "Get notified with a direct-call alarm",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Schedule,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                if (showReminderDialog) {
+                    val finalDelaySeconds = remember(reminderDelayValue, reminderDelayUnit) {
+                        val value = reminderDelayValue.toIntOrNull() ?: 0
+                        when (reminderDelayUnit) {
+                            "sec" -> value
+                            "min" -> value * 60
+                            "hour" -> value * 3600
+                            "day" -> value * 86400
+                            else -> value * 60
+                        }
+                    }
+
+                    AlertDialog(
+                        onDismissRequest = { showReminderDialog = false },
+                        shape = RoundedCornerShape(24.dp),
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.NotificationsActive,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        title = { 
+                            Text(
+                                text = "Callback Reminder",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            ) 
+                        },
+                        text = {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "Remind you to call back ${if (primaryRecord.name == "Unknown") primaryRecord.number else primaryRecord.name} in:",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                
+                                OutlinedTextField(
+                                    value = reminderDelayValue,
+                                    onValueChange = { newValue ->
+                                        if (newValue.all { it.isDigit() } && newValue.length <= 4) {
+                                            reminderDelayValue = newValue
+                                        }
+                                    },
+                                    label = { Text("Duration") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    listOf("sec", "min", "hour", "day").forEach { unit ->
+                                        FilterChip(
+                                            selected = reminderDelayUnit == unit,
+                                            onClick = { reminderDelayUnit = unit },
+                                            label = { 
+                                                Text(
+                                                    text = unit, 
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    textAlign = TextAlign.Center
+                                                ) 
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+
+                                OutlinedTextField(
+                                    value = reminderNoteText,
+                                    onValueChange = { reminderNoteText = it },
+                                    label = { Text("Optional Note") },
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true
+                                )
+                            }
+                        },
+                        confirmButton = {
+                            Button(
+                                onClick = {
+                                    val triggerTime = System.currentTimeMillis() + (finalDelaySeconds * 1000L)
+                                    viewModel.addReminder(
+                                        number = primaryRecord.number,
+                                        name = if (primaryRecord.name == "Unknown") primaryRecord.number else primaryRecord.name,
+                                        triggerTime = triggerTime,
+                                        note = reminderNoteText
+                                    )
+                                    Toast.makeText(context, "Callback alarm scheduled!", Toast.LENGTH_SHORT).show()
+                                    showReminderDialog = false
+                                },
+                                shape = RoundedCornerShape(100.dp)
+                            ) {
+                                Text("Schedule")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showReminderDialog = false }
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    )
+                }
             }
             
             item {

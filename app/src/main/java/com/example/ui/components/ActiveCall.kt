@@ -63,7 +63,11 @@ fun ActiveCallScreen(
     onSaveNote: (String) -> Unit = {},
     onMinimize: (() -> Unit)? = null,
     avatarShapeType: String = "circular",
-    isPocketProtectionEnabled: Boolean = false
+    isPocketProtectionEnabled: Boolean = false,
+    isFake: Boolean = false,
+    fakeState: String = "RINGING",
+    onFakeAnswer: () -> Unit = {},
+    onFakeHangUp: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -84,6 +88,8 @@ fun ActiveCallScreen(
     val currentRecordingStartTime by rememberUpdatedState(recordingStartTime)
     val currentOnSaveRecording by rememberUpdatedState(onSaveRecording)
 
+    var fakeActiveStartTimestamp by remember { mutableLongStateOf(0L) }
+
     DisposableEffect(Unit) {
         onDispose {
             if (currentIsRecording) {
@@ -102,22 +108,47 @@ fun ActiveCallScreen(
         }
     }
 
-    LaunchedEffect(callState) {
-        if (callState == android.telecom.Call.STATE_ACTIVE) {
-            while (true) {
-                delay(1000)
-                tickTrigger++
+    val currentCallState = if (isFake) {
+        if (fakeState == "ACTIVE") android.telecom.Call.STATE_ACTIVE else android.telecom.Call.STATE_RINGING
+    } else {
+        callState
+    }
+
+    LaunchedEffect(isFake, fakeState) {
+        if (isFake) {
+            if (fakeState == "ACTIVE") {
+                fakeActiveStartTimestamp = System.currentTimeMillis()
+                while (true) {
+                    delay(1000)
+                    tickTrigger++
+                }
+            }
+        } else {
+            if (callState == android.telecom.Call.STATE_ACTIVE) {
+                while (true) {
+                    delay(1000)
+                    tickTrigger++
+                }
             }
         }
     }
 
-    val callDuration = remember(activeStartTimestamp, tickTrigger, callState) {
-        if (callState == android.telecom.Call.STATE_ACTIVE) {
-            val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
-            val durationMs = System.currentTimeMillis() - start
-            (durationMs / 1000).coerceAtLeast(0L).toInt()
+    val callDuration = remember(activeStartTimestamp, tickTrigger, currentCallState, isFake, fakeActiveStartTimestamp) {
+        if (isFake) {
+            if (fakeState == "ACTIVE" && fakeActiveStartTimestamp > 0L) {
+                val durationMs = System.currentTimeMillis() - fakeActiveStartTimestamp
+                (durationMs / 1000).coerceAtLeast(0L).toInt()
+            } else {
+                0
+            }
         } else {
-            0
+            if (callState == android.telecom.Call.STATE_ACTIVE) {
+                val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
+                val durationMs = System.currentTimeMillis() - start
+                (durationMs / 1000).coerceAtLeast(0L).toInt()
+            } else {
+                0
+            }
         }
     }
 
@@ -208,7 +239,7 @@ fun ActiveCallScreen(
         ) {
             InCallHeader(
                 isOnHold = isOnHold,
-                callState = callState,
+                callState = currentCallState,
                 participants = participants,
                 preferredSim = preferredSim,
                 contactName = contactName,
@@ -337,9 +368,9 @@ fun ActiveCallScreen(
             }
 
             InCallBottomBar(
-                isIncoming = isIncoming,
-                onAnswer = onAnswer,
-                onHangUp = onHangUp,
+                isIncoming = if (isFake) (fakeState == "RINGING") else isIncoming,
+                onAnswer = if (isFake) onFakeAnswer else onAnswer,
+                onHangUp = if (isFake) onFakeHangUp else onHangUp,
                 onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen },
                 avatarShapeType = avatarShapeType
             )

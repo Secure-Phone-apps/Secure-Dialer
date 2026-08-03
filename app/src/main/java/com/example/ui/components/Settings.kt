@@ -84,6 +84,9 @@ fun SettingsPanel(
                             6 -> stringResource(R.string.settings_updates_title)
                             7 -> stringResource(R.string.settings_recordings_title)
                             8 -> stringResource(R.string.backup_service_health_title)
+                            9 -> "Offline Spam Database"
+                            10 -> "Scheduled Reminders"
+                            11 -> "Fake Call Simulator"
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -160,6 +163,18 @@ fun SettingsPanel(
                         cardBgColor = cardBgColor
                     )
                     8 -> BackupRestoreSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    9 -> SpamDatabaseSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    10 -> ScheduledRemindersSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    11 -> FakeCallSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )

@@ -38,6 +38,7 @@ class MyInCallService : InCallService() {
         
         if (call.state == Call.STATE_RINGING) {
             showIncomingCallNotification(call)
+            com.example.util.FlashLightManager.startFlashing(this)
         }
 
         // Register callback to track call status and show missed call notifications if applicable
@@ -53,6 +54,7 @@ class MyInCallService : InCallService() {
                     // Cancel incoming call notification when call becomes active or disconnects
                     val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(1)
+                    com.example.util.FlashLightManager.stopFlashing(this@MyInCallService)
                 }
                 if (state == Call.STATE_DISCONNECTED) {
                     if (wasRinging) {
@@ -192,6 +194,7 @@ class MyInCallService : InCallService() {
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
         CallManager.removeCall(call)
+        com.example.util.FlashLightManager.stopFlashing(this)
         if (CallManager.calls.value.isEmpty()) {
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(1)

@@ -28,9 +28,11 @@ class Converters {
         QuickResponse::class,
         AppSetting::class,
         CallNote::class,
-        CallRecording::class
+        CallRecording::class,
+        SpamNumber::class,
+        CallReminder::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

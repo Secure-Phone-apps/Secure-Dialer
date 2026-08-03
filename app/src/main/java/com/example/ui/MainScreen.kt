@@ -534,8 +534,13 @@ fun MainScreen(
                 }
             }
 
+            val isFakeCallActive by viewModel.isFakeCallActive
+            val fakeCallerName by viewModel.fakeCallerName
+            val fakeCallerNumber by viewModel.fakeCallerNumber
+            val fakeCallState by viewModel.fakeCallState
+
             AnimatedVisibility(
-                visible = isCallActive && !isCallMinimized,
+                visible = (isCallActive && !isCallMinimized) || isFakeCallActive,
                 enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
                 exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
             ) {
@@ -544,19 +549,58 @@ fun MainScreen(
                 val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
 
                 ActiveCallScreen(
-                    contactName = callingContactName, contactNumber = callingContactNumber,
-                    preferredSim = preferredSim, quickResponses = quickResponses,
-                    onHangUp = { CallManager.disconnect(); isCallActive = false },
+                    contactName = if (isFakeCallActive) fakeCallerName else callingContactName,
+                    contactNumber = if (isFakeCallActive) fakeCallerNumber else callingContactNumber,
+                    preferredSim = preferredSim,
+                    quickResponses = quickResponses,
+                    onHangUp = {
+                        if (isFakeCallActive) {
+                            val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
+                                (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
+                            } else {
+                                0L
+                            }
+                            val callType = if (fakeCallState == "ACTIVE") com.example.model.CallType.INCOMING else com.example.model.CallType.MISSED
+                            viewModel.logFakeCall(fakeCallerName, fakeCallerNumber, callType, durationSeconds)
+                            viewModel.fakeCallStartTimestamp = 0L
+                            viewModel.isFakeCallActive.value = false
+                            viewModel.fakeCallState.value = "DISCONNECTED"
+                        } else {
+                            CallManager.disconnect()
+                            isCallActive = false
+                        }
+                    },
                     onAnswer = { CallManager.answer() },
-                    onQuickDecline = { CallManager.disconnect(); isCallActive = false },
-                    isIncoming = (systemCallState == android.telecom.Call.STATE_RINGING),
-                    contacts = allContacts, callState = systemCallState,
+                    onQuickDecline = {
+                        if (isFakeCallActive) {
+                            val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
+                                (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
+                            } else {
+                                0L
+                            }
+                            val callType = if (fakeCallState == "ACTIVE") com.example.model.CallType.INCOMING else com.example.model.CallType.MISSED
+                            viewModel.logFakeCall(fakeCallerName, fakeCallerNumber, callType, durationSeconds)
+                            viewModel.fakeCallStartTimestamp = 0L
+                            viewModel.isFakeCallActive.value = false
+                            viewModel.fakeCallState.value = "DISCONNECTED"
+                        } else {
+                            CallManager.disconnect()
+                            isCallActive = false
+                        }
+                    },
+                    isIncoming = if (isFakeCallActive) (fakeCallState == "RINGING") else (systemCallState == android.telecom.Call.STATE_RINGING),
+                    contacts = allContacts,
+                    callState = if (isFakeCallActive) {
+                        if (fakeCallState == "ACTIVE") android.telecom.Call.STATE_ACTIVE else android.telecom.Call.STATE_RINGING
+                    } else {
+                        systemCallState
+                    },
                     recordingEnabled = viewModel.recordingEnabled.value,
                     onSaveRecording = { duration, filePath ->
                         viewModel.saveCallRecording(
                             com.example.model.CallRecording(
-                                name = callingContactName,
-                                number = callingContactNumber,
+                                name = if (isFakeCallActive) fakeCallerName else callingContactName,
+                                number = if (isFakeCallActive) fakeCallerNumber else callingContactNumber,
                                 timestamp = System.currentTimeMillis().toString(),
                                 duration = duration,
                                 filePath = filePath
@@ -564,11 +608,29 @@ fun MainScreen(
                         )
                     },
                     onSaveNote = { content ->
-                        viewModel.saveCallNote(callingContactNumber, content)
+                        viewModel.saveCallNote(if (isFakeCallActive) fakeCallerNumber else callingContactNumber, content)
                     },
-                    onMinimize = { isCallMinimized = true },
+                    onMinimize = if (isFakeCallActive) null else { { isCallMinimized = true } },
                     avatarShapeType = viewModel.avatarShapeType.value,
-                    isPocketProtectionEnabled = viewModel.isPocketProtectionEnabled.value
+                    isPocketProtectionEnabled = viewModel.isPocketProtectionEnabled.value,
+                    isFake = isFakeCallActive,
+                    fakeState = fakeCallState,
+                    onFakeAnswer = { 
+                        viewModel.fakeCallStartTimestamp = System.currentTimeMillis()
+                        viewModel.fakeCallState.value = "ACTIVE" 
+                    },
+                    onFakeHangUp = { 
+                        val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
+                            (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
+                        } else {
+                            0L
+                        }
+                        val callType = if (fakeCallState == "ACTIVE") com.example.model.CallType.INCOMING else com.example.model.CallType.MISSED
+                        viewModel.logFakeCall(fakeCallerName, fakeCallerNumber, callType, durationSeconds)
+                        viewModel.fakeCallStartTimestamp = 0L
+                        viewModel.isFakeCallActive.value = false 
+                        viewModel.fakeCallState.value = "DISCONNECTED" 
+                    }
                 )
             }
 

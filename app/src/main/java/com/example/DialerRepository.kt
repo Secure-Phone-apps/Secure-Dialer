@@ -379,4 +379,49 @@ class DialerRepository(rawContext: Context) {
             null
         }
     }
+
+    suspend fun insertManualCallRecord(name: String, number: String, type: CallType, durationSeconds: Long) = withContext(Dispatchers.IO) {
+        val timestampMs = System.currentTimeMillis()
+        try {
+            val systemType = when (type) {
+                CallType.MISSED -> CallLog.Calls.MISSED_TYPE
+                CallType.OUTGOING -> CallLog.Calls.OUTGOING_TYPE
+                CallType.INCOMING -> CallLog.Calls.INCOMING_TYPE
+            }
+            val values = ContentValues().apply {
+                put(CallLog.Calls.NUMBER, number)
+                put(CallLog.Calls.CACHED_NAME, name)
+                put(CallLog.Calls.TYPE, systemType)
+                put(CallLog.Calls.DATE, timestampMs)
+                put(CallLog.Calls.DURATION, durationSeconds)
+                put(CallLog.Calls.IS_READ, 1)
+            }
+            context.contentResolver.insert(CallLog.Calls.CONTENT_URI, values)
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
+            val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+            val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
+            val pair = colors[Math.abs(name.hashCode()) % colors.size]
+            val record = CallRecord(
+                name = name,
+                number = number,
+                label = "Mobile",
+                timestamp = sdf.format(Date(timestampMs)),
+                type = type,
+                avatarText = getInitials(name),
+                avatarBgValue = pair.first.value.toLong(),
+                avatarTextColorValue = pair.second.value.toLong(),
+                duration = durationSeconds,
+                hasVoicemail = false
+            )
+            dao.insertCallLogs(listOf(record))
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 }

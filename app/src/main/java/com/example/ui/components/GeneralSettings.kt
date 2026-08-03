@@ -1,5 +1,6 @@
 package com.example.ui.components
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -38,6 +39,8 @@ fun GeneralSettings(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val prefs = remember { context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE) }
+    var flashAlertsEnabled by remember { mutableStateOf(prefs.getBoolean("flash_alerts_enabled", false)) }
     val isDarkTheme by viewModel.isDarkTheme
     val onThemeChange = { newVal: Boolean ->
         viewModel.updateDarkTheme(newVal)
@@ -203,6 +206,15 @@ fun GeneralSettings(
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                         iconTint = MaterialTheme.colorScheme.tertiary
                     )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsRowNav(
+                        title = "Offline Spam Protection",
+                        subtitle = "Import CSV blocklists and manage blocked numbers locally",
+                        onClick = { onNavigateToTab(9) },
+                        icon = Icons.Default.Shield,
+                        iconBgColor = MaterialTheme.colorScheme.errorContainer,
+                        iconTint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }
@@ -288,6 +300,19 @@ fun GeneralSettings(
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                         iconTint = MaterialTheme.colorScheme.tertiary
                     )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsRowToggle(
+                        title = "Flash Alerts on Call",
+                        subtitle = "Blinks the camera flash on incoming ringing calls",
+                        checked = flashAlertsEnabled,
+                        onCheckedChange = {
+                            prefs.edit().putBoolean("flash_alerts_enabled", it).apply()
+                            flashAlertsEnabled = it
+                        },
+                        icon = Icons.Default.FlashlightOn,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
@@ -323,6 +348,15 @@ fun GeneralSettings(
                         iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
                         iconTint = MaterialTheme.colorScheme.secondary
                     )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsRowNav(
+                        title = "Fake Call Simulator",
+                        subtitle = "Schedule a simulated incoming call to escape awkward meetups",
+                        onClick = { onNavigateToTab(11) },
+                        icon = Icons.Default.DirectionsRun,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
@@ -348,6 +382,15 @@ fun GeneralSettings(
                         icon = Icons.Default.Shield,
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                         iconTint = MaterialTheme.colorScheme.tertiary
+                    )
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsRowNav(
+                        title = "Callback Reminders Dashboard",
+                        subtitle = "View and cancel pending call alarm reminders",
+                        onClick = { onNavigateToTab(10) },
+                        icon = Icons.Default.NotificationsActive,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.primary
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowNav(

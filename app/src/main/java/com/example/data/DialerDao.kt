@@ -146,4 +146,42 @@ interface DialerDao {
 
     @Query("DELETE FROM call_recordings WHERE id = :id")
     suspend fun deleteCallRecording(id: Int)
+
+    // Spam Numbers
+    @Query("SELECT * FROM spam_numbers ORDER BY number ASC")
+    fun getAllSpamNumbersFlow(): Flow<List<SpamNumber>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSpamNumber(spam: SpamNumber)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSpamNumbers(spam: List<SpamNumber>)
+
+    @Delete
+    suspend fun deleteSpamNumber(spam: SpamNumber)
+
+    @Query("DELETE FROM spam_numbers")
+    suspend fun clearAllSpam()
+
+    @Query("SELECT EXISTS(SELECT 1 FROM spam_numbers WHERE number = :number)")
+    suspend fun isSpamNumber(number: String): Boolean
+
+    // Call Reminders
+    @Query("SELECT * FROM call_reminders ORDER BY reminderTime ASC")
+    fun getAllRemindersFlow(): Flow<List<CallReminder>>
+
+    @Query("SELECT * FROM call_reminders ORDER BY reminderTime ASC")
+    suspend fun getAllRemindersList(): List<CallReminder>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertReminder(reminder: CallReminder): Long
+
+    @Update
+    suspend fun updateReminder(reminder: CallReminder)
+
+    @Delete
+    suspend fun deleteReminder(reminder: CallReminder)
+
+    @Query("DELETE FROM call_reminders WHERE id = :id")
+    suspend fun deleteReminderById(id: Int)
 }

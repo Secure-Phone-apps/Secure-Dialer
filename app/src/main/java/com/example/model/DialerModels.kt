@@ -82,6 +82,22 @@ data class CallNote(
     val lastUpdated: Long = System.currentTimeMillis()
 )
 
+@Entity(tableName = "spam_numbers")
+data class SpamNumber(
+    @PrimaryKey val number: String,
+    val label: String = "Spam"
+)
+
+@Entity(tableName = "call_reminders")
+data class CallReminder(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val number: String,
+    val name: String,
+    val reminderTime: Long,
+    val isCompleted: Boolean = false,
+    val note: String = ""
+)
+
 @Entity(tableName = "call_recordings")
 data class CallRecording(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,

@@ -125,6 +125,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
     var isPocketProtectionEnabled = mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false))
     var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
+    var flashAlertsEnabled = mutableStateOf(prefs.getBoolean("flash_alerts_enabled", false))
+
+    // Fake Call Simulation State
+    var isFakeCallActive = mutableStateOf(false)
+    var fakeCallerName = mutableStateOf("Unknown")
+    var fakeCallerNumber = mutableStateOf("Unknown")
+    var fakeCallState = mutableStateOf("RINGING")
+    var fakeCallStartTimestamp = 0L
     var dialpadTonesEnabled = mutableStateOf(true)
     var vibrateOnClickEnabled = mutableStateOf(true)
     var preferredSim = mutableStateOf("SIM 1")
@@ -158,6 +166,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val notesFlow: StateFlow<List<CallNote>> = repository.getAllCallNotes()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val spamFlow: StateFlow<List<SpamNumber>> = repository.getAllSpamNumbers()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val remindersFlow: StateFlow<List<CallReminder>> = repository.getAllReminders()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
@@ -411,6 +425,80 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     suspend fun getCallHistoryByNumber(number: String): List<CallRecord> {
         return repository.getCallHistoryByNumber(number)
+    }
+
+    // New Custom Features Support
+    fun updateFlashAlertsEnabled(enabled: Boolean) {
+        flashAlertsEnabled.value = enabled
+        prefs.edit().putBoolean("flash_alerts_enabled", enabled).apply()
+    }
+
+    fun addSpamNumber(number: String, label: String = "Spam") {
+        viewModelScope.launch {
+            repository.addSpamNumber(number, label)
+        }
+    }
+
+    fun deleteSpamNumber(spam: SpamNumber) {
+        viewModelScope.launch {
+            repository.deleteSpamNumber(spam)
+        }
+    }
+
+    fun clearAllSpam() {
+        viewModelScope.launch {
+            repository.clearAllSpam()
+        }
+    }
+
+    fun importSpamNumbersFromCsv(csvContent: String, onResult: (Int) -> Unit) {
+        viewModelScope.launch {
+            val count = repository.importSpamNumbersFromCsv(csvContent)
+            onResult(count)
+        }
+    }
+
+    fun addReminder(number: String, name: String, triggerTime: Long, note: String = "", onResult: (Long) -> Unit = {}) {
+        viewModelScope.launch {
+            val reminder = CallReminder(
+                number = number,
+                name = name,
+                reminderTime = triggerTime,
+                isCompleted = false,
+                note = note
+            )
+            val id = repository.saveReminder(reminder)
+            // Schedule via system alarm
+            com.example.util.ReminderScheduler.schedule(getApplication(), id.toInt(), triggerTime)
+            onResult(id)
+        }
+    }
+
+    fun updateReminder(reminder: CallReminder) {
+        viewModelScope.launch {
+            repository.updateReminder(reminder)
+        }
+    }
+
+    fun deleteReminder(reminder: CallReminder) {
+        viewModelScope.launch {
+            repository.deleteReminder(reminder)
+            com.example.util.ReminderScheduler.cancel(getApplication(), reminder.id)
+        }
+    }
+
+    fun deleteReminderById(id: Int) {
+        viewModelScope.launch {
+            repository.deleteReminderById(id)
+            com.example.util.ReminderScheduler.cancel(getApplication(), id)
+        }
+    }
+
+    fun logFakeCall(name: String, number: String, type: com.example.model.CallType, durationSeconds: Long) {
+        viewModelScope.launch {
+            repository.insertManualCallRecord(name, number, type, durationSeconds)
+            syncData()
+        }
     }
 
     override fun onCleared() {
