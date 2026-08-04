@@ -24,9 +24,9 @@
 
 <p align="center">
   <img src="https://img.shields.io/tokei/lines/github/Secure-Phone-apps/Secure-Dialer?style=flat&color=38BDF8&label=LINES%20OF%20CODE" />
-  <img src="https://img.shields.io/badge/COMMITS-120-22C55E?style=flat" />
+  <img src="https://img.shields.io/github/commit-activity/t/Secure-Phone-apps/Secure-Dialer?style=flat&color=22C55E&label=COMMITS" />
   <img src="https://img.shields.io/github/downloads/Secure-Phone-apps/Secure-Dialer/total?style=flat&color=F97316&label=DOWNLOADS" />
-  <img src="https://api.visitorbadge.io/api/visitors?path=Secure-Phone-apps%2FSecure-Dialer&label=PAGE%20VIEWS&color=ec4899&style=flat" />
+  <img src="https://komarev.com/ghpvc/?username=Secure-Phone-apps&repo=Secure-Dialer&style=flat&color=ec4899&label=PAGE%20VIEWS" />
 </p>
 
 Welcome to **Secure Dialer**, your trustworthy, lightning-fast, and open-source telephone companion for Android. 
