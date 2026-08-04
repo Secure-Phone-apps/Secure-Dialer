@@ -22,13 +22,6 @@
   <img src="https://img.shields.io/github/last-commit/Secure-Phone-apps/Secure-Dialer?style=flat&color=059669&labelColor=111827" />
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/tokei/lines/github/Secure-Phone-apps/Secure-Dialer?style=flat&color=38BDF8&label=LINES%20OF%20CODE" />
-  <img src="https://img.shields.io/github/commit-activity/t/Secure-Phone-apps/Secure-Dialer?style=flat&color=22C55E&label=COMMITS" />
-  <img src="https://img.shields.io/github/downloads/Secure-Phone-apps/Secure-Dialer/total?style=flat&color=F97316&label=DOWNLOADS" />
-  <img src="https://komarev.com/ghpvc/?username=Secure-Phone-apps&repo=Secure-Dialer&style=flat&color=ec4899&label=PAGE%20VIEWS" />
-</p>
-
 Welcome to **Secure Dialer**, your trustworthy, lightning-fast, and open-source telephone companion for Android. 
 
 If you are looking for a reliable, modern, and offline-first dialer that can fully replace your phone's pre-installed application, you have found it. Secure Dialer is engineered to provide a secure alternative to commercial caller-ID dialers, stock system apps, and closed-source tools. 
