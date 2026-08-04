@@ -123,7 +123,7 @@ fun GeneralSettings(
                         subtitle = if (isDynamicSupported) {
                             stringResource(R.string.settings_dynamic_color_sub)
                         } else {
-                            "System wallpaper color scheme (Requires Android 12+)"
+                            stringResource(R.string.settings_dynamic_color_sub_fallback)
                         },
                         checked = useDynamicColor && isDynamicSupported,
                         onCheckedChange = { if (isDynamicSupported) onDynamicColorChange(it) },
@@ -146,8 +146,8 @@ fun GeneralSettings(
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                     SettingsRowToggle(
-                        title = "ImageToolbox Aesthetic Style",
-                        subtitle = "Apply premium custom outlines, borders, soft-squircle shapes, and elegant tonal card backgrounds inspired by ImageToolbox",
+                        title = stringResource(R.string.settings_imagetoolbox_style),
+                        subtitle = stringResource(R.string.settings_imagetoolbox_style_sub),
                         checked = isImageToolboxStyle,
                         onCheckedChange = onImageToolboxStyleChange,
                         icon = Icons.Default.Brush,
@@ -251,8 +251,8 @@ fun GeneralSettings(
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowNav(
-                        title = "Offline Spam Protection",
-                        subtitle = "Import CSV blocklists and manage blocked numbers locally",
+                        title = stringResource(R.string.settings_spam_protection),
+                        subtitle = stringResource(R.string.settings_spam_protection_sub),
                         onClick = { onNavigateToTab(9) },
                         icon = Icons.Default.Shield,
                         iconBgColor = MaterialTheme.colorScheme.errorContainer,
@@ -345,8 +345,8 @@ fun GeneralSettings(
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowToggle(
-                        title = "Flash Alerts on Call",
-                        subtitle = "Blinks the camera flash on incoming ringing calls",
+                        title = stringResource(R.string.settings_flash_alerts),
+                        subtitle = stringResource(R.string.settings_flash_alerts_sub),
                         checked = flashAlertsEnabled,
                         onCheckedChange = {
                             prefs.edit().putBoolean("flash_alerts_enabled", it).apply()
@@ -393,8 +393,8 @@ fun GeneralSettings(
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowNav(
-                        title = "Fake Call Simulator",
-                        subtitle = "Schedule a simulated incoming call to escape awkward meetups",
+                        title = stringResource(R.string.settings_fake_call_sim),
+                        subtitle = stringResource(R.string.settings_fake_call_sim_sub),
                         onClick = { onNavigateToTab(11) },
                         icon = Icons.Default.DirectionsRun,
                         iconBgColor = MaterialTheme.colorScheme.primaryContainer,
@@ -428,8 +428,8 @@ fun GeneralSettings(
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowNav(
-                        title = "Callback Reminders Dashboard",
-                        subtitle = "View and cancel pending call alarm reminders",
+                        title = stringResource(R.string.settings_callback_reminders),
+                        subtitle = stringResource(R.string.settings_callback_reminders_sub),
                         onClick = { onNavigateToTab(10) },
                         icon = Icons.Default.NotificationsActive,
                         iconBgColor = MaterialTheme.colorScheme.primaryContainer,
@@ -515,7 +515,7 @@ fun ImageToolboxPalettePicker(
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text(
-            text = "Select ImageToolbox Palette",
+            text = stringResource(R.string.select_imagetoolbox_palette),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 12.dp)

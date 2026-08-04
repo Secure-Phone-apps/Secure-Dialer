@@ -1,28 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Tabs -->
     <string name="tab_favorites">المفضلة</string>
     <string name="tab_recents">السجل</string>
     <string name="tab_contacts">جهات الاتصال</string>
     <string name="tab_dialpad">لوحة الاتصال</string>
     <string name="tab_voicemail">البريد الصوتي</string>
-
-    <!-- Header & Search -->
     <string name="search_placeholder">البحث في جهات الاتصال والأرقام</string>
     <string name="search_clear">مسح</string>
     <string name="settings_title">الإعدادات</string>
     <string name="default_dialer_warning">تعيين كتطبيق الاتصال الافتراضي لتمكين جميع الميزات.</string>
     <string name="warning">تحذير</string>
-
-    <!-- Permissions -->
     <string name="permissions_required">الأذونات المطلوبة</string>
     <string name="contacts_perm_desc">للوصول إلى جهات الاتصال الحقيقية وتحميلها وتعديلها والاتصال بها، يرجى تفعيل إذن جهات الاتصال.</string>
     <string name="enable_contacts_perm">تمكين جهات الاتصال</string>
     <string name="call_log_perm_desc">للوصول إلى سجل المكالمات الحقيقي وتحميله والاتصال به، يرجى تفعيل إذن سجل المكالمات.</string>
     <string name="enable_call_log_perm">تمكين سجل المكالمات</string>
-
-    <!-- Contacts -->
     <string name="contacts_header">جهات الاتصال</string>
     <string name="add_new_contact">إضافة جديد</string>
     <string name="no_contacts_title">لم يتم العثور على جهات اتصال</string>
@@ -41,8 +34,6 @@
     <string name="btn_cancel">إلغاء</string>
     <string name="btn_delete">حذف</string>
     <string name="btn_edit">تعديل</string>
-
-    <!-- Recents -->
     <string name="recents_header">السجل</string>
     <string name="filter_all">الكل</string>
     <string name="filter_missed">فائتة</string>
@@ -50,15 +41,11 @@
     <string name="no_call_log_subtitle">ستظهر المكالمات الأخيرة هنا</string>
     <string name="no_results_title">لم يتم العثور على نتائج</string>
     <string name="no_results_subtitle">لا توجد مكالمات مطابقة</string>
-
-    <!-- Dialpad -->
     <string name="dialpad_enter_number">أدخل الرقم</string>
     <string name="dialpad_no_matches">لا توجد جهات اتصال مطابقة</string>
     <string name="dialpad_paste">لصق</string>
     <string name="dialpad_copy">نسخ الرقم</string>
     <string name="dialpad_clear">مسح</string>
-
-    <!-- Active Call -->
     <string name="call_blocked_toast">🚫 تم حظر المكالمة</string>
     <string name="call_status_hold">المكالمة قيد الانتظار</string>
     <string name="call_status_dialing">جاري الاتصال...</string>
@@ -98,16 +85,12 @@
     <string name="note_saved">تم حفظ الملاحظة بأمان</string>
     <string name="recording_saved">تم حفظ التسجيل بأمان</string>
     <string name="recording_started">⏺️ بدأ تسجيل المكالمة</string>
-
-    <!-- Favorites & Voicemail -->
     <string name="favorites_header">المفضلة</string>
     <string name="no_favorites_title">لا توجد مفضلة بعد</string>
     <string name="no_favorites_subtitle">ضع نجمة على جهات الاتصال للعثور عليها بسهولة</string>
     <string name="voicemail_header">البريد الصوتي</string>
     <string name="no_voicemails_title">لا توجد رسائل صوتية</string>
     <string name="no_voicemails_subtitle">كل شيء محدّث</string>
-
-    <!-- Settings Panel -->
     <string name="settings_appearance">المظهر</string>
     <string name="settings_dark_theme">المظهر الداكن</string>
     <string name="settings_dark_theme_sub">تطبيق المظهر الداكن على الواجهة</string>
@@ -150,7 +133,6 @@
     <string name="settings_dedup_title">أداة التكرارات</string>
     <string name="settings_updates_title">التحديثات</string>
     <string name="settings_recordings_title">التسجيلات</string>
-
     <string name="settings_startup_options">خيارات بدء التشغيل</string>
     <string name="settings_default_startup_tab">التبويب الافتراضي عند البدء</string>
     <string name="sim_ask">السؤال</string>
@@ -267,8 +249,6 @@
     <string name="action_message">رسالة</string>
     <string name="action_add_contact">إضافة جهة اتصال</string>
     <string name="app_version_name">الإصدار 1.0.2</string>
-
-    <!-- Complete App Localization Keys -->
     <string name="unknown">غير معروف</string>
     <string name="send_sms">إرسال رسالة قصيرة</string>
     <string name="block">حظر</string>
@@ -286,8 +266,6 @@
     <string name="choose_sim_card">اختر بطاقة SIM لإجراء هذه المكالمة إلى %1$s:</string>
     <string name="no_answer">بلا إجابة</string>
     <string name="conference">مكالمة جماعية (%1$d)</string>
-    
-    <!-- Call Log Summary Dashboard -->
     <string name="call_summary_prefix">ملخص مكالمات %1$s</string>
     <string name="today_call_summary">ملخص مكالمات اليوم</string>
     <string name="summary_missed_and_time">الفائتة: %1$d • الوقت: %2$s</string>
@@ -302,4 +280,92 @@
     <string name="summary_range_year_tab">سنة</string>
     <string name="summary_range_all_tab">الكل</string>
     <string name="recent_label_format">الأخيرة • %1$s</string>
-</resources>
+    <string name="active_reminders_title">التذكيرات النشطة</string>
+    <string name="add_spam_manually_title">إضافة رقم مزعج يدوياً</string>
+    <string name="app_locked_desc">هذا التطبيق محمي لحماية خصوصيتك. يرجى مصادقة قفل الجهاز للمتابعة.</string>
+    <string name="app_locked_title">الهاتف الآمن مقفل</string>
+    <string name="blocked_offline_numbers_title">الأرقام المحظورة دون اتصال</string>
+    <string name="blocklist_empty_desc">قم باستيراد قائمة حظر CSV أو أضف الأرقام يدوياً لحظر المتطفلين محلياً.</string>
+    <string name="blocklist_empty_title">قائمة الحظر فارغة</string>
+    <string name="btn_add_to_offline_db">إضافة إلى قاعدة البيانات المحلية</string>
+    <string name="btn_cancel_scheduled_escape_calls">إلغاء المكالمات الوهمية المجدولة</string>
+    <string name="btn_clear_all">مسح الكل</string>
+    <string name="btn_csv_import">استيراد CSV</string>
+    <string name="btn_export_vcf">تصدير VCF</string>
+    <string name="btn_import">استيراد</string>
+    <string name="btn_import_contacts">استيراد جهات الاتصال</string>
+    <string name="btn_import_vcf">استيراد VCF</string>
+    <string name="btn_load_sample_list">تحميل قائمة تجريبية</string>
+    <string name="btn_open_settings">فتح الإعدادات</string>
+    <string name="btn_unlock_dialer">إلغاء قفل لوحة الاتصال</string>
+    <string name="call_count_label">عدد المكالمات:</string>
+    <string name="callback_reminders_stats">%1$d نشط، %2$d مكتمل</string>
+    <string name="callback_reminders_title">تذكيرات إعادة الاتصال</string>
+    <string name="caller_identity">هوية المتصل</string>
+    <string name="caller_name_label">اسم المتصل</string>
+    <string name="device_auth_subtitle">مصادقة لفتح لوحة الاتصال الآمنة</string>
+    <string name="device_auth_title">لوحة الاتصال الآمنة</string>
+    <string name="duration_label">المدة</string>
+    <string name="fake_call_sim_explanation">ستظهر شاشة مكالمة واردة وهمية بدقة عالية بعد انتهاء المؤقت.</string>
+    <string name="fake_call_sim_title">محاكي المكالمة الوهمية</string>
+    <string name="history_passed_title">السجل (السابق)</string>
+    <string name="import_csv_dialog_desc">التنسيق: \'الرقم,التصنيف\' (واحدة في كل سطر). الصق محتوى CSV أدنها:</string>
+    <string name="import_csv_dialog_title">استيراد قائمة الحظر CSV</string>
+    <string name="label_phone_number_hint">رقم الهاتف</string>
+    <string name="label_spam_label_hint">التصنيف (مثال: تسويق)</string>
+    <string name="load_sample_dataset">أو تحميل عينة بيانات محلياً:</string>
+    <string name="local_offline_protection">حماية محلية دون اتصال</string>
+    <string name="local_offline_protection_sub">بدون أي اتصال بالإنترنت. محلي تماماً.</string>
+    <string name="multi_call_note">ملاحظة: ينطبق فاصل التكرار عندما يكون عدد المكالمات 2 أو أكثر.</string>
+    <string name="no_active_reminders_desc">عند عرض تفاصيل أي مكالمة، يمكنك ضبط تذكير بإعادة الاتصال.</string>
+    <string name="no_active_reminders_title">لا توجد تذكيرات نشطة</string>
+    <string name="optional_note_label">ملاحظة اختيارية</string>
+    <string name="remind_call_back_prompt">تذكير بإعادة الاتصال بـ %1$s خلال:</string>
+    <string name="repeat_interval_label">فاصل التكرار</string>
+    <string name="restricted_settings_desc">لاستخدام هذا التطبيق كلوحة اتصال افتراضية، قد تحتاج إلى تمكينه من إعدادات النظام.</string>
+    <string name="restricted_settings_title">الإعدادات المقيدة</string>
+    <string name="schedule_callback_reminder_sub">احصل على إشعار مع منبه اتصال</string>
+    <string name="schedule_callback_reminder_title">جدولة تذكير إعادة الاتصال</string>
+    <string name="schedule_escape_call">جدولة مكالمة وهمية (%1$d ثانية)</string>
+    <string name="schedule_sequential_calls">جدولة %1$d مكالمات متتالية</string>
+    <string name="scheduled_prefix">مجدول: %1$s</string>
+    <string name="select_imagetoolbox_palette">اختيار لوحة ألوان ImageToolbox</string>
+    <string name="sequential_multi_call_desc">إطلاق عدة مكالمات متتالية للمساعدة في مغادرة المواقف المباشرة.</string>
+    <string name="sequential_multi_call_title">خيارات المكالمات المتعددة</string>
+    <string name="settings_biometric_lock">قفل التطبيق</string>
+    <string name="settings_biometric_lock_sub">طلب قفل الجهاز (رمز PIN/نمط/بصمة) لفتح التطبيق</string>
+    <string name="settings_callback_reminders">لوحة تذكيرات إعادة الاتصال</string>
+    <string name="settings_callback_reminders_sub">عرض وإلغاء تذكيرات الاتصال المعلقة</string>
+    <string name="settings_dynamic_color">الألوان الديناميكية</string>
+    <string name="settings_dynamic_color_sub">استخدام نظام ألوان خلفية الشاشة (Android 12+)</string>
+    <string name="settings_dynamic_color_sub_fallback">نظام ألوان خلفية الشاشة (يتطلب Android 12+)</string>
+    <string name="settings_fake_call_sim">محاكي المكالمة الوهمية</string>
+    <string name="settings_fake_call_sim_sub">جدولة مكالمة واردة وهمية للخروج من المواقف المخرجة</string>
+    <string name="settings_flash_alerts">تنبيهات الفلاش عند الاتصال</string>
+    <string name="settings_flash_alerts_sub">وميض فلاش الكاميرا أثناء المكالمات الواردة</string>
+    <string name="settings_imagetoolbox_style">نمط ImageToolbox الجمالي</string>
+    <string name="settings_imagetoolbox_style_sub">تطبيق حدود وأشكال منحنية خلفية مستوحاة من ImageToolbox</string>
+    <string name="settings_pocket_protection">حماية اللمس في الجيب</string>
+    <string name="settings_pocket_protection_sub">حظر إدخال اللمس أثناء المكالمات عند وجود الهاتف في الجيب</string>
+    <string name="settings_security_protection">الأمان والحماية</string>
+    <string name="settings_spam_protection">الحماية من الإزعاج دون اتصال</string>
+    <string name="settings_spam_protection_sub">استيراد قوائم الحظر وإدارة الأرقام المحظورة محلياً</string>
+    <string name="spam_entries_label">إدخالات الإزعاج</string>
+    <string name="spam_numbers_blocked">تم حظر %1$d رقماً</string>
+    <string name="tab_fake_call_sim">مكالمة وهمية</string>
+    <string name="tab_scheduled_reminders">التذكيرات</string>
+    <string name="tab_spam_database">قاعدة الإزعاج</string>
+    <string name="trigger_delay_timer">مؤقت التأخير</string>
+    <string name="triggered_prefix">تم التفعيل: %1$s</string>
+    <string name="unit_day">يوم</string>
+    <string name="unit_hour">ساعة</string>
+    <string name="unit_min">دقيقة</string>
+    <string name="unit_sec">ثانية</string>
+    <string name="vcf_content_label">محتوى vCard (VCF)</string>
+    <string name="vcf_exported_desc">تم تصدير جهات الاتصال بنجاح بصيغة vCard القياسية.</string>
+    <string name="vcf_exported_title">تم تصدير جهات اتصال vCard</string>
+    <string name="vcf_import_desc">الصق محتوى ملف .vcf لجهّات الاتصال لاستيرادها.</string>
+    <string name="vcf_import_title">استيراد جهات الاتصال من vCard</string>
+    <string name="vcf_migration_desc">تصدير أو استيراد جهات الاتصال بصيغة vCard (.vcf).</string>
+    <string name="vcf_migration_title">نقل جهات اتصال vCard (VCF)</string>
+<string name="btn_call_back">إعادة الاتصال</string></resources>

@@ -140,8 +140,8 @@ class MyInCallService : InCallService() {
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_call_incoming)
-            .setContentTitle("Incoming Call")
-            .setContentText("Incoming call from $displayName")
+            .setContentTitle(getString(R.string.call_type_incoming))
+            .setContentText("${getString(R.string.call_type_incoming)}: $displayName")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .setAutoCancel(true)
@@ -197,12 +197,12 @@ class MyInCallService : InCallService() {
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_call_missed)
-            .setContentTitle("Missed Call")
-            .setContentText("Missed call from $name")
+            .setContentTitle(getString(R.string.call_type_missed))
+            .setContentText("${getString(R.string.call_type_missed)}: $name")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
-            .addAction(android.R.drawable.sym_action_call, "Call Back", callBackPendingIntent)
+            .addAction(android.R.drawable.sym_action_call, getString(R.string.btn_call_back), callBackPendingIntent)
             .build()
 
         notificationManager.notify(2, notification)

@@ -383,12 +383,12 @@ fun CallHistoryDetailsScreen(
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Schedule Callback Reminder",
+                                text = stringResource(R.string.schedule_callback_reminder_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Get notified with a direct-call alarm",
+                                text = stringResource(R.string.schedule_callback_reminder_sub),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -425,7 +425,7 @@ fun CallHistoryDetailsScreen(
                         },
                         title = { 
                             Text(
-                                text = "Callback Reminder",
+                                text = stringResource(R.string.callback_reminders_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             ) 
@@ -436,7 +436,7 @@ fun CallHistoryDetailsScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    text = "Remind you to call back ${if (primaryRecord.name == "Unknown") primaryRecord.number else primaryRecord.name} in:",
+                                    text = stringResource(R.string.remind_call_back_prompt, if (primaryRecord.name == "Unknown") primaryRecord.number else primaryRecord.name),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -448,7 +448,7 @@ fun CallHistoryDetailsScreen(
                                             reminderDelayValue = newValue
                                         }
                                     },
-                                    label = { Text("Duration") },
+                                    label = { Text(stringResource(R.string.duration_label)) },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -480,7 +480,7 @@ fun CallHistoryDetailsScreen(
                                 OutlinedTextField(
                                     value = reminderNoteText,
                                     onValueChange = { reminderNoteText = it },
-                                    label = { Text("Optional Note") },
+                                    label = { Text(stringResource(R.string.optional_note_label)) },
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true
@@ -502,14 +502,14 @@ fun CallHistoryDetailsScreen(
                                 },
                                 shape = RoundedCornerShape(100.dp)
                             ) {
-                                Text("Schedule")
+                                Text(stringResource(R.string.btn_save))
                             }
                         },
                         dismissButton = {
                             TextButton(
                                 onClick = { showReminderDialog = false }
                             ) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.btn_cancel))
                             }
                         }
                     )

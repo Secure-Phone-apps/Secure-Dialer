@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -86,12 +88,12 @@ fun ScheduledRemindersSettings(
 
                     Column {
                         Text(
-                            text = "Callback Reminders",
+                            text = stringResource(R.string.callback_reminders_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${activeReminders.size} active, ${completedReminders.size} processed",
+                            text = stringResource(R.string.callback_reminders_stats, activeReminders.size, completedReminders.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -103,7 +105,7 @@ fun ScheduledRemindersSettings(
         // Active Reminders section
         item {
             Text(
-                text = "Active Reminders",
+                text = stringResource(R.string.active_reminders_title),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -114,8 +116,8 @@ fun ScheduledRemindersSettings(
             item {
                 SettingsEmptyState(
                     icon = Icons.Default.NotificationAdd,
-                    title = "No Active Reminders",
-                    description = "When viewing any call log detail page, you can set a custom callback alarm reminder.",
+                    title = stringResource(R.string.no_active_reminders_title),
+                    description = stringResource(R.string.no_active_reminders_desc),
                     tintColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                 )
             }
@@ -130,7 +132,7 @@ fun ScheduledRemindersSettings(
                         Column {
                             Text(reminder.number)
                             Text(
-                                text = "Scheduled: ${sdf.format(Date(reminder.reminderTime))}",
+                                text = stringResource(R.string.scheduled_prefix, sdf.format(Date(reminder.reminderTime))),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -157,7 +159,7 @@ fun ScheduledRemindersSettings(
                             viewModel.deleteReminder(reminder)
                             Toast.makeText(context, "Cancelled reminder for ${reminder.name}", Toast.LENGTH_SHORT).show()
                         }) {
-                            Icon(Icons.Default.Cancel, "Cancel", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Default.Cancel, stringResource(R.string.btn_cancel), tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 )
@@ -168,7 +170,7 @@ fun ScheduledRemindersSettings(
         if (completedReminders.isNotEmpty()) {
             item {
                 Text(
-                    text = "History (Passed)",
+                    text = stringResource(R.string.history_passed_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -185,7 +187,7 @@ fun ScheduledRemindersSettings(
                         Column {
                             Text(reminder.number, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text(
-                                text = "Triggered: ${sdf.format(Date(reminder.reminderTime))}",
+                                text = stringResource(R.string.triggered_prefix, sdf.format(Date(reminder.reminderTime))),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -194,7 +196,7 @@ fun ScheduledRemindersSettings(
                     leadingContent = {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Triggered",
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
                             modifier = Modifier.padding(8.dp)
                         )
@@ -203,7 +205,7 @@ fun ScheduledRemindersSettings(
                         IconButton(onClick = {
                             viewModel.deleteReminder(reminder)
                         }) {
-                            Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                            Icon(Icons.Default.Delete, stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
                         }
                     }
                 )

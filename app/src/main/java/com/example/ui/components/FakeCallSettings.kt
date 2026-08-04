@@ -35,6 +35,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.FakeCallReceiver
 
@@ -97,12 +99,12 @@ fun FakeCallSettings(
                     }
                     Column {
                         Text(
-                            text = "Fake Call Simulator",
+                            text = stringResource(R.string.fake_call_sim_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Escape awkward situations politely.",
+                            text = stringResource(R.string.settings_fake_call_sim_sub),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -112,7 +114,7 @@ fun FakeCallSettings(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                 Text(
-                    text = "A fully simulated high-fidelity incoming call screen will trigger after your chosen timer. Answering the call behaves like a real call with local elapsed timers and interactive keypad modules.",
+                    text = stringResource(R.string.fake_call_sim_explanation),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -130,7 +132,7 @@ fun FakeCallSettings(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Caller Identity",
+                    text = stringResource(R.string.caller_identity),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -139,7 +141,7 @@ fun FakeCallSettings(
                 OutlinedTextField(
                     value = fakeName,
                     onValueChange = { fakeName = it },
-                    label = { Text("Caller Name") },
+                    label = { Text(stringResource(R.string.caller_name_label)) },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -172,7 +174,7 @@ fun FakeCallSettings(
                 OutlinedTextField(
                     value = fakeNumber,
                     onValueChange = { fakeNumber = it },
-                    label = { Text("Phone Number") },
+                    label = { Text(stringResource(R.string.label_phone_number_hint)) },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -191,7 +193,7 @@ fun FakeCallSettings(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Trigger Delay Timer",
+                    text = stringResource(R.string.trigger_delay_timer),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -209,7 +211,7 @@ fun FakeCallSettings(
                                 delayValue = newValue
                             }
                         },
-                        label = { Text("Duration") },
+                        label = { Text(stringResource(R.string.duration_label)) },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
@@ -252,14 +254,14 @@ fun FakeCallSettings(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = "Sequential Multi-Call Options",
+                    text = stringResource(R.string.sequential_multi_call_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
 
                 Text(
-                    text = "Triggers multiple calls in sequence so that if a single excuse call isn't sufficient, subsequent calls keep coming.",
+                    text = stringResource(R.string.sequential_multi_call_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -270,7 +272,7 @@ fun FakeCallSettings(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Call Count:",
+                        text = stringResource(R.string.call_count_label),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.weight(1f)
                     )
@@ -297,7 +299,7 @@ fun FakeCallSettings(
                                 intervalValue = newValue
                             }
                         },
-                        label = { Text("Repeat Interval") },
+                        label = { Text(stringResource(R.string.repeat_interval_label)) },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
                         enabled = repeatCount > 1,
@@ -318,7 +320,7 @@ fun FakeCallSettings(
 
                 if (repeatCount == 1) {
                     Text(
-                        text = "Note: Repeat interval applies when Call Count is 2 or more.",
+                        text = stringResource(R.string.multi_call_note),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
@@ -355,9 +357,9 @@ fun FakeCallSettings(
                 Icon(Icons.Default.AccessTime, null)
                 Spacer(Modifier.width(8.dp))
                 val btnText = if (repeatCount > 1) {
-                    "Schedule $repeatCount Sequential Calls"
+                    stringResource(R.string.schedule_sequential_calls, repeatCount)
                 } else {
-                    "Schedule Escape Call ($finalDelaySeconds sec)"
+                    stringResource(R.string.schedule_escape_call, finalDelaySeconds)
                 }
                 Text(btnText)
             }
@@ -372,7 +374,7 @@ fun FakeCallSettings(
             ) {
                 Icon(Icons.Default.Cancel, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Cancel Scheduled Escape Calls")
+                Text(stringResource(R.string.btn_cancel_scheduled_escape_calls))
             }
         }
     }

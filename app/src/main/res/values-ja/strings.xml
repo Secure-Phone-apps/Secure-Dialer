@@ -1,28 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Tabs -->
     <string name="tab_favorites">お気に入り</string>
     <string name="tab_recents">履歴</string>
     <string name="tab_contacts">連絡先</string>
     <string name="tab_dialpad">ダイヤル</string>
     <string name="tab_voicemail">留守電</string>
-
-    <!-- Header & Search -->
     <string name="search_placeholder">連絡先や番号を検索</string>
     <string name="search_clear">クリア</string>
     <string name="settings_title">設定</string>
     <string name="default_dialer_warning">すべての機能を使用するにはデフォルトの通話アプリに設定してください。</string>
     <string name="warning">警告</string>
-
-    <!-- Permissions -->
     <string name="permissions_required">必要な権限</string>
     <string name="contacts_perm_desc">電話帳の連絡先を表示・編集・発信するのには、連絡先へのアクセス権限を許可してください。</string>
     <string name="enable_contacts_perm">連絡先の権限を許可</string>
     <string name="call_log_perm_desc">通話履歴を表示・発信するのには、通話履歴へのアクセス権限を許可してください。</string>
     <string name="enable_call_log_perm">通話履歴の権限を許可</string>
-
-    <!-- Contacts -->
     <string name="contacts_header">連絡先</string>
     <string name="add_new_contact">新規追加</string>
     <string name="no_contacts_title">連絡先が見つかりません</string>
@@ -41,8 +34,6 @@
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_delete">削除</string>
     <string name="btn_edit">編集</string>
-
-    <!-- Recents -->
     <string name="recents_header">履歴</string>
     <string name="filter_all">すべて</string>
     <string name="filter_missed">着信履歴のみ</string>
@@ -50,15 +41,11 @@
     <string name="no_call_log_subtitle">最近の通話がここに表示されます</string>
     <string name="no_results_title">該当なし</string>
     <string name="no_results_subtitle">一致する通話履歴がありません</string>
-
-    <!-- Dialpad -->
     <string name="dialpad_enter_number">番号を入力</string>
     <string name="dialpad_no_matches">一致する連絡先がありません</string>
     <string name="dialpad_paste">貼り付け</string>
     <string name="dialpad_copy">番号をコピー</string>
     <string name="dialpad_clear">クリア</string>
-
-    <!-- Active Call -->
     <string name="call_blocked_toast">🚫 着信拒否されました</string>
     <string name="call_status_hold">保留中</string>
     <string name="call_status_dialing">発信中...</string>
@@ -98,16 +85,12 @@
     <string name="note_saved">メモを安全に保存しました</string>
     <string name="recording_saved">録音を安全に保存しました</string>
     <string name="recording_started">⏺️ 通話録音を開始しました</string>
-
-    <!-- Favorites & Voicemail -->
     <string name="favorites_header">お気に入り</string>
     <string name="no_favorites_title">お気に入りはまだありません</string>
     <string name="no_favorites_subtitle">星マークをタップして追加します</string>
     <string name="voicemail_header">留守番電話</string>
     <string name="no_voicemails_title">メッセージはありません</string>
     <string name="no_voicemails_subtitle">新しいメッセージはありません</string>
-
-    <!-- Settings Panel -->
     <string name="settings_appearance">外観</string>
     <string name="settings_dark_theme">ダークテーマ</string>
     <string name="settings_dark_theme_sub">ダークテーマを適用します</string>
@@ -150,7 +133,6 @@
     <string name="settings_dedup_title">重複統合</string>
     <string name="settings_updates_title">アップデート</string>
     <string name="settings_recordings_title">録音一覧</string>
-
     <string name="settings_startup_options">起動オプション</string>
     <string name="settings_default_startup_tab">デフォルトの起動タブ</string>
     <string name="sim_ask">確認する</string>
@@ -267,8 +249,6 @@
     <string name="action_message">メッセージ</string>
     <string name="action_add_contact">連絡先を追加</string>
     <string name="app_version_name">バージョン 1.0.2</string>
-
-    <!-- Complete App Localization Keys -->
     <string name="unknown">不明</string>
     <string name="send_sms">SMSを送信</string>
     <string name="block">ブロック</string>
@@ -286,8 +266,6 @@
     <string name="choose_sim_card">%1$s への発信に使用するSIMカードを選択してください：</string>
     <string name="no_answer">応答なし</string>
     <string name="conference">会議通話 (%1$d)</string>
-    
-    <!-- Call Log Summary Dashboard -->
     <string name="call_summary_prefix">%1$s の通話要約</string>
     <string name="today_call_summary">今日の通話要約</string>
     <string name="summary_missed_and_time">不在着信 : %1$d • 時間 : %2$s</string>
@@ -302,4 +280,92 @@
     <string name="summary_range_year_tab">年間</string>
     <string name="summary_range_all_tab">すべて</string>
     <string name="recent_label_format">履歴 • %1$s</string>
-</resources>
+    <string name="active_reminders_title">アクティブなリマインダー</string>
+    <string name="add_spam_manually_title">迷惑電話番号を手動追加</string>
+    <string name="app_locked_desc">プライバシー保護のためロックされています。続行するには端末のロック解除を行ってください。</string>
+    <string name="app_locked_title">セキュアダイヤラーがロックされています</string>
+    <string name="blocked_offline_numbers_title">オフラインでブロックされた番号</string>
+    <string name="blocklist_empty_desc">CSVをインポートするか番号を手動で追加して迷惑電話をローカルでブロックします。</string>
+    <string name="blocklist_empty_title">ブロックリストは空です</string>
+    <string name="btn_add_to_offline_db">オフラインDBに追加</string>
+    <string name="btn_cancel_scheduled_escape_calls">予約済み偽着信をキャンセル</string>
+    <string name="btn_clear_all">すべて消去</string>
+    <string name="btn_csv_import">CSVインポート</string>
+    <string name="btn_export_vcf">VCFエクスポート</string>
+    <string name="btn_import">インポート</string>
+    <string name="btn_import_contacts">連絡先をインポート</string>
+    <string name="btn_import_vcf">VCFインポート</string>
+    <string name="btn_load_sample_list">サンプルリストを読み込む</string>
+    <string name="btn_open_settings">設定を開く</string>
+    <string name="btn_unlock_dialer">ダイヤラーのロック解除</string>
+    <string name="call_count_label">着信回数:</string>
+    <string name="callback_reminders_stats">%1$d 件アクティブ, %2$d 件完了</string>
+    <string name="callback_reminders_title">折り返しリマインダー</string>
+    <string name="caller_identity">発信者情報</string>
+    <string name="caller_name_label">発信者名</string>
+    <string name="device_auth_subtitle">セキュアダイヤラーを開くには認証してください</string>
+    <string name="device_auth_title">セキュアダイヤラー</string>
+    <string name="duration_label">時間</string>
+    <string name="fake_call_sim_explanation">指定したタイマーの経過後にリアルな疑似着信画面が表示されます。</string>
+    <string name="fake_call_sim_title">偽着信シミュレーター</string>
+    <string name="history_passed_title">履歴 (過去)</string>
+    <string name="import_csv_dialog_desc">形式: \'電話番号,ラベル\' (1行に1つ)。以下にCSVの内容を貼り付けてください:</string>
+    <string name="import_csv_dialog_title">CSVブロックリストをインポート</string>
+    <string name="label_phone_number_hint">電話番号</string>
+    <string name="label_spam_label_hint">ラベル (例: 迷惑電話)</string>
+    <string name="load_sample_dataset">またはサンプルデータを読み込む:</string>
+    <string name="local_offline_protection">ローカルオフライン保護</string>
+    <string name="local_offline_protection_sub">通信なし。完全オフライン動作。</string>
+    <string name="multi_call_note">注: 繰り返し間隔は着信回数が2回以上の場合に適用されます。</string>
+    <string name="no_active_reminders_desc">通話履歴の画面から折り返しリマインダーを設定できます。</string>
+    <string name="no_active_reminders_title">アクティブなリマインダーはありません</string>
+    <string name="optional_note_label">メモ (任意)</string>
+    <string name="remind_call_back_prompt">%1$s への折り返しリマインダー:</string>
+    <string name="repeat_interval_label">繰り返し間隔</string>
+    <string name="restricted_settings_desc">デフォルトの電話アプリとして設定するには、端末の設定から許可してください。</string>
+    <string name="restricted_settings_title">制限された設定</string>
+    <string name="schedule_callback_reminder_sub">コールアラームで通知を受け取ります</string>
+    <string name="schedule_callback_reminder_title">折り返しリマインダーをスケジュール</string>
+    <string name="schedule_escape_call">偽着信をスケジュール (%1$d 秒)</string>
+    <string name="schedule_sequential_calls">%1$d 回の連続着信をスケジュール</string>
+    <string name="scheduled_prefix">予定: %1$s</string>
+    <string name="select_imagetoolbox_palette">ImageToolboxパレットを選択</string>
+    <string name="sequential_multi_call_desc">抜け出しにくい場面で連続して偽着信を発生させます。</string>
+    <string name="sequential_multi_call_title">複数着信オプション</string>
+    <string name="settings_biometric_lock">アプリのロック</string>
+    <string name="settings_biometric_lock_sub">アプリ起動時に端末のロック (PIN/パターン/生体認証) を要求する</string>
+    <string name="settings_callback_reminders">折り返しリマインダーダッシュボード</string>
+    <string name="settings_callback_reminders_sub">保留中の折り返しアラームの確認・キャンセル</string>
+    <string name="settings_dynamic_color">ダイナミックカラー</string>
+    <string name="settings_dynamic_color_sub">壁紙の配色を使用する (Android 12+)</string>
+    <string name="settings_dynamic_color_sub_fallback">壁紙の配色テーマ (Android 12以降が必要)</string>
+    <string name="settings_fake_call_sim">偽着信シミュレーター</string>
+    <string name="settings_fake_call_sim_sub">気まずい場面から抜け出すための偽着信をスケジュールする</string>
+    <string name="settings_flash_alerts">着信時のフラッシュ通知</string>
+    <string name="settings_flash_alerts_sub">着信時にカメラのフラッシュを点滅させます</string>
+    <string name="settings_imagetoolbox_style">ImageToolboxスタイル</string>
+    <string name="settings_imagetoolbox_style_sub">ImageToolbox風の美しい枠線や角丸背景を適用</string>
+    <string name="settings_pocket_protection">ポケット誤作動防止</string>
+    <string name="settings_pocket_protection_sub">ポケット内での誤タッチを近接センサーで防止</string>
+    <string name="settings_security_protection">セキュリティと保護</string>
+    <string name="settings_spam_protection">オフライン迷惑電話対策</string>
+    <string name="settings_spam_protection_sub">CSVリストのインポートとブロック番号の管理</string>
+    <string name="spam_entries_label">迷惑電話エントリー</string>
+    <string name="spam_numbers_blocked">%1$d 件ブロック中</string>
+    <string name="tab_fake_call_sim">偽着信</string>
+    <string name="tab_scheduled_reminders">リマインダー</string>
+    <string name="tab_spam_database">迷惑電話DB</string>
+    <string name="trigger_delay_timer">起動タイマー</string>
+    <string name="triggered_prefix">実行済み: %1$s</string>
+    <string name="unit_day">日</string>
+    <string name="unit_hour">時間</string>
+    <string name="unit_min">分</string>
+    <string name="unit_sec">秒</string>
+    <string name="vcf_content_label">vCard (VCF) 内容</string>
+    <string name="vcf_exported_desc">連絡先が標準のvCard形式でエクスポートされました。</string>
+    <string name="vcf_exported_title">vCard連絡先のエクスポート完了</string>
+    <string name="vcf_import_desc">連絡先をインポートするにはvCardテキストを貼り付けてください。</string>
+    <string name="vcf_import_title">vCardから連絡先をインポート</string>
+    <string name="vcf_migration_desc">vCard (.vcf) ファイルを使用して連絡先をバックアップ/復元します。</string>
+    <string name="vcf_migration_title">vCard (VCF) 連絡先移行</string>
+<string name="btn_call_back">折り返し電話</string></resources>

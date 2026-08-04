@@ -1,28 +1,29 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Secure Dialer</string>
 
-    <!-- Tabs -->
+    
     <string name="tab_favorites">Favorites</string>
     <string name="tab_recents">Recents</string>
     <string name="tab_contacts">Contacts</string>
     <string name="tab_dialpad">Dialpad</string>
     <string name="tab_voicemail">Voicemail</string>
 
-    <!-- Header & Search -->
+    
     <string name="search_placeholder">Search contacts &amp; numbers</string>
     <string name="search_clear">Clear</string>
     <string name="settings_title">Settings</string>
     <string name="default_dialer_warning">Set as default dialer to enable all features.</string>
     <string name="warning">Warning</string>
 
-    <!-- Permissions -->
+    
     <string name="permissions_required">Permissions Required</string>
     <string name="contacts_perm_desc">To access, load, edit, and call the real contacts on your phone, please enable the Contacts Permission.</string>
     <string name="enable_contacts_perm">Enable Phone Contacts</string>
     <string name="call_log_perm_desc">To access, load, and call the real call history on your phone, please enable the Call Log Permission.</string>
     <string name="enable_call_log_perm">Enable Call Log</string>
 
-    <!-- Contacts -->
+    
     <string name="contacts_header">Contacts</string>
     <string name="add_new_contact">Add New</string>
     <string name="no_contacts_title">No contacts found</string>
@@ -42,7 +43,7 @@
     <string name="btn_delete">Delete</string>
     <string name="btn_edit">Edit</string>
 
-    <!-- Recents -->
+    
     <string name="recents_header">Recents</string>
     <string name="filter_all">All</string>
     <string name="filter_missed">Missed</string>
@@ -51,14 +52,14 @@
     <string name="no_results_title">No results found</string>
     <string name="no_results_subtitle">No matching calls found</string>
 
-    <!-- Dialpad -->
+    
     <string name="dialpad_enter_number">Enter Number</string>
     <string name="dialpad_no_matches">No matching contacts</string>
     <string name="dialpad_paste">Paste</string>
     <string name="dialpad_copy">Copy Number</string>
     <string name="dialpad_clear">Clear</string>
 
-    <!-- Active Call -->
+    
     <string name="call_blocked_toast">🚫 Call Blocked</string>
     <string name="call_status_hold">Call on hold</string>
     <string name="call_status_dialing">Dialing...</string>
@@ -99,7 +100,7 @@
     <string name="recording_saved">Saved recording securely</string>
     <string name="recording_started">⏺️ Call Recording Started</string>
 
-    <!-- Favorites & Voicemail -->
+    
     <string name="favorites_header">Favorites</string>
     <string name="no_favorites_title">No favorites yet</string>
     <string name="no_favorites_subtitle">Star contacts to find them easily</string>
@@ -107,7 +108,7 @@
     <string name="no_voicemails_title">No voicemails</string>
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
 
-    <!-- Settings Panel -->
+    
     <string name="settings_appearance">Appearance</string>
     <string name="settings_dark_theme">Dark Theme</string>
     <string name="settings_dark_theme_sub">Apply dark visual theme to the interface</string>
@@ -165,7 +166,7 @@
     <string name="settings_view_saved_recordings">View Saved Recordings</string>
     <string name="settings_view_saved_recordings_sub">Listen to and manage your call recordings</string>
     
-    <!-- Security & Protection -->
+    
     <string name="settings_security_protection">Security &amp; Protection</string>
     <string name="settings_biometric_lock">App Lock</string>
     <string name="settings_biometric_lock_sub">Require device lock (PIN/Pattern/Biometric) to open the app</string>
@@ -229,7 +230,7 @@
     <string name="privacy_section_3_title">3. Data Sharing</string>
     <string name="privacy_section_3_desc">We do not share your data with any third parties.</string>
 
-    <!-- Additional Translations -->
+    
     <string name="filter_all_contacts">All Contacts</string>
     <string name="filter_dialed">Dialed</string>
     <string name="filter_received">Received</string>
@@ -279,7 +280,7 @@
     <string name="action_add_contact">Add Contact</string>
     <string name="app_version_name">Version 1.0.2</string>
 
-    <!-- Complete App Localization Keys -->
+    
     <string name="unknown">Unknown</string>
     <string name="send_sms">Send SMS</string>
     <string name="block">Block</string>
@@ -298,7 +299,7 @@
     <string name="no_answer">No Answer</string>
     <string name="conference">Conference (%1$d)</string>
     
-    <!-- Call Log Summary Dashboard -->
+    
     <string name="call_summary_prefix">%1$s Call Summary</string>
     <string name="today_call_summary">Today\'s Call Summary</string>
     <string name="summary_missed_and_time">Missed: %1$d • Time: %2$s</string>
@@ -313,4 +314,99 @@
     <string name="summary_range_year_tab">Year</string>
     <string name="summary_range_all_tab">All</string>
     <string name="recent_label_format">Recent • %1$s</string>
-</resources>
+
+    
+    <string name="settings_dynamic_color_sub_fallback">System wallpaper color scheme (Requires Android 12+)</string>
+    <string name="settings_imagetoolbox_style">ImageToolbox Aesthetic Style</string>
+    <string name="settings_imagetoolbox_style_sub">Apply premium custom outlines, borders, soft-squircle shapes, and elegant tonal card backgrounds inspired by ImageToolbox</string>
+    <string name="select_imagetoolbox_palette">Select ImageToolbox Palette</string>
+    <string name="settings_spam_protection">Offline Spam Protection</string>
+    <string name="settings_spam_protection_sub">Import CSV blocklists and manage blocked numbers locally</string>
+    <string name="settings_flash_alerts">Flash Alerts on Call</string>
+    <string name="settings_flash_alerts_sub">Blinks the camera flash on incoming ringing calls</string>
+    <string name="settings_fake_call_sim">Fake Call Simulator</string>
+    <string name="settings_fake_call_sim_sub">Schedule a simulated incoming call to escape awkward meetups</string>
+    <string name="settings_callback_reminders">Callback Reminders Dashboard</string>
+    <string name="settings_callback_reminders_sub">View and cancel pending call alarm reminders</string>
+
+    
+    <string name="local_offline_protection">Local Offline Protection</string>
+    <string name="local_offline_protection_sub">Zero network calls. Completely offline.</string>
+    <string name="spam_entries_label">Spam Entries</string>
+    <string name="spam_numbers_blocked">%1$d numbers blocked</string>
+    <string name="btn_csv_import">CSV Import</string>
+    <string name="add_spam_manually_title">Add Spam Number Manually</string>
+    <string name="label_phone_number_hint">Phone Number</string>
+    <string name="label_spam_label_hint">Label (e.g. Robocall)</string>
+    <string name="btn_add_to_offline_db">Add to Offline Database</string>
+    <string name="blocklist_empty_title">Blocklist is empty</string>
+    <string name="blocklist_empty_desc">Import a CSV blocklist or add numbers manually to block telemarketers and scammers locally.</string>
+    <string name="blocked_offline_numbers_title">Blocked Offline Numbers</string>
+    <string name="btn_clear_all">Clear All</string>
+    <string name="import_csv_dialog_title">Import CSV Blocklist</string>
+    <string name="import_csv_dialog_desc">Format: \'number,label\' (one per line). Paste your CSV blocklist content below:</string>
+    <string name="load_sample_dataset">Or load a sample offline dataset:</string>
+    <string name="btn_load_sample_list">Load Sample List</string>
+    <string name="btn_import">Import</string>
+
+    
+    <string name="fake_call_sim_title">Fake Call Simulator</string>
+    <string name="fake_call_sim_explanation">A fully simulated high-fidelity incoming call screen will trigger after your chosen timer. Answering the call behaves like a real call with local elapsed timers and interactive keypad modules.</string>
+    <string name="caller_identity">Caller Identity</string>
+    <string name="caller_name_label">Caller Name</string>
+    <string name="trigger_delay_timer">Trigger Delay Timer</string>
+    <string name="duration_label">Duration</string>
+    <string name="sequential_multi_call_title">Sequential Multi-Call Options</string>
+    <string name="sequential_multi_call_desc">Triggers multiple calls in sequence so that if a single excuse call isn\'t sufficient, subsequent calls keep coming.</string>
+    <string name="call_count_label">Call Count:</string>
+    <string name="repeat_interval_label">Repeat Interval</string>
+    <string name="multi_call_note">Note: Repeat interval applies when Call Count is 2 or more.</string>
+    <string name="schedule_sequential_calls">Schedule %1$d Sequential Calls</string>
+    <string name="schedule_escape_call">Schedule Escape Call (%1$d sec)</string>
+    <string name="btn_cancel_scheduled_escape_calls">Cancel Scheduled Escape Calls</string>
+    <string name="unit_sec">sec</string>
+    <string name="unit_min">min</string>
+    <string name="unit_hour">hour</string>
+    <string name="unit_day">day</string>
+
+    
+    <string name="callback_reminders_title">Callback Reminders</string>
+    <string name="callback_reminders_stats">%1$d active, %2$d processed</string>
+    <string name="active_reminders_title">Active Reminders</string>
+    <string name="no_active_reminders_title">No Active Reminders</string>
+    <string name="no_active_reminders_desc">When viewing any call log detail page, you can set a custom callback alarm reminder.</string>
+    <string name="history_passed_title">History (Passed)</string>
+    <string name="scheduled_prefix">Scheduled: %1$s</string>
+    <string name="triggered_prefix">Triggered: %1$s</string>
+    <string name="schedule_callback_reminder_title">Schedule Callback Reminder</string>
+    <string name="schedule_callback_reminder_sub">Get notified with a direct-call alarm</string>
+    <string name="remind_call_back_prompt">Remind you to call back %1$s in:</string>
+    <string name="optional_note_label">Optional Note</string>
+
+    
+    <string name="app_locked_title">Secure Dialer Locked</string>
+    <string name="app_locked_desc">This app is secured to protect your privacy. Please authenticate with your device lock to continue.</string>
+    <string name="btn_unlock_dialer">Unlock Dialer</string>
+    <string name="device_auth_title">Secure Dialer</string>
+    <string name="device_auth_subtitle">Authenticate to open Secure Dialer</string>
+    <string name="restricted_settings_title">Restricted Settings</string>
+    <string name="restricted_settings_desc">To use this app as your default dialer, you may need to manually enable it. Go to System Settings &gt; Apps &gt; [Our App Name] &gt; Advanced &gt; Allow Restricted Settings, then try again.</string>
+    <string name="btn_open_settings">Open Settings</string>
+
+    
+    <string name="vcf_migration_title">vCard (VCF) Contacts Migration</string>
+    <string name="vcf_migration_desc">Export your local contacts as a standard vCard (.vcf) file or import contacts from an existing vCard file.</string>
+    <string name="btn_export_vcf">Export VCF</string>
+    <string name="btn_import_vcf">Import VCF</string>
+    <string name="vcf_exported_title">vCard (VCF) Contacts Exported</string>
+    <string name="vcf_exported_desc">Your contacts have been exported to standard vCard format. Copy this text and save it to a .vcf file to import into other devices.</string>
+    <string name="vcf_import_title">Import Contacts from vCard</string>
+    <string name="vcf_import_desc">Paste the content of a standard .vcf (vCard) file below to import the contacts into your system database.</string>
+    <string name="vcf_content_label">vCard (VCF) Content</string>
+    <string name="btn_import_contacts">Import Contacts</string>
+
+    
+    <string name="tab_spam_database">Offline Spam Database</string>
+    <string name="tab_scheduled_reminders">Scheduled Reminders</string>
+    <string name="tab_fake_call_sim">Fake Call Simulator</string>
+<string name="btn_call_back">Call Back</string></resources>

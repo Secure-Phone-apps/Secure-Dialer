@@ -161,14 +161,14 @@ fun BackupRestoreSettings(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "vCard (VCF) Contacts Migration",
+                    text = stringResource(R.string.vcf_migration_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.tertiary
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Export your local contacts as a standard vCard (.vcf) file or import contacts from an existing vCard file.",
+                    text = stringResource(R.string.vcf_migration_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -191,7 +191,7 @@ fun BackupRestoreSettings(
                     ) {
                         Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Export VCF", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.btn_export_vcf), fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
@@ -201,7 +201,7 @@ fun BackupRestoreSettings(
                     ) {
                         Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Import VCF", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.btn_import_vcf), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -308,11 +308,11 @@ fun BackupRestoreSettings(
         val dataStr = exportedVcfDialog ?: ""
         AlertDialog(
             onDismissRequest = { exportedVcfDialog = null },
-            title = { Text("vCard (VCF) Contacts Exported") },
+            title = { Text(stringResource(R.string.vcf_exported_title)) },
             text = {
                 Column {
                     Text(
-                        "Your contacts have been exported to standard vCard format. Copy this text and save it to a .vcf file to import into other devices.",
+                        stringResource(R.string.vcf_exported_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -333,12 +333,12 @@ fun BackupRestoreSettings(
                     Toast.makeText(context, "vCard content copied to clipboard!", Toast.LENGTH_SHORT).show()
                     exportedVcfDialog = null
                 }) {
-                    Text("Copy to Clipboard")
+                    Text(stringResource(R.string.backup_copy_clipboard))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { exportedVcfDialog = null }) {
-                    Text("Close")
+                    Text(stringResource(R.string.close))
                 }
             }
         )
@@ -348,14 +348,14 @@ fun BackupRestoreSettings(
     if (showImportVcfDialog) {
         AlertDialog(
             onDismissRequest = { showImportVcfDialog = false },
-            title = { Text("Import Contacts from vCard") },
+            title = { Text(stringResource(R.string.vcf_import_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("Paste the content of a standard .vcf (vCard) file below to import the contacts into your system database.")
+                    Text(stringResource(R.string.vcf_import_desc))
                     OutlinedTextField(
                         value = importVcfInput,
                         onValueChange = { importVcfInput = it },
-                        label = { Text("vCard (VCF) Content") },
+                        label = { Text(stringResource(R.string.vcf_content_label)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp),
@@ -377,12 +377,12 @@ fun BackupRestoreSettings(
                         }
                     }
                 }) {
-                    Text("Import Contacts")
+                    Text(stringResource(R.string.btn_import_contacts))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showImportVcfDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )

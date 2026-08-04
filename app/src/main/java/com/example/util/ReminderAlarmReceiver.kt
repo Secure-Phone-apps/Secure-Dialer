@@ -27,6 +27,7 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
+import com.example.R
 import com.example.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -82,12 +83,12 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
                 val notification = NotificationCompat.Builder(context, channelId)
                     .setSmallIcon(android.R.drawable.sym_action_chat)
-                    .setContentTitle("Callback Reminder")
-                    .setContentText("Reminding you to call back ${reminder.name} (${reminder.number})")
+                    .setContentTitle(context.getString(R.string.callback_reminders_title))
+                    .setContentText(context.getString(R.string.remind_call_back_prompt, "${reminder.name} (${reminder.number})"))
                     .setPriority(NotificationCompat.PRIORITY_HIGH)
                     .setContentIntent(mainPendingIntent)
                     .setAutoCancel(true)
-                    .addAction(android.R.drawable.sym_action_call, "Call Now", callPendingIntent)
+                    .addAction(android.R.drawable.sym_action_call, context.getString(R.string.btn_call_back), callPendingIntent)
                     .build()
 
                 nm.notify(reminderId, notification)

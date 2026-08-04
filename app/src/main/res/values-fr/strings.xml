@@ -1,28 +1,21 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Tabs -->
     <string name="tab_favorites">Favoris</string>
     <string name="tab_recents">Récents</string>
     <string name="tab_contacts">Contacts</string>
     <string name="tab_dialpad">Clavier</string>
     <string name="tab_voicemail">Messagerie</string>
-
-    <!-- Header & Search -->
     <string name="search_placeholder">Rechercher contacts et numéros</string>
     <string name="search_clear">Effacer</string>
     <string name="settings_title">Paramètres</string>
     <string name="default_dialer_warning">Définir comme téléphone par défaut pour activer toutes les fonctionnalités.</string>
     <string name="warning">Avertissement</string>
-
-    <!-- Permissions -->
     <string name="permissions_required">Autorisations requises</string>
     <string name="contacts_perm_desc">Pour accéder, charger, modifier et appeler les vrais contacts de votre téléphone, veuillez autoriser l\'accès aux Contacts.</string>
     <string name="enable_contacts_perm">Autoriser les contacts</string>
     <string name="call_log_perm_desc">Pour accéder, charger et appeler votre historique d\'appels réel, veuillez autoriser l\'accès au Journal d\'appels.</string>
     <string name="enable_call_log_perm">Autoriser le journal d\'appels</string>
-
-    <!-- Contacts -->
     <string name="contacts_header">Contacts</string>
     <string name="add_new_contact">Ajouter</string>
     <string name="no_contacts_title">Aucun contact trouvé</string>
@@ -41,8 +34,6 @@
     <string name="btn_cancel">Annuler</string>
     <string name="btn_delete">Supprimer</string>
     <string name="btn_edit">Modifier</string>
-
-    <!-- Recents -->
     <string name="recents_header">Récents</string>
     <string name="filter_all">Tous</string>
     <string name="filter_missed">Manqués</string>
@@ -50,15 +41,11 @@
     <string name="no_call_log_subtitle">Les appels récents s\'afficheront ici</string>
     <string name="no_results_title">Aucun résultat trouvé</string>
     <string name="no_results_subtitle">Aucun appel correspondant</string>
-
-    <!-- Dialpad -->
     <string name="dialpad_enter_number">Saisir un numéro</string>
     <string name="dialpad_no_matches">Aucun contact correspondant</string>
     <string name="dialpad_paste">Coller</string>
     <string name="dialpad_copy">Copier le numéro</string>
     <string name="dialpad_clear">Effacer</string>
-
-    <!-- Active Call -->
     <string name="call_blocked_toast">🚫 Appel bloqué</string>
     <string name="call_status_hold">Appel en attente</string>
     <string name="call_status_dialing">Numérotation...</string>
@@ -98,16 +85,12 @@
     <string name="note_saved">Note enregistrée en toute sécurité</string>
     <string name="recording_saved">Enregistrement sauvegardé en toute sécurité</string>
     <string name="recording_started">⏺️ Enregistrement de l\'appel démarré</string>
-
-    <!-- Favorites & Voicemail -->
     <string name="favorites_header">Favoris</string>
     <string name="no_favorites_title">Pas encore de favoris</string>
     <string name="no_favorites_subtitle">Ajoutez une étoile aux contacts pour les retrouver facilement</string>
     <string name="voicemail_header">Messagerie</string>
     <string name="no_voicemails_title">Aucun message vocal</string>
     <string name="no_voicemails_subtitle">Vous êtes à jour</string>
-
-    <!-- Settings Panel -->
     <string name="settings_appearance">Apparence</string>
     <string name="settings_dark_theme">Thème sombre</string>
     <string name="settings_dark_theme_sub">Appliquer le thème sombre à l\'interface</string>
@@ -150,7 +133,6 @@
     <string name="settings_dedup_title">Déduplication</string>
     <string name="settings_updates_title">Mises à jour</string>
     <string name="settings_recordings_title">Enregistrements</string>
-
     <string name="settings_startup_options">Options de démarrage</string>
     <string name="settings_default_startup_tab">Onglet de démarrage par défaut</string>
     <string name="sim_ask">Demander</string>
@@ -267,8 +249,6 @@
     <string name="action_message">Message</string>
     <string name="action_add_contact">Ajouter un contact</string>
     <string name="app_version_name">Version 1.0.2</string>
-
-    <!-- Complete App Localization Keys -->
     <string name="unknown">Inconnu</string>
     <string name="send_sms">Envoyer un SMS</string>
     <string name="block">Bloquer</string>
@@ -286,8 +266,6 @@
     <string name="choose_sim_card">Choisissez la carte SIM pour appeler %1$s :</string>
     <string name="no_answer">Pas de réponse</string>
     <string name="conference">Conférence (%1$d)</string>
-    
-    <!-- Call Log Summary Dashboard -->
     <string name="call_summary_prefix">Résumé des appels - %1$s</string>
     <string name="today_call_summary">Résumé des appels d\'aujourd\'hui</string>
     <string name="summary_missed_and_time">Manqués : %1$d • Temps : %2$s</string>
@@ -302,4 +280,92 @@
     <string name="summary_range_year_tab">Année</string>
     <string name="summary_range_all_tab">Tous</string>
     <string name="recent_label_format">Récent • %1$s</string>
-</resources>
+    <string name="active_reminders_title">Rappels actifs</string>
+    <string name="add_spam_manually_title">Ajouter un numéro indésirable manuellement</string>
+    <string name="app_locked_desc">Cette application est sécurisée. Veuillez vous authentifier pour continuer.</string>
+    <string name="app_locked_title">Composeur sécurisé verrouillé</string>
+    <string name="blocked_offline_numbers_title">Numéros bloqués hors ligne</string>
+    <string name="blocklist_empty_desc">Importez une liste CSV ou ajoutez des numéros manuellement pour bloquer le spam localement.</string>
+    <string name="blocklist_empty_title">La liste de blocage est vide</string>
+    <string name="btn_add_to_offline_db">Ajouter à la base hors ligne</string>
+    <string name="btn_cancel_scheduled_escape_calls">Annuler les appels simulés programmés</string>
+    <string name="btn_clear_all">Tout effacer</string>
+    <string name="btn_csv_import">Importer CSV</string>
+    <string name="btn_export_vcf">Exporter VCF</string>
+    <string name="btn_import">Importer</string>
+    <string name="btn_import_contacts">Importer contacts</string>
+    <string name="btn_import_vcf">Importer VCF</string>
+    <string name="btn_load_sample_list">Charger un exemple</string>
+    <string name="btn_open_settings">Ouvrir les paramètres</string>
+    <string name="btn_unlock_dialer">Déverrouiller le composeur</string>
+    <string name="call_count_label">Nombre d\'appels :</string>
+    <string name="callback_reminders_stats">%1$d actifs, %2$d traités</string>
+    <string name="callback_reminders_title">Rappels d\'appel</string>
+    <string name="caller_identity">Identité de l\'appelant</string>
+    <string name="caller_name_label">Nom de l\'appelant</string>
+    <string name="device_auth_subtitle">Authentifiez-vous pour ouvrir le Composeur Sécurisé</string>
+    <string name="device_auth_title">Composeur Sécurisé</string>
+    <string name="duration_label">Durée</string>
+    <string name="fake_call_sim_explanation">Un écran d\'appel entrant simulé se déclenchera après la minuterie choisie.</string>
+    <string name="fake_call_sim_title">Simulateur de faux appel</string>
+    <string name="history_passed_title">Historique (Passé)</string>
+    <string name="import_csv_dialog_desc">Format: \'numéro,étiquette\' (un par ligne). Collez votre contenu CSV ci-dessous :</string>
+    <string name="import_csv_dialog_title">Importer une liste CSV indésirable</string>
+    <string name="label_phone_number_hint">Numéro de téléphone</string>
+    <string name="label_spam_label_hint">Étiquette (ex: Démarchage)</string>
+    <string name="load_sample_dataset">Ou charger un échantillon :</string>
+    <string name="local_offline_protection">Protection locale hors ligne</string>
+    <string name="local_offline_protection_sub">Zéro appel réseau. Entièrement hors ligne.</string>
+    <string name="multi_call_note">Remarque : L\'intervalle s\'applique à partir de 2 appels.</string>
+    <string name="no_active_reminders_desc">Vous pouvez programmer un rappel dans les détails de n\'importe quel appel.</string>
+    <string name="no_active_reminders_title">Aucun rappel actif</string>
+    <string name="optional_note_label">Note optionnelle</string>
+    <string name="remind_call_back_prompt">Rappeler %1$s dans :</string>
+    <string name="repeat_interval_label">Intervalle de répétition</string>
+    <string name="restricted_settings_desc">Pour définir l\'application par défaut, activez-la dans les Paramètres système.</string>
+    <string name="restricted_settings_title">Paramètres restreints</string>
+    <string name="schedule_callback_reminder_sub">Recevez une alerte de rappel d\'appel</string>
+    <string name="schedule_callback_reminder_title">Programmer un rappel d\'appel</string>
+    <string name="schedule_escape_call">Programmer un faux appel (%1$d sec)</string>
+    <string name="schedule_sequential_calls">Programmer %1$d appels séquentiels</string>
+    <string name="scheduled_prefix">Programmé : %1$s</string>
+    <string name="select_imagetoolbox_palette">Sélectionner la palette ImageToolbox</string>
+    <string name="sequential_multi_call_desc">Déclenche plusieurs appels en séquence.</string>
+    <string name="sequential_multi_call_title">Options d\'appels multiples</string>
+    <string name="settings_biometric_lock">Verrouillage de l\'application</string>
+    <string name="settings_biometric_lock_sub">Exiger le verrouillage de l\'appareil (Code/Schéma/Empreinte) pour ouvrir l\'application</string>
+    <string name="settings_callback_reminders">Tableau de bord des rappels</string>
+    <string name="settings_callback_reminders_sub">Afficher et annuler les rappels d\'appel en attente</string>
+    <string name="settings_dynamic_color">Couleur dynamique</string>
+    <string name="settings_dynamic_color_sub">Utiliser les couleurs du fond d\'écran (Android 12+)</string>
+    <string name="settings_dynamic_color_sub_fallback">Thème du fond d\'écran (Nécessite Android 12+)</string>
+    <string name="settings_fake_call_sim">Simulateur de faux appel</string>
+    <string name="settings_fake_call_sim_sub">Programmez un appel simulé pour vous éclipser</string>
+    <string name="settings_flash_alerts">Flash lors des appels</string>
+    <string name="settings_flash_alerts_sub">Fait clignoter le flash lors des appels entrants</string>
+    <string name="settings_imagetoolbox_style">Style esthétique ImageToolbox</string>
+    <string name="settings_imagetoolbox_style_sub">Applique des contours, formes douces et fonds personnalisés</string>
+    <string name="settings_pocket_protection">Protection anti-tactile de poche</string>
+    <string name="settings_pocket_protection_sub">Bloque les touches involontaires lors d\'un appel dans la poche</string>
+    <string name="settings_security_protection">Sécurité &amp; Protection</string>
+    <string name="settings_spam_protection">Protection Anti-Spam hors ligne</string>
+    <string name="settings_spam_protection_sub">Importez des listes CSV et gérez les numéros bloqués</string>
+    <string name="spam_entries_label">Entrées indésirables</string>
+    <string name="spam_numbers_blocked">%1$d numéros bloqués</string>
+    <string name="tab_fake_call_sim">Faux Appel</string>
+    <string name="tab_scheduled_reminders">Rappels</string>
+    <string name="tab_spam_database">Base Anti-Spam</string>
+    <string name="trigger_delay_timer">Délai de déclenchement</string>
+    <string name="triggered_prefix">Déclenché : %1$s</string>
+    <string name="unit_day">jour</string>
+    <string name="unit_hour">heure</string>
+    <string name="unit_min">min</string>
+    <string name="unit_sec">sec</string>
+    <string name="vcf_content_label">Contenu vCard (VCF)</string>
+    <string name="vcf_exported_desc">Vos contacts ont été exportés au format vCard.</string>
+    <string name="vcf_exported_title">Contacts vCard (VCF) exportés</string>
+    <string name="vcf_import_desc">Collez le contenu d\'un fichier .vcf pour importer les contacts.</string>
+    <string name="vcf_import_title">Importer des contacts vCard</string>
+    <string name="vcf_migration_desc">Exportez ou importez vos contacts au format vCard (.vcf).</string>
+    <string name="vcf_migration_title">Migration de contacts vCard (VCF)</string>
+<string name="btn_call_back">Rappeler</string></resources>

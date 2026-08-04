@@ -35,6 +35,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 import kotlinx.coroutines.launch
 
@@ -87,12 +89,12 @@ fun SpamDatabaseSettings(
                         }
                         Column {
                             Text(
-                                text = "Local Offline Protection",
+                                text = stringResource(R.string.local_offline_protection),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "Zero network calls. Completely offline.",
+                                text = stringResource(R.string.local_offline_protection_sub),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -108,12 +110,12 @@ fun SpamDatabaseSettings(
                     ) {
                         Column {
                             Text(
-                                text = "Spam Entries",
+                                text = stringResource(R.string.spam_entries_label),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "${spamList.size} numbers blocked",
+                                text = stringResource(R.string.spam_numbers_blocked, spamList.size),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -126,7 +128,7 @@ fun SpamDatabaseSettings(
                         ) {
                             Icon(Icons.Default.UploadFile, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("CSV Import")
+                            Text(stringResource(R.string.btn_csv_import))
                         }
                     }
                 }
@@ -144,7 +146,7 @@ fun SpamDatabaseSettings(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "Add Spam Number Manually",
+                        text = stringResource(R.string.add_spam_manually_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -156,7 +158,7 @@ fun SpamDatabaseSettings(
                         OutlinedTextField(
                             value = manualNumber,
                             onValueChange = { manualNumber = it },
-                            label = { Text("Phone Number") },
+                            label = { Text(stringResource(R.string.label_phone_number_hint)) },
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1.3f),
                             singleLine = true
@@ -165,7 +167,7 @@ fun SpamDatabaseSettings(
                         OutlinedTextField(
                             value = manualLabel,
                             onValueChange = { manualLabel = it },
-                            label = { Text("Label (e.g. Robocall)") },
+                            label = { Text(stringResource(R.string.label_spam_label_hint)) },
                             shape = RoundedCornerShape(12.dp),
                             modifier = Modifier.weight(1f),
                             singleLine = true
@@ -186,7 +188,7 @@ fun SpamDatabaseSettings(
                     ) {
                         Icon(Icons.Default.Add, null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Add to Offline Database")
+                        Text(stringResource(R.string.btn_add_to_offline_db))
                     }
                 }
             }
@@ -197,8 +199,8 @@ fun SpamDatabaseSettings(
             item {
                 SettingsEmptyState(
                     icon = Icons.Default.VerifiedUser,
-                    title = "Blocklist is empty",
-                    description = "Import a CSV blocklist or add numbers manually to block telemarketers and scammers locally.",
+                    title = stringResource(R.string.blocklist_empty_title),
+                    description = stringResource(R.string.blocklist_empty_desc),
                     tintColor = MaterialTheme.colorScheme.primary
                 )
             }
@@ -210,7 +212,7 @@ fun SpamDatabaseSettings(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Blocked Offline Numbers",
+                        text = stringResource(R.string.blocked_offline_numbers_title),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -222,7 +224,7 @@ fun SpamDatabaseSettings(
                     }) {
                         Icon(Icons.Default.DeleteSweep, null, modifier = Modifier.size(16.dp))
                         Spacer(Modifier.width(4.dp))
-                        Text("Clear All")
+                        Text(stringResource(R.string.btn_clear_all))
                     }
                 }
             }
@@ -255,7 +257,7 @@ fun SpamDatabaseSettings(
                             viewModel.deleteSpamNumber(spam)
                             Toast.makeText(context, "Removed ${spam.number}", Toast.LENGTH_SHORT).show()
                         }) {
-                            Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.error)
+                            Icon(Icons.Default.Delete, stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.error)
                         }
                     }
                 )
@@ -266,11 +268,11 @@ fun SpamDatabaseSettings(
     if (showImportDialog) {
         AlertDialog(
             onDismissRequest = { showImportDialog = false },
-            title = { Text("Import CSV Blocklist") },
+            title = { Text(stringResource(R.string.import_csv_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Format: 'number,label' (one per line). Paste your CSV blocklist content below:",
+                        text = stringResource(R.string.import_csv_dialog_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -288,7 +290,7 @@ fun SpamDatabaseSettings(
                     HorizontalDivider()
 
                     Text(
-                        text = "Or load a sample offline dataset:",
+                        text = stringResource(R.string.load_sample_dataset),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -306,7 +308,7 @@ fun SpamDatabaseSettings(
                                     +15551234567,Telemarketing Offer
                                 """.trimIndent()
                             },
-                            label = { Text("Load Sample List") }
+                            label = { Text(stringResource(R.string.btn_load_sample_list)) }
                         )
                     }
                 }
@@ -323,12 +325,12 @@ fun SpamDatabaseSettings(
                         }
                     }
                 ) {
-                    Text("Import")
+                    Text(stringResource(R.string.btn_import))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showImportDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )

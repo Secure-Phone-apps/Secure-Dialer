@@ -101,9 +101,9 @@ fun SettingsPanel(
                             6 -> stringResource(R.string.settings_updates_title)
                             7 -> stringResource(R.string.settings_recordings_title)
                             8 -> stringResource(R.string.backup_service_health_title)
-                            9 -> "Offline Spam Database"
-                            10 -> "Scheduled Reminders"
-                            11 -> "Fake Call Simulator"
+                            9 -> stringResource(R.string.tab_spam_database)
+                            10 -> stringResource(R.string.tab_scheduled_reminders)
+                            11 -> stringResource(R.string.tab_fake_call_sim)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,

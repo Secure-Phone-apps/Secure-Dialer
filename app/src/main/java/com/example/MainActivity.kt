@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import com.example.ui.MainScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
@@ -373,13 +374,13 @@ class MainActivity : ComponentActivity() {
     private fun RestrictedSettingsDialog(onDismiss: () -> Unit, onOpenSettings: () -> Unit) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text("Restricted Settings") },
-            text = { Text("To use this app as your default dialer, you may need to manually enable it. Go to System Settings > Apps > [Our App Name] > Advanced > Allow Restricted Settings, then try again.") },
+            title = { Text(stringResource(R.string.restricted_settings_title)) },
+            text = { Text(stringResource(R.string.restricted_settings_desc)) },
             confirmButton = {
-                TextButton(onClick = onOpenSettings) { Text("Open Settings") }
+                TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.btn_open_settings)) }
             },
             dismissButton = {
-                TextButton(onClick = onDismiss) { Text("Cancel") }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel)) }
             }
         )
     }
