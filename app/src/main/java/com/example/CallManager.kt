@@ -35,6 +35,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 object CallManager {
+    private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+
     private val _currentCall = MutableStateFlow<Call?>(null)
     val currentCall: StateFlow<Call?> = _currentCall
 
@@ -123,7 +125,7 @@ object CallManager {
                 )
 
                 inCallService?.let { ctx ->
-                    CoroutineScope(Dispatchers.IO).launch {
+                    scope.launch {
                         try {
                             val db = com.example.data.AppDatabase.getDatabase(ctx)
                             db.dialerDao().insertCallRecording(recording)
@@ -167,11 +169,12 @@ object CallManager {
             _callerNumber.value = number
             _callerName.value = "" 
             val cnap = call.details?.callerDisplayName ?: ""
-            _callerCnapName.value = cnap
             
             if (cnap.isNotBlank() && number.isNotEmpty()) {
+                ContactCache.putCnapName(number, cnap)
+                _callerCnapName.value = cnap
                 inCallService?.let { context ->
-                    CoroutineScope(Dispatchers.IO).launch {
+                    scope.launch {
                         try {
                             val db = com.example.data.AppDatabase.getDatabase(context)
                             db.dialerDao().insertSetting(com.example.model.AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
@@ -180,6 +183,22 @@ object CallManager {
                         }
                     }
                 }
+            } else if (number.isNotEmpty()) {
+                val savedCnap = ContactCache.getCnapName(number)
+                if (!savedCnap.isNullOrBlank()) {
+                    _callerCnapName.value = savedCnap
+                } else {
+                    inCallService?.let { context ->
+                        scope.launch {
+                            val dbCnap = getSavedCnapName(context, number)
+                            if (!dbCnap.isNullOrBlank()) {
+                                _callerCnapName.value = dbCnap
+                            }
+                        }
+                    }
+                }
+            } else {
+                _callerCnapName.value = ""
             }
         } else {
             autoStopRecordingIfNeeded()

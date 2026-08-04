@@ -202,26 +202,42 @@ object BackupRestoreManager {
                         currentNum = ""
                         currentEmail = ""
                     }
+                    trimmed.startsWith("FN;", ignoreCase = true) -> {
+                        val index = trimmed.indexOf(":")
+                        if (index != -1) {
+                            currentName = cleanVcfValue(trimmed.substring(index + 1))
+                        }
+                    }
                     trimmed.startsWith("FN:", ignoreCase = true) -> {
-                        currentName = trimmed.substring(3).trim()
+                        currentName = cleanVcfValue(trimmed.substring(3))
+                    }
+                    trimmed.startsWith("N;", ignoreCase = true) || trimmed.startsWith("N:", ignoreCase = true) -> {
+                        if (currentName.isBlank()) {
+                            val index = trimmed.indexOf(":")
+                            if (index != -1) {
+                                val parts = trimmed.substring(index + 1).split(";").map { cleanVcfValue(it) }
+                                val formatted = parts.filter { it.isNotBlank() }.reversed().joinToString(" ")
+                                if (formatted.isNotBlank()) currentName = formatted
+                            }
+                        }
                     }
                     trimmed.startsWith("TEL;", ignoreCase = true) -> {
                         val index = trimmed.indexOf(":")
                         if (index != -1) {
-                            currentNum = trimmed.substring(index + 1).trim()
+                            currentNum = cleanVcfValue(trimmed.substring(index + 1))
                         }
                     }
                     trimmed.startsWith("TEL:", ignoreCase = true) -> {
-                        currentNum = trimmed.substring(4).trim()
+                        currentNum = cleanVcfValue(trimmed.substring(4))
                     }
                     trimmed.startsWith("EMAIL;", ignoreCase = true) -> {
                         val index = trimmed.indexOf(":")
                         if (index != -1) {
-                            currentEmail = trimmed.substring(index + 1).trim()
+                            currentEmail = cleanVcfValue(trimmed.substring(index + 1))
                         }
                     }
                     trimmed.startsWith("EMAIL:", ignoreCase = true) -> {
-                        currentEmail = trimmed.substring(6).trim()
+                        currentEmail = cleanVcfValue(trimmed.substring(6))
                     }
                     trimmed.startsWith("END:VCARD", ignoreCase = true) -> {
                         if (currentNum.isNotBlank()) {
@@ -264,5 +280,13 @@ object BackupRestoreManager {
         val decoded = Base64.decode(cipherText, Base64.DEFAULT)
         val decrypted = cipher.doFinal(decoded)
         return String(decrypted, Charsets.UTF_8)
+    }
+
+    private fun cleanVcfValue(value: String): String {
+        return value.trim()
+            .replace("\\,", ",")
+            .replace("\\;", ";")
+            .replace("\\n", "\n")
+            .replace("\\\\", "\\")
     }
 }

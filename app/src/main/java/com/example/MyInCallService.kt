@@ -43,6 +43,7 @@ class MyInCallService : InCallService() {
         val number = handle?.schemeSpecificPart ?: ""
         val cnapName = call.details?.callerDisplayName
         if (!cnapName.isNullOrBlank() && number.isNotEmpty()) {
+            ContactCache.putCnapName(number, cnapName)
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     val db = com.example.data.AppDatabase.getDatabase(this@MyInCallService)

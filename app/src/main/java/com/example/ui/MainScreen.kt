@@ -262,10 +262,14 @@ fun MainScreen(
         }
         
         var resolvedName = name
-        if (resolvedName == "Unknown" || resolvedName.isEmpty()) {
-            val contactName = getContactNameFromNumber(context, number)
-            if (contactName != null) {
-                resolvedName = contactName
+        val memoryContact = getContactNameFromNumber(context, number)
+        val memoryCnap = com.example.ContactCache.getCnapName(number)
+        
+        if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
+            if (memoryContact != null) {
+                resolvedName = memoryContact
+            } else if (!memoryCnap.isNullOrBlank()) {
+                resolvedName = memoryCnap
             }
         }
         
@@ -274,7 +278,7 @@ fun MainScreen(
             pendingCallNumber = number
             showSimSelectDialog = true
             
-            if (resolvedName == "Unknown" || resolvedName.isEmpty()) {
+            if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
                     val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         com.example.getSavedCnapName(context, number)
@@ -290,7 +294,7 @@ fun MainScreen(
             isCallActive = true
             CallManager.placeCall(context, number, preferredSim)
             
-            if (resolvedName == "Unknown" || resolvedName.isEmpty()) {
+            if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
                     val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                         com.example.getSavedCnapName(context, number)

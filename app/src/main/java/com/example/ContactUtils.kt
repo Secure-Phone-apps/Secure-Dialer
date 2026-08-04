@@ -30,8 +30,15 @@ object ContactCache {
     private var suffix8Map = HashMap<String, com.example.model.Contact>()
     @Volatile
     private var suffix7Map = HashMap<String, com.example.model.Contact>()
+
     @Volatile
     private var cnapMap = HashMap<String, String>()
+    @Volatile
+    private var cnapSuffix10Map = HashMap<String, String>()
+    @Volatile
+    private var cnapSuffix8Map = HashMap<String, String>()
+    @Volatile
+    private var cnapSuffix7Map = HashMap<String, String>()
 
     fun init(contacts: List<com.example.model.Contact>, settings: List<com.example.model.AppSetting>) {
         val fMap = HashMap<String, com.example.model.Contact>()
@@ -49,22 +56,61 @@ object ContactCache {
             if (len >= 7) s7Map[clean.takeLast(7)] = contact
         }
 
-        val cMap = HashMap<String, String>()
-        val cnapPrefix = "cnap_"
-        for (setting in settings) {
-            if (setting.key.startsWith(cnapPrefix)) {
-                val cleanKey = setting.key.substring(cnapPrefix.length).filter { it.isDigit() }
-                if (cleanKey.isNotEmpty()) {
-                    cMap[cleanKey] = setting.value
-                }
-            }
-        }
-
         fullNumMap = fMap
         suffix10Map = s10Map
         suffix8Map = s8Map
         suffix7Map = s7Map
+
+        initCnapFromSettings(settings)
+    }
+
+    fun initCnapFromSettings(settings: List<com.example.model.AppSetting>) {
+        val cMap = HashMap<String, String>()
+        val cs10Map = HashMap<String, String>()
+        val cs8Map = HashMap<String, String>()
+        val cs7Map = HashMap<String, String>()
+        val cnapPrefix = "cnap_"
+
+        for (setting in settings) {
+            if (setting.key.startsWith(cnapPrefix)) {
+                val cleanKey = setting.key.substring(cnapPrefix.length).filter { it.isDigit() }
+                if (cleanKey.isNotEmpty()) {
+                    val name = setting.value
+                    cMap[cleanKey] = name
+                    val len = cleanKey.length
+                    if (len >= 10) cs10Map[cleanKey.takeLast(10)] = name
+                    if (len >= 8) cs8Map[cleanKey.takeLast(8)] = name
+                    if (len >= 7) cs7Map[cleanKey.takeLast(7)] = name
+                }
+            }
+        }
+
         cnapMap = cMap
+        cnapSuffix10Map = cs10Map
+        cnapSuffix8Map = cs8Map
+        cnapSuffix7Map = cs7Map
+    }
+
+    @Synchronized
+    fun putCnapName(number: String, cnapName: String) {
+        val clean = number.filter { it.isDigit() }
+        if (clean.isEmpty() || cnapName.isBlank()) return
+
+        val newCnapMap = HashMap(cnapMap)
+        val newS10Map = HashMap(cnapSuffix10Map)
+        val newS8Map = HashMap(cnapSuffix8Map)
+        val newS7Map = HashMap(cnapSuffix7Map)
+
+        newCnapMap[clean] = cnapName
+        val len = clean.length
+        if (len >= 10) newS10Map[clean.takeLast(10)] = cnapName
+        if (len >= 8) newS8Map[clean.takeLast(8)] = cnapName
+        if (len >= 7) newS7Map[clean.takeLast(7)] = cnapName
+
+        cnapMap = newCnapMap
+        cnapSuffix10Map = newS10Map
+        cnapSuffix8Map = newS8Map
+        cnapSuffix7Map = newS7Map
     }
 
     fun getContact(number: String): com.example.model.Contact? {
@@ -82,7 +128,13 @@ object ContactCache {
     fun getCnapName(number: String): String? {
         val clean = number.filter { it.isDigit() }
         if (clean.isEmpty()) return null
-        return cnapMap[clean]
+        val len = clean.length
+        return cnapMap[clean] ?: when {
+            len >= 10 -> cnapSuffix10Map[clean.takeLast(10)]
+            len >= 8 -> cnapSuffix8Map[clean.takeLast(8)]
+            len >= 7 -> cnapSuffix7Map[clean.takeLast(7)]
+            else -> null
+        }
     }
 }
 
@@ -113,5 +165,15 @@ fun getContactNameFromNumber(context: Context, number: String): String? {
 
 fun getSavedCnapName(context: Context, number: String): String? {
     if (number.isBlank()) return null
-    return ContactCache.getCnapName(number)
+    val memoryName = ContactCache.getCnapName(number)
+    if (!memoryName.isNullOrBlank()) return memoryName
+
+    return try {
+        val db = com.example.data.AppDatabase.getDatabase(context)
+        val settings = kotlinx.coroutines.runBlocking { db.dialerDao().getAllSettingsList() }
+        ContactCache.initCnapFromSettings(settings)
+        ContactCache.getCnapName(number)
+    } catch (e: Exception) {
+        null
+    }
 }

@@ -109,7 +109,7 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
     } catch (e: Exception) {
         e.printStackTrace()
     }
-    contacts.distinctBy { it.number }
+    return@withContext contacts.distinctBy { it.number }
 }
 
 suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withContext(Dispatchers.IO) {
@@ -149,10 +149,19 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
     }
 
     val cnapIndex = HashMap<String, String>()
+    val cnapSuffix10 = HashMap<String, String>()
+    val cnapSuffix8 = HashMap<String, String>()
+    val cnapSuffix7 = HashMap<String, String>()
+
     for (entry in cnapMap.entries) {
         val cleanKey = entry.key.filter { it.isDigit() }
         if (cleanKey.isNotEmpty()) {
-            cnapIndex[cleanKey] = entry.value
+            val cnapName = entry.value
+            cnapIndex[cleanKey] = cnapName
+            val len = cleanKey.length
+            if (len >= 10) cnapSuffix10[cleanKey.takeLast(10)] = cnapName
+            if (len >= 8) cnapSuffix8[cleanKey.takeLast(8)] = cnapName
+            if (len >= 7) cnapSuffix7[cleanKey.takeLast(7)] = cnapName
         }
     }
 
@@ -188,7 +197,13 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                 } else null
 
                 val matchingCnapName = if (cleanNum.isNotEmpty()) {
-                    cnapIndex[cleanNum]
+                    val len = cleanNum.length
+                    cnapIndex[cleanNum] ?: when {
+                        len >= 10 -> cnapSuffix10[cleanNum.takeLast(10)]
+                        len >= 8 -> cnapSuffix8[cleanNum.takeLast(8)]
+                        len >= 7 -> cnapSuffix7[cleanNum.takeLast(7)]
+                        else -> null
+                    }
                 } else null
 
                 val name = when {
