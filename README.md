@@ -3,37 +3,23 @@
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/API-24%2B-25D366?style=for-the-badge&logo=android&logoColor=white" />
-  <img src="https://img.shields.io/badge/KOTLIN-1.9.22-9B51E0?style=for-the-badge&logo=kotlin&logoColor=white" />
-  <img src="https://img.shields.io/badge/JETPACK_COMPOSE-M3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" />
-  <img src="https://img.shields.io/badge/MATERIAL_YOU-Dynamic-98C379?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/API-24%2B-22C55E?style=for-the-badge&logo=android&logoColor=white&labelColor=15803D" />
+  <img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=for-the-badge&logo=kotlin&logoColor=white" />
+  <img src="https://img.shields.io/badge/Compose-M3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" />
+  <img src="https://img.shields.io/github/license/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=A3E635" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/LINES_OF_CODE-35K-6A8E23?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/COMMITS-120-2E7D32?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/CODE_SIZE-4.8_MIB-0284C7?style=for-the-badge" />
+  <img src="https://img.shields.io/github/stars/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=FACC15&labelColor=854D0E" />
+  <img src="https://img.shields.io/github/forks/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=EC4899&labelColor=85002C" />
+  <img src="https://img.shields.io/github/issues/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=F97316&labelColor=9A3412" />
+  <img src="https://img.shields.io/github/repo-size/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=38BDF8&labelColor=0369A1" />
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/PAGE_VIEWS-12,450-C2185B?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/DOWNLOADS-2K-D84315?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/STARS-150-F57F17?style=for-the-badge" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/RELEASE-V1.0.0-4A148C?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/PLAY_STORE-READY-E91E63?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/F--DROID-COMPATIBLE-7B1FA2?style=for-the-badge" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Wakatime-150_hrs-81C784?style=for-the-badge&logo=wakatime" />
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/GITHUB_TRENDING-%231_Repository_Of_The_Day-1E5631?style=for-the-badge&logo=github" />
-  <img src="https://img.shields.io/badge/RECOMMEND_BY-HelloGitHub-1D5E30?style=for-the-badge" />
+  <img src="https://img.shields.io/github/v/release/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=A855F7&labelColor=4A148C" />
+  <img src="https://img.shields.io/github/v/tag/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=A855F7&labelColor=4A148C&label=LATEST%20TAG" />
+  <img src="https://img.shields.io/github/last-commit/Secure-Phone-apps/Secure-Dialer?style=for-the-badge&color=059669&labelColor=111827" />
 </p>
 
 Welcome to **Secure Dialer**, your trustworthy, lightning-fast, and open-source telephone companion for Android. 
