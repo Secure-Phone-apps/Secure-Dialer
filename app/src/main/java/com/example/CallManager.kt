@@ -151,6 +151,12 @@ object CallManager {
             _calls.value = _calls.value // force emit to update conference UI
             autoSelectCurrentCall()
         }
+
+        override fun onDetailsChanged(call: Call, details: Call.Details) {
+            super.onDetailsChanged(call, details)
+            _calls.value = _calls.value // force emit
+            autoSelectCurrentCall()
+        }
     }
 
     var inCallService: InCallService? = null
@@ -221,15 +227,30 @@ object CallManager {
     }
 
     fun mergeCalls() {
-        val activeCall = _currentCall.value
         val allCallsList = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        val activeCall = allCallsList.find { it.state == Call.STATE_ACTIVE }
         val heldCall = allCallsList.find { it.state == Call.STATE_HOLDING }
         
         if (activeCall != null && heldCall != null) {
             try {
                 activeCall.conference(heldCall)
             } catch (e: Exception) {
-                e.printStackTrace()
+                try {
+                    heldCall.conference(activeCall)
+                } catch (ex: Exception) {
+                    ex.printStackTrace()
+                }
+            }
+        } else {
+            // Fallback: merge any other active call with another call if not strictly STATE_HOLDING yet
+            val current = _currentCall.value
+            val other = allCallsList.firstOrNull { it != current }
+            if (current != null && other != null) {
+                try {
+                    current.conference(other)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -351,6 +372,16 @@ object CallManager {
         try {
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
             if (telecomManager != null) {
+                // Hold any active call first to avoid race conditions/collisions
+                val activeCall = _currentCall.value
+                if (activeCall != null && activeCall.state == Call.STATE_ACTIVE) {
+                    try {
+                        activeCall.hold()
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+
                 val uri = Uri.fromParts("tel", number, null)
                 val extras = Bundle()
                 

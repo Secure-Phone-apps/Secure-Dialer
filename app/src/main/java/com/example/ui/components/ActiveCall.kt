@@ -227,6 +227,18 @@ fun ActiveCallScreen(
         }
     }
 
+    val isConference = remember(isFake, fakeParticipants, currentCall, allCalls) {
+        if (isFake) {
+            fakeParticipants.size > 1
+        } else {
+            val allCallsList = allCalls.filter { it.state != android.telecom.Call.STATE_DISCONNECTED }
+            allCallsList.any { 
+                it.children.isNotEmpty() || 
+                it.details?.hasProperty(android.telecom.Call.Details.PROPERTY_CONFERENCE) == true 
+            } || currentCall?.details?.hasProperty(android.telecom.Call.Details.PROPERTY_CONFERENCE) == true
+        }
+    }
+
     var isNear by remember { mutableStateOf(false) }
 
     DisposableEffect(context) {
@@ -300,7 +312,8 @@ fun ActiveCallScreen(
                     } else {
                         CallManager.mergeCalls()
                     }
-                }
+                },
+                isConference = isConference
             )
 
             waitingCall?.let { call ->

@@ -42,7 +42,8 @@ fun InCallHeader(
     formattedTime: String,
     heldCall: android.telecom.Call?,
     contacts: List<Contact>,
-    onMerge: (() -> Unit)? = null
+    onMerge: (() -> Unit)? = null,
+    isConference: Boolean = false
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -59,7 +60,7 @@ fun InCallHeader(
             callState == android.telecom.Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
             callState == android.telecom.Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
             callState == android.telecom.Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
-            participants.size > 1 -> "${stringResource(R.string.call_status_conference)} • $simDisplay"
+            isConference || participants.size > 1 -> "${stringResource(R.string.call_status_conference)} • $simDisplay"
             else -> "${stringResource(R.string.call_status_ongoing)} • $simDisplay"
         }
 
@@ -71,11 +72,13 @@ fun InCallHeader(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        val displayName = if (participants.size > 1) {
-            if (participants.size == 2) {
+        val displayName = if (isConference || participants.size > 1) {
+            if (participants.size >= 2) {
                 "${participants[0].first.ifEmpty { participants[0].second }} & ${participants[1].first.ifEmpty { participants[1].second }}"
+            } else if (participants.size == 1 && participants[0].first.isNotEmpty()) {
+                participants[0].first
             } else {
-                stringResource(R.string.conference, participants.size)
+                stringResource(R.string.call_status_conference)
             }
         } else {
             val rawName = contactName.ifEmpty { contactNumber }
@@ -91,11 +94,15 @@ fun InCallHeader(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        val displaySubtitle = if (participants.size > 1) {
+        val displaySubtitle = if (isConference || participants.size > 1) {
             if (participants.size > 2) {
                 participants.joinToString(", ") { it.first.ifEmpty { it.second } }
-            } else {
+            } else if (participants.size == 2) {
                 "${participants[0].second} • ${participants[1].second}"
+            } else if (participants.size == 1 && participants[0].second.isNotEmpty()) {
+                participants[0].second
+            } else {
+                ""
             }
         } else {
             if (contactName.isNotEmpty() && contactNumber.isNotEmpty() && contactName != contactNumber) contactNumber else ""
