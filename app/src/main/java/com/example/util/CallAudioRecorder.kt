@@ -49,6 +49,7 @@ object CallAudioRecorder {
     private var mediaRecorder: MediaRecorder? = null
     private var currentOutputFile: File? = null
     private var timerJob: Job? = null
+    private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.Main)
 
     fun startRecording(context: Context, phoneNumber: String): Boolean {
         if (_isRecording.value) return false
@@ -86,7 +87,7 @@ object CallAudioRecorder {
             _isRecording.value = true
             _recordingDuration.value = 0
 
-            timerJob = CoroutineScope(Dispatchers.Main).launch {
+            timerJob = scope.launch {
                 while (isActive) {
                     delay(1000)
                     _recordingDuration.value += 1

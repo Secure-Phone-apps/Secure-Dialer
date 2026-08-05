@@ -132,11 +132,11 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var dialpadInput = mutableStateOf("")
     var isSettingsVisible = mutableStateOf(false)
     var isDarkTheme = mutableStateOf(prefs.getBoolean("is_dark_theme", true))
+    var isAmoledMode = mutableStateOf(prefs.getBoolean("is_amoled_mode", false))
+    var customColorHex = mutableStateOf(prefs.getString("custom_color_hex", "#68A500") ?: "#68A500")
     var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
-    var isImageToolboxStyle = mutableStateOf(prefs.getBoolean("is_image_toolbox_style", false))
-    var imageToolboxPalette = mutableStateOf(prefs.getString("image_toolbox_palette", "oled_obsidian") ?: "oled_obsidian")
     var avatarShapeType = mutableStateOf(prefs.getString("avatar_shape_type", "circular") ?: "circular")
-    var themeColor = mutableStateOf(prefs.getString("theme_color", "classic_slate") ?: "classic_slate")
+    var themeColor = mutableStateOf(prefs.getString("theme_color", "expressive_lime") ?: "expressive_lime")
     var useDynamicColor = mutableStateOf(prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S))
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
@@ -221,19 +221,19 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().putBoolean("is_dark_theme", dark).apply()
     }
 
+    fun updateAmoledMode(amoled: Boolean) {
+        isAmoledMode.value = amoled
+        prefs.edit().putBoolean("is_amoled_mode", amoled).apply()
+    }
+
+    fun updateCustomColorHex(hex: String) {
+        customColorHex.value = hex
+        prefs.edit().putString("custom_color_hex", hex).apply()
+    }
+
     fun updateM3Expressive(expressive: Boolean) {
         isM3Expressive.value = expressive
         prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
-    }
-
-    fun updateImageToolboxStyle(enabled: Boolean) {
-        isImageToolboxStyle.value = enabled
-        prefs.edit().putBoolean("is_image_toolbox_style", enabled).apply()
-    }
-
-    fun updateImageToolboxPalette(palette: String) {
-        imageToolboxPalette.value = palette
-        prefs.edit().putString("image_toolbox_palette", palette).apply()
     }
 
     fun updateAvatarShapeType(shapeType: String) {

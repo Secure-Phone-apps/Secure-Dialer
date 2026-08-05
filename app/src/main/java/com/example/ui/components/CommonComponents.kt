@@ -54,7 +54,6 @@ import com.example.ui.viewmodel.DialerViewModel
 import androidx.compose.ui.res.stringResource
 
 import com.example.ui.theme.LocalM3Expressive
-import com.example.ui.theme.imageToolboxBorder
 import androidx.compose.ui.draw.shadow
 
 @Composable
@@ -74,8 +73,7 @@ fun HeaderSearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            .imageToolboxBorder(searchShape),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         shape = searchShape,
         color = containerColor,
         tonalElevation = if (isExpressive) 6.dp else 3.dp

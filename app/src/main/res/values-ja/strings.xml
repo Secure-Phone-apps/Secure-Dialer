@@ -329,7 +329,6 @@
     <string name="schedule_escape_call">偽着信をスケジュール (%1$d 秒)</string>
     <string name="schedule_sequential_calls">%1$d 回の連続着信をスケジュール</string>
     <string name="scheduled_prefix">予定: %1$s</string>
-    <string name="select_imagetoolbox_palette">ImageToolboxパレットを選択</string>
     <string name="sequential_multi_call_desc">抜け出しにくい場面で連続して偽着信を発生させます。</string>
     <string name="sequential_multi_call_title">複数着信オプション</string>
     <string name="settings_biometric_lock">アプリのロック</string>
@@ -343,8 +342,6 @@
     <string name="settings_fake_call_sim_sub">気まずい場面から抜け出すための偽着信をスケジュールする</string>
     <string name="settings_flash_alerts">着信時のフラッシュ通知</string>
     <string name="settings_flash_alerts_sub">着信時にカメラのフラッシュを点滅させます</string>
-    <string name="settings_imagetoolbox_style">ImageToolboxスタイル</string>
-    <string name="settings_imagetoolbox_style_sub">ImageToolbox風の美しい枠線や角丸背景を適用</string>
     <string name="settings_pocket_protection">ポケット誤作動防止</string>
     <string name="settings_pocket_protection_sub">ポケット内での誤タッチを近接センサーで防止</string>
     <string name="settings_security_protection">セキュリティと保護</string>

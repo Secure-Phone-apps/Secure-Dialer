@@ -188,18 +188,18 @@ class MainActivity : ComponentActivity() {
             }
 
             val currentThemeColor by viewModel.themeColor
+            val customColorHex by viewModel.customColorHex
+            val isAmoledMode by viewModel.isAmoledMode
             val isM3Expressive by viewModel.isM3Expressive
             val useDynamicColor by viewModel.useDynamicColor
-            val isImageToolboxStyle by viewModel.isImageToolboxStyle
-            val imageToolboxPalette by viewModel.imageToolboxPalette
 
             MyApplicationTheme(
                 darkTheme = isDarkTheme,
                 dynamicColor = useDynamicColor,
                 themeColor = currentThemeColor,
-                isM3Expressive = isM3Expressive,
-                isImageToolboxStyle = isImageToolboxStyle,
-                imageToolboxPalette = imageToolboxPalette
+                customColorHex = customColorHex,
+                isAmoledMode = isAmoledMode,
+                isM3Expressive = isM3Expressive
             ) {
                 if (isAppAuthenticated.value) {
                     MainScreen(

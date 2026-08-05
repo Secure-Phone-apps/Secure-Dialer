@@ -67,6 +67,10 @@ fun GeneralSettings(
     val onThemeChange = { newVal: Boolean ->
         viewModel.updateDarkTheme(newVal)
     }
+    val isAmoledMode by viewModel.isAmoledMode
+    val onAmoledChange = { newVal: Boolean ->
+        viewModel.updateAmoledMode(newVal)
+    }
     val useDynamicColor by viewModel.useDynamicColor
     val onDynamicColorChange = { newVal: Boolean ->
         viewModel.updateUseDynamicColor(newVal)
@@ -74,10 +78,6 @@ fun GeneralSettings(
     val isM3Expressive by viewModel.isM3Expressive
     val onExpressiveChange = { newVal: Boolean ->
         viewModel.updateM3Expressive(newVal)
-    }
-    val isImageToolboxStyle by viewModel.isImageToolboxStyle
-    val onImageToolboxStyleChange = { newVal: Boolean ->
-        viewModel.updateImageToolboxStyle(newVal)
     }
     val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
     val onTonesChange = { newVal: Boolean -> viewModel.dialpadTonesEnabled.value = newVal }
@@ -115,6 +115,20 @@ fun GeneralSettings(
                         iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                         iconTint = MaterialTheme.colorScheme.primary
                     )
+                    
+                    if (isDarkTheme) {
+                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        SettingsRowToggle(
+                            title = "Pure AMOLED Pitch Black",
+                            subtitle = "Deep black surfaces for true OLED battery savings and high contrast",
+                            checked = isAmoledMode,
+                            onCheckedChange = onAmoledChange,
+                            icon = Icons.Default.Contrast,
+                            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                            iconTint = MaterialTheme.colorScheme.tertiary
+                        )
+                    }
+
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     
                     val isDynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
@@ -132,6 +146,17 @@ fun GeneralSettings(
                         iconTint = MaterialTheme.colorScheme.secondary,
                         enabled = isDynamicSupported
                     )
+
+                    if (!useDynamicColor || !isDynamicSupported) {
+                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        ThemeColorPicker(
+                            currentSelected = viewModel.themeColor.value,
+                            customColorHex = viewModel.customColorHex.value,
+                            onColorSelected = { viewModel.updateThemeColor(it) },
+                            onCustomColorChange = { viewModel.updateCustomColorHex(it) }
+                        )
+                    }
+
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
                     SettingsRowToggle(
@@ -143,31 +168,6 @@ fun GeneralSettings(
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                         iconTint = MaterialTheme.colorScheme.tertiary
                     )
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_imagetoolbox_style),
-                        subtitle = stringResource(R.string.settings_imagetoolbox_style_sub),
-                        checked = isImageToolboxStyle,
-                        onCheckedChange = onImageToolboxStyleChange,
-                        icon = Icons.Default.Brush,
-                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.primary
-                    )
-
-                    if (isImageToolboxStyle) {
-                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        ImageToolboxPalettePicker(
-                            currentSelected = viewModel.imageToolboxPalette.value,
-                            onPaletteSelected = { viewModel.updateImageToolboxPalette(it) }
-                        )
-                    } else if (!useDynamicColor || !isDynamicSupported) {
-                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        ThemeColorPicker(
-                            currentSelected = viewModel.themeColor.value,
-                            onColorSelected = { viewModel.updateThemeColor(it) }
-                        )
-                    }
                 }
             }
         }
@@ -484,104 +484,4 @@ fun GeneralSettings(
     }
 }
 
-@Composable
-fun ImageToolboxPalettePicker(
-    currentSelected: String,
-    onPaletteSelected: (String) -> Unit
-) {
-    val options = listOf(
-        PaletteOption(
-            id = "oled_obsidian",
-            colors = listOf(Color(0xFFFFFFFF), Color(0xFF9CA3AF), Color(0xFF374151), Color(0xFF0A0C10)),
-            label = "Obsidian"
-        ),
-        PaletteOption(
-            id = "nordic_forest",
-            colors = listOf(Color(0xFF86EFAC), Color(0xFF065F46), Color(0xFF1E5E3A), Color(0xFFD1FAE5)),
-            label = "Forest"
-        ),
-        PaletteOption(
-            id = "lavender_dusk",
-            colors = listOf(Color(0xFFDDD6FE), Color(0xFF5B21B6), Color(0xFFC7D2FE), Color(0xFF110E21)),
-            label = "Lavender"
-        ),
-        PaletteOption(
-            id = "terracotta_desert",
-            colors = listOf(Color(0xFF9E4E2A), Color(0xFFFDBA74), Color(0xFFFCD34D), Color(0xFFFDA4AF)),
-            label = "Terracotta"
-        )
-    )
-    val pickerShape = RoundedCornerShape(14.dp)
-
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(
-            text = stringResource(R.string.select_imagetoolbox_palette),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            options.forEach { option ->
-                val isSelected = currentSelected == option.id
-                val scale by animateFloatAsState(
-                    targetValue = if (isSelected) 1.15f else 1.0f,
-                    animationSpec = tween(
-                        durationMillis = 150,
-                        easing = FastOutSlowInEasing
-                    ),
-                    label = "palette_picker_scale"
-                )
-
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .scale(scale)
-                        .clip(pickerShape)
-                        .clickable { onPaletteSelected(option.id) }
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                        .border(
-                            width = if (isSelected) 2.5.dp else 1.dp,
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
-                            shape = pickerShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Render 2x2 grid of the 4 colors
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Row(modifier = Modifier.weight(1.0f)) {
-                            Box(modifier = Modifier.weight(1.0f).fillMaxHeight().background(option.colors[0]))
-                            Box(modifier = Modifier.weight(1.0f).fillMaxHeight().background(option.colors[1]))
-                        }
-                        Row(modifier = Modifier.weight(1.0f)) {
-                            Box(modifier = Modifier.weight(1.0f).fillMaxHeight().background(option.colors[2]))
-                            Box(modifier = Modifier.weight(1.0f).fillMaxHeight().background(option.colors[3]))
-                        }
-                    }
-
-                    if (isSelected) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.Black.copy(alpha = 0.35f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = option.label,
-                                tint = Color.White,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-data class PaletteOption(val id: String, val colors: List<Color>, val label: String)
 data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)

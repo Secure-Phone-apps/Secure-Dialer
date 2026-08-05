@@ -329,7 +329,6 @@
     <string name="schedule_escape_call">Notfallanruf planen (%1$d Sek.)</string>
     <string name="schedule_sequential_calls">%1$d aufeinanderfolgende Anrufe planen</string>
     <string name="scheduled_prefix">Geplant: %1$s</string>
-    <string name="select_imagetoolbox_palette">ImageToolbox-Palette auswählen</string>
     <string name="sequential_multi_call_desc">Löst mehrere Anrufe nacheinander aus.</string>
     <string name="sequential_multi_call_title">Mehrfach-Anruf Optionen</string>
     <string name="settings_biometric_lock">App-Sperre</string>
@@ -343,8 +342,6 @@
     <string name="settings_fake_call_sim_sub">Planen Sie einen simulierten Anruf, um unangenehmen Situationen zu entkommen</string>
     <string name="settings_flash_alerts">Blitzlicht bei Anruf</string>
     <string name="settings_flash_alerts_sub">Lässt den Kamerablitz bei eingehenden Anrufen blinken</string>
-    <string name="settings_imagetoolbox_style">ImageToolbox Ästhetik-Stil</string>
-    <string name="settings_imagetoolbox_style_sub">Verleiht Abrundungen und Hintergründe im ImageToolbox-Design</string>
     <string name="settings_pocket_protection">Taschen-Berührungsschutz</string>
     <string name="settings_pocket_protection_sub">Blockiert Touch-Eingaben während Anrufen in der Tasche</string>
     <string name="settings_security_protection">Sicherheit &amp; Schutz</string>

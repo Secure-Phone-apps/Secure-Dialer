@@ -329,7 +329,6 @@
     <string name="schedule_escape_call">Programar llamada falsa (%1$d seg)</string>
     <string name="schedule_sequential_calls">Programar %1$d llamadas secuenciales</string>
     <string name="scheduled_prefix">Programado: %1$s</string>
-    <string name="select_imagetoolbox_palette">Seleccionar paleta ImageToolbox</string>
     <string name="sequential_multi_call_desc">Activa varias llamadas en secuencia para asegurar una excusa convincente.</string>
     <string name="sequential_multi_call_title">Opciones de llamadas múltiples</string>
     <string name="settings_biometric_lock">Bloqueo de aplicación</string>
@@ -343,8 +342,6 @@
     <string name="settings_fake_call_sim_sub">Programe una llamada simulada entrante para salir de situaciones incómodas</string>
     <string name="settings_flash_alerts">Alertas de flash al llamar</string>
     <string name="settings_flash_alerts_sub">Parpadea el flash de la cámara en llamadas entrantes</string>
-    <string name="settings_imagetoolbox_style">Estilo estético ImageToolbox</string>
-    <string name="settings_imagetoolbox_style_sub">Aplique bordes personalizados, formas suaves y fondos elegantes estilo ImageToolbox</string>
     <string name="settings_pocket_protection">Protección táctil de bolsillo</string>
     <string name="settings_pocket_protection_sub">Bloquea toques táctiles durante llamadas en el bolsillo usando sensor de proximidad</string>
     <string name="settings_security_protection">Seguridad y Protección</string>

@@ -39,6 +39,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val reminderId = intent.getIntExtra("reminder_id", -1)
         if (reminderId == -1) return
 
+        val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val db = AppDatabase.getDatabase(context)
@@ -95,6 +96,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
             } catch (e: Exception) {
                 e.printStackTrace()
+            } finally {
+                pendingResult.finish()
             }
         }
     }

@@ -329,7 +329,6 @@
     <string name="schedule_escape_call">फेक कॉल शेड्यूल करें (%1$d सेकंड)</string>
     <string name="schedule_sequential_calls">%1$d क्रमिक कॉल शेड्यूल करें</string>
     <string name="scheduled_prefix">शेड्यूल किया गया: %1$s</string>
-    <string name="select_imagetoolbox_palette">ImageToolbox पैलेट चुनें</string>
     <string name="sequential_multi_call_desc">कठिन स्थितियों से निकलने के लिए क्रमिक कॉल ट्रिगर करता है।</string>
     <string name="sequential_multi_call_title">मल्टी-कॉल विकल्प</string>
     <string name="settings_biometric_lock">ऐप लॉक</string>
@@ -343,8 +342,6 @@
     <string name="settings_fake_call_sim_sub">असहज स्थितियों से बचने के लिए फेक कॉल शेड्यूल करें</string>
     <string name="settings_flash_alerts">कॉल पर फ्लैश अलर्ट</string>
     <string name="settings_flash_alerts_sub">इनकमिंग कॉल पर कैमरा फ्लैश ब्लिंक करता है</string>
-    <string name="settings_imagetoolbox_style">ImageToolbox स्टाइल</string>
-    <string name="settings_imagetoolbox_style_sub">ImageToolbox से प्रेरित आउटलाइन और बैकग्राउंड लागू करें</string>
     <string name="settings_pocket_protection">पॉकेट टच प्रोटेक्शन</string>
     <string name="settings_pocket_protection_sub">जेब में कॉल के दौरान अनपेक्षित टच ब्लॉक करता है</string>
     <string name="settings_security_protection">सुरक्षा और संरक्षण</string>

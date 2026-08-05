@@ -131,7 +131,7 @@ fun ActiveCallScreen(
         callState
     }
 
-    LaunchedEffect(isFake, fakeState) {
+    LaunchedEffect(isFake, fakeState, callState) {
         if (isFake) {
             if (fakeState == "ACTIVE") {
                 fakeActiveStartTimestamp = System.currentTimeMillis()
@@ -180,6 +180,7 @@ fun ActiveCallScreen(
     val audioState by CallManager.audioState.collectAsStateWithLifecycle()
     val waitingCall by CallManager.waitingCall.collectAsStateWithLifecycle()
     val allCalls by CallManager.calls.collectAsStateWithLifecycle()
+    val currentCall by CallManager.currentCall.collectAsStateWithLifecycle()
     val heldCall = remember(allCalls) { allCalls.firstOrNull { it.state == android.telecom.Call.STATE_HOLDING } }
 
     LaunchedEffect(audioState) {
@@ -193,8 +194,37 @@ fun ActiveCallScreen(
     var isInCallDialpadOpen by remember { mutableStateOf(false) }
     var isNoteDialogOpen by remember { mutableStateOf(false) }
     var inCallDialpadInput by remember { mutableStateOf("") }
-    var participants by remember(contactName, contactNumber) {
+    var fakeParticipants by remember(contactName, contactNumber) {
         mutableStateOf(listOf(Pair(contactName, contactNumber)))
+    }
+
+    val participants = remember(isFake, currentCall, allCalls, contactName, contactNumber, contacts, fakeParticipants) {
+        if (isFake) {
+            fakeParticipants
+        } else {
+            val allCallsList = allCalls.filter { it.state != android.telecom.Call.STATE_DISCONNECTED }
+            // Identify if there is a conference call in the list (either has children or has conference property)
+            val conferenceCall = allCallsList.find { 
+                it.children.isNotEmpty() || 
+                it.details?.hasProperty(android.telecom.Call.Details.PROPERTY_CONFERENCE) == true 
+            }
+            if (conferenceCall != null) {
+                val children = conferenceCall.children
+                if (children.isNotEmpty()) {
+                    children.map { child ->
+                        val number = child.details?.handle?.schemeSpecificPart ?: ""
+                        val name = contacts.find { it.number == number }?.name ?: number
+                        Pair(name, number)
+                    }
+                } else {
+                    listOf(Pair("Conference Call", ""))
+                }
+            } else {
+                val number = currentCall?.details?.handle?.schemeSpecificPart ?: contactNumber
+                val name = contacts.find { it.number == number }?.name ?: contactName.ifEmpty { number }
+                listOf(Pair(name, number))
+            }
+        }
     }
 
     var isNear by remember { mutableStateOf(false) }
@@ -263,13 +293,21 @@ fun ActiveCallScreen(
                 contactNumber = contactNumber,
                 formattedTime = formattedTime,
                 heldCall = heldCall,
-                contacts = contacts
+                contacts = contacts,
+                onMerge = {
+                    if (isFake) {
+                        Toast.makeText(context, "📞 Merged call (Simulation)", Toast.LENGTH_SHORT).show()
+                    } else {
+                        CallManager.mergeCalls()
+                    }
+                }
             )
 
             waitingCall?.let { call ->
                 InCallWaitingCallDialog(
                     waitingCall = call,
-                    contacts = contacts
+                    contacts = contacts,
+                    avatarShapeType = avatarShapeType
                 )
             }
 
@@ -303,7 +341,11 @@ fun ActiveCallScreen(
                     contacts = contacts,
                     onDismiss = { isAddCallDialogOpen = false },
                     onAddCall = { finalName, number ->
-                        participants = participants + Pair(finalName, number)
+                        if (isFake) {
+                            fakeParticipants = fakeParticipants + Pair(finalName, number)
+                        } else {
+                            CallManager.placeCall(context, number)
+                        }
                     },
                     avatarShapeType = avatarShapeType
                 )

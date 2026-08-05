@@ -53,7 +53,6 @@ import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.ui.theme.LocalM3Expressive
-import com.example.ui.theme.imageToolboxBorder
 import com.example.ui.viewmodel.DialerViewModel
 
 @Composable
@@ -87,8 +86,7 @@ fun RecentCallRow(
             .clickable {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 isExpanded = !isExpanded
-            }
-            .imageToolboxBorder(MaterialTheme.shapes.medium),
+            },
         colors = CardDefaults.cardColors(
             containerColor = containerColor
         ),

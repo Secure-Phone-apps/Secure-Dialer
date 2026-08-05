@@ -329,7 +329,6 @@
     <string name="schedule_escape_call">Agendar Chamada Falsa (%1$d seg)</string>
     <string name="schedule_sequential_calls">Agendar %1$d Chamadas Consecutivas</string>
     <string name="scheduled_prefix">Agendado: %1$s</string>
-    <string name="select_imagetoolbox_palette">Selecionar Paleta ImageToolbox</string>
     <string name="sequential_multi_call_desc">Dispara chamadas em sequência para saídas de emergência.</string>
     <string name="sequential_multi_call_title">Opções de Chamadas Múltiplas</string>
     <string name="settings_biometric_lock">Bloqueio do Aplicativo</string>
@@ -343,8 +342,6 @@
     <string name="settings_fake_call_sim_sub">Agende uma chamada simulada para sair de reuniões chotas</string>
     <string name="settings_flash_alerts">Alertas de Flash na Chamada</string>
     <string name="settings_flash_alerts_sub">Pisca o flash da câmera ao receber chamadas</string>
-    <string name="settings_imagetoolbox_style">Estilo Estético ImageToolbox</string>
-    <string name="settings_imagetoolbox_style_sub">Aplica contornos e formas elegantes estilo ImageToolbox</string>
     <string name="settings_pocket_protection">Proteção de Toque no Bolso</string>
     <string name="settings_pocket_protection_sub">Bloqueia toques involuntários durante chamadas no bolso</string>
     <string name="settings_security_protection">Segurança e Proteção</string>

@@ -317,9 +317,6 @@
 
     
     <string name="settings_dynamic_color_sub_fallback">System wallpaper color scheme (Requires Android 12+)</string>
-    <string name="settings_imagetoolbox_style">ImageToolbox Aesthetic Style</string>
-    <string name="settings_imagetoolbox_style_sub">Apply premium custom outlines, borders, soft-squircle shapes, and elegant tonal card backgrounds inspired by ImageToolbox</string>
-    <string name="select_imagetoolbox_palette">Select ImageToolbox Palette</string>
     <string name="settings_spam_protection">Offline Spam Protection</string>
     <string name="settings_spam_protection_sub">Import CSV blocklists and manage blocked numbers locally</string>
     <string name="settings_flash_alerts">Flash Alerts on Call</string>

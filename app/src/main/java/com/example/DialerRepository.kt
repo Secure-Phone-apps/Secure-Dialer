@@ -35,9 +35,10 @@ class DialerRepository(rawContext: Context) {
     val context: Context = rawContext.applicationContext
     val db = AppDatabase.getDatabase(context)
     val dao = db.dialerDao()
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     init {
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        repositoryScope.launch {
             try {
                 val initialContacts = dao.getAllContactsList()
                 val initialSettings = dao.getAllSettingsList()

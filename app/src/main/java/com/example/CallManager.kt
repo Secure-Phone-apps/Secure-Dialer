@@ -64,10 +64,73 @@ object CallManager {
     private val _activeStartTimestamp = MutableStateFlow<Long>(0L)
     val activeStartTimestamp: StateFlow<Long> = _activeStartTimestamp
 
+    fun autoSelectCurrentCall() {
+        val allCallsList = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        
+        if (allCallsList.isEmpty()) {
+            updateCall(null)
+            return
+        }
+
+        // 1. If there's an active conference call (has children), prefer it.
+        val conferenceCall = allCallsList.find { 
+            it.children.isNotEmpty() || 
+            it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true 
+        }
+        if (conferenceCall != null) {
+            if (_currentCall.value != conferenceCall) {
+                updateCall(conferenceCall)
+            }
+            return
+        }
+
+        // 2. If there's an active call, prefer it.
+        val activeCall = allCallsList.find { it.state == Call.STATE_ACTIVE }
+        if (activeCall != null) {
+            if (_currentCall.value != activeCall) {
+                updateCall(activeCall)
+            }
+            return
+        }
+
+        // 3. If there's a dialing/connecting/ringing call, show it.
+        val progressCall = allCallsList.find { 
+            it.state == Call.STATE_DIALING || 
+            it.state == Call.STATE_CONNECTING || 
+            it.state == Call.STATE_RINGING 
+        }
+        if (progressCall != null) {
+            if (_currentCall.value != progressCall) {
+                updateCall(progressCall)
+            }
+            return
+        }
+
+        // 4. If there's a held call, pick it
+        val heldCall = allCallsList.find { it.state == Call.STATE_HOLDING }
+        if (heldCall != null) {
+            if (_currentCall.value != heldCall) {
+                updateCall(heldCall)
+            }
+            return
+        }
+
+        // 5. Fallback to any non-disconnected call
+        if (_currentCall.value == null || _currentCall.value?.state == Call.STATE_DISCONNECTED) {
+            updateCall(allCallsList.first())
+        }
+    }
+
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
             _calls.value = _calls.value // force emit
+            
+            if (state == Call.STATE_DISCONNECTED) {
+                removeCall(call)
+                return
+            }
+
             if (call == _currentCall.value) {
                 _callState.value = state
                 if (state == Call.STATE_ACTIVE) {
@@ -76,12 +139,17 @@ object CallManager {
                         _activeStartTimestamp.value = if (connectTime > 0L) connectTime else System.currentTimeMillis()
                     }
                 }
-                if (state == Call.STATE_DISCONNECTED) {
-                    removeCall(call)
-                }
             } else if (call == _waitingCall.value && state == Call.STATE_DISCONNECTED) {
                 updateWaitingCall(null)
             }
+            
+            autoSelectCurrentCall()
+        }
+
+        override fun onChildrenChanged(call: Call, children: List<Call>) {
+            super.onChildrenChanged(call, children)
+            _calls.value = _calls.value // force emit to update conference UI
+            autoSelectCurrentCall()
         }
     }
 
@@ -98,10 +166,10 @@ object CallManager {
             _calls.value = _calls.value + call
             call.registerCallback(callCallback)
         }
-        if (_currentCall.value == null) {
-            updateCall(call)
-        } else if (call.state == Call.STATE_RINGING && _currentCall.value != call) {
+        if (call.state == Call.STATE_RINGING && _currentCall.value != null && _currentCall.value != call) {
             updateWaitingCall(call)
+        } else {
+            autoSelectCurrentCall()
         }
     }
 
@@ -145,11 +213,24 @@ object CallManager {
         }
         if (_currentCall.value == call) {
             autoStopRecordingIfNeeded()
-            val nextCall = _calls.value.firstOrNull { it.state != Call.STATE_DISCONNECTED }
-            updateCall(nextCall)
         }
         if (_waitingCall.value == call) {
             updateWaitingCall(null)
+        }
+        autoSelectCurrentCall()
+    }
+
+    fun mergeCalls() {
+        val activeCall = _currentCall.value
+        val allCallsList = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        val heldCall = allCallsList.find { it.state == Call.STATE_HOLDING }
+        
+        if (activeCall != null && heldCall != null) {
+            try {
+                activeCall.conference(heldCall)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -164,6 +245,13 @@ object CallManager {
                 }
             } else {
                 _activeStartTimestamp.value = 0L
+            }
+            if (call.state == Call.STATE_HOLDING) {
+                try {
+                    call.unhold()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
             val number = call.details?.handle?.schemeSpecificPart ?: ""
             _callerNumber.value = number
@@ -292,8 +380,12 @@ object CallManager {
                 } else {
                     call.disconnect()
                 }
+                
+                val remainingCalls = _calls.value.filter { it != call && it.state != Call.STATE_DISCONNECTED }
+                if (remainingCalls.isEmpty()) {
+                    updateCall(null)
+                }
             }
-            updateCall(null)
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -309,7 +401,7 @@ object CallManager {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            dtmfJob = CoroutineScope(Dispatchers.Default).launch {
+            dtmfJob = scope.launch(Dispatchers.Default) {
                 kotlinx.coroutines.delay(150)
                 try {
                     call.stopDtmfTone()

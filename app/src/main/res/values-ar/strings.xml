@@ -329,7 +329,6 @@
     <string name="schedule_escape_call">جدولة مكالمة وهمية (%1$d ثانية)</string>
     <string name="schedule_sequential_calls">جدولة %1$d مكالمات متتالية</string>
     <string name="scheduled_prefix">مجدول: %1$s</string>
-    <string name="select_imagetoolbox_palette">اختيار لوحة ألوان ImageToolbox</string>
     <string name="sequential_multi_call_desc">إطلاق عدة مكالمات متتالية للمساعدة في مغادرة المواقف المباشرة.</string>
     <string name="sequential_multi_call_title">خيارات المكالمات المتعددة</string>
     <string name="settings_biometric_lock">قفل التطبيق</string>
@@ -343,8 +342,6 @@
     <string name="settings_fake_call_sim_sub">جدولة مكالمة واردة وهمية للخروج من المواقف المخرجة</string>
     <string name="settings_flash_alerts">تنبيهات الفلاش عند الاتصال</string>
     <string name="settings_flash_alerts_sub">وميض فلاش الكاميرا أثناء المكالمات الواردة</string>
-    <string name="settings_imagetoolbox_style">نمط ImageToolbox الجمالي</string>
-    <string name="settings_imagetoolbox_style_sub">تطبيق حدود وأشكال منحنية خلفية مستوحاة من ImageToolbox</string>
     <string name="settings_pocket_protection">حماية اللمس في الجيب</string>
     <string name="settings_pocket_protection_sub">حظر إدخال اللمس أثناء المكالمات عند وجود الهاتف في الجيب</string>
     <string name="settings_security_protection">الأمان والحماية</string>

@@ -31,9 +31,17 @@ import android.telecom.InCallService
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 class MyInCallService : InCallService() {
+    private val serviceScope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+
+    override fun onDestroy() {
+        serviceScope.cancel()
+        super.onDestroy()
+    }
+
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
         CallManager.inCallService = this
@@ -44,7 +52,7 @@ class MyInCallService : InCallService() {
         val cnapName = call.details?.callerDisplayName
         if (!cnapName.isNullOrBlank() && number.isNotEmpty()) {
             ContactCache.putCnapName(number, cnapName)
-            CoroutineScope(Dispatchers.IO).launch {
+            serviceScope.launch {
                 try {
                     val db = com.example.data.AppDatabase.getDatabase(this@MyInCallService)
                     db.dialerDao().insertSetting(com.example.model.AppSetting("cnap_" + number.filter { it.isDigit() }, cnapName))

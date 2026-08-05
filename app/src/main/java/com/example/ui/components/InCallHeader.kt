@@ -41,7 +41,8 @@ fun InCallHeader(
     contactNumber: String,
     formattedTime: String,
     heldCall: android.telecom.Call?,
-    contacts: List<Contact>
+    contacts: List<Contact>,
+    onMerge: (() -> Unit)? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -154,21 +155,43 @@ fun InCallHeader(
                             }
                         }
                     }
-                    Button(
-                        onClick = {
-                            try {
-                                val activeCall = CallManager.currentCall.value
-                                activeCall?.hold()
-                                heldCall.unhold()
-                                CallManager.updateCall(heldCall)
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                        },
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                        modifier = Modifier.height(32.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(stringResource(R.string.btn_swap), style = MaterialTheme.typography.labelMedium)
+                        Button(
+                            onClick = {
+                                try {
+                                    val activeCall = CallManager.currentCall.value
+                                    activeCall?.hold()
+                                    heldCall.unhold()
+                                    CallManager.updateCall(heldCall)
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary,
+                                contentColor = MaterialTheme.colorScheme.onSecondary
+                            )
+                        ) {
+                            Text(stringResource(R.string.btn_swap), style = MaterialTheme.typography.labelMedium)
+                        }
+                        if (onMerge != null) {
+                            Button(
+                                onClick = onMerge,
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Text(stringResource(R.string.btn_add_merge), style = MaterialTheme.typography.labelMedium)
+                            }
+                        }
                     }
                 }
             }
