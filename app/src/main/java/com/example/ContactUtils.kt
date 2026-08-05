@@ -163,7 +163,24 @@ fun getContactNameFromNumber(context: Context, number: String): String? {
     return null
 }
 
-fun getSavedCnapName(context: Context, number: String): String? {
+suspend fun getSavedCnapName(context: Context, number: String): String? {
+    if (number.isBlank()) return null
+    val memoryName = ContactCache.getCnapName(number)
+    if (!memoryName.isNullOrBlank()) return memoryName
+
+    return kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        try {
+            val db = com.example.data.AppDatabase.getDatabase(context)
+            val settings = db.dialerDao().getAllSettingsList()
+            ContactCache.initCnapFromSettings(settings)
+            ContactCache.getCnapName(number)
+        } catch (e: Exception) {
+            null
+        }
+    }
+}
+
+fun getSavedCnapNameSync(context: Context, number: String): String? {
     if (number.isBlank()) return null
     val memoryName = ContactCache.getCnapName(number)
     if (!memoryName.isNullOrBlank()) return memoryName

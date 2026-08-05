@@ -238,9 +238,7 @@ fun MainScreen(
                 } else if (systemCallerCnapName.isNotEmpty()) {
                     callingContactName = systemCallerCnapName
                 } else {
-                    val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        com.example.getSavedCnapName(context, systemCallerNumber)
-                    }
+                    val savedCnap = com.example.getSavedCnapName(context, systemCallerNumber)
                     callingContactName = savedCnap ?: systemCallerNumber
                 }
             }
@@ -280,9 +278,7 @@ fun MainScreen(
             
             if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
-                    val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        com.example.getSavedCnapName(context, number)
-                    }
+                    val savedCnap = com.example.getSavedCnapName(context, number)
                     if (!savedCnap.isNullOrBlank()) {
                         pendingCallName = savedCnap
                     }
@@ -296,9 +292,7 @@ fun MainScreen(
             
             if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
-                    val savedCnap = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        com.example.getSavedCnapName(context, number)
-                    }
+                    val savedCnap = com.example.getSavedCnapName(context, number)
                     if (!savedCnap.isNullOrBlank()) {
                         callingContactName = savedCnap
                     }

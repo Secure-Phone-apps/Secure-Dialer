@@ -118,7 +118,7 @@ class MyInCallService : InCallService() {
         val cnapName = call.details?.callerDisplayName
         val contactName = if (number.isNotEmpty()) getContactNameFromNumber(this, number) else null
         val savedCnap = if (number.isNotEmpty() && contactName == null && cnapName.isNullOrBlank()) {
-            getSavedCnapName(this, number)
+            getSavedCnapNameSync(this, number)
         } else null
         
         val displayName = when {
@@ -165,7 +165,7 @@ class MyInCallService : InCallService() {
         val cnapName = call.details?.callerDisplayName
         val contactName = getContactNameFromNumber(this, number)
         val savedCnap = if (number != "Unknown" && number.isNotEmpty() && contactName == null && cnapName.isNullOrBlank()) {
-            getSavedCnapName(this, number)
+            getSavedCnapNameSync(this, number)
         } else null
         
         val name = when {
