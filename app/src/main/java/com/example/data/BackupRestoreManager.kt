@@ -25,9 +25,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.security.MessageDigest
+import java.security.SecureRandom
 import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.GCMParameterSpec
+import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 object BackupRestoreManager {
@@ -255,31 +257,59 @@ object BackupRestoreManager {
         }
     }
 
-    private fun deriveKey(password: String): SecretKeySpec {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val bytes = digest.digest(password.toByteArray(Charsets.UTF_8))
-        return SecretKeySpec(bytes, "AES")
+    private fun deriveKey(password: String, salt: ByteArray): SecretKeySpec {
+        val iterations = 10000
+        val keyLength = 256
+        val spec = PBEKeySpec(password.toCharArray(), salt, iterations, keyLength)
+        val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val keyBytes = factory.generateSecret(spec).encoded
+        return SecretKeySpec(keyBytes, "AES")
     }
 
     private fun encryptData(plainText: String, password: String): String {
-        val key = deriveKey(password)
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val iv = ByteArray(16) { 0 }
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec)
-        val encrypted = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
-        return Base64.encodeToString(encrypted, Base64.NO_WRAP)
+        val random = SecureRandom()
+        val salt = ByteArray(16)
+        random.nextBytes(salt)
+
+        val iv = ByteArray(12)
+        random.nextBytes(iv)
+
+        val key = deriveKey(password, salt)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val spec = GCMParameterSpec(128, iv)
+        cipher.init(Cipher.ENCRYPT_MODE, key, spec)
+
+        val encryptedBytes = cipher.doFinal(plainText.toByteArray(Charsets.UTF_8))
+
+        val combined = ByteArray(salt.size + iv.size + encryptedBytes.size)
+        System.arraycopy(salt, 0, combined, 0, salt.size)
+        System.arraycopy(iv, 0, combined, salt.size, iv.size)
+        System.arraycopy(encryptedBytes, 0, combined, salt.size + iv.size, encryptedBytes.size)
+
+        return Base64.encodeToString(combined, Base64.NO_WRAP)
     }
 
     private fun decryptData(cipherText: String, password: String): String {
-        val key = deriveKey(password)
-        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-        val iv = ByteArray(16) { 0 }
-        val ivSpec = IvParameterSpec(iv)
-        cipher.init(Cipher.DECRYPT_MODE, key, ivSpec)
-        val decoded = Base64.decode(cipherText, Base64.DEFAULT)
-        val decrypted = cipher.doFinal(decoded)
-        return String(decrypted, Charsets.UTF_8)
+        val combined = Base64.decode(cipherText, Base64.DEFAULT)
+        if (combined.size < 28) {
+            throw IllegalArgumentException("Invalid encrypted payload size")
+        }
+
+        val salt = ByteArray(16)
+        val iv = ByteArray(12)
+        val encryptedBytes = ByteArray(combined.size - 28)
+
+        System.arraycopy(combined, 0, salt, 0, 16)
+        System.arraycopy(combined, 16, iv, 0, 12)
+        System.arraycopy(combined, 28, encryptedBytes, 0, encryptedBytes.size)
+
+        val key = deriveKey(password, salt)
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+        val spec = GCMParameterSpec(128, iv)
+        cipher.init(Cipher.DECRYPT_MODE, key, spec)
+
+        val decryptedBytes = cipher.doFinal(encryptedBytes)
+        return String(decryptedBytes, Charsets.UTF_8)
     }
 
     private fun cleanVcfValue(value: String): String {

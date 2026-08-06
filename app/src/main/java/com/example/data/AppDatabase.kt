@@ -20,6 +20,8 @@ package com.example.data
 import android.content.Context
 import androidx.room.*
 import com.example.model.*
+import net.sqlcipher.database.SQLiteDatabase
+import net.sqlcipher.database.SupportFactory
 
 class Converters {
     @TypeConverter
@@ -62,11 +64,15 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+                SQLiteDatabase.loadLibs(context)
+                val dbKey = DatabaseKeyManager.getDatabaseKey(context)
+                val factory = SupportFactory(dbKey)
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "dialer_database"
                 )
+                    .openHelperFactory(factory)
                     .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
