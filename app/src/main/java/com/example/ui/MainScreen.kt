@@ -107,7 +107,7 @@ fun MainScreen(
     var dialpadInput by viewModel.dialpadInput
     var isSettingsVisible by viewModel.isSettingsVisible
     var isCallActive by viewModel.isCallActive
-    var isCallMinimized by remember { mutableStateOf(false) }
+    var isCallMinimized by viewModel.isCallMinimized
 
     // Automatically dismiss keyboard and clear focus on tab changes, settings visibility changes, and call transitions
     LaunchedEffect(selectedTab) {
@@ -556,7 +556,12 @@ fun MainScreen(
                         contactNumber = callingContactNumber,
                         callState = systemCallState,
                         onExpand = { isCallMinimized = false },
-                        onHangUp = { CallManager.disconnect(); isCallActive = false }
+                        onHangUp = {
+                            CallManager.disconnect()
+                            if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
+                                isCallActive = false
+                            }
+                        }
                     )
                 }
 
@@ -606,7 +611,9 @@ fun MainScreen(
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
                             CallManager.disconnect()
-                            isCallActive = false
+                            if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
+                                isCallActive = false
+                            }
                         }
                     },
                     onAnswer = { CallManager.answer() },
@@ -624,7 +631,9 @@ fun MainScreen(
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
                             CallManager.disconnect()
-                            isCallActive = false
+                            if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
+                                isCallActive = false
+                            }
                         }
                     },
                     isIncoming = if (isFakeCallActive) (fakeCallState == "RINGING") else (systemCallState == android.telecom.Call.STATE_RINGING),

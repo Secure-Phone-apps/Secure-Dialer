@@ -348,6 +348,11 @@ class MainActivity : ComponentActivity() {
             isAppAuthenticated.value = true
         }
 
+        if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false)) {
+            viewModel.isCallMinimized.value = false
+            isAppAuthenticated.value = true
+        }
+
         if (intent.getBooleanExtra("SHOW_CALL_LOG", false)) {
             viewModel.selectedTab.value = 1
         }

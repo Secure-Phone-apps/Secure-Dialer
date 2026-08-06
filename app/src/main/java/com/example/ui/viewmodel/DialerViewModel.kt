@@ -167,6 +167,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isLoadingPermissions = mutableStateOf(true)
 
     var isCallActive = mutableStateOf(false)
+    var isCallMinimized = mutableStateOf(false)
     var callingContactName = mutableStateOf("")
     var callingContactNumber = mutableStateOf("")
     var isDefaultDialer = mutableStateOf(false)

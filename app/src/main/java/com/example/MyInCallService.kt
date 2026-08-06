@@ -37,6 +37,17 @@ import kotlinx.coroutines.launch
 class MyInCallService : InCallService() {
     private val serviceScope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent != null) {
+            when (intent.action) {
+                ACTION_HANG_UP -> {
+                    CallManager.disconnect()
+                }
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
     override fun onDestroy() {
         serviceScope.cancel()
         super.onDestroy()
@@ -65,6 +76,8 @@ class MyInCallService : InCallService() {
         if (call.state == Call.STATE_RINGING) {
             showIncomingCallNotification(call)
             com.example.util.FlashLightManager.startFlashing(this)
+        } else if (call.state == Call.STATE_ACTIVE || call.state == Call.STATE_DIALING || call.state == Call.STATE_CONNECTING || call.state == Call.STATE_HOLDING) {
+            showActiveCallNotification(call)
         }
 
         // Register callback to track call status and show missed call notifications if applicable
@@ -82,7 +95,12 @@ class MyInCallService : InCallService() {
                     notificationManager.cancel(1)
                     com.example.util.FlashLightManager.stopFlashing(this@MyInCallService)
                 }
+                if (state == Call.STATE_ACTIVE || state == Call.STATE_DIALING || state == Call.STATE_CONNECTING || state == Call.STATE_HOLDING) {
+                    showActiveCallNotification(c)
+                }
                 if (state == Call.STATE_DISCONNECTED) {
+                    val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.cancel(3)
                     if (wasRinging) {
                         val causeCode = c.details?.disconnectCause?.code
                         if (causeCode != DisconnectCause.REJECTED &&
@@ -224,11 +242,82 @@ class MyInCallService : InCallService() {
         if (CallManager.calls.value.isEmpty()) {
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(1)
+            notificationManager.cancel(3)
         }
     }
 
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         super.onCallAudioStateChanged(audioState)
         CallManager.updateAudioState(audioState)
+    }
+
+    private fun showActiveCallNotification(call: Call) {
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "active_call_channel"
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Active Calls",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Ongoing active call controls"
+                setShowBadge(false)
+            }
+            nm.createNotificationChannel(channel)
+        }
+
+        val handle = call.details?.handle
+        val number = handle?.schemeSpecificPart ?: ""
+        val cnapName = call.details?.callerDisplayName
+        val contactName = if (number.isNotEmpty()) getContactNameFromNumber(this, number) else null
+        val savedCnap = if (number.isNotEmpty() && contactName == null && cnapName.isNullOrBlank()) {
+            getSavedCnapNameSync(this, number)
+        } else null
+        
+        val displayName = when {
+            contactName != null -> contactName
+            !cnapName.isNullOrBlank() -> cnapName
+            !savedCnap.isNullOrBlank() -> savedCnap
+            number.isNotEmpty() -> number
+            else -> "Unknown"
+        }
+
+        val returnIntent = Intent(this, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            putExtra("SHOW_CALL_SCREEN", true)
+        }
+        val returnPendingIntent = PendingIntent.getActivity(
+            this, 
+            200, 
+            returnIntent, 
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val hangUpIntent = Intent(this, MyInCallService::class.java).apply {
+            action = ACTION_HANG_UP
+        }
+        val hangUpPendingIntent = PendingIntent.getService(
+            this,
+            201,
+            hangUpIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val notification = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(android.R.drawable.sym_action_call)
+            .setContentTitle("Ongoing Call")
+            .setContentText("Call with $displayName is active")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .setContentIntent(returnPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Hang Up", hangUpPendingIntent)
+            .build()
+
+        nm.notify(3, notification)
+    }
+
+    companion object {
+        const val ACTION_HANG_UP = "com.example.ACTION_HANG_UP"
     }
 }
