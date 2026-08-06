@@ -131,6 +131,7 @@ fun SettingsPanel(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .consumeWindowInsets(paddingValues)
         ) {
             AnimatedContent(
                 targetState = activeTab,

@@ -179,7 +179,7 @@ fun ContactsTabContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 12.dp)
         ) {
             if (!hasPermission && !isLoading) {
                 Card(
@@ -268,7 +268,7 @@ fun ContactsTabContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 36.dp, bottom = 4.dp),
+                        .padding(end = 36.dp, bottom = 2.dp),
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -314,7 +314,7 @@ fun ContactsTabContent(
             } else {
                 LazyColumn(
                     state = listState,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.fillMaxSize().padding(end = 36.dp)
                 ) {
                     if (showOnlyFavorites) {
@@ -333,7 +333,7 @@ fun ContactsTabContent(
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+                                    modifier = Modifier.padding(start = 12.dp, top = 10.dp, bottom = 2.dp)
                                 )
                             }
                             ContactRow(
@@ -363,7 +363,7 @@ fun ContactsTabContent(
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp)
+                                        modifier = Modifier.padding(start = 12.dp, top = 10.dp, bottom = 2.dp)
                                     )
                                 }
                                 ContactRow(

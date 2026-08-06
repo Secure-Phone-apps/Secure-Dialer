@@ -100,14 +100,14 @@ fun RecentCallRow(
                 headlineContent = {
                     Column(
                         modifier = Modifier.offset(x = (-8).dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = if (record.name == "Unknown") stringResource(R.string.unknown) else record.name,
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium,
-                                lineHeight = 18.sp,
+                                lineHeight = 16.sp,
                                 color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
@@ -152,7 +152,7 @@ fun RecentCallRow(
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
-                            .size(40.dp),
+                            .size(36.dp),
                         shape = avatarShape,
                         color = record.avatarBg.copy(alpha = 0.8f)
                     ) {
@@ -219,10 +219,10 @@ fun RecentCallRow(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 12.dp)
+                        .padding(bottom = 8.dp)
                 ) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant
                     )

@@ -124,7 +124,7 @@ fun RecentsTabContent(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 12.dp)
             ) {
             if (!hasPermission && !isLoading) {
                 Card(
@@ -181,14 +181,14 @@ fun RecentsTabContent(
                 // 1. Call Log Summary Dashboard at the top
                 CallLogSummaryDashboard(
                     callRecords = callRecords,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    modifier = Modifier.padding(vertical = 4.dp)
                 )
 
                 // 2. Google Dialer style filter chips directly below the dashboard
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .padding(vertical = 4.dp)
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -233,7 +233,7 @@ fun RecentsTabContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 // 3. Consolidated Call Logs list or search results state
                 val query by viewModel.searchQuery
@@ -255,10 +255,10 @@ fun RecentsTabContent(
                     }
                 } else {
                     LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(vertical = 4.dp)
+                            .padding(vertical = 2.dp)
                     ) {
                         items(
                             items = consolidatedRecords,
