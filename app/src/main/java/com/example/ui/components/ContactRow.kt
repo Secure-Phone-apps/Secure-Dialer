@@ -102,9 +102,9 @@ fun ContactRow(
                     ) {
                         Text(
                             text = contact.name,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.Medium,
-                            lineHeight = 16.sp
+                            lineHeight = 18.sp
                         )
                         Text(
                             text = "${localizeContactLabel(contact.label)} • ${contact.number}",
@@ -119,7 +119,7 @@ fun ContactRow(
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
-                            .size(36.dp),
+                            .size(40.dp),
                         shape = avatarShape,
                         color = contact.avatarBg
                     ) {

@@ -2,7 +2,9 @@ package com.example
 
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
+import com.example.model.CallRecord
 import com.example.ui.viewmodel.DialerViewModel
+import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -51,5 +53,22 @@ class DialerViewModelTest {
     fun `dialpad input updates correctly`() {
         viewModel.dialpadInput.value = "123"
         assertEquals("123", viewModel.dialpadInput.value)
+    }
+
+    @Test
+    fun `inspect call logs dates`() {
+        val repo = com.example.DialerRepository(context)
+        kotlinx.coroutines.runBlocking {
+            repo.syncCallLogs()
+            val callLogs = repo.getAllCallHistoryFlow()
+            val firstList = callLogs.first()
+            println("DIALER_TEST_LOGS_COUNT: ${firstList.size}")
+            if (firstList.isNotEmpty()) {
+                val f = firstList.first()
+                val l = firstList.last()
+                println("FIRST_LOG_TIMESTAMP: ${f.timestamp}, timestampMs: ${f.timestampMs}")
+                println("LAST_LOG_TIMESTAMP: ${l.timestamp}, timestampMs: ${l.timestampMs}")
+            }
+        }
     }
 }

@@ -333,7 +333,7 @@ fun ContactsTabContent(
                                     style = MaterialTheme.typography.titleMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(start = 12.dp, top = 10.dp, bottom = 2.dp)
+                                    modifier = Modifier.padding(start = 10.dp, top = 8.dp, bottom = 2.dp)
                                 )
                             }
                             ContactRow(
@@ -363,7 +363,7 @@ fun ContactsTabContent(
                                         style = MaterialTheme.typography.titleMedium,
                                         color = MaterialTheme.colorScheme.primary,
                                         fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(start = 12.dp, top = 10.dp, bottom = 2.dp)
+                                        modifier = Modifier.padding(start = 10.dp, top = 8.dp, bottom = 2.dp)
                                     )
                                 }
                                 ContactRow(

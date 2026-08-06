@@ -181,14 +181,14 @@ fun RecentsTabContent(
                 // 1. Call Log Summary Dashboard at the top
                 CallLogSummaryDashboard(
                     callRecords = callRecords,
-                    modifier = Modifier.padding(vertical = 4.dp)
+                    modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
                 )
 
                 // 2. Google Dialer style filter chips directly below the dashboard
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(top = 2.dp, bottom = 2.dp)
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -232,8 +232,6 @@ fun RecentsTabContent(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(2.dp))
 
                 // 3. Consolidated Call Logs list or search results state
                 val query by viewModel.searchQuery

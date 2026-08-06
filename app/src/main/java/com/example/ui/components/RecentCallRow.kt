@@ -105,16 +105,16 @@ fun RecentCallRow(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = if (record.name == "Unknown") stringResource(R.string.unknown) else record.name,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Medium,
-                                lineHeight = 16.sp,
+                                lineHeight = 18.sp,
                                 color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.weight(1f, fill = false)
                             )
                             if (group.calls.size > 1) {
                                 Text(
                                     text = " (${group.calls.size})",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -152,7 +152,7 @@ fun RecentCallRow(
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
-                            .size(36.dp),
+                            .size(40.dp),
                         shape = avatarShape,
                         color = record.avatarBg.copy(alpha = 0.8f)
                     ) {

@@ -166,9 +166,7 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
     }
 
     try {
-        val queryUri = CallLog.Calls.CONTENT_URI.buildUpon()
-            .appendQueryParameter("limit", "200")
-            .build()
+        val queryUri = CallLog.Calls.CONTENT_URI
         context.contentResolver.query(
             queryUri,
             arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION),

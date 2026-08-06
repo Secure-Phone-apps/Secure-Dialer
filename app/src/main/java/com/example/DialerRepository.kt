@@ -205,7 +205,7 @@ class DialerRepository(rawContext: Context) {
             }
             
             val localCount = dao.getCallLogCount()
-            val expectedLocalCount = minOf(systemCount, 200)
+            val expectedLocalCount = systemCount
             
             val lastSyncedMaxId = prefs.getInt("last_synced_call_log_max_id", -1)
             val lastSyncedCount = prefs.getInt("last_synced_call_log_count", -1)
