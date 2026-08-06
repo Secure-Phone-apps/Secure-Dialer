@@ -226,7 +226,7 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
 
                 val pair = colors[Math.abs(name.hashCode()) % colors.size]
                 val photoUriVal = matchingContact?.photoUri ?: ""
-                logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, getInitials(name), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal))
+                logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, getInitials(name), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal, dateVal))
             }
         }
     } catch (e: SecurityException) {

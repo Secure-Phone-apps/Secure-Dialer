@@ -435,7 +435,8 @@ class DialerRepository(rawContext: Context) {
                 avatarBgValue = pair.first.value.toLong(),
                 avatarTextColorValue = pair.second.value.toLong(),
                 duration = durationSeconds,
-                hasVoicemail = false
+                hasVoicemail = false,
+                timestampMs = timestampMs
             )
             dao.insertCallLogs(listOf(record))
         } catch (e: Exception) {

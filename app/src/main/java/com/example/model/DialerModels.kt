@@ -62,7 +62,8 @@ data class CallRecord(
     val avatarTextColorValue: Long,
     val duration: Long,
     val hasVoicemail: Boolean,
-    val photoUri: String = ""
+    val photoUri: String = "",
+    val timestampMs: Long = 0L
 ) {
     @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
     @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())

@@ -96,74 +96,98 @@ fun CallLogSummaryDashboard(
         
         when (selectedRange) {
             SummaryTimeRange.TODAY -> {
-                callRecords.filter { it.timestamp.startsWith(todayPrefix) }
+                callRecords.filter { record ->
+                    if (record.timestampMs != 0L) {
+                        val calToday = java.util.Calendar.getInstance().apply {
+                            set(java.util.Calendar.HOUR_OF_DAY, 0)
+                            set(java.util.Calendar.MINUTE, 0)
+                            set(java.util.Calendar.SECOND, 0)
+                            set(java.util.Calendar.MILLISECOND, 0)
+                        }
+                        record.timestampMs >= calToday.timeInMillis
+                    } else {
+                        record.timestamp.startsWith(todayPrefix)
+                    }
+                }
             }
             SummaryTimeRange.WEEK -> {
-                val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
-                val calCurrent = java.util.Calendar.getInstance()
-                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
-                val currentMillis = calCurrent.timeInMillis
                 callRecords.filter { record ->
-                    try {
-                        val parsed = sdf.parse(record.timestamp)
-                        if (parsed != null) {
-                            val calParsed = java.util.Calendar.getInstance().apply { 
-                                time = parsed
-                                set(java.util.Calendar.YEAR, currentYear)
-                            }
-                            if (calParsed.timeInMillis > currentMillis) {
-                                calParsed.add(java.util.Calendar.YEAR, -1)
-                            }
-                            calParsed.timeInMillis >= startOfWeek
-                        } else false
-                    } catch (e: Exception) {
-                        false
+                    if (record.timestampMs != 0L) {
+                        record.timestampMs >= startOfWeek
+                    } else {
+                        try {
+                            val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
+                            val calCurrent = java.util.Calendar.getInstance()
+                            val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                            val currentMillis = calCurrent.timeInMillis
+                            val parsed = sdf.parse(record.timestamp)
+                            if (parsed != null) {
+                                val calParsed = java.util.Calendar.getInstance().apply { 
+                                    time = parsed
+                                    set(java.util.Calendar.YEAR, currentYear)
+                                }
+                                if (calParsed.timeInMillis > currentMillis) {
+                                    calParsed.add(java.util.Calendar.YEAR, -1)
+                                }
+                                calParsed.timeInMillis >= startOfWeek
+                            } else false
+                        } catch (e: Exception) {
+                            false
+                        }
                     }
                 }
             }
             SummaryTimeRange.MONTH -> {
-                val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
-                val calCurrent = java.util.Calendar.getInstance()
-                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
-                val currentMillis = calCurrent.timeInMillis
                 callRecords.filter { record ->
-                    try {
-                        val parsed = sdf.parse(record.timestamp)
-                        if (parsed != null) {
-                            val calParsed = java.util.Calendar.getInstance().apply { 
-                                time = parsed
-                                set(java.util.Calendar.YEAR, currentYear)
-                            }
-                            if (calParsed.timeInMillis > currentMillis) {
-                                calParsed.add(java.util.Calendar.YEAR, -1)
-                            }
-                            calParsed.timeInMillis >= startOfMonth
-                        } else false
-                    } catch (e: Exception) {
-                        false
+                    if (record.timestampMs != 0L) {
+                        record.timestampMs >= startOfMonth
+                    } else {
+                        try {
+                            val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
+                            val calCurrent = java.util.Calendar.getInstance()
+                            val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                            val currentMillis = calCurrent.timeInMillis
+                            val parsed = sdf.parse(record.timestamp)
+                            if (parsed != null) {
+                                val calParsed = java.util.Calendar.getInstance().apply { 
+                                    time = parsed
+                                    set(java.util.Calendar.YEAR, currentYear)
+                                }
+                                if (calParsed.timeInMillis > currentMillis) {
+                                    calParsed.add(java.util.Calendar.YEAR, -1)
+                                }
+                                calParsed.timeInMillis >= startOfMonth
+                            } else false
+                        } catch (e: Exception) {
+                            false
+                        }
                     }
                 }
             }
             SummaryTimeRange.YEAR -> {
-                val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
-                val calCurrent = java.util.Calendar.getInstance()
-                val currentYear = calCurrent.get(java.util.Calendar.YEAR)
-                val currentMillis = calCurrent.timeInMillis
                 callRecords.filter { record ->
-                    try {
-                        val parsed = sdf.parse(record.timestamp)
-                        if (parsed != null) {
-                            val calParsed = java.util.Calendar.getInstance().apply { 
-                                time = parsed
-                                set(java.util.Calendar.YEAR, currentYear)
-                            }
-                            if (calParsed.timeInMillis > currentMillis) {
-                                calParsed.add(java.util.Calendar.YEAR, -1)
-                            }
-                            calParsed.timeInMillis >= startOfYear
-                        } else false
-                    } catch (e: Exception) {
-                        false
+                    if (record.timestampMs != 0L) {
+                        record.timestampMs >= startOfYear
+                    } else {
+                        try {
+                            val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
+                            val calCurrent = java.util.Calendar.getInstance()
+                            val currentYear = calCurrent.get(java.util.Calendar.YEAR)
+                            val currentMillis = calCurrent.timeInMillis
+                            val parsed = sdf.parse(record.timestamp)
+                            if (parsed != null) {
+                                val calParsed = java.util.Calendar.getInstance().apply { 
+                                    time = parsed
+                                    set(java.util.Calendar.YEAR, currentYear)
+                                }
+                                if (calParsed.timeInMillis > currentMillis) {
+                                    calParsed.add(java.util.Calendar.YEAR, -1)
+                                }
+                                calParsed.timeInMillis >= startOfYear
+                            } else false
+                        } catch (e: Exception) {
+                            false
+                        }
                     }
                 }
             }
