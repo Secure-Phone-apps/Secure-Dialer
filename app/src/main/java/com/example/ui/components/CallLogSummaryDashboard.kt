@@ -50,6 +50,9 @@ import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.getMissedCallColor
+import com.example.ui.theme.getDialedCallColor
+import com.example.ui.theme.getReceivedCallColor
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -313,7 +316,7 @@ fun CallLogSummaryDashboard(
                             value = missedCallsCount.toString(),
                             label = stringResource(R.string.filter_missed),
                             icon = Icons.Default.CallMissed,
-                            iconColor = MaterialTheme.colorScheme.error,
+                            iconColor = getMissedCallColor(),
                             modifier = Modifier.weight(1f)
                         )
 
@@ -321,7 +324,7 @@ fun CallLogSummaryDashboard(
                             value = outgoingCallsCount.toString(),
                             label = stringResource(R.string.filter_dialed),
                             icon = Icons.AutoMirrored.Filled.CallMade,
-                            iconColor = Color(0xFF2E7D32),
+                            iconColor = getDialedCallColor(),
                             modifier = Modifier.weight(1f)
                         )
 
@@ -329,7 +332,7 @@ fun CallLogSummaryDashboard(
                             value = receivedCallsCount.toString(),
                             label = stringResource(R.string.filter_received),
                             icon = Icons.AutoMirrored.Filled.CallReceived,
-                            iconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            iconColor = getReceivedCallColor(),
                             modifier = Modifier.weight(1f)
                         )
                     }

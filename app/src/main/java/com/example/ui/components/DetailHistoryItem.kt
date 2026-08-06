@@ -36,13 +36,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.model.CallRecord
 import com.example.model.CallType
+import com.example.ui.theme.getMissedCallColor
+import com.example.ui.theme.getDialedCallColor
+import com.example.ui.theme.getReceivedCallColor
 
 @Composable
 fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
     val (icon, color) = when (record.type) {
-        CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-        CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF2E7D32)
-        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.primary
+        CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
+        CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
+        CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
     }
     
     Card(
@@ -72,11 +75,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
             Surface(
                 modifier = Modifier.size(32.dp),
                 shape = RoundedCornerShape(16.dp),
-                color = when (record.type) {
-                    CallType.MISSED -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.6f)
-                    CallType.OUTGOING -> Color(0xFFE8F5E9)
-                    CallType.INCOMING -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
-                }
+                color = color.copy(alpha = 0.15f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(

@@ -307,8 +307,8 @@ fun CallHistoryDetailsScreen(
                     DetailActionItem(
                         icon = Icons.Default.Block,
                         label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
-                        containerColor = if (isBlocked) Color(0xFFE8F5E9) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
-                        contentColor = if (isBlocked) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                        containerColor = if (isBlocked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                        contentColor = if (isBlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         onClick = {
                             if (isBlocked) {
                                 viewModel.removeBlockedNumber(number)

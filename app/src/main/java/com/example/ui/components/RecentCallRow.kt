@@ -53,6 +53,9 @@ import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.getMissedCallColor
+import com.example.ui.theme.getDialedCallColor
+import com.example.ui.theme.getReceivedCallColor
 import com.example.ui.viewmodel.DialerViewModel
 
 @Composable
@@ -121,9 +124,9 @@ fun RecentCallRow(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             val (icon, iconColor) = when (record.type) {
-                                CallType.MISSED -> Icons.Default.CallMissed to MaterialTheme.colorScheme.error
-                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to Color(0xFF2E7D32)
-                                CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to MaterialTheme.colorScheme.onSurfaceVariant
+                                CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
+                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
+                                CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
                             }
                             Icon(
                                 imageVector = icon,
@@ -254,7 +257,7 @@ fun RecentCallRow(
                         RecentActionItem(
                             icon = Icons.Default.Block,
                             label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
-                            tint = if (isBlocked) Color(0xFF2E7D32) else MaterialTheme.colorScheme.error,
+                            tint = if (isBlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                             onClick = {
                                 if (isBlocked) {
                                     viewModel.removeBlockedNumber(record.number)

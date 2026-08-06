@@ -76,6 +76,9 @@ import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.model.CallType
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.getMissedCallColor
+import com.example.ui.theme.getDialedCallColor
+import com.example.ui.theme.getReceivedCallColor
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Schedule
@@ -200,8 +203,9 @@ fun RecentsTabContent(
                     filters.forEach { (filter, label, icon) ->
                         val selected = currentFilter == filter
                         val iconTint = when (filter) {
-                            RecentsFilter.MISSED -> MaterialTheme.colorScheme.error
-                            RecentsFilter.DIALED -> Color(0xFF2E7D32)
+                            RecentsFilter.MISSED -> getMissedCallColor()
+                            RecentsFilter.DIALED -> getDialedCallColor()
+                            RecentsFilter.RECEIVED -> getReceivedCallColor()
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                         }
                         FilterChip(
@@ -222,7 +226,8 @@ fun RecentsTabContent(
                                 labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                selectedLeadingIconColor = iconTint
+                                selectedLeadingIconColor = iconTint,
+                                iconColor = iconTint
                             )
                         )
                     }

@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
@@ -89,6 +90,24 @@ private val LightColorScheme =
     onSurfaceVariant = OnSurfaceVariantLight,
     outline = OutlineLight
   )
+
+@Composable
+fun getMissedCallColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFFFF6B6B) else Color(0xFFD32F2F)
+}
+
+@Composable
+fun getDialedCallColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFFA0AAB0) else Color(0xFF607D8B)
+}
+
+@Composable
+fun getReceivedCallColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
+}
 
 fun parseHexColor(hex: String, fallback: Color = Color(0xFF68A500)): Color {
     return try {
@@ -159,6 +178,178 @@ fun getColorSchemeForTheme(
     }
 
     return when (themeColor) {
+        "burgundy_plum" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFFFDA4AF),
+                    onPrimary = Color(0xFF5F0017),
+                    primaryContainer = Color(0xFF800020),
+                    onPrimaryContainer = Color(0xFFFFD9E2),
+                    secondary = Color(0xFFE35D7A),
+                    onSecondary = Color(0xFF490011),
+                    secondaryContainer = Color(0xFF6E0D25),
+                    onSecondaryContainer = Color(0xFFFFD9E2),
+                    tertiary = Color(0xFFF89BB0),
+                    onTertiary = Color(0xFF5F0017),
+                    tertiaryContainer = Color(0xFF800020),
+                    onTertiaryContainer = Color(0xFFFFD9E2),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF180509),
+                    surfaceVariant = Color(0xFF2E0911),
+                    onSurface = Color(0xFFFFF0F1),
+                    outline = Color(0xFF800020)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF880D1E),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFFFF1F2),
+                    onPrimaryContainer = Color(0xFF4C0519),
+                    secondary = Color(0xFF9F1239),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFFFE4E6),
+                    onSecondaryContainer = Color(0xFF4C0519),
+                    tertiary = Color(0xFF4C0519),
+                    onTertiary = Color(0xFFFFFFFF),
+                    tertiaryContainer = Color(0xFFFFE4E6),
+                    onTertiaryContainer = Color(0xFF4C0519),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFAFAFA),
+                    surfaceVariant = Color(0xFFFFF1F2),
+                    onSurface = Color(0xFF1C1917),
+                    outline = Color(0xFFFB7185)
+                )
+            }
+        }
+        "oceanic_sapphire" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFF60A5FA),
+                    onPrimary = Color(0xFF172554),
+                    primaryContainer = Color(0xFF1E3A8A),
+                    onPrimaryContainer = Color(0xFFDBEAFE),
+                    secondary = Color(0xFF3B82F6),
+                    onSecondary = Color(0xFF172554),
+                    secondaryContainer = Color(0xFF1E40AF),
+                    onSecondaryContainer = Color(0xFFDBEAFE),
+                    tertiary = Color(0xFF93C5FD),
+                    onTertiary = Color(0xFF172554),
+                    tertiaryContainer = Color(0xFF1E3A8A),
+                    onTertiaryContainer = Color(0xFFDBEAFE),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF030D1B),
+                    surfaceVariant = Color(0xFF0B1931),
+                    onSurface = Color(0xFFEFF6FF),
+                    outline = Color(0xFF3B82F6)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF1E3A8A),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFEFF6FF),
+                    onPrimaryContainer = Color(0xFF172554),
+                    secondary = Color(0xFF3B82F6),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFDBEAFE),
+                    onSecondaryContainer = Color(0xFF1E3A8A),
+                    tertiary = Color(0xFF1D4ED8),
+                    onTertiary = Color(0xFFFFFFFF),
+                    tertiaryContainer = Color(0xFFDBEAFE),
+                    onTertiaryContainer = Color(0xFF172554),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFAFAFA),
+                    surfaceVariant = Color(0xFFEFF6FF),
+                    onSurface = Color(0xFF0F172A),
+                    outline = Color(0xFF93C5FD)
+                )
+            }
+        }
+        "burnt_terracotta" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFFF97316),
+                    onPrimary = Color(0xFF431407),
+                    primaryContainer = Color(0xFF7C2D12),
+                    onPrimaryContainer = Color(0xFFFFEDD5),
+                    secondary = Color(0xFFEA580C),
+                    onSecondary = Color(0xFF431407),
+                    secondaryContainer = Color(0xFF9A3412),
+                    onSecondaryContainer = Color(0xFFFFE4D6),
+                    tertiary = Color(0xFFFDBA74),
+                    onTertiary = Color(0xFF431407),
+                    tertiaryContainer = Color(0xFF7C2D12),
+                    onTertiaryContainer = Color(0xFFFFEDD5),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF150A05),
+                    surfaceVariant = Color(0xFF2C140A),
+                    onSurface = Color(0xFFFFF7ED),
+                    outline = Color(0xFFEA580C)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFFC2410C),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFFFF7ED),
+                    onPrimaryContainer = Color(0xFF431407),
+                    secondary = Color(0xFFEA580C),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFFFEDD5),
+                    onSecondaryContainer = Color(0xFF431407),
+                    tertiary = Color(0xFF9A3412),
+                    onTertiary = Color(0xFFFFFFFF),
+                    tertiaryContainer = Color(0xFFFFEDD5),
+                    onTertiaryContainer = Color(0xFF431407),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFAFAFA),
+                    surfaceVariant = Color(0xFFFFF7ED),
+                    onSurface = Color(0xFF1C1917),
+                    outline = Color(0xFFFDBA74)
+                )
+            }
+        }
+        "sleek_slate" -> {
+            if (darkTheme) {
+                darkColorScheme(
+                    primary = Color(0xFF94A3B8),
+                    onPrimary = Color(0xFF0F172A),
+                    primaryContainer = Color(0xFF1E293B),
+                    onPrimaryContainer = Color(0xFFF1F5F9),
+                    secondary = Color(0xFF64748B),
+                    onSecondary = Color(0xFF0F172A),
+                    secondaryContainer = Color(0xFF334155),
+                    onSecondaryContainer = Color(0xFFE2E8F0),
+                    tertiary = Color(0xFFCBD5E1),
+                    onTertiary = Color(0xFF0F172A),
+                    tertiaryContainer = Color(0xFF1E293B),
+                    onTertiaryContainer = Color(0xFFF1F5F9),
+                    background = Color(0xFF000000),
+                    surface = Color(0xFF0A0F1D),
+                    surfaceVariant = Color(0xFF192337),
+                    onSurface = Color(0xFFF8FAFC),
+                    outline = Color(0xFF475569)
+                )
+            } else {
+                lightColorScheme(
+                    primary = Color(0xFF475569),
+                    onPrimary = Color(0xFFFFFFFF),
+                    primaryContainer = Color(0xFFF1F5F9),
+                    onPrimaryContainer = Color(0xFF0F172A),
+                    secondary = Color(0xFF64748B),
+                    onSecondary = Color(0xFFFFFFFF),
+                    secondaryContainer = Color(0xFFE2E8F0),
+                    onSecondaryContainer = Color(0xFF1E293B),
+                    tertiary = Color(0xFF334155),
+                    onTertiary = Color(0xFFFFFFFF),
+                    tertiaryContainer = Color(0xFFE2E8F0),
+                    onTertiaryContainer = Color(0xFF0F172A),
+                    background = Color(0xFFFFFFFF),
+                    surface = Color(0xFFFAFAFA),
+                    surfaceVariant = Color(0xFFF1F5F9),
+                    onSurface = Color(0xFF0F172A),
+                    outline = Color(0xFFCBD5E1)
+                )
+            }
+        }
         "emerald_green" -> {
             if (darkTheme) {
                 darkColorScheme(

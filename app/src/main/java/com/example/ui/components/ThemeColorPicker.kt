@@ -85,14 +85,29 @@ fun ThemeColorPicker(
             colors = listOf(Color(0xFFE65100), Color(0xFFF59E0B), Color(0xFF7C2D12), Color(0xFFFFEDD5))
         ),
         PaletteSeedItem(
+            key = "burgundy_plum",
+            name = "Burgundy Plum",
+            colors = listOf(Color(0xFF880D1E), Color(0xFF9F1239), Color(0xFF4C0519), Color(0xFFFFF1F2))
+        ),
+        PaletteSeedItem(
+            key = "oceanic_sapphire",
+            name = "Oceanic Sapphire",
+            colors = listOf(Color(0xFF1E3A8A), Color(0xFF3B82F6), Color(0xFF172554), Color(0xFFEFF6FF))
+        ),
+        PaletteSeedItem(
+            key = "burnt_terracotta",
+            name = "Burnt Terracotta",
+            colors = listOf(Color(0xFFC2410C), Color(0xFFEA580C), Color(0xFF431407), Color(0xFFFFF7ED))
+        ),
+        PaletteSeedItem(
+            key = "sleek_slate",
+            name = "Sleek Slate",
+            colors = listOf(Color(0xFF475569), Color(0xFF64748B), Color(0xFF1E293B), Color(0xFFF1F5F9))
+        ),
+        PaletteSeedItem(
             key = "rose_magenta",
             name = "Rose Magenta",
             colors = listOf(Color(0xFFC2185B), Color(0xFFF43F5E), Color(0xFF881337), Color(0xFFFFE4E6))
-        ),
-        PaletteSeedItem(
-            key = "emerald_green",
-            name = "Emerald Green",
-            colors = listOf(Color(0xFF10B981), Color(0xFF34D399), Color(0xFF065F46), Color(0xFFD1FAE5))
         ),
         PaletteSeedItem(
             key = "sky_cyan",
@@ -155,13 +170,13 @@ fun ThemeColorPicker(
         }
 
         // Grid of pure Squircle Swatches
-        val chunkedPalettes = palettes.chunked(4)
+        val chunkedPalettes = palettes.chunked(6)
         chunkedPalettes.forEachIndexed { rowIndex, rowItems ->
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = if (rowIndex < chunkedPalettes.size - 1) 12.dp else 0.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                    .padding(bottom = if (rowIndex < chunkedPalettes.size - 1) 4.dp else 0.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 rowItems.forEach { item ->
@@ -174,9 +189,9 @@ fun ThemeColorPicker(
 
                     Box(
                         modifier = Modifier
-                            .size(60.dp)
+                            .size(52.dp)
                             .scale(cardScale)
-                            .clip(RoundedCornerShape(18.dp))
+                            .clip(RoundedCornerShape(14.dp))
                             .background(
                                 if (isSelected)
                                     MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
@@ -189,7 +204,7 @@ fun ThemeColorPicker(
                                     MaterialTheme.colorScheme.primary
                                 else
                                     MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-                                shape = RoundedCornerShape(18.dp)
+                                shape = RoundedCornerShape(14.dp)
                             )
                             .clickable {
                                 onColorSelected(item.key)
@@ -198,14 +213,14 @@ fun ThemeColorPicker(
                                     showCustomHexDialog = true
                                 }
                             }
-                            .padding(4.dp),
+                            .padding(3.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         // 4-quadrant squircle color matrix
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .clip(RoundedCornerShape(14.dp))
+                                .clip(RoundedCornerShape(10.dp))
                         ) {
                             Column(modifier = Modifier.fillMaxSize()) {
                                 Row(modifier = Modifier.weight(1f).fillMaxWidth()) {
