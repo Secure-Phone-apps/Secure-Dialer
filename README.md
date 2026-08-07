@@ -111,13 +111,13 @@ To work as your default phone application, Secure Dialer requires these standard
 
 When you download a release from our Releases page, you will see several APK variants. Here is exactly which file is for which device:
 
-| APK File Name | Target Device & Architecture | Typical Size |
-| :--- | :--- | :--- |
-| **`app-arm64-v8a-release.apk`** | **Modern 64-bit Android Phones** (Samsung Galaxy, Google Pixel, OnePlus, Xiaomi, Motorola, etc. manufactured in the last 6+ years). **Recommended for 95% of users.** | ~7.27 MB |
-| **`app-armeabi-v7a-release.apk`** | **Older 32-bit Android Devices** & legacy budget phones. | ~5.95 MB |
-| **`app-x86-release.apk`** | **32-bit Emulators** & Intel-based Android tablets/Chromebooks. | ~7.16 MB |
-| **`app-x86_64-release.apk`** | **64-bit Emulators** & PC environments (Windows Subsystem for Android / ChromeOS). | ~7.65 MB |
-| **`secure-dialer-v1.3.0.apk`** (or **`app-universal-release.apk`**) | **Universal APK** containing binaries for *all* architectures combined into a single file. | ~16.7 MB |
+| APK File Name | Target Device & Architecture |
+| :--- | :--- |
+| **`app-arm64-v8a-release.apk`** | **Modern 64-bit Android Phones** (Samsung Galaxy, Google Pixel, OnePlus, Xiaomi, Motorola, etc. manufactured in the last 6+ years). **Recommended for 95% of users.** |
+| **`app-armeabi-v7a-release.apk`** | **Older 32-bit Android Devices** & legacy budget phones. |
+| **`app-x86-release.apk`** | **32-bit Emulators** & Intel-based Android tablets/Chromebooks. |
+| **`app-x86_64-release.apk`** | **64-bit Emulators** & PC environments (Windows Subsystem for Android / ChromeOS). |
+| **`secure-dialer-v1.3.0.apk`** (or **`app-universal-release.apk`**) | **Universal APK** containing binaries for *all* architectures combined into a single file. |
 
 
 ---
