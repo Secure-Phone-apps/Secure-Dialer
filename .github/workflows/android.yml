@@ -35,14 +35,14 @@ jobs:
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
         fi
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      uses: gradle/actions/setup-gradle@v4
     - name: Build Debug APK
       run: gradle :app:assembleDebug
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: app/build/outputs/apk/debug/**/*.apk
 
   build-release:
     if: github.event_name == 'workflow_dispatch'
@@ -65,7 +65,7 @@ jobs:
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > my-upload-key.jks
         fi
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v3
+      uses: gradle/actions/setup-gradle@v4
     - name: Build Release APK
       env:
         KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -75,13 +75,17 @@ jobs:
       run: gradle :app:assembleRelease
     - name: Rename APK
       run: |
-        if [ -f app/build/outputs/apk/release/app-universal-release.apk ]; then
-          cp app/build/outputs/apk/release/app-universal-release.apk app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
-        elif [ -f app/build/outputs/apk/release/app-release.apk ]; then
-          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
+        mkdir -p app/build/outputs/apk/release/combined
+        UNIVERSAL_APK=$(find app/build/outputs/apk/release -name "*universal*release*.apk" | head -n 1)
+        if [ -n "$UNIVERSAL_APK" ]; then
+          cp "$UNIVERSAL_APK" app/build/outputs/apk/release/combined/secure-dialer-${{ github.event.inputs.release_version }}.apk
         else
-          cp app/build/outputs/apk/release/*.apk app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
+          ANY_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -n "$ANY_APK" ]; then
+            cp "$ANY_APK" app/build/outputs/apk/release/combined/secure-dialer-${{ github.event.inputs.release_version }}.apk
+          fi
         fi
+        find app/build/outputs/apk/release -name "*.apk" -exec cp {} app/build/outputs/apk/release/combined/ \;
     - name: Extract Release Notes
       run: |
         # Extract the latest entry from CHANGELOG.md (everything between the first and second H2 headers)
@@ -98,6 +102,5 @@ jobs:
         body_path: release_notes.md
         generate_release_notes: false
         files: |
-          app/build/outputs/apk/release/secure-dialer-${{ github.event.inputs.release_version }}.apk
-          app/build/outputs/apk/release/*.apk
+          app/build/outputs/apk/release/combined/*.apk
 
