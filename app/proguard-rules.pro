@@ -20,6 +20,18 @@
 -dontwarn androidx.room.**
 -dontwarn androidx.sqlite.**
 
+# SQLCipher Database Encryption Rules
+-keep class net.sqlcipher.** { *; }
+-keepclassmembers class net.sqlcipher.** { *; }
+-keep class * extends net.sqlcipher.database.SQLiteOpenHelper { *; }
+-keep class net.sqlcipher.database.SQLiteDatabase {
+    native <methods>;
+}
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+-dontwarn net.sqlcipher.**
+
 # 3. Coil Image Loader
 -keep class coil.** { *; }
 -dontwarn coil.**
