@@ -113,11 +113,11 @@ When you download a release from our Releases page, you will see several APK var
 
 | APK File Name | Target Device & Architecture |
 | :--- | :--- |
-| **`app-arm64-v8a-release.apk`** | **Modern 64-bit Android Phones** (Samsung Galaxy, Google Pixel, OnePlus, Xiaomi, Motorola, etc. manufactured in the last 6+ years). **Recommended for 95% of users.** |
-| **`app-armeabi-v7a-release.apk`** | **Older 32-bit Android Devices** & legacy budget phones. |
-| **`app-x86-release.apk`** | **32-bit Emulators** & Intel-based Android tablets/Chromebooks. |
-| **`app-x86_64-release.apk`** | **64-bit Emulators** & PC environments (Windows Subsystem for Android / ChromeOS). |
-| **`secure-dialer-v1.3.0.apk`** (or **`app-universal-release.apk`**) | **Universal APK** containing binaries for *all* architectures combined into a single file. |
+| **`secure-dialer-v1.3.0-arm64-v8a.apk`** | **Modern 64-bit Android Phones** (Samsung Galaxy, Google Pixel, OnePlus, Xiaomi, Motorola, etc. manufactured in the last 6+ years). **Recommended for 95% of users.** |
+| **`secure-dialer-v1.3.0-armeabi-v7a.apk`** | **Older 32-bit Android Devices** & legacy budget phones. |
+| **`secure-dialer-v1.3.0-x86.apk`** | **32-bit Emulators** & Intel-based Android tablets/Chromebooks. |
+| **`secure-dialer-v1.3.0-x86_64.apk`** | **64-bit Emulators** & PC environments (Windows Subsystem for Android / ChromeOS). |
+| **`secure-dialer-v1.3.0-universal.apk`** | **Universal APK** containing binaries for *all* architectures combined into a single file. |
 
 
 ---
