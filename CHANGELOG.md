@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.3.0] - 2026-08-06
+
+### Performance & Build Architecture
+- **ABI Split Support**: Configured multi-architecture APK splits (`arm64-v8a`, `armeabi-v7a`, `x86`, `x86_64`) to automatically generate individual, lightweight, highly optimized binaries per CPU architecture. This optimizes run speeds and significantly reduces the installed app footprint on user devices.
+
+### Navigation & Gestures
+- **System Back-Swipe Navigation Fixes**: Integrated Compose `BackHandler` hooks across sub-settings screens, call detail logs, and active call views. Swiping back or using the system back button now correctly and gracefully steps backward in the app hierarchy rather than exiting the application prematurely.
+
+### Visual Contrast & Theme Ergonomics
+- **Contrast-Enhanced Calling Buttons**: Color-coded call actions with context-aware, highly visible greens and reds. The Call and Answer buttons now stand out in a polished theme-friendly green, while Hang Up and Decline buttons are styled in a crisp, recognizable red. 
+- **Dynamic Theme Adaptive System**: Engineered the button colors to dynamically adapt their luminance and contrast based on the background color state, keeping the buttons perfectly readable and aesthetically aligned across light, dark, and custom dynamic theme configurations.
+
 ## [1.2.0] - 2026-07-25
 
 ### Design & Material 3 Expressive
