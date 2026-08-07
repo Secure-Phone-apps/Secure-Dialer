@@ -14,6 +14,7 @@ on:
 
 env:
   ACTIONS_AUDIT_NODE_VERSION: 'false'
+  ACTIONS_SILENCE_DEPRECATED_NODE_VERSION_WARNING: 'true'
 
 jobs:
   build-debug:
@@ -73,18 +74,34 @@ jobs:
         KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
       run: gradle :app:assembleRelease
-    - name: Rename APK
+    - name: Rename APKs with Architecture Tags
       run: |
         mkdir -p app/build/outputs/apk/release/combined
-        UNIVERSAL_APK=$(find app/build/outputs/apk/release -name "*universal*release*.apk" | head -n 1)
-        if [ -n "$UNIVERSAL_APK" ]; then
-          cp "$UNIVERSAL_APK" app/build/outputs/apk/release/combined/secure-dialer-${{ github.event.inputs.release_version }}.apk
-        else
-          ANY_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          if [ -n "$ANY_APK" ]; then
-            cp "$ANY_APK" app/build/outputs/apk/release/combined/secure-dialer-${{ github.event.inputs.release_version }}.apk
-          fi
+        VERSION="${{ github.event.inputs.release_version }}"
+        if [ -z "$VERSION" ]; then
+          VERSION="1.3.0"
         fi
+        
+        # Explicitly tag each APK with its architecture/ABI so Obtanium detects multiple architectures and prompts the user
+        for apk in $(find app/build/outputs/apk/release -name "*.apk"); do
+          if [ -f "$apk" ]; then
+            filename=$(basename "$apk")
+            if echo "$filename" | grep -q "arm64-v8a"; then
+              cp "$apk" "app/build/outputs/apk/release/combined/secure-dialer-${VERSION}-arm64-v8a.apk"
+            elif echo "$filename" | grep -q "armeabi-v7a"; then
+              cp "$apk" "app/build/outputs/apk/release/combined/secure-dialer-${VERSION}-armeabi-v7a.apk"
+            elif echo "$filename" | grep -q "x86_64"; then
+              cp "$apk" "app/build/outputs/apk/release/combined/secure-dialer-${VERSION}-x86_64.apk"
+            elif echo "$filename" | grep -q "x86"; then
+              cp "$apk" "app/build/outputs/apk/release/combined/secure-dialer-${VERSION}-x86.apk"
+            elif echo "$filename" | grep -q "universal"; then
+              cp "$apk" "app/build/outputs/apk/release/combined/secure-dialer-${VERSION}-universal.apk"
+            else
+              cp "$apk" "app/build/outputs/apk/release/combined/secure-dialer-${VERSION}.apk"
+            fi
+          fi
+        done
+        # Also copy original APKs
         find app/build/outputs/apk/release -name "*.apk" -exec cp {} app/build/outputs/apk/release/combined/ \;
     - name: Extract Release Notes
       run: |
