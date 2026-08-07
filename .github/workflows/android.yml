@@ -101,8 +101,6 @@ jobs:
             fi
           fi
         done
-        # Also copy original APKs
-        find app/build/outputs/apk/release -name "*.apk" -exec cp {} app/build/outputs/apk/release/combined/ \;
     - name: Extract Release Notes
       run: |
         # Extract the latest entry from CHANGELOG.md (everything between the first and second H2 headers)
