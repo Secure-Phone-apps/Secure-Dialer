@@ -98,6 +98,30 @@ fun getMissedCallColor(): Color {
 }
 
 @Composable
+fun getCallGreenColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFF34D399) else Color(0xFF059669)
+}
+
+@Composable
+fun getOnCallGreenColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFF003822) else Color(0xFFFFFFFF)
+}
+
+@Composable
+fun getDeclineRedColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFFF43F5E) else Color(0xFFE11D48)
+}
+
+@Composable
+fun getOnDeclineRedColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFF4C0519) else Color(0xFFFFFFFF)
+}
+
+@Composable
 fun getDialedCallColor(): Color {
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     return if (isDark) Color(0xFFA0AAB0) else Color(0xFF607D8B)

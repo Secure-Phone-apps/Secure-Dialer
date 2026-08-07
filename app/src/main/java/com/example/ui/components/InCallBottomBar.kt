@@ -98,8 +98,8 @@ fun InCallBottomBar(
                         onAnswer()
                     },
                     interactionSource = answerInteractionSource,
-                    color = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    color = com.example.ui.theme.getCallGreenColor(),
+                    contentColor = com.example.ui.theme.getOnCallGreenColor(),
                     shape = buttonShape,
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
@@ -145,8 +145,8 @@ fun InCallBottomBar(
                         onHangUp()
                     },
                     interactionSource = hangUpInteractionSource,
-                    color = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
+                    color = com.example.ui.theme.getDeclineRedColor(),
+                    contentColor = com.example.ui.theme.getOnDeclineRedColor(),
                     shape = buttonShape,
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
@@ -192,8 +192,8 @@ fun InCallBottomBar(
                         onHangUp()
                     },
                     interactionSource = hangUpInteractionSource,
-                    color = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError,
+                    color = com.example.ui.theme.getDeclineRedColor(),
+                    contentColor = com.example.ui.theme.getOnDeclineRedColor(),
                     shape = buttonShape,
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,

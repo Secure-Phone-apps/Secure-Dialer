@@ -206,7 +206,7 @@ fun DialpadTabContent(
                                             Icon(
                                                 imageVector = Icons.Default.Call,
                                                 contentDescription = "Call",
-                                                tint = MaterialTheme.colorScheme.primary,
+                                                tint = com.example.ui.theme.getCallGreenColor(),
                                                 modifier = Modifier.size(20.dp)
                                             )
                                         }
@@ -385,8 +385,8 @@ fun DialpadTabContent(
                     onCallClick(inputValue)
                 },
                 shape = actionButtonShape,
-                color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                color = com.example.ui.theme.getCallGreenColor(),
+                contentColor = com.example.ui.theme.getOnCallGreenColor(),
                 modifier = Modifier
                     .weight(1f)
                     .height(60.dp)

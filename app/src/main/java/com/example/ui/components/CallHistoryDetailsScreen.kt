@@ -93,6 +93,8 @@ fun CallHistoryDetailsScreen(
     onCallClick: (CallRecord) -> Unit,
     onBack: () -> Unit
 ) {
+    androidx.activity.compose.BackHandler(enabled = true, onBack = onBack)
+
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     

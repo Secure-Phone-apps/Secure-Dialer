@@ -86,6 +86,10 @@ fun ActiveCallScreen(
     onFakeAnswer: () -> Unit = {},
     onFakeHangUp: () -> Unit = {}
 ) {
+    androidx.activity.compose.BackHandler(enabled = true) {
+        onMinimize?.invoke()
+    }
+
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val activeStartTimestamp by CallManager.activeStartTimestamp.collectAsStateWithLifecycle()

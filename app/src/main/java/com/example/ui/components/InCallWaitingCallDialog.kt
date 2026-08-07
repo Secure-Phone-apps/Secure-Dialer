@@ -152,8 +152,8 @@ fun InCallWaitingCallDialog(
                 },
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = com.example.ui.theme.getCallGreenColor(),
+                    contentColor = com.example.ui.theme.getOnCallGreenColor()
                 )
             ) {
                 Text(stringResource(R.string.btn_answer_hold), fontWeight = FontWeight.Bold)
@@ -171,8 +171,8 @@ fun InCallWaitingCallDialog(
                 },
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
+                    containerColor = com.example.ui.theme.getDeclineRedColor(),
+                    contentColor = com.example.ui.theme.getOnDeclineRedColor()
                 )
             ) {
                 Text(stringResource(R.string.btn_decline), fontWeight = FontWeight.Bold)

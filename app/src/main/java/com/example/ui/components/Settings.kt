@@ -77,6 +77,14 @@ fun SettingsPanel(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
 
+    androidx.activity.compose.BackHandler(enabled = true) {
+        if (activeTab != 0) {
+            activeTab = 0
+        } else {
+            onClose()
+        }
+    }
+
     val isExpressive = LocalM3Expressive.current
     val cardBgColor = if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
