@@ -89,7 +89,6 @@
             <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600 dark:text-slate-300">
                 <a href="#why-us" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Why Us</a>
                 <a href="#screenshots" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Screenshots</a>
-                <a href="#t9-simulator" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Interactive T9</a>
                 <a href="#features" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Features</a>
                 <a href="#permissions" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Permissions</a>
                 <a href="#setup" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Setup</a>
@@ -245,7 +244,7 @@
     </section>
 
     <!-- App Screenshots / Showcase Section -->
-    <section id="screenshots" class="py-24 overflow-hidden">
+    <section id="screenshots" class="py-24 overflow-hidden bg-slate-100/50 dark:bg-darkbg-900/30 transition-colors">
         <div class="max-w-7xl mx-auto px-6">
             <div class="text-center max-w-3xl mx-auto mb-16 space-y-4">
                 <span class="text-sm font-display font-extrabold text-brand-500 uppercase tracking-widest">Interface Showcase</span>
@@ -255,149 +254,97 @@
                 </p>
             </div>
 
-            <!-- Interative Tab Slider for Desktop & Swipable Showcase -->
-            <div class="flex flex-col items-center gap-10">
-                <!-- Navigation Tabs -->
-                <div class="flex items-center gap-2 p-1.5 bg-gray-100 dark:bg-slate-800 rounded-2xl">
-                    <button onclick="switchScreenshot('dialpad')" id="btn-ss-dialpad" class="px-5 py-2.5 rounded-xl font-display font-bold text-sm tracking-wide transition-all bg-brand-500 text-white">
-                        Tactile Dialpad
-                    </button>
-                    <button onclick="switchScreenshot('recents')" id="btn-ss-recents" class="px-5 py-2.5 rounded-xl font-display font-bold text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-                        Call History
-                    </button>
-                    <button onclick="switchScreenshot('contacts')" id="btn-ss-contacts" class="px-5 py-2.5 rounded-xl font-display font-bold text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-                        Address Book
-                    </button>
-                </div>
-
-                <!-- Showcase Frame with Relative Binding -->
-                <div class="relative w-full max-w-[280px] sm:max-w-[300px] rounded-[3rem] p-3 bg-slate-900 shadow-2xl border-4 border-slate-950 overflow-hidden transition-all duration-300">
-                    <div class="rounded-[2.2rem] overflow-hidden bg-slate-800 aspect-[9/19] relative">
-                        <!-- Relative paths bound directly to the folder -->
-                        <img id="screenshot-display" src="assets/screenshots/dialpad.jpg" alt="Secure Dialer Feature Mockup" class="w-full h-full object-cover transition-opacity duration-300 opacity-100">
+            <!-- Side-by-Side Interactive Tour Layout -->
+            <div class="grid lg:grid-cols-12 gap-12 items-center">
+                
+                <!-- Left Column: Device Mockup and Tab Switcher -->
+                <div class="lg:col-span-5 flex flex-col items-center gap-8">
+                    <!-- Navigation Tabs -->
+                    <div class="flex items-center gap-1.5 p-1.5 bg-gray-200/60 dark:bg-slate-800 rounded-2xl w-full max-w-sm justify-between">
+                        <button onclick="switchScreenshot('dialpad')" id="btn-ss-dialpad" class="flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all bg-brand-500 text-white shadow-sm">
+                            Dialpad
+                        </button>
+                        <button onclick="switchScreenshot('recents')" id="btn-ss-recents" class="flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            History
+                        </button>
+                        <button onclick="switchScreenshot('contacts')" id="btn-ss-contacts" class="flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            Contacts
+                        </button>
                     </div>
-                    <!-- Home Bar -->
-                    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full"></div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Interactive T9 Dialpad Simulator Section -->
-    <section id="t9-simulator" class="py-24 bg-white dark:bg-darkbg-800 border-y border-gray-100 dark:border-slate-800">
-        <div class="max-w-7xl mx-auto px-6 grid lg:grid-cols-12 gap-16 items-center">
-            
-            <!-- Explanatory Narrative -->
-            <div class="lg:col-span-6 space-y-6">
-                <span class="text-sm font-display font-extrabold text-brand-500 uppercase tracking-widest">Interactive Experience</span>
-                <h2 class="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">Try Smart T9 Search Now</h2>
-                <p class="text-slate-600 dark:text-slate-300 leading-relaxed">
-                    T9 dialing lets you search and match contacts instantaneously using numeric keys directly on the dialpad. 
-                </p>
-                <div class="space-y-4">
-                    <div class="flex items-start gap-4">
-                        <div class="p-2 bg-brand-50 text-brand-500 dark:bg-emerald-950/20 dark:text-brand-400 rounded-xl mt-1">
-                            <span class="font-display font-extrabold text-sm">ABC</span>
-                        </div>
-                        <div>
-                            <h4 class="font-display font-bold text-slate-900 dark:text-white text-md">Letter Mapping</h4>
-                            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Each key represents three or four letters. For example, Key 2 matches A, B, or C.</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-4">
-                        <div class="p-2 bg-brand-50 text-brand-500 dark:bg-emerald-950/20 dark:text-brand-400 rounded-xl mt-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                        <div>
-                            <h4 class="font-display font-bold text-slate-900 dark:text-white text-md">Instant Match</h4>
-                            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Type numbers corresponding to the letters of a name. For instance, type <span class="font-bold">5-6-4-6</span> to match <span class="font-bold text-brand-500">JOHN</span>!</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Clickable Interactive CSS Simulator -->
-            <div class="lg:col-span-6 flex justify-center">
-                <div class="w-full max-w-[360px] bg-slate-900 text-white rounded-[2.5rem] p-6 shadow-2xl glow-emerald border border-slate-800">
-                    <!-- Simulator screen -->
-                    <div class="bg-slate-950 rounded-2xl p-4 mb-6 min-h-[140px] flex flex-col justify-between border border-slate-800 relative">
-                        <div class="absolute top-2 right-3 text-[10px] text-slate-500 font-mono tracking-wider">T9 ENGINE ACTIVE</div>
+                    <!-- Showcase Frame with Relative Binding -->
+                    <div class="relative w-full max-w-[280px] sm:max-w-[310px] rounded-[3rem] p-3.5 bg-slate-900 shadow-2xl border-4 border-slate-950 overflow-hidden transition-all duration-300">
+                        <!-- Top Notch -->
+                        <div class="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-4 bg-slate-950 rounded-b-2xl z-10"></div>
                         
-                        <!-- Number Display -->
-                        <div class="text-right">
-                            <div id="sim-input" class="text-3xl font-display font-semibold tracking-wider text-slate-200 min-h-[36px] overflow-hidden whitespace-nowrap text-ellipsis"></div>
-                            <button onclick="clearSim()" id="sim-clear" class="text-xs text-rose-400 hover:text-rose-300 font-semibold mt-1 transition-opacity opacity-0">Clear</button>
+                        <div class="rounded-[2.2rem] overflow-hidden bg-slate-800 aspect-[9/19] relative">
+                            <!-- Relative paths bound directly to the screenshots folder -->
+                            <img id="screenshot-display" src="assets/screenshots/dialpad.jpg" alt="Secure Dialer Feature Mockup" class="w-full h-full object-cover transition-opacity duration-300 opacity-100">
+                        </div>
+                        <!-- Home Bar -->
+                        <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Dynamic Screen Explanation Panel (Building Trust & Transparency) -->
+                <div class="lg:col-span-7 space-y-8">
+                    <!-- Dynamic Header -->
+                    <div class="space-y-2">
+                        <div class="text-xs font-display font-extrabold text-brand-500 uppercase tracking-widest" id="tour-screen-badge">SCREEN EXPLORATION</div>
+                        <h3 class="text-2xl sm:text-3xl font-display font-bold text-slate-900 dark:text-white tracking-tight" id="tour-screen-title">Tactile Smart Dialpad</h3>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm sm:text-base" id="tour-screen-desc">
+                            Your primary hub for quick dialing, speed dials, and smart local directory matching. Real tactile response paired with hardware privacy guarantees.
+                        </p>
+                    </div>
+
+                    <!-- Dynamic Details list -->
+                    <div class="space-y-6" id="tour-features-container">
+                        <!-- Feature Row 1 -->
+                        <div class="flex items-start gap-4">
+                            <div class="p-2.5 bg-brand-50 text-brand-500 dark:bg-brand-950/20 dark:text-brand-400 rounded-xl mt-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display font-bold text-slate-900 dark:text-white text-md">Smart T9 Contact Search</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Type numbers corresponding to names to search instantly. Highly responsive local algorithm matches contacts without remote database lookups.</p>
+                            </div>
                         </div>
 
-                        <!-- Matches List -->
-                        <div class="border-t border-slate-800/80 pt-3 mt-2">
-                            <div class="text-[10px] text-brand-500 uppercase font-extrabold tracking-widest mb-1">Matched Contacts</div>
-                            <div id="sim-results" class="space-y-1.5 max-h-[70px] overflow-y-auto">
-                                <!-- Default message -->
-                                <div class="text-xs text-slate-400 italic">Dial a number to search contacts</div>
+                        <!-- Feature Row 2 -->
+                        <div class="flex items-start gap-4">
+                            <div class="p-2.5 bg-brand-50 text-brand-500 dark:bg-brand-950/20 dark:text-brand-400 rounded-xl mt-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display font-bold text-slate-900 dark:text-white text-md">Tactile Haptics & DTMF</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Provides satisfying feedback vibration with real DTMF tone generation for easy navigation of corporate automated menu directories.</p>
+                            </div>
+                        </div>
+
+                        <!-- Feature Row 3 -->
+                        <div class="flex items-start gap-4">
+                            <div class="p-2.5 bg-brand-50 text-brand-500 dark:bg-brand-950/20 dark:text-brand-400 rounded-xl mt-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4 class="font-display font-bold text-slate-900 dark:text-white text-md">Speed Dial Indices</h4>
+                                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">Assign keys 1 through 9 to trigger immediate calls to your most important contacts without navigating deep directories.</p>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Simulator Dialpad Keys -->
-                    <div class="grid grid-cols-3 gap-3">
-                        <button onclick="pressSim('1', '')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">1</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">⚡</span>
-                        </button>
-                        <button onclick="pressSim('2', 'abc')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">2</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">ABC</span>
-                        </button>
-                        <button onclick="pressSim('3', 'def')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">3</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">DEF</span>
-                        </button>
-                        
-                        <button onclick="pressSim('4', 'ghi')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">4</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">GHI</span>
-                        </button>
-                        <button onclick="pressSim('5', 'jkl')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">5</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">JKL</span>
-                        </button>
-                        <button onclick="pressSim('6', 'mno')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">6</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">MNO</span>
-                        </button>
-
-                        <button onclick="pressSim('7', 'pqrs')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">7</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">PQRS</span>
-                        </button>
-                        <button onclick="pressSim('8', 'tuv')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">8</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">TUV</span>
-                        </button>
-                        <button onclick="pressSim('9', 'wxyz')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">9</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">WXYZ</span>
-                        </button>
-
-                        <button class="h-16 rounded-2xl bg-slate-850 hover:bg-slate-800 transition-colors flex items-center justify-center border border-slate-700/30 text-slate-500 cursor-not-allowed">
-                            <span class="text-xl">*</span>
-                        </button>
-                        <button onclick="pressSim('0', '+')" class="h-16 rounded-2xl bg-slate-800 hover:bg-slate-750 active:bg-brand-500 hover:scale-[1.02] active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-700/50">
-                            <span class="text-lg font-bold">0</span>
-                            <span class="text-[9px] text-slate-400 tracking-wider">+</span>
-                        </button>
-                        <button class="h-16 rounded-2xl bg-slate-850 hover:bg-slate-800 transition-colors flex items-center justify-center border border-slate-700/30 text-slate-500 cursor-not-allowed">
-                            <span class="text-lg">#</span>
-                        </button>
-                    </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </section>
+
+
 
     <!-- Detailed Core Premium Features Grid -->
     <section id="features" class="py-24">
@@ -720,138 +667,116 @@ cd Secure-Dialer
                 'contacts': 'btn-ss-contacts'
             };
 
-            // Transition fade effect
+            const screenDetails = {
+                'dialpad': {
+                    badge: "TACTILE USER INTERFACE",
+                    title: "Tactile Smart Dialpad",
+                    desc: "Your primary hub for quick dialing, speed dials, and smart local directory matching. Real tactile response paired with hardware privacy guarantees.",
+                    features: [
+                        {
+                            title: "Smart T9 Contact Search",
+                            desc: "Type numbers corresponding to names to search instantly. Highly responsive local algorithm matches contacts without remote database lookups.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>`
+                        },
+                        {
+                            title: "Tactile Haptics & DTMF",
+                            desc: "Provides satisfying feedback vibration with real DTMF tone generation for easy navigation of corporate automated menu directories.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`
+                        },
+                        {
+                            title: "Speed Dial Indices",
+                            desc: "Assign keys 1 through 9 to trigger immediate calls to your most important contacts without navigating deep directories.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`
+                        }
+                    ]
+                },
+                'recents': {
+                    badge: "COMMUNICATION HISTORY",
+                    title: "Pure Local Call Logs",
+                    desc: "Comprehensive overview of all placed, incoming, or missed connections. Kept 100% on-device inside hardware-backed SQLCipher encryption.",
+                    features: [
+                        {
+                            title: "Sandboxed Isolation",
+                            desc: "Operates independently of Android's global communication logs if configured, insulating your history from third-party social media harvesting apps.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>`
+                        },
+                        {
+                            title: "Multi-SIM Outbound Tags",
+                            desc: "Dynamic labels highlight exactly which cellular SIM processed the call. Seamless one-tap SIM toggle prompts prevent accidental outbound carrier charges.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>`
+                        },
+                        {
+                            title: "Delayed Callback Reminders",
+                            desc: "Click detail entries to set localized push notification reminders, containing immediate direct dialing actions to prevent forgotten followups.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                        }
+                    ]
+                },
+                'contacts': {
+                    badge: "CONTACT MANAGEMENT",
+                    title: "Encrypted Address Book",
+                    desc: "An isolated, sandboxed digital directory for managing friends, family, and colleagues. Features advanced privacy controls and batch cleaner diagnostics.",
+                    features: [
+                        {
+                            title: "Local Database Partitioning",
+                            desc: "Save highly confidential contacts inside the encrypted local database, ensuring other apps with 'Read Contacts' permission have no access to them.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>`
+                        },
+                        {
+                            title: "Diagnostics & Deduplication",
+                            desc: "Perform quick local audits to identify and merge duplicate numbers, delete orphaned area codes, and maintain a highly polished, clean directory.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>`
+                        },
+                        {
+                            title: "Standard vCard Export",
+                            desc: "Direct, offline exports to uncompressed .vcf text files, allowing easy backup migration to GrapheneOS or separate physical phones securely.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`
+                        }
+                    ]
+                }
+            };
+
+            // Transition fade effect on image
             displayImg.style.opacity = '0';
             
             setTimeout(() => {
                 displayImg.src = pathMap[tabName];
                 displayImg.style.opacity = '1';
+                
+                // Swap the text details panel dynamically
+                const details = screenDetails[tabName];
+                document.getElementById('tour-screen-badge').innerText = details.badge;
+                document.getElementById('tour-screen-title').innerText = details.title;
+                document.getElementById('tour-screen-desc').innerText = details.desc;
+
+                // Render matching features list
+                const container = document.getElementById('tour-features-container');
+                container.innerHTML = details.features.map(f => `
+                    <div class="flex items-start gap-4">
+                        <div class="p-2.5 bg-brand-50 text-brand-500 dark:bg-brand-950/20 dark:text-brand-400 rounded-xl mt-1">
+                            ${f.icon}
+                        </div>
+                        <div>
+                            <h4 class="font-display font-bold text-slate-900 dark:text-white text-md">${f.title}</h4>
+                            <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">${f.desc}</p>
+                        </div>
+                    </div>
+                `).join('');
+
             }, 150);
 
             // Toggle active styles on buttons
             Object.keys(btnMap).forEach(key => {
                 const btn = document.getElementById(btnMap[key]);
                 if (key === tabName) {
-                    btn.className = "px-5 py-2.5 rounded-xl font-display font-bold text-sm tracking-wide transition-all bg-brand-500 text-white";
+                    btn.className = "flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all bg-brand-500 text-white shadow-sm";
                 } else {
-                    btn.className = "px-5 py-2.5 rounded-xl font-display font-bold text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white";
+                    btn.className = "flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white";
                 }
             });
         }
 
-        // 3. T9 Smart Dial Simulator Logic
-        const simulatedContacts = [
-            { name: "John Doe", number: "5646363" },     // 5-6-4-6-3-6-3
-            { name: "Lucy Smith", number: "5829764" },   // 5-8-2-9-7-6-4
-            { name: "Alex Jones", number: "2539566" },   // 2-5-3-9-5-6-6
-            { name: "Emma Watson", number: "3662928" },  // 3-6-6-2-9-2-8
-            { name: "Robert Downey", number: "762378" },  // 7-6-2-3-7-8
-            { name: "Michael Vance", number: "642423" }   // 6-4-2-4-2-3
-        ];
 
-        const keyLetters = {
-            '2': ['a', 'b', 'c'],
-            '3': ['d', 'e', 'f'],
-            '4': ['g', 'h', 'i'],
-            '5': ['j', 'k', 'l'],
-            '6': ['m', 'n', 'o'],
-            '7': ['p', 'q', 'r', 's'],
-            '8': ['t', 'u', 'v'],
-            '9': ['w', 'x', 'y', 'z'],
-            '0': [' ']
-        };
-
-        let currentInput = "";
-
-        function pressSim(digit, letters) {
-            currentInput += digit;
-            updateSimUI();
-        }
-
-        function clearSim() {
-            currentInput = "";
-            updateSimUI();
-        }
-
-        function updateSimUI() {
-            const inputEl = document.getElementById('sim-input');
-            const clearEl = document.getElementById('sim-clear');
-            const resultsEl = document.getElementById('sim-results');
-            
-            inputEl.innerText = currentInput;
-
-            if (currentInput.length > 0) {
-                clearEl.style.opacity = "1";
-                
-                // Perform T9 search matching
-                const matches = filterT9(currentInput);
-                
-                resultsEl.innerHTML = "";
-                if (matches.length === 0) {
-                    resultsEl.innerHTML = '<div class="text-xs text-rose-400 italic">No contacts matched</div>';
-                } else {
-                    matches.forEach(contact => {
-                        resultsEl.innerHTML += `
-                            <div class="flex items-center justify-between py-1 border-b border-slate-800/40 last:border-0 hover:bg-slate-800/30 px-1 rounded transition-colors">
-                                <div class="text-xs font-semibold text-slate-200">${contact.name}</div>
-                                <div class="text-[10px] font-mono text-slate-400">${contact.number}</div>
-                            </div>
-                        `;
-                    });
-                }
-            } else {
-                clearEl.style.opacity = "0";
-                resultsEl.innerHTML = '<div class="text-xs text-slate-400 italic">Dial a number to search contacts</div>';
-            }
-        }
-
-        // T9 matching algorithm helper
-        function filterT9(sequence) {
-            return simulatedContacts.filter(contact => {
-                // Check if sequence matches phone number directly
-                if (contact.number.includes(sequence)) return true;
-                
-                // Check if sequence matches name via T9
-                const nameClean = contact.name.toLowerCase();
-                
-                // Check if there is any subsequence mapping
-                return matchNameWithT9(nameClean, sequence);
-            });
-        }
-
-        function matchNameWithT9(name, sequence) {
-            // Check if we can find the T9 sequence matching anywhere inside the contact's name words
-            const words = name.split(' ');
-            
-            for (let word of words) {
-                if (wordMatch(word, sequence)) return true;
-            }
-            
-            // Also test matching the whole continuous string (ignoring spaces)
-            const continuousName = name.replace(/\s+/g, '');
-            return wordMatch(continuousName, sequence);
-        }
-
-        function wordMatch(word, sequence) {
-            if (word.length < sequence.length) return false;
-            
-            // Check all sliding windows
-            for (let i = 0; i <= word.length - sequence.length; i++) {
-                let match = true;
-                for (let j = 0; j < sequence.length; j++) {
-                    const char = word[i + j];
-                    const digit = sequence[j];
-                    const letters = keyLetters[digit];
-                    
-                    if (!letters || !letters.includes(char)) {
-                        match = false;
-                        break;
-                    }
-                }
-                if (match) return true;
-            }
-            return false;
-        }
     </script>
 </body>
 </html>
