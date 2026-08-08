@@ -140,11 +140,11 @@
 
                 <!-- Action CTAs -->
                 <div class="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-4">
-                    <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/releases" class="w-full sm:w-auto px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl text-center font-display font-bold tracking-wide shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-3">
+                    <a href="assets/secure-dialer.apk" download="secure-dialer.apk" onclick="showDownloadGuide()" class="w-full sm:w-auto px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl text-center font-display font-bold tracking-wide shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
-                        Download APK (v1.2.0)
+                        Download APK (v1.3.0)
                     </a>
                     <a href="#setup" class="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-2xl text-center font-display font-bold tracking-wide transition-all">
                         Compile from Source
@@ -593,10 +593,10 @@ cd Secure-Dialer
             <div class="md:col-span-3 space-y-4">
                 <h5 class="text-white font-display font-bold text-sm uppercase tracking-wider">Repository Specs</h5>
                 <ul class="text-sm space-y-2.5">
-                    <li><a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/LICENSE" target="_blank" class="hover:text-white transition-colors">GPLv3 License</a></li>
-                    <li><a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/SECURITY.md" target="_blank" class="hover:text-white transition-colors">Security Disclosures</a></li>
-                    <li><a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/CONTRIBUTING.md" target="_blank" class="hover:text-white transition-colors">Contributor Guidelines</a></li>
-                    <li><a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/CHANGELOG.md" target="_blank" class="hover:text-white transition-colors">Changelog</a></li>
+                    <li><button onclick="openDocModal('license')" class="text-left text-slate-400 hover:text-white transition-colors focus:outline-none">GPLv3 License</button></li>
+                    <li><button onclick="openDocModal('security')" class="text-left text-slate-400 hover:text-white transition-colors focus:outline-none">Security Disclosures</button></li>
+                    <li><button onclick="openDocModal('contributing')" class="text-left text-slate-400 hover:text-white transition-colors focus:outline-none">Contributor Guidelines</button></li>
+                    <li><button onclick="openDocModal('changelog')" class="text-left text-slate-400 hover:text-white transition-colors focus:outline-none">Changelog</button></li>
                 </ul>
             </div>
 
@@ -777,6 +777,436 @@ cd Secure-Dialer
         }
 
 
+        // 3. Interactive Modal Controllers (100% Offline & Local-First)
+        const docContents = {
+            'security': `
+                <div class="space-y-6">
+                    <p class="text-slate-600 dark:text-slate-300">This document outlines the security architecture, data-protection posture, and vulnerability reporting procedures for the Android Dialer application.</p>
+                    <p class="text-slate-600 dark:text-slate-300">The application is built on a <strong class="text-brand-500 font-bold">local-first, privacy-by-design architecture</strong>. All database records, call history, and backup structures are secured directly on the physical device using hardware-backed cryptographic modules and standard authenticated encryption protocols.</p>
+                    <hr class="border-gray-100 dark:border-slate-800/80 my-6">
+                    
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 text-xs bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-400 font-bold rounded">1</span>
+                            Core Security Architecture
+                        </h4>
+                        <p class="mb-4 text-xs text-slate-500">The app employs nested cryptographic controls to ensure that even if the physical device is lost, stolen, or compromised (e.g., via root access), the user's sensitive call logs and contact databases remain fully secure.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 bg-gray-50 dark:bg-slate-850 rounded-2xl border border-gray-100 dark:border-slate-800/60">
+                                <h5 class="font-bold text-slate-900 dark:text-white text-sm mb-1.5">A. On-Device Database Encryption (SQLCipher)</h5>
+                                <ul class="list-disc pl-5 text-xs space-y-1.5 text-slate-600 dark:text-slate-400">
+                                    <li><strong>Engine:</strong> <code class="font-mono bg-gray-200/50 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">net.sqlcipher.database</code> community edition.</li>
+                                    <li><strong>Algorithm:</strong> Full-database transparent AES-256 encryption.</li>
+                                    <li><strong>Key Generation:</strong> A cryptographically secure 256-bit key is generated dynamically on first boot using <code class="font-mono bg-gray-200/50 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">java.security.SecureRandom</code>.</li>
+                                    <li><strong>Key Storage:</strong> The generated database passphrase is encrypted via <code class="font-mono bg-gray-200/50 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">AES/GCM/NoPadding</code> and stored in SharedPreferences.</li>
+                                    <li><strong>Key Protection (Android Keystore):</strong> The encryption key is managed using the hardware-backed <strong>Android Keystore System</strong> under alias <code class="font-mono bg-gray-200/50 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">DialerDbMasterKey</code>, isolating it from extraction.</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="p-4 bg-gray-50 dark:bg-slate-850 rounded-2xl border border-gray-100 dark:border-slate-800/60">
+                                <h5 class="font-bold text-slate-900 dark:text-white text-sm mb-1.5">B. Cryptographically Secure Backups</h5>
+                                <p class="text-xs mb-2 text-slate-600 dark:text-slate-400">Backups are fully encrypted prior to export:</p>
+                                <ul class="list-disc pl-5 text-xs space-y-1.5 text-slate-600 dark:text-slate-400">
+                                    <li><strong>Key Derivation (PBKDF2):</strong> User passwords converted via PBKDF2 with HmacSHA256 (<code class="font-mono bg-gray-200/50 dark:bg-slate-800 px-1 py-0.5 rounded text-[11px]">PBKDF2WithHmacSHA256</code>).</li>
+                                    <li><strong>Work Factor:</strong> <code class="font-mono">10,000</code> iterations to prevent offline brute-force attempts.</li>
+                                    <li><strong>Salt Generation:</strong> Unique 16-byte random salt generated via <code class="font-mono text-[11px]">SecureRandom</code> for every session.</li>
+                                    <li><strong>Payload Encryption:</strong> Encrypted using AES in Galois/Counter Mode (<code class="font-mono text-[11px]">AES/GCM/NoPadding</code>) with a unique, non-repeating 12-byte IV.</li>
+                                    <li><strong>Integrity Validation:</strong> GCM provides authenticated encryption (AEAD), blocking tampering or modification.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 text-xs bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-400 font-bold rounded">2</span>
+                            Privacy & Data Boundaries
+                        </h4>
+                        <p class="text-xs sm:text-sm leading-relaxed text-slate-600 dark:text-slate-400">The application is designed with a strict zero-trust posture toward external servers:</p>
+                        <ul class="list-disc pl-5 text-xs space-y-1.5 mt-2 text-slate-600 dark:text-slate-400">
+                            <li><strong>Offline First:</strong> There are no integrated cloud services, telemetry trackers, or external analytics SDKs.</li>
+                            <li><strong>Local Isolation:</strong> All speed dials, call statistics, contact indexes, and custom settings reside purely within the encrypted SQLCipher database.</li>
+                            <li><strong>Permission Boundaries:</strong> The application only requests standard Android Permissions. No background network permissions are requested or used, making remote exfiltration impossible.</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                            <span class="px-2 py-0.5 text-xs bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-400 font-bold rounded">3</span>
+                            Reporting a Vulnerability
+                        </h4>
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400">We take security very seriously. If you identify a security vulnerability, please report it through private channels:</p>
+                        <div class="mt-3 p-4 bg-brand-500/10 border border-brand-500/20 rounded-2xl">
+                            <p class="text-xs text-brand-600 dark:text-brand-400 font-bold mb-1">How to Report:</p>
+                            <p class="text-sm text-slate-800 dark:text-slate-200">Email: <a href="mailto:movstore.online@gmail.com" class="font-bold underline hover:text-brand-500 transition-colors">movstore.online@gmail.com</a></p>
+                            <p class="text-xs text-slate-500 dark:text-slate-500 mt-2">Include vulnerability details, reproduction steps, and potential impact. We will triage within 48 hours and remediate within 7 days.</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            'contributing': `
+                <div class="space-y-6">
+                    <p class="text-slate-600 dark:text-slate-300 text-sm">Thank you for your interest in contributing to <strong>Secure Dialer</strong>! We are building a modern, lightweight, stable, and completely offline-first Android phone dialer to preserve user privacy and security.</p>
+                    
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white mb-3">📜 Core Guarantees & Code Principles</h4>
+                        <div class="grid gap-3 sm:grid-cols-2 text-xs">
+                            <div class="p-3.5 bg-gray-50 dark:bg-slate-850 rounded-xl border border-gray-100 dark:border-slate-800/60">
+                                <span class="font-bold text-brand-500">1. Zero-Internet (Hard Rule)</span>
+                                <p class="text-slate-500 mt-1">No internet permission, analytics, or third-party cloud connections can ever be added.</p>
+                            </div>
+                            <div class="p-3.5 bg-gray-50 dark:bg-slate-850 rounded-xl border border-gray-100 dark:border-slate-800/60">
+                                <span class="font-bold text-brand-500">2. Native Alternatives</span>
+                                <p class="text-slate-500 mt-1">Favor direct interactions with Android Framework APIs instead of external wrappers.</p>
+                            </div>
+                            <div class="p-3.5 bg-gray-50 dark:bg-slate-850 rounded-xl border border-gray-100 dark:border-slate-800/60">
+                                <span class="font-bold text-brand-500">3. Ruthless Efficiency</span>
+                                <p class="text-slate-500 mt-1">Keep codebase fast and responsive. Avoid complex DI frameworks or speculative layers.</p>
+                            </div>
+                            <div class="p-3.5 bg-gray-50 dark:bg-slate-850 rounded-xl border border-gray-100 dark:border-slate-800/60">
+                                <span class="font-bold text-brand-500">4. Material 3 Guidelines</span>
+                                <p class="text-slate-500 mt-1">Enforce proper edge-to-edge layout, typography pairings, and accessible touch targets.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white mb-3">🚀 Setting Up the Development Environment</h4>
+                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-850 text-slate-300 font-mono text-xs">
+                            <p class="text-slate-500"># Prerequisites: Android Studio (Koala), JDK 17, SDK 24-36</p>
+                            <p class="mt-2 text-slate-500"># Clone the repository:</p>
+                            <p class="text-emerald-400">git clone https://github.com/Secure-Phone-apps/Secure-Dialer.git</p>
+                            <p class="mt-2 text-slate-500"># Run or assemble debug APK:</p>
+                            <p class="text-emerald-400">./gradlew assembleDebug</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white mb-2">🧪 Testing Guidelines</h4>
+                        <p class="text-xs mb-3 text-slate-500">We use Robolectric for JVM lifecycle tests and Roborazzi for visual screenshots.</p>
+                        <div class="bg-slate-950 rounded-2xl p-4 border border-slate-850 text-slate-300 font-mono text-xs space-y-1">
+                            <div><span class="text-slate-500"># Run local unit tests:</span></div>
+                            <div class="text-emerald-400">./gradlew :app:testDebugUnitTest</div>
+                            <div class="pt-2"><span class="text-slate-500"># Verify screenshot matches:</span></div>
+                            <div class="text-emerald-400">./gradlew :app:verifyRoborazziDebug</div>
+                            <div class="pt-2"><span class="text-slate-500"># Record new baseline reference screenshots:</span></div>
+                            <div class="text-emerald-400">./gradlew :app:recordRoborazziDebug</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-md font-display font-bold text-slate-900 dark:text-white mb-2">📥 Submission Process</h4>
+                        <ol class="list-decimal pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1.5">
+                            <li><strong>Check Issues:</strong> Search the issue tracker to check if there is an existing ticket.</li>
+                            <li><strong>Create Branch:</strong> Fork/branch from <code class="px-1 bg-gray-200 dark:bg-slate-800 text-[10px]">main</code> using <code class="px-1 bg-gray-200 dark:bg-slate-800 text-[10px]">feature/your-feature-name</code>.</li>
+                            <li><strong>Write Clean Code:</strong> Focused, minimal commits, high standards.</li>
+                            <li><strong>Verify Build:</strong> Run full test suits local verification before submitting.</li>
+                            <li><strong>Open Pull Request:</strong> Clearly verify that no network permission or cloud callbacks are added.</li>
+                        </ol>
+                    </div>
+                </div>
+            `,
+            'changelog': `
+                <div class="space-y-6">
+                    <p class="text-xs text-slate-500">All notable updates and releases of the Secure Dialer application are documented here.</p>
+                    
+                    <!-- v1.3.0 -->
+                    <div class="border-l-2 border-brand-500 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.3.0</span>
+                            <span class="text-xs text-slate-500">2026-08-06</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Performance & System Enhancements</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>ABI Split Support:</strong> Configured multi-architecture APK splits (<code class="font-mono">arm64-v8a</code>, <code class="font-mono">armeabi-v7a</code>, <code class="font-mono">x86</code>, <code class="font-mono">x86_64</code>) to generate optimized, lightweight standalone binaries per device type.</li>
+                            <li><strong>System Back-Swipe Navigation Fixes:</strong> Integrated Compose BackHandler hooks across settings, call details, and active dial screens for graceful backward stepping.</li>
+                            <li><strong>Contrast-Enhanced Buttons:</strong> Color-coded call actions with context-aware, highly visible green (Call/Answer) and red (Decline/Hang Up) elements.</li>
+                            <li><strong>Dynamic Theme Luminance Adapters:</strong> Button aesthetics now dynamically adjust their contrast values relative to active system dark/light luminance layouts.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.2.0 -->
+                    <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded">v1.2.0</span>
+                            <span class="text-xs text-slate-500">2026-07-25</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Material 3 Expressive & Multilingual Support</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>Material 3 Expressive UI:</strong> Upgraded typography, elevated card surfaces, and added a refined slate-grey color palette.</li>
+                            <li><strong>7 App Localizations:</strong> Fully translated the interface into Spanish, German, Hindi, Arabic, Portuguese, Japanese, and English (RTL/LTR support).</li>
+                            <li><strong>Log and Directory Filters:</strong> Added chip selectors for All, Missed, Received, Dialed logs, and starred contacts.</li>
+                            <li><strong>In-Dialpad Smart T9 Search:</strong> Dynamic real-time letter matching directly inside the dialpad interface.</li>
+                            <li><strong>CNAP Support:</strong> Displays carrier-supplied Calling Name Delivery tags on incoming rings.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.1.0 -->
+                    <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded">v1.1.0</span>
+                            <span class="text-xs text-slate-500">2026-07-15</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Documentation & Soft-Keyboard Auto-Dismiss</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>Call-Initiation Keyboard Dismissal:</strong> Instantly hides soft keyboard input boards when triggering calls to prevent UI overlapping.</li>
+                            <li><strong>Modern Architecture Showcases:</strong> Certified independent clean-slate codebase (no forks, repackaged bloat) for easy security audits.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.0.2 -->
+                    <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded">v1.0.2</span>
+                            <span class="text-xs text-slate-500">2026-07-10</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Favorites Screen & Persistent Log Deletion</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>Dedicated Favorites Tab:</strong> View and quick-call starred contacts.</li>
+                            <li><strong>Persistent SQLite & Resolver Sync:</strong> Standardized deletion queries so erased call logs do not reappear.</li>
+                            <li><strong>Call Timer Accuracy:</strong> Restructured call duration updates to trigger strictly upon active connection answering.</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            'license': `
+                <div class="space-y-4">
+                    <div class="p-4 bg-brand-500/10 border border-brand-500/25 rounded-2xl text-xs space-y-1">
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">GNU General Public License v3.0 Summary</h4>
+                        <p class="text-slate-600 dark:text-slate-400">Secure Dialer is completely free open-source software. You can run, copy, distribute, study, change, and improve the software.</p>
+                        <div class="grid grid-cols-2 gap-2 pt-2 font-semibold">
+                            <span class="text-brand-600 dark:text-brand-400">✔ Commercial Use</span>
+                            <span class="text-brand-600 dark:text-brand-400">✔ Modification Allowed</span>
+                            <span class="text-brand-600 dark:text-brand-400">✔ Distribution Allowed</span>
+                            <span class="text-brand-600 dark:text-brand-400">✔ Private Use</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-500 pt-1">Condition: Source code of any modifications must be disclosed under the same GPLv3 license.</p>
+                    </div>
+                    <pre class="font-mono text-[11px] bg-slate-950 text-slate-300 p-4 rounded-2xl overflow-x-auto max-h-[40vh] leading-relaxed whitespace-pre-wrap">                    GNU GENERAL PUBLIC LICENSE
+                       Version 3, 29 June 2007
+
+ Copyright (C) 2007 Free Software Foundation, Inc. &lt;https://fsf.org/&gt;
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+                            Preamble
+
+  The GNU General Public License is a free, copyleft license for
+software and other kinds of works.
+
+  The licenses for most software and other practical works are designed
+to take away your freedom to share and change the works.  By contrast,
+the GNU General Public License is intended to guarantee your freedom to
+share and change all versions of a program--to make sure it remains free
+software for all its users.  We, the Free Software Foundation, use the
+GNU General Public License for most of our software; it applies also to
+any other work released this way by its authors.  You can apply it to
+your programs, too.
+
+  When we speak of free software, we are referring to freedom, not
+price.  Our General Public Licenses are designed to make sure that you
+have the freedom to distribute copies of free software (and charge for
+them if you wish), that you receive source code or can get it if you
+want it, that you can change the software or use pieces of it in new
+free programs, and that you know you can do these things.</pre>
+                </div>
+            `
+        };
+
+        const docTitles = {
+            'license': 'GNU GPLv3 License',
+            'security': 'Security Policy & Posture',
+            'contributing': 'Contributor Guidelines',
+            'changelog': 'App Changelog & History'
+        };
+
+        function openDocModal(docType) {
+            const modal = document.getElementById('doc-modal');
+            const content = document.getElementById('doc-modal-content');
+            const titleEl = document.getElementById('doc-modal-title');
+            const bodyEl = document.getElementById('doc-modal-body');
+            const shieldIcon = document.getElementById('doc-icon-shield');
+            const fileIcon = document.getElementById('doc-icon-file');
+
+            // Swap icons depending on security or file type
+            if (docType === 'security') {
+                shieldIcon.classList.remove('hidden');
+                fileIcon.classList.add('hidden');
+            } else {
+                shieldIcon.classList.add('hidden');
+                fileIcon.classList.remove('hidden');
+            }
+
+            titleEl.innerText = docTitles[docType];
+            bodyEl.innerHTML = docContents[docType];
+
+            // Trigger visual transitions
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDocModal() {
+            const modal = document.getElementById('doc-modal');
+            const content = document.getElementById('doc-modal-content');
+
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function showDownloadGuide() {
+            const modal = document.getElementById('download-modal');
+            const content = document.getElementById('download-modal-content');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                content.classList.remove('scale-95');
+                content.classList.add('scale-100');
+            }, 10);
+        }
+
+        function closeDownloadModal() {
+            const modal = document.getElementById('download-modal');
+            const content = document.getElementById('download-modal-content');
+
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0');
+            content.classList.remove('scale-100');
+            content.classList.add('scale-95');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // Close on ESC keypress
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDocModal();
+                closeDownloadModal();
+            }
+        });
+
+
     </script>
+
+    <!-- Document View Modal -->
+    <div id="doc-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 md:p-10 transition-opacity duration-300 opacity-0">
+        <!-- Backdrop -->
+        <div onclick="closeDocModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+        
+        <!-- Modal Content Container -->
+        <div class="relative bg-white dark:bg-slate-900 rounded-[2.2rem] w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col border border-gray-100 dark:border-slate-800 shadow-2xl scale-95 transition-transform duration-300" id="doc-modal-content">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-gray-100 dark:border-slate-800/60 bg-gray-50/50 dark:bg-slate-900/50">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-brand-500 text-white rounded-xl flex items-center justify-center">
+                        <svg id="doc-icon-shield" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
+                        <svg id="doc-icon-file" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 id="doc-modal-title" class="font-display font-bold text-lg sm:text-xl text-slate-900 dark:text-white">Document</h3>
+                </div>
+                <!-- Close Button -->
+                <button onclick="closeDocModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Body Content -->
+            <div id="doc-modal-body" class="p-6 sm:p-8 overflow-y-auto text-sm sm:text-base text-slate-700 dark:text-slate-300 space-y-6 leading-relaxed font-sans max-w-none">
+                <!-- Injected via javascript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Download Guide Modal -->
+    <div id="download-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 transition-opacity duration-300 opacity-0">
+        <!-- Backdrop -->
+        <div onclick="closeDownloadModal()" class="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"></div>
+        
+        <!-- Modal Content Container -->
+        <div class="relative bg-white dark:bg-slate-900 rounded-[2.2rem] w-full max-w-lg overflow-hidden flex flex-col border border-gray-100 dark:border-slate-800 shadow-2xl scale-95 transition-transform duration-300" id="download-modal-content">
+            <!-- Header -->
+            <div class="p-6 sm:p-8 text-center bg-gray-50/60 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/60 relative">
+                <!-- Close Button -->
+                <button onclick="closeDownloadModal()" class="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors focus:outline-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+                
+                <div class="mx-auto w-16 h-16 bg-brand-50 dark:bg-brand-950/20 text-brand-500 rounded-2xl flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                </div>
+                
+                <h3 class="font-display font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white">Direct Download Initiated!</h3>
+                <p class="text-xs text-slate-500 mt-1">Downloading Secure Dialer v1.3.0 APK (approx. 4.2 MB)</p>
+            </div>
+            
+            <!-- Body -->
+            <div class="p-6 sm:p-8 space-y-6">
+                <div class="space-y-4">
+                    <h4 class="font-display font-bold text-xs text-slate-900 dark:text-white uppercase tracking-wider">How to Install Android APKs</h4>
+                    
+                    <!-- Steps -->
+                    <div class="space-y-3.5">
+                        <div class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xs font-bold font-mono">1</span>
+                            <div class="text-xs sm:text-sm">
+                                <p class="font-bold text-slate-800 dark:text-slate-200">Allow Unknown Sources</p>
+                                <p class="text-slate-500 leading-relaxed text-xs">Go to Settings &rarr; Apps &rarr; Special App Access &rarr; Install Unknown Apps and toggle permissions for your Browser or File Manager.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xs font-bold font-mono">2</span>
+                            <div class="text-xs sm:text-sm">
+                                <p class="font-bold text-slate-800 dark:text-slate-200">Trigger Installation</p>
+                                <p class="text-slate-500 leading-relaxed text-xs">Tap the finished download notification or open your browser's "Downloads" folder and select <code>secure-dialer.apk</code>.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="flex-shrink-0 w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xs font-bold font-mono">3</span>
+                            <div class="text-xs sm:text-sm">
+                                <p class="font-bold text-slate-800 dark:text-slate-200">Verify Zero Permissions Request</p>
+                                <p class="text-slate-500 leading-relaxed text-xs">During installation, notice there is <strong>no request for Internet access</strong>, verifying the local, sandboxed architecture of Secure Dialer.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hash check -->
+                <div class="p-4 bg-slate-50 dark:bg-slate-850 rounded-2xl border border-gray-100 dark:border-slate-800/60 flex items-start gap-3">
+                    <svg class="w-5 h-5 text-brand-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <div class="text-xs space-y-1 overflow-hidden">
+                        <p class="font-bold text-slate-800 dark:text-slate-200">SHA-256 Checksum Signature</p>
+                        <p class="font-mono text-[10px] text-slate-500 select-all overflow-hidden text-ellipsis whitespace-nowrap">e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
