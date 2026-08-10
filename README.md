@@ -4,12 +4,12 @@
 
 <table align="center">
   <tr>
-    <td><img src="assets/screenshots/dialpad.jpg" height="400" alt="Dialpad" /></td>
-    <td><img src="assets/screenshots/contacts.jpg" height="400" alt="Contacts" /></td>
-    <td><img src="assets/screenshots/recents.jpg" height="400" alt="Recents" /></td>
-    <td><img src="assets/screenshots/call_log.jpg" height="400" alt="Call Log" /></td>
-    <td><img src="assets/screenshots/calling.jpg" height="400" alt="Call Screen" /></td>
-    <td><img src="assets/screenshots/setting.jpg" height="400" alt="Settings" /></td>
+    <td><img src="assets/screenshots/dialpad.jpg" height="600" alt="Dialpad" /></td>
+    <td><img src="assets/screenshots/contacts.jpg" height="600" alt="Contacts" /></td>
+    <td><img src="assets/screenshots/recents.jpg" height="600" alt="Recents" /></td>
+    <td><img src="assets/screenshots/call_log.jpg" height="600" alt="Call Log" /></td>
+    <td><img src="assets/screenshots/calling.jpg" height="600" alt="Call Screen" /></td>
+    <td><img src="assets/screenshots/setting.jpg" height="600" alt="Settings" /></td>
   </tr>
 </table>
 ---
