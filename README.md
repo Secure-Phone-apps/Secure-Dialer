@@ -151,33 +151,73 @@ No. Secure Dialer operates <b>100% offline</b>. It does not declare the <code>an
 </details>
 
 <details>
-<summary><b>2. How is my contact data and call history stored?</b></summary>
+<summary><b>2. Is my local database encrypted on the device?</b></summary>
 <br>
-All call logs, contact details, speed dial settings, and spam blocks are stored in a secure local database powered by the high-performance <b>Android Room Persistence Library (SQLite)</b>. The database resides inside your application's private sandboxed directories, completely inaccessible to third-party apps.
+Yes! Your local database is fully encrypted using <b>SQLCipher</b> and a dynamically generated <b>AES-256 database master key</b>. This master key is generated with cryptographically strong <code>SecureRandom</code> and protected using hardware-backed <b>Android KeyStore</b> (using AES in GCM mode with no padding). Even on rooted devices, your private dialer database is safeguarded against unauthorized extractions.
 </details>
 
 <details>
-<summary><b>3. Does this app support Dual SIM setups?</b></summary>
+<summary><b>3. Can I use Secure Dialer as my default phone app?</b></summary>
 <br>
-Yes. Secure Dialer includes native support for <b>multi-SIM (Dual SIM)</b> devices. Outbound calls will dynamically query the active subscriptions on your device, prompting you to choose the preferred SIM line or utilizing your default carrier subscription preferences.
+Yes. Secure Dialer is fully compliant with modern Android requirements to act as your <b>Default Phone Handler</b>. It implements a custom native <code>InCallService</code> and <code>CallManager</code> to fully display incoming/outgoing calling overlays, control speakers, toggle microphones, and process dialing signals locally.
 </details>
 
 <details>
-<summary><b>4. Why does the app request Contacts and Call Log permissions?</b></summary>
+<summary><b>4. What is the difference between Local-First and System Contacts?</b></summary>
 <br>
-These permissions are <b>strictly essential</b> for core dialer functions. Android requires <code>READ_CONTACTS</code> to display and search your phonebook, and <code>READ_CALL_LOG</code> / <code>WRITE_CALL_LOG</code> to display recent dials and handle caller ID resolution. Because the app has zero network access, we guarantee your personal data stays 100% local.
+Secure Dialer offers an innovative dual-tier contact model:
+<ul>
+  <li><b>System Contacts</b>: Syncs directly with your Android OS standard contact book (requires standard permissions).</li>
+  <li><b>Local-First Contacts</b>: Stored solely inside our app's encrypted SQLite sandbox. They are completely separated from Android's system contact pool. This guarantees that other applications on your device—even those with full system contact permissions—cannot read or harvest these private entries.</li>
+</ul>
 </details>
 
 <details>
-<summary><b>5. Can I backup, restore, or migrate my offline data?</b></summary>
+<summary><b>5. Does this app feature T9 predictive dialer search?</b></summary>
 <br>
-Absolutely. Since there is no cloud synchronization, we provide a robust <b>Local Backup & Export</b> option in Settings. You can export your encrypted database as a local backup file, save it to secure storage, and easily import it onto any other device running Secure Dialer.
+Yes! The Dialpad supports classical <b>T9 predictive keypad search</b>. As you tap digit keys on the keypad, the app's internal repository instantly maps characters into matching keypad numbers (e.g. tapping "564" resolves to "JOH", showing matching names immediately) to find contacts in fractions of a millisecond.
 </details>
 
 <details>
-<summary><b>6. How can I audit the security of the application?</b></summary>
+<summary><b>6. How do Callback Reminders work without background server networks?</b></summary>
 <br>
-The codebase is <b>100% open source under the GPLv3 license</b>. We invite developers, privacy advocates, and security firms to audit our source repository, verify our zero-internet policy, inspect the Room database schemas, and compile their own signed binaries directly from source.
+Instead of relying on heavy cloud push servers that track when you return calls, Secure Dialer leverages standard on-device <b>Android WorkManager</b> or local system alarm scheduler frameworks. Reminders are scheduled locally and trigger localized push alerts directly on your operating system at the exact specified time, requiring zero battery-draining socket connections.
+</details>
+
+<details>
+<summary><b>7. Does this app support blocking spam calls or unwanted numbers?</b></summary>
+<br>
+Yes. Secure Dialer contains an offline, on-device SQLite blocklist. If an incoming number matches any entry in your local blocklist, the app automatically declines the call at the system level. This filtering happens entirely on-device without exposing the caller's identity or forwarding telemetry data to any third-party spam-tracking databases.
+</details>
+
+<details>
+<summary><b>8. Does this app support dual-SIM (Multi-SIM) devices?</b></summary>
+<br>
+Yes. Secure Dialer fully queries active subscription lines on multi-SIM hardware. When starting an outbound call, the dialer prompts you with a clean dialog to choose the calling SIM, or follows your preset standard carrier SIM preferences established in the system or dialer settings.
+</details>
+
+<details>
+<summary><b>9. Why does the app request Contacts and Call Log permissions?</b></summary>
+<br>
+These permissions are <b>strictly essential</b> to fulfill primary telephone handler roles. Android requires <code>READ_CONTACTS</code> to resolve names, <code>READ_CALL_LOG</code> to show your recent calling records, and <code>WRITE_CALL_LOG</code> to let you delete elements. Because our app does not possess network permissions, we guarantee this data cannot be leaked.
+</details>
+
+<details>
+<summary><b>10. Can I backup, restore, or migrate my offline data?</b></summary>
+<br>
+Yes! Secure Dialer features a password-protected <b>Local Backup & Export</b> engine inside Settings. This engine compiles your blocklist, configurations, and speed-dials into an encrypted payload using <b>PBKDF2 derivation</b> and <b>AES-GCM encryption</b> keys generated from your custom password. You can export this backup string as a text file and restore it securely on another device.
+</details>
+
+<details>
+<summary><b>11. Is there a cost, tracking script, or ads inside the app?</b></summary>
+<br>
+No. Secure Dialer contains <b>zero ads, zero tracking scripts, and zero analytical trackers</b> (such as Firebase Analytics or AdMob). The app is completely free, does not offer premium subscriptions, and respects your privacy absolutely from the core architecture up.
+</details>
+
+<details>
+<summary><b>12. How can I audit the security of the application?</b></summary>
+<br>
+The codebase is <b>100% open source under the GPLv3 license</b>. We invite privacy advocates, cybersecurity firms, and open-source developers to fully audit our repository, check the Room SQL database schemas, inspect the KeyStore encryption classes, verify the complete lack of internet permissions, and compile their own build from source.
 </details>
 
 ---

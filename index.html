@@ -92,6 +92,7 @@
                 <a href="#features" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Features</a>
                 <a href="#permissions" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Permissions</a>
                 <a href="#setup" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">Setup</a>
+                <a href="#faq" class="hover:text-brand-500 dark:hover:text-brand-500 transition-colors">FAQ</a>
             </nav>
 
             <div class="flex items-center gap-4">
@@ -173,13 +174,8 @@
                 <!-- Decorative background elements -->
                 <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-brand-500/10 rounded-full filter blur-3xl opacity-50 dark:opacity-30"></div>
                 
-                <div class="relative w-full max-w-[320px] rounded-[3rem] p-3.5 bg-slate-900 shadow-2xl glow-emerald border-4 border-slate-950 overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
-                    <!-- Dynamic screen mockup with relative asset binding -->
-                    <div class="rounded-[2.2rem] overflow-hidden bg-slate-800 aspect-[9/19] flex items-center justify-center">
-                        <img src="assets/screenshots/dialpad.jpg" alt="Secure Dialer Application Interface" class="w-full h-full object-cover">
-                    </div>
-                    <!-- Device Home Indicator -->
-                    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full"></div>
+                <div class="w-full max-w-[480px] rounded-3xl overflow-hidden shadow-2xl border border-gray-150 dark:border-slate-800/80 transform hover:scale-[1.01] transition-transform duration-300 bg-white dark:bg-slate-950">
+                    <img src="assets/secure_dialer_hero.jpg" alt="Secure Dialer Application Interface - Branded application hero banner with dynamic Material 3 custom interface" class="w-full h-auto object-cover">
                 </div>
             </div>
 
@@ -593,72 +589,154 @@ cd Secure-Dialer
                         </svg>
                     </button>
                     <div id="faq-ans-1" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
-                        No. Secure Dialer operates <strong>100% offline</strong>. It contains absolutely zero network access permissions (the <code>android.permission.INTERNET</code> permission is not even declared in its manifest). Your call logs, contact details, and custom speed-dial choices never leave your physical device.
+                        No. Secure Dialer operates <strong>100% offline</strong>. It contains absolutely zero network access declarations (the <code>android.permission.INTERNET</code> permission is not even listed in its <code>AndroidManifest.xml</code>). Your contact list, call metrics, and dialer preferences reside physical on your device, completely sandboxed from any remote servers.
                     </div>
                 </div>
 
                 <!-- FAQ Item 2 -->
                 <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
                     <button onclick="toggleFaq(2)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
-                        <span class="text-sm sm:text-base">How is my contact data and call history stored?</span>
+                        <span class="text-sm sm:text-base">Is my local database encrypted on the device?</span>
                         <svg id="faq-icon-2" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
                     <div id="faq-ans-2" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
-                        All call histories, dialer metrics, speed dial configurations, and custom blocklists are saved securely in a local, on-device SQLite database using the high-performance Android <strong>Room Persistence Library</strong>. The database resides inside your application's private sandboxed directories, completely inaccessible to third-party apps.
+                        Yes! Your local database is fully encrypted using **SQLCipher** and a dynamically generated **AES-256 database master key** via <code>DatabaseKeyManager</code>. This master key is generated with cryptographically strong <code>SecureRandom</code> and protected using hardware-backed <strong>Android KeyStore</strong> (using AES in GCM mode with no padding). Even on rooted devices, your private dialer database is safeguarded against unauthorized extractions.
                     </div>
                 </div>
 
                 <!-- FAQ Item 3 -->
                 <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
                     <button onclick="toggleFaq(3)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
-                        <span class="text-sm sm:text-base">Does this app support dual-SIM devices?</span>
+                        <span class="text-sm sm:text-base">Can I use Secure Dialer as my default phone app?</span>
                         <svg id="faq-icon-3" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
                     <div id="faq-ans-3" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
-                        Yes. Secure Dialer supports <strong>multi-SIM (Dual SIM)</strong> hardware setups. When initiating an outbound call, the app will query your system's active subscriptions to prompt you for SIM line preference or utilize your pre-configured SIM card defaults defined in Settings.
+                        Yes. Secure Dialer is fully compliant with modern Android requirements to act as your **Default Phone Handler**. It implements a custom native <code>InCallService</code> (via <code>MyInCallService.kt</code>) and <code>CallManager</code> to fully display incoming/outgoing calling overlays, control speakers, toggle microphones, and process dialing signals locally.
                     </div>
                 </div>
 
                 <!-- FAQ Item 4 -->
                 <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
                     <button onclick="toggleFaq(4)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
-                        <span class="text-sm sm:text-base">Why does the app request Contacts and Call Log permissions?</span>
+                        <span class="text-sm sm:text-base">What is the difference between Local-First and System Contacts?</span>
                         <svg id="faq-icon-4" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
                     <div id="faq-ans-4" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
-                        These permissions are <strong>strictly essential</strong> for core dialer services. Android requires <code>READ_CONTACTS</code> to display and search your phonebook, and <code>READ_CALL_LOG</code> / <code>WRITE_CALL_LOG</code> to display recent dials and record inbound calls. Because our app is offline-first with zero internet permissions, we guarantee this data never leaves your device.
+                        Secure Dialer offers an innovative dual-tier contact model:
+                        <ul class="list-disc pl-5 mt-2 space-y-1">
+                            <li><strong>System Contacts</strong>: Syncs directly with your Android OS standard contact book (requires standard permissions).</li>
+                            <li><strong>Local-First Contacts</strong>: Stored solely inside our app's encrypted SQLite sandbox. They are completely separated from Android's system contact pool. This guarantees that other applications on your device—even those with full system contact permissions—cannot read or harvest these private entries.</li>
+                        </ul>
                     </div>
                 </div>
 
                 <!-- FAQ Item 5 -->
                 <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
                     <button onclick="toggleFaq(5)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
-                        <span class="text-sm sm:text-base">Can I backup, restore, or migrate my offline data?</span>
+                        <span class="text-sm sm:text-base">Does this app feature T9 predictive dialer search?</span>
                         <svg id="faq-icon-5" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
                     <div id="faq-ans-5" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
-                        Yes. Since there is no cloud integration, we offer a robust <strong>Local Backup & Export</strong> engine inside the Settings tab. You can export your full on-device database as an encrypted backup file, save it to secure storage, and import it on any other device running Secure Dialer.
+                        Yes! The Dialpad supports classical <strong>T9 predictive keypad search</strong>. As you tap digit keys on the keypad, the app's internal repository (<code>DialerRepositorySystemSync.kt</code>) instantly maps characters into matching keypad numbers (e.g. tapping "564" resolves to "JOH", showing matching names immediately) to find contacts in fractions of a millisecond.
                     </div>
                 </div>
 
                 <!-- FAQ Item 6 -->
                 <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
                     <button onclick="toggleFaq(6)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
-                        <span class="text-sm sm:text-base">How can I audit the security of the application?</span>
+                        <span class="text-sm sm:text-base">How do Callback Reminders work without background server networks?</span>
                         <svg id="faq-icon-6" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </button>
                     <div id="faq-ans-6" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
-                        The codebase is <strong>100% open source under the GPLv3 license</strong>. We invite developers, privacy advocates, and security firms to review our source repository, verify the absence of trackers, check the Room schemas, and build directly from source using standard Gradle compilation tools.
+                        Instead of relying on heavy cloud push servers that track when you return calls, Secure Dialer leverages standard on-device **Android WorkManager** or local system alarm scheduler frameworks. Reminders are scheduled locally and trigger localized push alerts directly on your operating system at the exact specified time, requiring zero battery-draining socket connections.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 7 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(7)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Does this app support blocking spam calls or unwanted numbers?</span>
+                        <svg id="faq-icon-7" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-7" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Yes. Secure Dialer contains an offline, on-device SQLite blocklist. If an incoming number matches any entry in your local blocklist, the app automatically declines the call at the system level. This filtering happens entirely on-device without exposing the caller's identity or forwarding telemetry data to any third-party spam-tracking databases.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 8 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(8)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Does this app support dual-SIM (Multi-SIM) devices?</span>
+                        <svg id="faq-icon-8" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-8" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Yes. Secure Dialer fully queries active subscription lines on multi-SIM hardware. When starting an outbound call, the dialer prompts you with a clean dialog to choose the calling SIM, or follows your preset standard carrier SIM preferences established in the system or dialer settings.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 9 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(9)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Why does the app request Contacts and Call Log permissions?</span>
+                        <svg id="faq-icon-9" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-9" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        These permissions are <strong>strictly essential</strong> to fulfill primary telephone handler roles. Android requires <code>READ_CONTACTS</code> to resolve names, <code>READ_CALL_LOG</code> to show your recent calling records, and <code>WRITE_CALL_LOG</code> to let you delete elements. Because our app does not possess network permissions, we guarantee this data cannot be leaked.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 10 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(10)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Can I backup, restore, or migrate my offline data?</span>
+                        <svg id="faq-icon-10" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-10" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Yes! Secure Dialer features a password-protected **Local Backup & Export** engine inside Settings (powered by <code>BackupRestoreManager</code>). This engine compiles your blocklist, configurations, and speed-dials into an encrypted payload using **PBKDF2 derivation** and **AES-GCM encryption** keys generated from your custom password. You can export this backup string as a text file and restore it securely on another device.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 11 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(11)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Is there a cost, tracking script, or ads inside the app?</span>
+                        <svg id="faq-icon-11" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-11" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        No. Secure Dialer contains **zero ads, zero tracking scripts, and zero analytical trackers** (such as Firebase Analytics or AdMob). The app is completely free, does not offer premium subscriptions, and respects your privacy absolutely from the core architecture up.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 12 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(12)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">How can I audit the security of the application?</span>
+                        <svg id="faq-icon-12" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-12" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        The codebase is **100% open source under the GPLv3 license**. We invite privacy advocates, cybersecurity firms, and open-source developers to fully audit our repository, check the Room SQL database schemas, inspect the KeyStore encryption classes, verify the complete lack of internet permissions, and compile their own build from source.
                     </div>
                 </div>
             </div>
