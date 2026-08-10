@@ -142,6 +142,46 @@ When you download a release from our Releases page, you will see several optimiz
 
 ---
 
+## ❓ Frequently Asked Questions (FAQ)
+
+<details>
+<summary><b>1. Does Secure Dialer require an internet connection?</b></summary>
+<br>
+No. Secure Dialer operates <b>100% offline</b>. It does not declare the <code>android.permission.INTERNET</code> permission in its manifest, meaning it is physically sandboxed on your device and cannot make network calls. Your contacts, call history, and preferences never leave your physical hardware.
+</details>
+
+<details>
+<summary><b>2. How is my contact data and call history stored?</b></summary>
+<br>
+All call logs, contact details, speed dial settings, and spam blocks are stored in a secure local database powered by the high-performance <b>Android Room Persistence Library (SQLite)</b>. The database resides inside your application's private sandboxed directories, completely inaccessible to third-party apps.
+</details>
+
+<details>
+<summary><b>3. Does this app support Dual SIM setups?</b></summary>
+<br>
+Yes. Secure Dialer includes native support for <b>multi-SIM (Dual SIM)</b> devices. Outbound calls will dynamically query the active subscriptions on your device, prompting you to choose the preferred SIM line or utilizing your default carrier subscription preferences.
+</details>
+
+<details>
+<summary><b>4. Why does the app request Contacts and Call Log permissions?</b></summary>
+<br>
+These permissions are <b>strictly essential</b> for core dialer functions. Android requires <code>READ_CONTACTS</code> to display and search your phonebook, and <code>READ_CALL_LOG</code> / <code>WRITE_CALL_LOG</code> to display recent dials and handle caller ID resolution. Because the app has zero network access, we guarantee your personal data stays 100% local.
+</details>
+
+<details>
+<summary><b>5. Can I backup, restore, or migrate my offline data?</b></summary>
+<br>
+Absolutely. Since there is no cloud synchronization, we provide a robust <b>Local Backup & Export</b> option in Settings. You can export your encrypted database as a local backup file, save it to secure storage, and easily import it onto any other device running Secure Dialer.
+</details>
+
+<details>
+<summary><b>6. How can I audit the security of the application?</b></summary>
+<br>
+The codebase is <b>100% open source under the GPLv3 license</b>. We invite developers, privacy advocates, and security firms to audit our source repository, verify our zero-internet policy, inspect the Room database schemas, and compile their own signed binaries directly from source.
+</details>
+
+---
+
 ## 📄 License
 
 This program is free software: you can redistribute it and/or modify it under the terms of the **GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.** See the [LICENSE](LICENSE) file for more details.

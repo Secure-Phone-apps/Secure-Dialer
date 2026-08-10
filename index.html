@@ -572,6 +572,99 @@ cd Secure-Dialer
         </div>
     </section>
 
+    <!-- FAQ Accordion Section -->
+    <section id="faq" class="py-12 sm:py-16 md:py-20 bg-gray-50/60 dark:bg-slate-900/40 border-t border-b border-gray-100 dark:border-slate-850">
+        <div class="max-w-4xl mx-auto px-6">
+            <div class="text-center mb-12 space-y-3">
+                <span class="text-sm font-display font-extrabold text-brand-500 uppercase tracking-widest">Questions & Answers</span>
+                <h2 class="text-3xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">Frequently Asked Questions</h2>
+                <p class="text-slate-600 dark:text-slate-300 text-sm">
+                    Everything you need to know about Secure Dialer's privacy controls, storage, and build setup.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <!-- FAQ Item 1 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(1)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Does Secure Dialer require an internet connection?</span>
+                        <svg id="faq-icon-1" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-1" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        No. Secure Dialer operates <strong>100% offline</strong>. It contains absolutely zero network access permissions (the <code>android.permission.INTERNET</code> permission is not even declared in its manifest). Your call logs, contact details, and custom speed-dial choices never leave your physical device.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 2 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(2)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">How is my contact data and call history stored?</span>
+                        <svg id="faq-icon-2" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-2" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        All call histories, dialer metrics, speed dial configurations, and custom blocklists are saved securely in a local, on-device SQLite database using the high-performance Android <strong>Room Persistence Library</strong>. The database resides inside your application's private sandboxed directories, completely inaccessible to third-party apps.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 3 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(3)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Does this app support dual-SIM devices?</span>
+                        <svg id="faq-icon-3" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-3" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Yes. Secure Dialer supports <strong>multi-SIM (Dual SIM)</strong> hardware setups. When initiating an outbound call, the app will query your system's active subscriptions to prompt you for SIM line preference or utilize your pre-configured SIM card defaults defined in Settings.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 4 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(4)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Why does the app request Contacts and Call Log permissions?</span>
+                        <svg id="faq-icon-4" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-4" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        These permissions are <strong>strictly essential</strong> for core dialer services. Android requires <code>READ_CONTACTS</code> to display and search your phonebook, and <code>READ_CALL_LOG</code> / <code>WRITE_CALL_LOG</code> to display recent dials and record inbound calls. Because our app is offline-first with zero internet permissions, we guarantee this data never leaves your device.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 5 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(5)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">Can I backup, restore, or migrate my offline data?</span>
+                        <svg id="faq-icon-5" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-5" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Yes. Since there is no cloud integration, we offer a robust <strong>Local Backup & Export</strong> engine inside the Settings tab. You can export your full on-device database as an encrypted backup file, save it to secure storage, and import it on any other device running Secure Dialer.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 6 -->
+                <div class="border border-gray-200/80 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/40 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(6)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-brand-500 focus:outline-none">
+                        <span class="text-sm sm:text-base">How can I audit the security of the application?</span>
+                        <svg id="faq-icon-6" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-6" class="hidden px-5 pb-5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        The codebase is <strong>100% open source under the GPLv3 license</strong>. We invite developers, privacy advocates, and security firms to review our source repository, verify the absence of trackers, check the Room schemas, and build directly from source using standard Gradle compilation tools.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Professional Footer -->
     <footer class="bg-slate-950 text-slate-400 py-12 md:py-16 border-t border-slate-900">
         <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-12 gap-12 border-b border-slate-900 pb-12 mb-12">
@@ -793,17 +886,32 @@ cd Secure-Dialer
                         {
                             title: "Dynamic Color & Appearance",
                             desc: "Toggle modern Material 3 expressive shapes and customized dark mode preferences tailored to your individual aesthetics.",
-                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>`
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z"></svg>`
                         },
                         {
                             title: "Blocked Numbers & Spam",
                             desc: "Enforce on-device numbers blocking directly in SQLite. Filter undesired spam lists offline without registering them online.",
-                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>`
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></svg>`
                         },
                         {
                             title: "Haptic Sound Toggles",
                             desc: "Fine-tune dialpad key tones (DTMF), system vibration responses, and dynamic click-haptics to optimize performance and battery.",
                             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>`
+                        },
+                        {
+                            title: "Speed Dial Assignments",
+                            desc: "Set up custom long-press speed dial numbers (2-9) to quickly place calls to your closest contacts from the Dialpad.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>`
+                        },
+                        {
+                            title: "Dynamic SIM Support",
+                            desc: "Configurable SIM select prompt for multi-SIM hardware setups, offering direct control over outbound carrier lines.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>`
+                        },
+                        {
+                            title: "Export & Backup Database",
+                            desc: "Securely export your encrypted local contact and call databases as local backup files to easily move them to another secure device.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>`
                         }
                     ]
                 }
@@ -847,6 +955,20 @@ cd Secure-Dialer
                     btn.className = "py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white";
                 }
             });
+        }
+
+
+        // FAQ Accordion Toggle function
+        function toggleFaq(index) {
+            const answer = document.getElementById(`faq-ans-${index}`);
+            const icon = document.getElementById(`faq-icon-${index}`);
+            if (answer.classList.contains('hidden')) {
+                answer.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                answer.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+            }
         }
 
 
