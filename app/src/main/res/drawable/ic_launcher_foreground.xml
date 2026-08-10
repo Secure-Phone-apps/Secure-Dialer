@@ -5,22 +5,14 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
 
-    <!-- Circle Ring Layer -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#E2F8F5"
-        android:strokeWidth="1.0"
-        android:strokeLineCap="round"
-        android:pathData="M 12, 4.5 a 7.5,7.5 0 1,1 0,15 a 7.5,7.5 0 1,1 0,-15" />
-
     <!-- Centered scaled Telephone Handset Layer -->
     <group
         android:pivotX="12"
         android:pivotY="12"
-        android:scaleX="0.48"
-        android:scaleY="0.48">
+        android:scaleX="0.52"
+        android:scaleY="0.52">
         <path
-            android:fillColor="#E2F8F5"
+            android:fillColor="#FFFFFF"
             android:pathData="M20.01,15.38c-1.23,0 -2.42,-0.2 -3.53,-0.56c-0.35,-0.12 -0.74,-0.03 -1.01,0.24l-1.57,1.97c-2.83,-1.35 -5.48,-3.9 -6.89,-6.83l1.95,-1.56c0.27,-0.27 0.35,-0.65 0.24,-1c-0.36,-1.11 -0.56,-2.3 -0.56,-3.53c0,-0.55 -0.45,-1 -1,-1H3.5c-0.55,0 -1,0.45 -1,1c0,9.39 7.61,17 17,17c0.55,0 1,-0.45 1,-1v-4.12c0,-0.55 -0.45,-1 -1,-1z" />
     </group>
 </vector>
