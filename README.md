@@ -2,7 +2,9 @@
 
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
-| ![Dialpad](assets/screenshots/dialpad.jpg) | ![Contacts](assets/screenshots/contacts.jpg) | ![Recents](assets/screenshots/recents.jpg) | ![Call Log](assets/screenshots/call_log.jpg) | ![Calling Screen](assets/screenshots/calling.jpg) | ![Settings](assets/screenshots/setting.jpg) |
+| Dialpad | Contacts | Recents | Call Log | Call Screen | Settings |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| ![Dialpad](assets/screenshots/dialpad.jpg) | ![Contacts](assets/screenshots/contacts.jpg) | ![Recents](assets/screenshots/recents.jpg) | ![Call Log](assets/screenshots/call_log.jpg) | ![Call Screen](assets/screenshots/calling.jpg) | ![Settings](assets/screenshots/setting.jpg) |
 ---
 <p align="center">
   <img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support" />
