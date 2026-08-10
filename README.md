@@ -2,17 +2,17 @@
 
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
-<table align="center">
-  <tr>
-    <td><img src="assets/screenshots/dialpad.jpg" height="600" alt="Dialpad" /></td>
-    <td><img src="assets/screenshots/contacts.jpg" height="600" alt="Contacts" /></td>
-    <td><img src="assets/screenshots/recents.jpg" height="600" alt="Recents" /></td>
-    <td><img src="assets/screenshots/call_log.jpg" height="600" alt="Call Log" /></td>
-    <td><img src="assets/screenshots/calling.jpg" height="600" alt="Call Screen" /></td>
-    <td><img src="assets/screenshots/setting.jpg" height="600" alt="Settings" /></td>
-  </tr>
-</table>
----
+<p align="center">
+  <img src="assets/screenshots/dialpad.jpg" width="31%" alt="Secure Dialer - Modern Android T9 dialpad interface with predictive contact search, speed dial, and Material You design." />
+  <img src="assets/screenshots/contacts.jpg" width="31%" alt="Secure Dialer - Local and system contacts manager screen to add, edit, or delete contacts with privacy-first offline storage." />
+  <img src="assets/screenshots/recents.jpg" width="31%" alt="Secure Dialer - Interactive recents call history log displaying incoming, outgoing, and missed calls with quick action buttons." />
+</p>
+<p align="center">
+  <img src="assets/screenshots/call_log.jpg" width="31%" alt="Secure Dialer - Advanced call history details screen with callback reminder scheduler, contact summary, and call duration logs." />
+  <img src="assets/screenshots/calling.jpg" width="31%" alt="Secure Dialer - Minimalist and eye-safe active outgoing/incoming calling screen UI with Material 3 dynamic color integration." />
+  <img src="assets/screenshots/setting.jpg" width="31%" alt="Secure Dialer - App preferences and configuration panel featuring dark mode, dynamic color schemes, and speed dial setup." />
+</p>
+
 <p align="center">
   <img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" />
