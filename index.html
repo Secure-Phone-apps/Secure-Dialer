@@ -176,7 +176,7 @@
                 <div class="relative w-full max-w-[320px] rounded-[3rem] p-3.5 bg-slate-900 shadow-2xl glow-emerald border-4 border-slate-950 overflow-hidden transform hover:scale-[1.02] transition-transform duration-300">
                     <!-- Dynamic screen mockup with relative asset binding -->
                     <div class="rounded-[2.2rem] overflow-hidden bg-slate-800 aspect-[9/19] flex items-center justify-center">
-                        <img src="assets/secure_dialer_hero.jpg" alt="Secure Dialer Application Interface" class="w-full h-full object-cover">
+                        <img src="assets/screenshots/dialpad.jpg" alt="Secure Dialer Application Interface" class="w-full h-full object-cover">
                     </div>
                     <!-- Device Home Indicator -->
                     <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/40 rounded-full"></div>
@@ -260,15 +260,24 @@
                 <!-- Left Column: Device Mockup and Tab Switcher -->
                 <div class="lg:col-span-5 flex flex-col items-center gap-8">
                     <!-- Navigation Tabs -->
-                    <div class="flex items-center gap-1.5 p-1.5 bg-gray-200/60 dark:bg-slate-800 rounded-2xl w-full max-w-sm justify-between">
-                        <button onclick="switchScreenshot('dialpad')" id="btn-ss-dialpad" class="flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all bg-brand-500 text-white shadow-sm">
+                    <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5 p-1.5 bg-gray-200/60 dark:bg-slate-800 rounded-2xl w-full max-w-lg justify-between">
+                        <button onclick="switchScreenshot('dialpad')" id="btn-ss-dialpad" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all bg-brand-500 text-white shadow-sm">
                             Dialpad
                         </button>
-                        <button onclick="switchScreenshot('recents')" id="btn-ss-recents" class="flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                        <button onclick="switchScreenshot('recents')" id="btn-ss-recents" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             History
                         </button>
-                        <button onclick="switchScreenshot('contacts')" id="btn-ss-contacts" class="flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                        <button onclick="switchScreenshot('contacts')" id="btn-ss-contacts" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
                             Contacts
+                        </button>
+                        <button onclick="switchScreenshot('call_log')" id="btn-ss-call_log" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            Call Log
+                        </button>
+                        <button onclick="switchScreenshot('calling')" id="btn-ss-calling" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            Calling
+                        </button>
+                        <button onclick="switchScreenshot('setting')" id="btn-ss-setting" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+                            Settings
                         </button>
                     </div>
 
@@ -658,13 +667,19 @@ cd Secure-Dialer
             const pathMap = {
                 'dialpad': 'assets/screenshots/dialpad.jpg',
                 'recents': 'assets/screenshots/recents.jpg',
-                'contacts': 'assets/screenshots/contacts.jpg'
+                'contacts': 'assets/screenshots/contacts.jpg',
+                'call_log': 'assets/screenshots/call_log.jpg',
+                'calling': 'assets/screenshots/calling.jpg',
+                'setting': 'assets/screenshots/setting.jpg'
             };
 
             const btnMap = {
                 'dialpad': 'btn-ss-dialpad',
                 'recents': 'btn-ss-recents',
-                'contacts': 'btn-ss-contacts'
+                'contacts': 'btn-ss-contacts',
+                'call_log': 'btn-ss-call_log',
+                'calling': 'btn-ss-calling',
+                'setting': 'btn-ss-setting'
             };
 
             const screenDetails = {
@@ -733,6 +748,72 @@ cd Secure-Dialer
                             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`
                         }
                     ]
+                },
+                'call_log': {
+                    badge: "DETAILED METRICS",
+                    title: "Advanced Call History",
+                    desc: "In-depth inspection of each call, featuring dynamic metadata, call statistics, quick callback hooks, and absolute deletion guarantees.",
+                    features: [
+                        {
+                            title: "Quick Action Controls",
+                            desc: "Seamlessly trigger messages, phone calls, or copy the number to your clipboard with a single tap from the detail panel.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 100-5.368 3 3 0 000 5.368zm0 12a3 3 0 100-5.368 3 3 0 000 5.368z"></path></svg>`
+                        },
+                        {
+                            title: "Callback Reminders",
+                            desc: "Schedule a delayed localized alert directly from any entry. Never forget to return an important work or client phone call.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>`
+                        },
+                        {
+                            title: "Individual Delete",
+                            desc: "Granularly wipe single call items or batch-clean entries on a per-contact basis without leaving trace remnants in system databases.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`
+                        }
+                    ]
+                },
+                'calling': {
+                    badge: "EYE-SAFE UX",
+                    title: "Immersive Calling Interface",
+                    desc: "A distraction-free, high-contrast, clean UI for handling incoming and outgoing calls with immediate tactile toggles.",
+                    features: [
+                        {
+                            title: "Material 3 Dynamic Theme",
+                            desc: "Adapts colors organically using your system's dynamic palette, minimizing screen glare during nocturnal calls.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>`
+                        },
+                        {
+                            title: "Clear Functional Layout",
+                            desc: "Generously sized button elements to prevent accidental touches. Mute, speaker, Bluetooth, keypads, and hold actions are readily accessible.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>`
+                        },
+                        {
+                            title: "Offline Quick Responses",
+                            desc: "Politely decline inbound connections using custom templates (SMS or localized prompt action) with a simple swipe gesture.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>`
+                        }
+                    ]
+                },
+                'setting': {
+                    badge: "YOUR POWER HOUSE",
+                    title: "Preferences & Protection",
+                    desc: "Fully manage and customize your dialer behaviors. Control dark theme, dynamic color schemas, haptics, speed-dials, spam blocks, and quick responses.",
+                    features: [
+                        {
+                            title: "Dynamic Color & Appearance",
+                            desc: "Toggle modern Material 3 expressive shapes and customized dark mode preferences tailored to your individual aesthetics.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M14 12a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>`
+                        },
+                        {
+                            title: "Blocked Numbers & Spam",
+                            desc: "Enforce on-device numbers blocking directly in SQLite. Filter undesired spam lists offline without registering them online.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg>`
+                        },
+                        {
+                            title: "Haptic Sound Toggles",
+                            desc: "Fine-tune dialpad key tones (DTMF), system vibration responses, and dynamic click-haptics to optimize performance and battery.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>`
+                        }
+                    ]
                 }
             };
 
@@ -769,9 +850,9 @@ cd Secure-Dialer
             Object.keys(btnMap).forEach(key => {
                 const btn = document.getElementById(btnMap[key]);
                 if (key === tabName) {
-                    btn.className = "flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all bg-brand-500 text-white shadow-sm";
+                    btn.className = "py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all bg-brand-500 text-white shadow-sm";
                 } else {
-                    btn.className = "flex-1 py-2.5 rounded-xl font-display font-bold text-xs sm:text-sm tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white";
+                    btn.className = "py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white";
                 }
             });
         }
