@@ -2,6 +2,8 @@
 
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
+| ![Dialpad](assets/screenshots/dialpad.jpg) | ![Contacts](assets/screenshots/contacts.jpg) | ![Recents](assets/screenshots/recents.jpg) | ![Call Log](assets/screenshots/call_log.jpg) | ![Calling Screen](assets/screenshots/calling.jpg) | ![Settings](assets/screenshots/setting.jpg) |
+---
 <p align="center">
   <img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support" />
   <img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" />
@@ -30,14 +32,6 @@ Whether you are looking for a secure **Google Dialer alternative**, a cleaner **
 | **Hardware Key Security** | **Yes (Android Keystore)** | No | No | No |
 | **Fake Call & Escape Simulator** | **Yes (High-Fidelity UI)**| No | No | No |
 | **vCard/VCF Import & Export** | **Yes (Offline Backup)** | No (Pushes to Google Cloud) | No | Yes (Basic) |
-
----
-
-## 📱 Visual Preview
-
-| Dialpad | Contacts | Call History |
-| :---: | :---: | :---: |
-| ![Dialpad](assets/screenshots/dialpad.jpg) | ![Contacts](assets/screenshots/contacts.jpg) | ![Recents](assets/screenshots/recents.jpg) |
 
 ---
 
