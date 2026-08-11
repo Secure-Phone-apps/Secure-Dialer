@@ -101,6 +101,10 @@ jobs:
             fi
           fi
         done
+    - name: Generate SHA-256 Checksums
+      run: |
+        cd app/build/outputs/apk/release/combined
+        sha256sum *.apk > checksums.txt
     - name: Extract Release Notes
       run: |
         # Extract the latest entry from CHANGELOG.md (everything between the first and second H2 headers)
@@ -118,4 +122,5 @@ jobs:
         generate_release_notes: false
         files: |
           app/build/outputs/apk/release/combined/*.apk
+          app/build/outputs/apk/release/combined/checksums.txt
 

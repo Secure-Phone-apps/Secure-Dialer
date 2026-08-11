@@ -18,6 +18,7 @@
   <img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" />
   <img src="https://img.shields.io/badge/Compose-M3-4285F4?style=flat&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose Material 3" />
   <img src="https://img.shields.io/github/license/Secure-Phone-apps/Secure-Dialer?style=flat&color=A3E635" alt="Open Source FOSS GPLv3" />
+  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
 </p>
 
 Welcome to **Secure Dialer**, your reliable, lightning-fast, and privacy-hardened calling companion and contacts manager for Android. 
@@ -117,6 +118,8 @@ To act as your **Default Phone App** and provide native calling capabilities, Se
 ---
 
 ## 📦 Release APK Guide & Architecture Breakdown
+
+> 💡 **Automatic Updates via Obtainium:** You can receive seamless automatic update notifications directly from our GitHub releases using [Obtainium](https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer). Click the badge above or tap **[Add to Obtainium](https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer)**.
 
 When you download a release from our Releases page, you will see several optimized APK variants. Choose the file matching your phone's processor architecture:
 

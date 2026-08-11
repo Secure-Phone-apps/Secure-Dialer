@@ -1,0 +1,92 @@
+name: Bug Report
+description: Create a report to help us improve Secure Dialer
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug! Please fill out the form below as completely as possible to help us resolve the issue quickly.
+  - type: input
+    id: app-version
+    attributes:
+      label: Secure Dialer Version
+      description: What version of Secure Dialer are you using? (e.g. v1.3.3)
+      placeholder: "e.g., v1.3.3"
+    validations:
+      required: true
+  - type: dropdown
+    id: android-version
+    attributes:
+      label: Android Version
+      description: Select your Android OS version
+      options:
+        - "Android 15 (API 35)"
+        - "Android 14 (API 34)"
+        - "Android 13 (API 33)"
+        - "Android 12 / 12L (API 31/32)"
+        - "Android 11 (API 30)"
+        - "Android 10 (API 29)"
+        - "Android 9 Pie or older (API 24-28)"
+        - "Custom ROM / GrapheneOS / CalyxOS / LineageOS"
+    validations:
+      required: true
+  - type: input
+    id: device-model
+    attributes:
+      label: Device Model
+      description: What device hardware are you using? (e.g., Pixel 8 Pro, Samsung S24, Xiaomi 13)
+      placeholder: "e.g., Google Pixel 8 Pro"
+    validations:
+      required: true
+  - type: dropdown
+    id: default-dialer
+    attributes:
+      label: Is Secure Dialer set as your Default Phone App?
+      options:
+        - "Yes, set as Default Phone & Call Screening App"
+        - "Yes, set as Default Phone App only"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "Describe what went wrong..."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: List the step-by-step actions to reproduce the behavior.
+      placeholder: |
+        1. Open the app
+        2. Tap on Dialpad
+        3. Enter a phone number...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs-screenshots
+    attributes:
+      label: Screenshots & Logs
+      description: Drag & drop screenshots, screen recordings, or logcat logs if available.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other relevant details (e.g., Telecom carrier, Dual-SIM configuration, Bluetooth headset state).
+    validations:
+      required: false
