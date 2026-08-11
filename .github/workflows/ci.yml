@@ -70,7 +70,7 @@ jobs:
           category: "/language:java-kotlin"
 
       - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: app-debug-apk
           path: app/build/outputs/apk/debug/**/*.apk
