@@ -69,3 +69,8 @@ Unlike cloud-dependent caller ID apps that upload incoming caller numbers to rem
 | **Network Traffic Sniffing / MITM** | Attacker monitors Wi-Fi or cellular traffic for voice logs. | Internet permission is omitted; 0 bytes are transmitted over Wi-Fi or cellular networks. |
 | **Cloud Leaks & Data Subpoenas** | Third-party database breaches or cloud subpoenas. | No cloud database exists. Secure Dialer developers do not host or store user data anywhere. |
 
+---
+
+📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide|Installation & Updates]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Permissions and Privacy Explained|Permissions & Privacy]]
+
+

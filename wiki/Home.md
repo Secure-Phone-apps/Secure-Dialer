@@ -16,10 +16,10 @@ Welcome to the official technical documentation and wiki for **Secure Dialer**�
 
 | Documentation Section | Description & Highlights |
 | :--- | :--- |
-| 🛡️ **[[Security-and-Encryption-Architecture\|Security & Encryption Architecture]]** | AES-256 GCM database encryption, Android KeyStore, hardware TEE/StrongBox, and offline sandboxing. |
-| 🔑 **[[Permissions-and-Privacy-Explained\|Permissions & Privacy Breakdown]]** | Transparent review of Android permissions, dynamic runtime requests, and strict exclusion of `INTERNET`. |
-| 📦 **[[Installation-and-Obtainium-Guide\|Installation & Obtainium Guide]]** | Step-by-step setup with Obtainium auto-updates, CPU architecture APK selection, and SHA-256 verification. |
-| ❓ **[[FAQ-and-Troubleshooting\|FAQ & Troubleshooting]]** | Dual-SIM routing, setting default dialer on Samsung/Pixel/Xiaomi, GrapheneOS/LineageOS compatibility, and backup/restore. |
+| 📦 **[[Installation and Obtainium Guide|Installation & Obtainium Guide]]** | Step-by-step setup with Obtainium auto-updates, CPU architecture APK selection, and SHA-256 verification. |
+| ❓ **[[FAQ and Troubleshooting|FAQ & Troubleshooting]]** | Dual-SIM routing, setting default dialer on Samsung/Pixel/Xiaomi, GrapheneOS/LineageOS compatibility, and backup/restore. |
+| 🔑 **[[Permissions and Privacy Explained|Permissions & Privacy Breakdown]]** | Transparent review of Android permissions, dynamic runtime requests, and strict exclusion of `INTERNET`. |
+| 🛡️ **[[Security and Encryption Architecture|Security & Encryption Architecture]]** | AES-256 GCM database encryption, Android KeyStore, hardware TEE/StrongBox, and offline sandboxing. |
 
 ---
 
@@ -53,4 +53,9 @@ Welcome to the official technical documentation and wiki for **Secure Dialer**�
 * 💬 **Community Discussions:** [GitHub Discussions](https://github.com/Secure-Phone-apps/Secure-Dialer/discussions)
 * 🐛 **Report Issues:** [GitHub Issue Tracker](https://github.com/Secure-Phone-apps/Secure-Dialer/issues)
 * 💖 **Sponsor Project:** [GitHub Sponsors](https://github.com/sponsors/Secure-Phone-apps)
+
+---
+
+📍 **Quick Links:** [[Installation and Obtainium Guide|Installation & Updates]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Permissions and Privacy Explained|Permissions & Privacy]] | [[Security and Encryption Architecture|Security Architecture]]
+
 

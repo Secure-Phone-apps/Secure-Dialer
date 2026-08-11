@@ -59,3 +59,8 @@ Welcome to the **Secure Dialer FAQ & Troubleshooting Guide**. Search below for s
 > [!SECURITY]
 > **Data Ownership:** Your backups remain strictly on your physical storage device. Make sure to keep your exported backup files in a safe location or encrypted container.
 
+---
+
+📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide|Installation & Updates]] | [[Permissions and Privacy Explained|Permissions & Privacy]] | [[Security and Encryption Architecture|Security Architecture]]
+
+

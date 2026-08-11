@@ -1,11 +1,16 @@
 ### 📚 Navigation
 
-* **[[Home]]**
-* 🛡️ **[[Security-and-Encryption-Architecture|Security Architecture]]**
-* 🔑 **[[Permissions-and-Privacy-Explained|Permissions & Privacy]]**
-* 📦 **[[Installation-and-Obtainium-Guide|Installation & Obtainium]]**
-* ❓ **[[FAQ-and-Troubleshooting|FAQ & Troubleshooting]]**
+* 🏠 **[[Home]]**
+
+#### 🚀 User Guides
+* 📦 **[[Installation and Obtainium Guide|Installation & Updates]]**
+* ❓ **[[FAQ and Troubleshooting|FAQ & Troubleshooting]]**
+* 🔑 **[[Permissions and Privacy Explained|Permissions & Privacy]]**
+
+#### 🛡️ Technical Reference
+* 🔒 **[[Security and Encryption Architecture|Security & Architecture]]**
 
 ---
-* 💬 [Discussions](https://github.com/Secure-Phone-apps/Secure-Dialer/discussions)
+* 💬 [Community Discussions](https://github.com/Secure-Phone-apps/Secure-Dialer/discussions)
 * 💖 [Sponsor Project](https://github.com/sponsors/Secure-Phone-apps)
+

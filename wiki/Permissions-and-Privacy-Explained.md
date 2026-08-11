@@ -52,3 +52,8 @@ When launching Secure Dialer for the first time:
 1. **Default Dialing Service:** You will be prompted to set **Secure Dialer as your Default Phone App** so Android routes incoming calls to our `InCallService`.
 2. **Selective Contacts Access:** You can choose whether to grant contacts access. If denied, Secure Dialer still functions perfectly as a standalone dialer with an isolated, encrypted local contact vault!
 
+---
+
+📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide|Installation & Updates]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Security and Encryption Architecture|Security Architecture]]
+
+

@@ -80,3 +80,8 @@ Compare the calculated 64-character hash string with the value in `checksums.txt
 * **Cause:** Android requires explicit user consent before a browser or file manager can install APKs.
 * **Fix:** Go to **System Settings** -> **Apps** -> **Special App Access** -> **Install Unknown Apps** and toggle **Allow** for your browser or Obtainium.
 
+---
+
+📍 **Quick Links:** [[Home]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Permissions and Privacy Explained|Permissions & Privacy]] | [[Security and Encryption Architecture|Security Architecture]]
+
+
