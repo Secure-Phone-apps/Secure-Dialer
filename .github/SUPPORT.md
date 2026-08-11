@@ -30,6 +30,21 @@ If you discover a security flaw or privacy issue, **do not open a public issue**
 
 ---
 
+## 💬 Community Discussions & Q&A
+
+For general questions, discussions, or community support:
+- **[GitHub Discussions](https://github.com/Secure-Phone-apps/Secure-Dialer/discussions)**: Ask questions, get help from the community, share custom ROM tips, or discuss ideas.
+- **[Project Wiki](https://github.com/Secure-Phone-apps/Secure-Dialer/wiki)**: Read technical guides, security whitepapers, and hardware encryption architecture docs.
+
+---
+
+## 💖 Supporting the Project
+
+Secure Dialer is maintained as a free, open-source project. If you'd like to support ongoing development:
+- **[Sponsor on GitHub Sponsors](https://github.com/sponsors/Secure-Phone-apps)**
+
+---
+
 ## 🤝 Community & Contributing
 
 Want to contribute translations, fix a bug, or improve UI design?

@@ -19,6 +19,14 @@
   <img src="https://img.shields.io/badge/Compose-M3-4285F4?style=flat&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose Material 3" />
   <img src="https://img.shields.io/github/license/Secure-Phone-apps/Secure-Dialer?style=flat&color=A3E635" alt="Open Source FOSS GPLv3" />
   <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/discussions"><img src="https://img.shields.io/badge/Community-Discussions-1F6FEB?style=flat&logo=github&logoColor=white" alt="GitHub Discussions" /></a>
+  <a href="https://github.com/sponsors/Secure-Phone-apps"><img src="https://img.shields.io/badge/Sponsor-GitHub_Sponsors-EA4AAA?style=flat&logo=githubsponsors&logoColor=white" alt="Sponsor Project" /></a>
+</p>
+
+<p align="center">
+  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/badge.png" height="52" alt="Get it on Obtainium" />
+  </a>
 </p>
 
 Welcome to **Secure Dialer**, your reliable, lightning-fast, and privacy-hardened calling companion and contacts manager for Android. 
@@ -222,6 +230,37 @@ No. Secure Dialer contains <b>zero ads, zero tracking scripts, and zero analytic
 <br>
 The codebase is <b>100% open source under the GPLv3 license</b>. We invite privacy advocates, cybersecurity firms, and open-source developers to fully audit our repository, check the Room SQL database schemas, inspect the KeyStore encryption classes, verify the complete lack of internet permissions, and compile their own build from source.
 </details>
+
+---
+
+## 💬 Community, Discussions & Wiki
+
+We invite all users, privacy advocates, and contributors to participate in our community channels:
+
+- 💬 **[GitHub Discussions](https://github.com/Secure-Phone-apps/Secure-Dialer/discussions):** Join Q&A, propose offline feature ideas, discuss custom ROM setups (GrapheneOS/CalyxOS/LineageOS), or chat about Android security. Read our **[Discussions Guide](.github/DISCUSSIONS.md)**.
+- 📚 **[Project Wiki Pages](wiki/Home.md):** Explore complete technical documentation:
+  - 🛡️ **[Security & Encryption Architecture](wiki/Security-and-Encryption-Architecture.md)**
+  - 🔑 **[Permissions & Privacy Explained](wiki/Permissions-and-Privacy-Explained.md)**
+  - 📦 **[Installation & Obtainium Guide](wiki/Installation-and-Obtainium-Guide.md)**
+  - ❓ **[FAQ & Troubleshooting Guide](wiki/FAQ-and-Troubleshooting.md)**
+- 💬 **[Community Support & Help](.github/SUPPORT.md):** Guidance on getting help, reporting bugs, or submitting feature requests.
+
+---
+
+## 💖 Support & Voluntary Sponsorship
+
+**Secure Dialer** is 100% free, open-source, and privacy-respecting with **zero ads, zero cloud servers, and zero API costs**. Development is funded entirely through voluntary community support for an independent solo developer.
+
+### Voluntary Sponsorship Tiers:
+* ☕ **Coffee Supporter ($2 - $5/mo):** Fuels bug fixes and performance profiling.
+* 🛡️ **Privacy Advocate ($10 - $25/mo):** Funds security maintenance and dependency updates.
+* 📱 **Hardware Backer ($50 - $100/mo):** Helps acquire physical Android test devices for dual-SIM & custom ROM testing.
+* ⭐ **Core Champion ($200+/mo):** Sustains long-term independent open-source development.
+
+👉 **Read our full [Honest Sponsorship & Funding Philosophy Guide](.github/SPONSORSHIP.md)** before donating.
+
+- 💖 **[Sponsor on GitHub Sponsors](https://github.com/sponsors/Secure-Phone-apps)**
+- ⭐ **Star this Repository:** Giving us a star on GitHub helps increase visibility for privacy-first Android applications!
 
 ---
 
