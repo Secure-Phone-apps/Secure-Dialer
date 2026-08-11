@@ -12,6 +12,9 @@ on:
         required: true
         default: 'v1.0.0'
 
+permissions:
+  contents: read
+
 env:
   ACTIONS_AUDIT_NODE_VERSION: 'false'
   ACTIONS_SILENCE_DEPRECATED_NODE_VERSION_WARNING: 'true'
@@ -20,6 +23,8 @@ jobs:
   build-debug:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
