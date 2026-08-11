@@ -16,11 +16,11 @@ Welcome to the official technical documentation and wiki for **Secure Dialer**�
 
 | Documentation Section | Description & Highlights |
 | :--- | :--- |
-| 🏆 **[[Wall of Honor|Wall of Honor (Sponsors)]]** | Automated showcase of generous community sponsors across our four support tiers. |
-| 📦 **[[Installation and Obtainium Guide|Installation & Obtainium Guide]]** | Step-by-step setup with Obtainium auto-updates, CPU architecture APK selection, and SHA-256 verification. |
-| ❓ **[[FAQ and Troubleshooting|FAQ & Troubleshooting]]** | Dual-SIM routing, setting default dialer on Samsung/Pixel/Xiaomi, GrapheneOS/LineageOS compatibility, and backup/restore. |
-| 🔑 **[[Permissions and Privacy Explained|Permissions & Privacy Breakdown]]** | Transparent review of Android permissions, dynamic runtime requests, and strict exclusion of `INTERNET`. |
-| 🛡️ **[[Security and Encryption Architecture|Security & Encryption Architecture]]** | AES-256 GCM database encryption, Android KeyStore, hardware TEE/StrongBox, and offline sandboxing. |
+| 🏆 **[[Wall of Honor]]** | Automated showcase of generous community sponsors across our four support tiers. |
+| 📦 **[[Installation and Obtainium Guide]]** | Step-by-step setup with Obtainium auto-updates, CPU architecture APK selection, and SHA-256 verification. |
+| ❓ **[[FAQ and Troubleshooting]]** | Dual-SIM routing, setting default dialer on Samsung/Pixel/Xiaomi, GrapheneOS/LineageOS compatibility, and backup/restore. |
+| 🔑 **[[Permissions and Privacy Explained]]** | Transparent review of Android permissions, dynamic runtime requests, and strict exclusion of `INTERNET`. |
+| 🛡️ **[[Security and Encryption Architecture]]** | AES-256 GCM database encryption, Android KeyStore, hardware TEE/StrongBox, and offline sandboxing. |
 
 ---
 
