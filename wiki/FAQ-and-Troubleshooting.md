@@ -61,6 +61,6 @@ Welcome to the **Secure Dialer FAQ & Troubleshooting Guide**. Search below for s
 
 ---
 
-📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide|Installation & Updates]] | [[Permissions and Privacy Explained|Permissions & Privacy]] | [[Security and Encryption Architecture|Security Architecture]]
+📍 **Quick Links:** [[Home]] | [[Wall of Honor]] | [[Installation and Obtainium Guide]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]]
 
 

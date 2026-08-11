@@ -54,6 +54,6 @@ When launching Secure Dialer for the first time:
 
 ---
 
-📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide|Installation & Updates]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Security and Encryption Architecture|Security Architecture]]
+📍 **Quick Links:** [[Home]] | [[Wall of Honor]] | [[Installation and Obtainium Guide]] | [[FAQ and Troubleshooting]] | [[Security and Encryption Architecture]]
 
 

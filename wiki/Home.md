@@ -16,6 +16,7 @@ Welcome to the official technical documentation and wiki for **Secure Dialer**�
 
 | Documentation Section | Description & Highlights |
 | :--- | :--- |
+| 🏆 **[[Wall of Honor|Wall of Honor (Sponsors)]]** | Automated showcase of generous community sponsors across our four support tiers. |
 | 📦 **[[Installation and Obtainium Guide|Installation & Obtainium Guide]]** | Step-by-step setup with Obtainium auto-updates, CPU architecture APK selection, and SHA-256 verification. |
 | ❓ **[[FAQ and Troubleshooting|FAQ & Troubleshooting]]** | Dual-SIM routing, setting default dialer on Samsung/Pixel/Xiaomi, GrapheneOS/LineageOS compatibility, and backup/restore. |
 | 🔑 **[[Permissions and Privacy Explained|Permissions & Privacy Breakdown]]** | Transparent review of Android permissions, dynamic runtime requests, and strict exclusion of `INTERNET`. |
@@ -56,6 +57,6 @@ Welcome to the official technical documentation and wiki for **Secure Dialer**�
 
 ---
 
-📍 **Quick Links:** [[Installation and Obtainium Guide|Installation & Updates]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Permissions and Privacy Explained|Permissions & Privacy]] | [[Security and Encryption Architecture|Security Architecture]]
+📍 **Quick Links:** [[Wall of Honor]] | [[Installation and Obtainium Guide]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]]
 
 

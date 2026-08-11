@@ -82,6 +82,6 @@ Compare the calculated 64-character hash string with the value in `checksums.txt
 
 ---
 
-📍 **Quick Links:** [[Home]] | [[FAQ and Troubleshooting|FAQ & Troubleshooting]] | [[Permissions and Privacy Explained|Permissions & Privacy]] | [[Security and Encryption Architecture|Security Architecture]]
+📍 **Quick Links:** [[Home]] | [[Wall of Honor]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]]
 
 
