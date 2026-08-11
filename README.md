@@ -1,5 +1,11 @@
 # Secure Dialer 📞 — Pure, Private, & Offline-First Open-Source Android Dialer App
 
+<p align="center">
+  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/badge.png" height="52" alt="Get it on Obtainium" />
+  </a>
+</p>
+
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
 <p align="center">
@@ -21,12 +27,6 @@
   <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/discussions"><img src="https://img.shields.io/badge/Community-Discussions-1F6FEB?style=flat&logo=github&logoColor=white" alt="GitHub Discussions" /></a>
   <a href="https://github.com/sponsors/Secure-Phone-apps"><img src="https://img.shields.io/badge/Sponsor-GitHub_Sponsors-EA4AAA?style=flat&logo=githubsponsors&logoColor=white" alt="Sponsor Project" /></a>
-</p>
-
-<p align="center">
-  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
-    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/badge.png" height="52" alt="Get it on Obtainium" />
-  </a>
 </p>
 
 Welcome to **Secure Dialer**, your reliable, lightning-fast, and privacy-hardened calling companion and contacts manager for Android. 
