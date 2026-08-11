@@ -1,48 +1,71 @@
 # 🛡️ Security & Encryption Architecture
 
-Secure Dialer employs a defense-in-depth security model to protect call histories, local contact books, and blocked caller lists from local malware, unauthorized device access, and physical extraction.
+Secure Dialer employs a defense-in-depth security architecture designed to protect call logs, contact books, speed dials, and blocked numbers from local device malware, physical extraction, and unauthorized background inspection.
 
 ---
 
-## 1. Zero-Internet Hardening
+## 1. Operating System-Level Network Isolation
 
-The fundamental pillar of Secure Dialer's privacy is **Operating System-Level Isolation**:
+The core pillar of Secure Dialer's zero-trust model is **Hardware & OS-Level Sandboxing**:
 
-* **Manifest Omission:** The `AndroidManifest.xml` file **does not** request `android.permission.INTERNET` or `android.permission.ACCESS_NETWORK_STATE`.
-* **OS-Enforced Blocking:** Even if an attacker were to attempt an injection attack, the Android OS kernel physically drops any socket creation or outbound network request attempt.
-* **Zero Telemetry:** No Google Analytics, Firebase Crashlytics, Sentry, or third-party tracking SDKs exist in the compiled codebase.
+* **Manifest Omission:** The `AndroidManifest.xml` file completely omits `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE`.
+* **Kernel Enforcement:** The Android Linux kernel strictly drops any attempt to open sockets (`socket()`, `connect()`). Network calls are rejected at the system call layer.
+* **Zero Telemetry SDKs:** The application binary contains zero analytics, tracking, or crash reporting SDKs (No Firebase, No Google Play Services, No Sentry).
 
 ---
 
-## 2. Hardware-Backed AES-256 GCM Encryption
+## 2. Hardware-Backed AES-256 GCM Database Encryption
 
-All local app data (call history logs, notes, speed dial configurations, local contact cards, and blocklists) is stored inside an encrypted **SQLCipher SQLite database**.
+All local app data (call history logs, contact notes, speed dial shortcuts, local encrypted contact cards, and blacklists) is stored inside a **SQLCipher-encrypted SQLite database**.
 
-### Key Generation Lifecycle:
-1. **Android KeyStore Initialization:** Upon first launch, Secure Dialer invokes the Android KeyStore System Provider (`AndroidKeyStore`).
-2. **Hardware Security Module (HSM / TEE):** A 256-bit AES cryptographic master key is generated inside the device's hardware-isolated **Trusted Execution Environment (TEE)** or **StrongBox Keymaster**.
-3. **Master Key Protection:** The master key never enters standard RAM in cleartext and cannot be extracted from the device hardware.
-4. **Database Cipher Passphrase:** SQLCipher encrypts database pages on disk using AES-256 in Galois/Counter Mode (GCM).
+### Key Generation & Cryptographic Lifecycle:
 
+1. **KeyStore Provider:** Upon first initialization, Secure Dialer calls the Android KeyStore System (`AndroidKeyStore`).
+2. **Secure Enclave Generation:** A 256-bit AES cryptographic master key is generated inside the device's hardware-isolated **Trusted Execution Environment (TEE)** or **StrongBox Keymaster (HSM)**.
+3. **RAM Protection:** The master passphrase is never stored in unencrypted persistent storage and cannot be extracted via USB debugging or root access.
+4. **On-Disk Cipher:** SQLCipher encrypts all page sectors on disk using **AES-256 in Galois/Counter Mode (GCM)**.
+
+```text
+┌────────────────────────────────┐      ┌───────────────────────────────┐      ┌─────────────────────────────────┐
+│     Encrypted Local Database   │ ◄──► │  SQLCipher Database Engine    │ ◄──► │  Android KeyStore System        │
+│    (call_logs.db on disk)      │      │       (AES-256 GCM)           │      │   (Hardware TEE / StrongBox)    │
+└────────────────────────────────┘      └───────────────────────────────┘      └─────────────────────────────────┘
 ```
-[ Local Database File ] <---> [ SQLCipher Engine (AES-256 GCM) ] <---> [ Android KeyStore (TEE / HSM) ]
+
+---
+
+## 3. Isolated Encrypted Local Contacts Vault
+
+Users can choose between two contact storage modes:
+
+* **System Contacts Integration:** Standard Android `ContactsContract` provider integration for seamless device-wide contact management.
+* **Encrypted Local Contacts Vault:** An isolated contacts vault stored strictly within Secure Dialer's encrypted database. Local contacts are completely invisible to other applications on your smartphone.
+
+---
+
+## 4. Offline Call Screening & Zero-Latency Rejection
+
+Unlike cloud-dependent caller ID apps that upload incoming caller numbers to remote lookup servers, Secure Dialer relies on Android's native `CallScreeningService`:
+
+```text
+[ Incoming Call Event ] ──► [ CallScreeningService ] ──► [ Query SQLCipher Local DB (<5ms) ] ──► [ Reject & Silence / Allow ]
+                                                                   │
+                                                                   ▼
+                                                       (Zero Network Transmission)
 ```
 
----
-
-## 3. Contact Isolation: Local vs. System Contacts
-
-Secure Dialer gives users full control over how contacts are stored:
-
-* **System Contacts Integration:** Read and write access to standard Android System Contacts via `ContactsContract` provider.
-* **Encrypted Local Contacts Vault:** Users can store sensitive contacts strictly inside Secure Dialer's encrypted database. Local contacts are completely isolated from other installed apps on your device.
+1. **Instant Local Lookup:** When an incoming call arrives, `CallScreeningService` queries the encrypted local database in under 5 milliseconds.
+2. **Autonomous Decision:** If the caller is on your blocklist or matches your call-blocking criteria (e.g. unknown numbers), the call is automatically rejected or silenced before your phone rings.
+3. **Zero Leaks:** No phone numbers or timestamp telemetry leave the physical device.
 
 ---
 
-## 4. Offline Call Screening & Spam Prevention
+## 🛡️ Threat Model & Security Controls Matrix
 
-Instead of uploading incoming phone numbers to cloud servers (like Truecaller), Secure Dialer uses Android's native `CallScreeningService`:
+| Threat Vector | Attack Scenario | Secure Dialer Defense Control |
+| :--- | :--- | :--- |
+| **Physical Theft / Forensic Dumping** | Attacker extracts flash storage chips or takes device dump. | Database pages are encrypted with AES-256 GCM; master keys are locked in TEE / StrongBox hardware. |
+| **Malicious App Inter-Proc Extraction** | Malware attempts to read local app data. | Linux UID sandboxing and file permissions prevent other apps from accessing `/data/data/com.aistudio...`. |
+| **Network Traffic Sniffing / MITM** | Attacker monitors Wi-Fi or cellular traffic for voice logs. | Internet permission is omitted; 0 bytes are transmitted over Wi-Fi or cellular networks. |
+| **Cloud Leaks & Data Subpoenas** | Third-party database breaches or cloud subpoenas. | No cloud database exists. Secure Dialer developers do not host or store user data anywhere. |
 
-* **Local Spam Blocklist:** Numbers added to your blocklist are stored in your encrypted local database.
-* **Zero-Latency Screening:** When an incoming call arrives, `CallScreeningService` queries the encrypted local database in under 5 milliseconds.
-* **Automated Call Rejection:** If a match is found, the call is rejected or silenced before your phone rings—without transmitting any data over the internet.

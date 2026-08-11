@@ -1,39 +1,54 @@
 # 🔑 Permissions & Privacy Explained
 
-Secure Dialer strictly adheres to the principle of **least privilege**. Every permission requested in `AndroidManifest.xml` serves a direct, necessary function for phone calling, call screening, and contact management.
+Secure Dialer strictly operates under the security principle of **Least Privilege**. Every permission requested in `AndroidManifest.xml` serves a direct, transparent function for cellular phone calling, offline call screening, and contact management.
 
 ---
 
-## 📋 Permission Manifest Breakdown
+## 📋 Comprehensive Permission Manifest Breakdown
 
-| Permission Name | Type | Purpose & Justification |
+| Permission Name | Grant Type | Technical Purpose & Justification |
 | :--- | :--- | :--- |
-| `READ_PHONE_STATE` | Runtime | Detects incoming call state, cellular network status, and SIM card availability. |
-| `CALL_PHONE` | Runtime | Enables placing phone calls directly from the T9 dialpad and contact list. |
-| `READ_CALL_LOG` | Runtime | Displays incoming, outgoing, and missed call history logs. |
-| `WRITE_CALL_LOG` | Runtime | Allows clearing call history, removing entries, or marking calls as read. |
-| `READ_CONTACTS` | Runtime | Displays system contacts within the app's unified contact list and T9 search. |
-| `WRITE_CONTACTS` | Runtime | Allows creating, editing, and deleting system contacts from within the app. |
-| `MANAGE_OWN_CALLS` | Normal | Allows integration with TelecomManager for active call state management. |
-| `POST_NOTIFICATIONS` | Runtime | Displays active ongoing call status, missed call alerts, and incoming call banners (Android 13+). |
-| `VIBRATE` | Normal | Provides haptic vibration feedback on dialpad button presses and incoming rings. |
+| `READ_PHONE_STATE` | Runtime | Detects incoming/outgoing call states, cellular radio network status, and SIM card slot availability for dual-SIM routing. |
+| `CALL_PHONE` | Runtime | Initiates phone calls directly from the T9 dialpad, speed dial shortcuts, and contact detail cards. |
+| `READ_CALL_LOG` | Runtime | Displays incoming, outgoing, missed, and rejected call history entries inside the unified recents log. |
+| `WRITE_CALL_LOG` | Runtime | Enables deleting individual call log entries, clearing recents history, and updating call status badges. |
+| `READ_CONTACTS` | Runtime | Displays system contacts inside the T9 dialpad auto-suggest and contact manager list. |
+| `WRITE_CONTACTS` | Runtime | Allows creating, editing, starring, and removing contacts in the system address book. |
+| `MANAGE_OWN_CALLS` | Normal | Integrates with Android's `TelecomManager` for managing active call audio streams and in-call UI overlays. |
+| `POST_NOTIFICATIONS` | Runtime | Displays active call heads-up banners, missed call alerts, and incoming call notification cards (Android 13+). |
+| `VIBRATE` | Normal | Provides tactile haptic feedback on dialpad key taps and incoming ring vibration. |
 
 ---
 
-## 🚫 Explicitly Excluded Permissions
+## 🚫 Explicitly Excluded Dangerous Permissions
 
-For absolute transparency, here are permissions that Secure Dialer **DOES NOT** request:
+For complete user privacy and zero-trust verification, the following high-risk permissions are **completely absent** from Secure Dialer's source code and manifest:
 
-❌ **`android.permission.INTERNET`**: The app cannot establish any HTTP/HTTPS, TCP, or UDP network connections.  
-❌ **`android.permission.ACCESS_FINE_LOCATION`**: The app never tracks or accesses your GPS location.  
-❌ **`android.permission.READ_EXTERNAL_STORAGE`**: Media files and external files are not read or scanned.  
-❌ **`android.permission.CAMERA`**: No camera access is ever requested.  
-❌ **`android.permission.RECORD_AUDIO`**: Background microphone recording is strictly impossible.
+| Excluded Permission | Threat Prevented |
+| :--- | :--- |
+| ❌ **`android.permission.INTERNET`** | **Zero Network Data Exfiltration:** The app cannot create HTTP/S, TCP/UDP sockets or send data to any remote server. |
+| ❌ **`android.permission.ACCESS_FINE_LOCATION`** | **No GPS Tracking:** Your location is never requested, accessed, or stored. |
+| ❌ **`android.permission.READ_EXTERNAL_STORAGE`** | **No File Scanning:** Private device storage, photos, and documents remain untouched. |
+| ❌ **`android.permission.CAMERA`** | **No Visual Access:** Camera hardware is never activated. |
+| ❌ **`android.permission.RECORD_AUDIO`** | **No Background Eavesdropping:** Audio recording APIs are never requested or invoked. |
 
 ---
 
-## ⚙️ How Dynamic Runtime Permissions Work
+## ⚖️ Privacy Comparison: Secure Dialer vs. Stock Phone Apps
 
-When you open Secure Dialer for the first time:
-1. You will be prompted to set **Secure Dialer as your Default Phone App**.
-2. You can selectively grant or revoke contacts access. If you grant contacts access, system contacts appear in T9 search. If you deny contacts access, you can still place manual calls or use encrypted local contacts.
+| Feature / Metric | Secure Dialer | Stock Dialers (Google / Samsung) | Cloud Call Blockers (Truecaller) |
+| :--- | :---: | :---: | :---: |
+| **Internet Access** | ❌ **Blocked** | ✅ Enabled | ✅ Required |
+| **Call Log Telemetry** | ❌ **Zero** | ⚠️ Uploaded for Analytics | ⚠️ Uploaded to Cloud DB |
+| **Contact Book Harvesting** | ❌ **Local Only** | ⚠️ Synced to Cloud Account | ⚠️ Publicly Searchable |
+| **Spam Check Method** | 🛡️ **Offline Local DB** | 🌐 Cloud Query | 🌐 Cloud Lookup |
+| **Monetization & Ads** | ❌ **100% Free / No Ads** | ❌ Pre-installed | ⚠️ Ads & Premium Subs |
+
+---
+
+## ⚙️ Dynamic Runtime Permission Request Flow
+
+When launching Secure Dialer for the first time:
+1. **Default Dialing Service:** You will be prompted to set **Secure Dialer as your Default Phone App** so Android routes incoming calls to our `InCallService`.
+2. **Selective Contacts Access:** You can choose whether to grant contacts access. If denied, Secure Dialer still functions perfectly as a standalone dialer with an isolated, encrypted local contact vault!
+
