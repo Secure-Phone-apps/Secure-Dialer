@@ -83,6 +83,12 @@ android {
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 
+configurations.all {
+  resolutionStrategy {
+    force("org.bouncycastle:bcprov-jdk18on:1.84")
+  }
+}
+
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {
