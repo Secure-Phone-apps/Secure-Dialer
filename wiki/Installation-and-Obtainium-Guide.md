@@ -10,7 +10,7 @@ Secure Dialer is distributed directly as signed, open-source Android Application
 
 <p align="center">
   <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
-    <img src="https://img.shields.io/badge/Get_It_On-Obtainium-00BCD4?style=for-the-badge&logo=android&logoColor=white" alt="Add to Obtainium" />
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="52" alt="Get it on Obtainium" />
   </a>
 </p>
 
