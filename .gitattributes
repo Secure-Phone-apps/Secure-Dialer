@@ -1,0 +1,8 @@
+# Explicitly mark binary files so Git never modifies or corrupts them
+*.jar binary
+*.jks binary
+*.keystore binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
