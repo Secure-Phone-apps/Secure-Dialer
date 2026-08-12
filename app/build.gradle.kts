@@ -85,7 +85,7 @@ android {
 
 configurations.all {
   resolutionStrategy {
-    force("org.bouncycastle:bcprov-jdk18on:1.85.2")
+    force("org.bouncycastle:bcprov-jdk18on:1.84")
   }
 }
 
