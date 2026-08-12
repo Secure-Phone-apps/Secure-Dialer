@@ -1,23 +1,24 @@
-name: Android CI
+name: CodeQL Security Scan
 
 on:
   push:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
+  schedule:
+    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
-
-env:
-  ACTIONS_AUDIT_NODE_VERSION: 'false'
-  ACTIONS_SILENCE_DEPRECATED_NODE_VERSION_WARNING: 'true'
+  security-events: write
+  actions: read
 
 jobs:
-  build:
-    name: Build & Verify
+  analyze:
+    name: CodeQL Security Analysis
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -39,12 +40,16 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build Debug APK
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          build-mode: manual
+
+      - name: Build Android App for CodeQL Analysis
         run: ./gradlew :app:assembleDebug --no-daemon
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/**/*.apk
-
+          category: "/language:java-kotlin"
