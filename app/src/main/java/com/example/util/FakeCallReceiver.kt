@@ -36,6 +36,7 @@ class FakeCallReceiver : BroadcastReceiver() {
 
         try {
             val mainIntent = Intent(context, MainActivity::class.java).apply {
+                setPackage(context.packageName)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 putExtra("TRIGGER_FAKE_CALL", true)
                 putExtra("FAKE_CALLER_NAME", name)
@@ -106,6 +107,7 @@ class FakeCallReceiver : BroadcastReceiver() {
 
             for (i in 0 until repeatCount) {
                 val intent = Intent(context, FakeCallReceiver::class.java).apply {
+                    setPackage(context.packageName)
                     putExtra("caller_name", name)
                     putExtra("caller_number", number)
                 }
@@ -136,7 +138,9 @@ class FakeCallReceiver : BroadcastReceiver() {
 
         fun cancelFakeCall(context: Context) {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-            val intent = Intent(context, FakeCallReceiver::class.java)
+            val intent = Intent(context, FakeCallReceiver::class.java).apply {
+                setPackage(context.packageName)
+            }
             
             // Cancel up to 16 repeating scheduled alarms to cover any scheduled chain
             for (i in 0..15) {

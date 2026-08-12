@@ -156,6 +156,7 @@ class MyInCallService : InCallService() {
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
+            setPackage(packageName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(
@@ -202,6 +203,7 @@ class MyInCallService : InCallService() {
         }
 
         val intent = Intent(this, MainActivity::class.java).apply {
+            setPackage(packageName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("SHOW_CALL_LOG", true)
         }
@@ -213,6 +215,7 @@ class MyInCallService : InCallService() {
         )
 
         val callBackIntent = Intent(Intent.ACTION_CALL).apply {
+            setPackage(packageName)
             data = Uri.parse("tel:$number")
         }
         val callBackPendingIntent = PendingIntent.getActivity(
@@ -284,6 +287,7 @@ class MyInCallService : InCallService() {
         }
 
         val returnIntent = Intent(this, MainActivity::class.java).apply {
+            setPackage(packageName)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             putExtra("SHOW_CALL_SCREEN", true)
         }
@@ -295,6 +299,7 @@ class MyInCallService : InCallService() {
         )
 
         val hangUpIntent = Intent(this, MyInCallService::class.java).apply {
+            setPackage(packageName)
             action = ACTION_HANG_UP
         }
         val hangUpPendingIntent = PendingIntent.getService(

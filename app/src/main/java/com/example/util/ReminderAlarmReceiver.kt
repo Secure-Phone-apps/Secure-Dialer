@@ -62,6 +62,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
                 // Intent to open Main Dialer Screen
                 val mainIntent = Intent(context, MainActivity::class.java).apply {
+                    setPackage(context.packageName)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
                 val mainPendingIntent = PendingIntent.getActivity(
@@ -73,6 +74,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
 
                 // Intent to initiate Call
                 val callIntent = Intent(Intent.ACTION_CALL).apply {
+                    setPackage(context.packageName)
                     data = Uri.parse("tel:${reminder.number}")
                 }
                 val callPendingIntent = PendingIntent.getActivity(
