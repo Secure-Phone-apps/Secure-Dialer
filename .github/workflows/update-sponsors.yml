@@ -1,7 +1,7 @@
 name: Automatically Update Sponsors Wall of Honor
 
 on:
-  sponsorship:
+  sponsor:
     types: [created, edited, cancelled, tier_changed]
   schedule:
     - cron: '0 0 * * *'
