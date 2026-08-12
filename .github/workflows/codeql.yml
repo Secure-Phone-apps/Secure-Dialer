@@ -48,6 +48,9 @@ jobs:
           languages: java-kotlin
           build-mode: manual
 
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+
       - name: Build Android App for CodeQL Analysis
         run: ./gradlew :app:assembleDebug --no-daemon
 
