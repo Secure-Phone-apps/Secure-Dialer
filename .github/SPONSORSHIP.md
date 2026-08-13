@@ -23,19 +23,19 @@ Your support directly fuels the **human labor, hardware, and developer resources
 
 We offer four transparent support stages. Choose the level that feels right for you:
 
-### ☕ 1. Coffee Supporter — *$2 to $5 / month*
+### ☕ 1. Well Wisher — *$2 to $5 / month*
 * **Impact:** Fuels late-night bug fixing, performance profiling, and UI polish.
 * **Recognition:** Public Sponsor badge on GitHub profile and our gratitude!
 
-### 🛡️ 2. Privacy Advocate — *$10 to $25 / month*
+### 🛡️ 2. Proud Sponsor — *$10 to $25 / month*
 * **Impact:** Directly funds ongoing security maintenance, dependency updates, and offline database optimization.
 * **Recognition:** Public Sponsor badge + named acknowledgment in our release notes (optional).
 
-### 📱 3. Hardware & Device Backer — *$50 to $100 / month*
+### 📱 3. Community Champion — *$50 to $100 / month*
 * **Impact:** Helps cover the cost of physical Android test devices for cross-device, dual-SIM, and custom ROM compatibility testing.
 * **Recognition:** Featured sponsor badge + named mention in repository README.
 
-### ⭐ 4. Core Open Source Champion — *$200+ / month*
+### ⭐ 4. Visionary Leader — *$200+ / month*
 * **Impact:** Provides dedicated support for independent, zero-tracker mobile software development without corporate compromise.
 * **Recognition:** Featured logo/name in README & official website sponsor wall.
 
