@@ -252,10 +252,10 @@ We invite all users, privacy advocates, and contributors to participate in our c
 **Secure Dialer** is 100% free, open-source, and privacy-respecting with **zero ads, zero cloud servers, and zero API costs**. Development is funded entirely through voluntary community support for an independent solo developer.
 
 ### Voluntary Sponsorship Tiers:
-* ☕ **Coffee Supporter ($2 - $5/mo):** Fuels bug fixes and performance profiling.
-* 🛡️ **Privacy Advocate ($10 - $25/mo):** Funds security maintenance and dependency updates.
-* 📱 **Hardware Backer ($50 - $100/mo):** Helps acquire physical Android test devices for dual-SIM & custom ROM testing.
-* ⭐ **Core Champion ($200+/mo):** Sustains long-term independent open-source development.
+* ☕ **Well Wisher ($2 - $5/mo):** Fuels bug fixes and performance profiling.
+* 🛡️ **Proud Sponsor ($10 - $25/mo):** Funds security maintenance and dependency updates.
+* 📱 **Community Champion ($50 - $100/mo):** Helps acquire physical Android test devices for dual-SIM & custom ROM testing.
+* ⭐ **Visionary Leader ($200+/mo):** Sustains long-term independent open-source development.
 
 👉 **Read our full [Honest Sponsorship & Funding Philosophy Guide](.github/SPONSORSHIP.md)** before donating.
 
