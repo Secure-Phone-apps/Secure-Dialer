@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@3a4e6e3d5001090b17c78d0b88131e34e9e04870 # v4.5.0
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -37,7 +37,7 @@ jobs:
           fi
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@94b500e2b5d7dcb01e016f4236a2818c393d6232 # v4.3.0
+        uses: gradle/actions/setup-gradle@v4
         with:
           validate-wrappers: false
 
@@ -48,7 +48,7 @@ jobs:
         run: gradle :app:assembleDebug
 
       - name: Upload Debug APK
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
           path: app/build/outputs/apk/debug/**/*.apk

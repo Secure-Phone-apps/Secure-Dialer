@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@3a4e6e3d5001090b17c78d0b88131e34e9e04870 # v4.5.0
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -36,7 +36,7 @@ jobs:
           fi
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@94b500e2b5d7dcb01e016f4236a2818c393d6232 # v4.3.0
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Build Release APK
         env:
@@ -88,7 +88,7 @@ jobs:
           fi
 
       - name: Create Release and Upload
-        uses: softprops/action-gh-release@c928219332e37c9bd9f07df02e513a60f5e14f7e # v2.2.0
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.release_version }}
           name: Release ${{ github.event.inputs.release_version }}
