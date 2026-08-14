@@ -50,8 +50,9 @@
     <meta property="twitter:description" content="A 100% offline, privacy-first open-source Android dialer with built-in spam blocking, AES-256 call notes, and fake call simulators. Zero internet permissions.">
     <meta property="twitter:image" content="assets/secure_dialer_hero.jpg">
 
-    <!-- Tailwind CSS & Google Fonts -->
-    <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
+    <!-- Precompiled Tailwind CSS Fallback + Tailwind JIT Engine -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJ4PA3UdaYhYLdzdcbcQsWhAC59mVhUM4twkgRX05hnh8g4e5251k3s45WKQEgJnSilBKgZIBQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -70,7 +71,7 @@
                             50: '#f0fdf4',
                             100: '#dcfce7',
                             200: '#bbf7d0',
-                            500: '#10b981', // Emerald green representing safety and security
+                            500: '#10b981',
                             600: '#059669',
                             700: '#047857',
                             900: '#064e3b',
@@ -87,12 +88,43 @@
     </script>
 
     <style>
+        :root {
+            --brand-primary: #10b981;
+            --brand-dark: #047857;
+        }
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
-        h1, h2, h3, h4 {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        /* Explicit SVG sizing protections to prevent icon distortion */
+        svg {
+            display: inline-block;
+            vertical-align: middle;
+            flex-shrink: 0;
+        }
+        svg.w-3 { width: 0.75rem !important; height: 0.75rem !important; }
+        svg.w-3\.5, svg.w-3\\.5 { width: 0.875rem !important; height: 0.875rem !important; }
+        svg.w-4 { width: 1rem !important; height: 1rem !important; }
+        svg.w-5 { width: 1.25rem !important; height: 1.25rem !important; }
+        svg.w-6 { width: 1.5rem !important; height: 1.5rem !important; }
+        svg.w-7 { width: 1.75rem !important; height: 1.75rem !important; }
+        svg.w-8 { width: 2rem !important; height: 2rem !important; }
+        svg.w-10 { width: 2.5rem !important; height: 2.5rem !important; }
+        svg.w-12 { width: 3rem !important; height: 3rem !important; }
+        svg.w-14 { width: 3.5rem !important; height: 3.5rem !important; }
+        svg.w-16 { width: 4rem !important; height: 4rem !important; }
+        
         .glow-emerald {
             box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.2);
         }
