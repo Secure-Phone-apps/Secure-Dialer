@@ -65,7 +65,6 @@ I wanted an app that:
 * **Runs smoothly on older devices (Android 9, 10, 11, 12)** that we all have at home and don't want to throw away.
 * **Is simple enough for elders and parents to use without confusion**, modern for younger users, and packed with practical tools for power users.
 
-I have spent the last 40–50 days building this, making over 160 debug builds, testing across multiple Android brands and OS versions, and reaching our 6th stable release. I promise that once you start using it, you will feel the effort, care, and dedication behind every single screen!
 
 ---
 
