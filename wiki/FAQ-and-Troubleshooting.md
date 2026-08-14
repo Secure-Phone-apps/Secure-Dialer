@@ -1,66 +1,54 @@
 # ❓ FAQ & Troubleshooting Guide
 
-Welcome to the **Secure Dialer FAQ & Troubleshooting Guide**. Search below for solutions to common configuration questions, default app setups, dual-SIM preferences, and custom ROM integration.
+Hey everyone! Here are answers to common questions about setting up **Secure Dialer**, dual-SIM configuration, spam blocking, and custom ROMs.
 
 ---
 
-## 📱 Section 1: Default Phone App & System Integration
+## 📱 Setting Up as Your Default Phone App
 
-### Q1: Why does Secure Dialer ask to be set as the Default Phone App?
-**A:** Android OS architecture strictly requires dialer applications to be registered as the system `Default Dialing App` in order to handle active incoming/outgoing call screens (`InCallService`), access cellular hardware controls (`TelecomManager`), and update call logs (`CallLog`).
+### Why does the app ask to be the Default Phone App?
+Android requires any app that displays incoming call screens and controls phone audio to be set as the system's **Default Phone App** (`InCallService`). Without this, the phone cannot let Secure Dialer answer or manage your calls.
 
-### Q2: How do I set Secure Dialer as my default dialer on Samsung / Pixel / Xiaomi / OnePlus?
-1. Open your device's **System Settings**.
-2. Navigate to **Apps** -> **Default Apps**.
-3. Tap **Phone App** (or Default Dialer) and select **Secure Dialer**.
-4. *(Optional for Xiaomi / HyperOS / MIUI):* Open **Autostart** permissions and grant Autostart to Secure Dialer to ensure incoming calls wake the screen instantly when locked.
-
----
-
-## 🚫 Section 2: Call Screening, Spam Blocking & Blacklists
-
-### Q3: How do I activate offline Call Screening & Spam Rejection?
-1. Open **System Settings** -> **Apps** -> **Default Apps**.
-2. Tap **Caller ID & Spam App** (or Call Screening Service).
-3. Select **Secure Dialer**.
-4. Inside **Secure Dialer** -> **Settings** -> **Call Screening & Blocklist**:
-   * Toggle **Enable Offline Call Screening**.
-   * Choose blocking rules: **Block Blocklisted Numbers**, **Block Private/Hidden Numbers**, or **Block Unknown Numbers**.
-
-> [!NOTE]
-> **100% Offline Screening:** Unlike cloud-based caller ID services (e.g. Truecaller), Secure Dialer screens calls locally using your encrypted on-device database in under 5 milliseconds with zero internet access.
+### How to set Secure Dialer as Default:
+1. Open your phone's **Settings**.
+2. Go to **Apps** -> **Default Apps**.
+3. Tap **Phone App** and select **Secure Dialer**.
+4. *(For Xiaomi / HyperOS / MIUI users):* Also enable **Autostart** in app settings so incoming calls can wake up the screen immediately when locked.
 
 ---
 
-## 📶 Section 3: Dual-SIM Calling & Carrier Preferences
+## 🚫 Offline Spam Blocking & Call Screening
 
-### Q4: Does Secure Dialer support Dual-SIM smartphones?
-**A:** Yes! Secure Dialer natively detects multi-SIM hardware slots (`SubscriptionManager`). When placing a call:
-* A fluid SIM selector prompt appears allowing you to tap **SIM 1** or **SIM 2**.
-* You can configure a default SIM preference per contact or globally in **Settings** -> **Dual-SIM Preferences**.
-
----
-
-## 🔒 Section 4: Custom ROMs (GrapheneOS / CalyxOS / LineageOS / /e/OS)
-
-### Q5: Is Secure Dialer compatible with GrapheneOS and de-Googled Android ROMs?
-**A:** **100% Compatible.** Secure Dialer is engineered specifically for privacy-hardened and de-Googled operating systems. It does not contain or depend on Google Play Services, Firebase Cloud Messaging, or microG components.
+### How do I enable Call Screening?
+1. Go to **Settings** -> **Apps** -> **Default Apps**.
+2. Tap **Caller ID & Spam App** and select **Secure Dialer**.
+3. Inside Secure Dialer, tap **Settings** -> **Call Screening & Blocklist** and toggle on your desired blocking options (block private numbers, block unknown numbers, or custom blocklist).
 
 ---
 
-## 💾 Section 5: Local Backup, Migration & Data Security
+## 📶 Dual-SIM Calling & Carriers
 
-### Q6: How do I backup my call history, speed dial settings, and local encrypted contacts?
-1. Open **Secure Dialer** -> **Settings** -> **Data & Backup**.
-2. Tap **Export Encrypted Backup (.vcf / .json)**.
-3. Choose a destination folder on your internal storage or external SD card.
-4. To restore on a new smartphone, tap **Import Backup** and select your saved backup file.
-
-> [!SECURITY]
-> **Data Ownership:** Your backups remain strictly on your physical storage device. Make sure to keep your exported backup files in a safe location or encrypted container.
+### Does Secure Dialer support Dual-SIM phones?
+Yes! Secure Dialer detects both SIM slots automatically. When you tap a number or contact to call:
+* A clean SIM dialog appears letting you pick **SIM 1** or **SIM 2**.
+* You can also set a default preferred SIM in **Settings** if you always call from one card.
 
 ---
 
-📍 **Quick Links:** [[Home]] | [[Wall of Honor]] | [[Installation and Obtainium Guide]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]]
+## 🔒 Custom ROMs (GrapheneOS, CalyxOS, LineageOS)
 
+### Does it work on de-Googled ROMs?
+Yes, **100%**. Secure Dialer was built with privacy and de-Googled systems in mind. It has zero dependencies on Google Play Services, microG, or Firebase.
 
+---
+
+## 💾 Backing Up Your Data
+
+### How do I backup my settings and blocklists?
+1. In Secure Dialer, open **Settings** -> **Data & Backup**.
+2. Tap **Export Encrypted Backup** and save the file to your device storage.
+3. To restore on another phone, tap **Import Backup** and enter your password.
+
+---
+
+📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]] | [[Wall of Honor]]

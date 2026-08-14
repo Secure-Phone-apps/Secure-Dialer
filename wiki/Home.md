@@ -1,6 +1,6 @@
 # Welcome to the Secure Dialer Wiki 📚
 
-Welcome to the official technical documentation and wiki for **Secure Dialer**—a modern, zero-internet, privacy-first open-source Android calling application built with Jetpack Compose, Kotlin 2.0, and Room Database with SQLCipher encryption.
+Hey everyone! Welcome to the official documentation and guides for **Secure Dialer**—my 100% offline, privacy-first Android dialer app built with Jetpack Compose (Material 3), Kotlin 2.0, and Room SQLite with SQLCipher database encryption.
 
 <p align="center">
   <img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support" />
@@ -12,51 +12,37 @@ Welcome to the official technical documentation and wiki for **Secure Dialer**�
 
 ---
 
-## ⚡ Wiki Quick Navigation
+## ⚡ Quick Guide Navigation
 
-| Documentation Section | Description & Highlights |
+| Guide | What You Will Find |
 | :--- | :--- |
-| 🏆 **[[Wall of Honor]]** | Automated showcase of generous community sponsors across our four support tiers. |
-| 📦 **[[Installation and Obtainium Guide]]** | Step-by-step setup with Obtainium auto-updates, CPU architecture APK selection, and SHA-256 verification. |
-| ❓ **[[FAQ and Troubleshooting]]** | Dual-SIM routing, setting default dialer on Samsung/Pixel/Xiaomi, GrapheneOS/LineageOS compatibility, and backup/restore. |
-| 🔑 **[[Permissions and Privacy Explained]]** | Transparent review of Android permissions, dynamic runtime requests, and strict exclusion of `INTERNET`. |
-| 🛡️ **[[Security and Encryption Architecture]]** | AES-256 GCM database encryption, Android KeyStore, hardware TEE/StrongBox, and offline sandboxing. |
+| 📦 **[[Installation and Obtainium Guide]]** | How to install the app, set up auto-updates with Obtainium, choose the right APK for your phone processor, and verify SHA-256 checksums. |
+| ❓ **[[FAQ and Troubleshooting]]** | Answers to common questions: setting default dialer on Samsung, Xiaomi, Pixel, handling Dual-SIM cards, and compatibility with GrapheneOS / LineageOS. |
+| 🔑 **[[Permissions and Privacy Explained]]** | Transparent breakdown of why certain phone permissions are needed and how the strict lack of internet permission keeps your data safe. |
+| 🛡️ **[[Security and Encryption Architecture]]** | Details on our AES-256 GCM database encryption, Android KeyStore hardware root of trust, and local offline sandbox. |
+| 🏆 **[[Wall of Honor]]** | Special thanks and automated showcase of community supporters and sponsors. |
 
 ---
 
-## 🌟 Core Features & Highlights
+## 🌟 Key Features at a Glance
 
-* **🔒 Zero-Internet Security:** Compiled without the `android.permission.INTERNET` permission. Your call history, contacts database, and dialing activity physically cannot leave your device.
-* **⚡ Lightning-Fast T9 Search:** Dialpad search algorithm supports instant contact lookups by name, phone number, or initials.
-* **🛡️ Local Encrypted Contacts Vault:** Choose to store sensitive contacts in an isolated, SQLCipher-encrypted vault hidden from other apps.
-* **🚫 Offline Call Screening & Spam Rejection:** Block nuisance calls and unwanted numbers using Android's native `CallScreeningService` without cloud tracking.
-* **📶 Dual-SIM Smart Selector:** Full support for multi-SIM Android devices with automatic carrier preference memory and manual toggles.
-* **🎨 Material You Dynamic Theming:** Fluid Jetpack Compose Material Design 3 interface with true AMOLED dark theme support.
-
----
-
-## 🛠️ Technology Stack Overview
-
-| Layer | Component / Framework |
-| :--- | :--- |
-| **Language** | Kotlin 2.0+ with Coroutines & StateFlow |
-| **UI Engine** | Jetpack Compose (Material Design 3) |
-| **Database** | Room Persistence Library + SQLCipher (AES-256 GCM) |
-| **Key Management** | Android KeyStore System Provider (Hardware-backed TEE / StrongBox) |
-| **Telephony Integration** | Android TelecomManager, InCallService, CallScreeningService |
-| **Target Platforms** | Android 7.0+ (API 24 to 35+), GrapheneOS, CalyxOS, LineageOS |
+* **🔒 100% Offline & Zero Trackers:** Built without the internet permission (`android.permission.INTERNET`). Your call logs, contacts, and notes never leave your physical phone.
+* **⚡ Smart T9 Dialpad:** Fast predictive search by contact name, phone number, or initials.
+* **🛡️ Encrypted Local Database:** All sensitive notes, speed dials, and blocklists are encrypted with **AES-256 SQLCipher**.
+* **🚫 Offline Spam Blocker:** Block spam callers and hidden numbers locally using Android's native `CallScreeningService`.
+* **📶 Full Dual-SIM Support:** Multi-SIM prompts and customizable carrier defaults.
+* **🎭 Fake Call Simulator:** Trigger a realistic incoming call to help you escape awkward meetings or situations.
+* **🎨 Modern Material 3 Design:** Smooth animations, dynamic theme colors, and full AMOLED dark mode support.
 
 ---
 
-## 💬 Community & Support
+## 💬 Community & Feedback
 
 * 🐙 **GitHub Repository:** [Secure-Phone-apps/Secure-Dialer](https://github.com/Secure-Phone-apps/Secure-Dialer)
 * 💬 **Community Discussions:** [GitHub Discussions](https://github.com/Secure-Phone-apps/Secure-Dialer/discussions)
-* 🐛 **Report Issues:** [GitHub Issue Tracker](https://github.com/Secure-Phone-apps/Secure-Dialer/issues)
+* 🐛 **Report a Bug:** [GitHub Issues](https://github.com/Secure-Phone-apps/Secure-Dialer/issues)
 * 💖 **Sponsor Project:** [GitHub Sponsors](https://github.com/sponsors/Secure-Phone-apps)
 
 ---
 
-📍 **Quick Links:** [[Wall of Honor]] | [[Installation and Obtainium Guide]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]]
-
-
+📍 **Quick Links:** [[Installation and Obtainium Guide]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]] | [[Wall of Honor]]

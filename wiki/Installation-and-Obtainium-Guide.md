@@ -1,12 +1,12 @@
-# 📦 Installation & Obtainium Update Guide
+# 📦 Installation & Obtainium Guide
 
-Secure Dialer is distributed directly as signed, open-source Android Application Packages (APKs). Because Secure Dialer does not connect to the internet, installing and updating via open-source tools like **Obtainium** or manual releases provides maximum privacy and control.
+Hey everyone! Here is a simple guide on how to install **Secure Dialer**, set up automatic update notifications with **Obtainium**, and pick the right APK file for your phone.
 
 ---
 
-## 🚀 Method 1: Automatic App Updates via Obtainium (Recommended)
+## 🚀 Method 1: Auto-Updates with Obtainium (Recommended)
 
-[Obtainium](https://github.com/ImranR98/Obtainium) is an open-source Android app manager that allows you to install and automatically receive update notifications directly from GitHub Releases—**without relying on Google Play Store or proprietary services**.
+[Obtainium](https://github.com/ImranR98/Obtainium) is an open-source Android app that lets you download and receive automatic updates directly from our GitHub Releases without needing the Google Play Store.
 
 <p align="center">
   <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
@@ -14,74 +14,53 @@ Secure Dialer is distributed directly as signed, open-source Android Application
   </a>
 </p>
 
-### Step-by-Step Obtainium Setup:
+### How to set it up:
 1. Download and install **[Obtainium](https://github.com/ImranR98/Obtainium)** on your Android device.
 2. Open Obtainium and tap **Add App**.
-3. Enter the official GitHub repository URL:
+3. Paste our GitHub repository URL:
    ```text
    https://github.com/Secure-Phone-apps/Secure-Dialer
    ```
-4. Tap **Add**. Obtainium will analyze the release assets, select the optimal CPU architecture APK for your smartphone, and notify you automatically whenever a new version is released!
-
-> [!TIP]
-> **One-Click Add:** If you are reading this page on your Android phone with Obtainium installed, simply tap the **[Get It On Obtainium](https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer)** button above!
+4. Tap **Add**. Obtainium will automatically detect new releases, select the best APK for your phone processor, and notify you when an update is available!
 
 ---
 
-## 📱 Method 2: Manual Direct APK Download
+## 📱 Method 2: Direct APK Download from GitHub Releases
 
-You can download compiled and cryptographically signed APK files directly from our **[GitHub Releases Page](https://github.com/Secure-Phone-apps/Secure-Dialer/releases)**.
+You can also download signed APK files directly from our **[GitHub Releases Page](https://github.com/Secure-Phone-apps/Secure-Dialer/releases)**.
 
-### CPU Architecture Selection Guide:
+### Which APK file should you choose?
 
-| APK File Name | CPU Target | Applicable Device Examples |
-| :--- | :--- | :--- |
-| `app-arm64-v8a-release.apk` | **64-bit ARM** (`arm64-v8a`) | **95% of modern smartphones** (Google Pixel 6/7/8/9, Samsung Galaxy S20–S24, OnePlus, Xiaomi, Nothing Phone) |
-| `app-armeabi-v7a-release.apk` | **32-bit ARM** (`armeabi-v7a`) | Older Android phones & entry-level budget devices |
-| `app-x86_64-release.apk` | **64-bit Intel/AMD** (`x86_64`) | Android Studio Emulators, ChromeOS devices, & Android-x86 PCs |
-| `app-universal-release.apk` | **Universal Multi-Arch** | Compatible with all Android devices (slightly larger file size) |
+| APK File Name | Which Phones Is It For? |
+| :--- | :--- |
+| **`secure-dialer-v1.3.0-arm64-v8a.apk`** | **Most modern Android phones** (Google Pixel, Samsung Galaxy, OnePlus, Xiaomi, Motorola from the last 6+ years). **Download this one if you are unsure!** |
+| **`secure-dialer-v1.3.0-armeabi-v7a.apk`** | **Older 32-bit Android phones** and entry-level budget phones. |
+| **`secure-dialer-v1.3.0-x86_64.apk`** | **64-bit Emulators**, ChromeOS, or Android-x86 PC setups. |
+| **`secure-dialer-v1.3.0-universal.apk`** | **Universal build** that runs on all Android devices. |
 
 ---
 
-## 🔒 Method 3: Cryptographic SHA-256 Checksum Verification
+## 🔒 Verifying APK Checksums (SHA-256)
 
-To ensure your downloaded APK has not been modified or corrupted, verify its SHA-256 hash against the official published `checksums.txt` file attached to each GitHub Release.
+If you want to verify that your downloaded APK is genuine and untampered, you can check its SHA-256 hash against the `checksums.txt` file attached to each release:
 
-### Verification Commands:
-
-* **Linux / macOS Terminal:**
+* **Linux / Mac Terminal:**
   ```bash
-  sha256sum app-arm64-v8a-release.apk
+  sha256sum secure-dialer-v1.3.0-arm64-v8a.apk
   ```
 * **Windows PowerShell:**
   ```powershell
-  Get-FileHash .\app-arm64-v8a-release.apk -Algorithm SHA256
+  Get-FileHash .\secure-dialer-v1.3.0-arm64-v8a.apk -Algorithm SHA256
   ```
-* **Android Termux:**
-  ```bash
-  sha256sum /sdcard/Download/app-arm64-v8a-release.apk
-  ```
-
-Compare the calculated 64-character hash string with the value in `checksums.txt`. The output must match identically.
 
 ---
 
-## 🛠️ Common Installation Troubleshooting
+## 🛠️ Quick Troubleshooting Tips
 
-### 1. "App Not Installed" or "Package Conflict" Error
-* **Cause:** Attempting to update or install over an existing app signed with a different key (e.g. debug build vs official release).
-* **Fix:** Uninstall any existing or development version of Secure Dialer before installing the official release APK.
-
-### 2. "Blocked by Play Protect" Warning
-* **Cause:** Android Google Play Protect flags sideloaded APKs from open-source repositories when they aren't downloaded via the Google Play Store.
-* **Fix:** Tap **More Details** -> **Install Anyway**. Secure Dialer contains zero malicious code or network callers.
-
-### 3. "Unknown Apps Permission Denied"
-* **Cause:** Android requires explicit user consent before a browser or file manager can install APKs.
-* **Fix:** Go to **System Settings** -> **Apps** -> **Special App Access** -> **Install Unknown Apps** and toggle **Allow** for your browser or Obtainium.
+* **"App Not Installed" Error:** If you previously had a debug build or older version signed with a different key, uninstall it first before installing the official release APK.
+* **"Blocked by Play Protect" Warning:** Since the app is downloaded from GitHub and not the Play Store, tap **More Details -> Install Anyway**. Secure Dialer is 100% open source and contains zero network or tracking code.
+* **"Unknown Apps" Prompt:** When downloading via browser or Obtainium, make sure you allow "Install Unknown Apps" in your device's system settings.
 
 ---
 
-📍 **Quick Links:** [[Home]] | [[Wall of Honor]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]]
-
-
+📍 **Quick Links:** [[Home]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Security and Encryption Architecture]] | [[Wall of Honor]]

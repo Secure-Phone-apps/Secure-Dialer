@@ -1,95 +1,58 @@
 # Contributing to Secure Dialer 🤝
 
-Thank you for your interest in contributing to **Secure Dialer**! We are building a modern, lightweight, stable, and completely offline-first Android phone dialer to preserve user privacy and security.
+Hey everyone! Thank you so much for your interest in helping improve **Secure Dialer**!
 
-As an open-source project, your contributions—whether reporting bugs, improving documentation, refactoring code, or submitting features—are highly appreciated.
-
----
-
-## 📜 Core Guarantees & Code Principles
-
-To preserve the trust, speed, and privacy of our users, all contributions must adhere strictly to these engineering principles:
-
-1. **🔒 Zero-Internet Guarantee (Hard Rule):** Secure Dialer does not use the `android.permission.INTERNET` permission. Under no circumstances should any network access, third-party analytics, error reporting SDKs, or cloud services be introduced.
-2. **🔌 Native Alternatives Only:** Do not add external library wrappers, complex architectures, or speculative features. We favor direct interactions with native Android Framework APIs (e.g., `TelecomManager`, `InCallService`, `CallScreeningService`, and `ContactsContract`).
-3. **⚡ Ruthless Code Efficiency:** Keep the codebase lightweight and highly responsive. Avoid boilerplate code, complex DI frameworks, or unnecessary wrapper hierarchies. Use native Kotlin and Jetpack Compose idioms.
-4. **🎨 Material Design 3 Styling:** Ensure all UI elements conform to the Material 3 standard, utilizing proper edge-to-edge system insets (`enableEdgeToEdge`), accessible touch targets (minimum 48dp), and consistent padding.
+Whether you are helping translate the app into your language, testing it on different phone models, reporting bugs, or submitting code improvements, every bit of help is deeply appreciated.
 
 ---
 
-## 🚀 Setting Up the Development Environment
+## 🔒 Core Guidelines & Invariants
 
-### Prerequisites
-* **Android Studio** (Koala or newer)
+To keep Secure Dialer completely private, lightweight, and trustworthy, all contributions must respect these simple rules:
+
+1. **Zero Internet Permission (Non-Negotiable):** Secure Dialer never includes the `android.permission.INTERNET` permission. Please do not add any third-party analytics, ads, cloud sync, or external tracking SDKs.
+2. **Native Android APIs First:** We prefer direct native integrations with Android OS telephony services (`TelecomManager`, `InCallService`, `CallScreeningService`, and `ContactsContract`) without unnecessary external wrappers.
+3. **Lightweight & Fast:** The app should open instantly and run smoothly on both new flagship phones and older Android devices.
+4. **Material 3 Expressive Design:** Follow modern Jetpack Compose Material 3 design patterns with proper edge-to-edge system insets and accessible touch targets (minimum 48dp).
+
+---
+
+## 🛠️ Developer Setup & Testing
+
+### Requirements
+* **Android Studio** (Koala or newer recommended)
 * **JDK 17**
-* **Android SDK 24** (Minimum) to **SDK 36** (Target)
+* **SDK Compatibility:** Android 7.0 (API 24) to Android 15/16 (API 36)
 
-### Build Instructions
-1. **Clone your fork of the repository:**
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/Secure-Dialer.git
-   ```
-2. **Open the project** in Android Studio.
-3. Allow Gradle to synchronize.
-4. Run or assemble the debug APK:
-   ```bash
-   gradle assembleDebug
-   ```
-
----
-
-## 🧪 Testing Guidelines
-
-We use Robolectric for fast local JVM tests and Roborazzi for visual regression / screenshot verification without requiring physical emulators.
-
-### Running Local Unit & JVM Tests
-To run standard unit tests and local Robolectric lifecycle tests:
+### Quick Build & Test Commands
 ```bash
+# Clone the repository
+git clone https://github.com/Secure-Phone-apps/Secure-Dialer.git
+cd Secure-Dialer
+
+# Run local unit tests
 gradle :app:testDebugUnitTest
-```
 
-### Verifying UI Screenshots
-To verify that UI changes have not introduced visual regressions:
-```bash
-gradle :app:verifyRoborazziDebug
-```
-
-### Recording Reference Screenshots
-If you have intentionally modified the UI and need to update the baseline reference screenshots:
-```bash
-gradle :app:recordRoborazziDebug
+# Assemble debug APK
+gradle :app:assembleDebug
 ```
 
 ---
 
-## 📥 Submission Process
+## 📥 How to Submit a Pull Request (PR)
 
-1. **Check Existing Issues:** Search the issue tracker to see if there is already an open issue or discussion regarding your change.
-2. **Create a Feature Branch:** Branch from the `main` branch with a descriptive name:
+1. Check existing **[GitHub Issues](https://github.com/Secure-Phone-apps/Secure-Dialer/issues)** to see if the topic is already being discussed.
+2. Fork the repository and create a descriptive feature branch:
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b feature/my-improvement
    ```
-3. **Write Clean Code:**
-   * Keep your edits focused and minimal.
-   * Add comments only where absolutely necessary to explain complex native system logic.
-   * Format your code standardly with Kotlin style guidelines.
-4. **Run Verification:** Ensure your code builds perfectly and all tests pass:
-   ```bash
-   gradle assembleDebug :app:testDebugUnitTest :app:verifyRoborazziDebug
-   ```
-5. **Commit & Push:** Commit your changes with descriptive, concise commit messages, and push to your fork:
-   ```bash
-   git commit -m "Refactor: Condense recents transaction history logic"
-   git push origin feature/your-feature-name
-   ```
-6. **Submit a Pull Request (PR):** Open a PR against the `main` branch of the official repository. Describe your changes clearly and verify that your PR adheres to our zero-network, privacy-first principles.
+3. Test your changes locally to ensure the app compiles cleanly and tests pass.
+4. Open a Pull Request on GitHub with a clear description of what you changed and which devices you tested on.
 
 ---
 
-## 🛡️ Security Vulnerabilities
+## 🛡️ Security Reports
 
-Please do **NOT** open public issues for security vulnerabilities. Report security issues privately by emailing `movstore.online@gmail.com`.
+If you discover a security flaw or privacy issue, please do not open a public issue. Email me directly at **`movstore.online@gmail.com`** so we can fix it privately before disclosure.
 
----
-
-*Thank you for helping us build a faster, safer, and completely private mobile experience!*
+*Thank you for supporting private, open-source communication tools!*

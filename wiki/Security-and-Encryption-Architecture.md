@@ -1,76 +1,64 @@
 # 🛡️ Security & Encryption Architecture
 
-Secure Dialer employs a defense-in-depth security architecture designed to protect call logs, contact books, speed dials, and blocked numbers from local device malware, physical extraction, and unauthorized background inspection.
+Hey everyone! Here is a detailed breakdown of how **Secure Dialer** protects your data, encrypts your database, and keeps your private phone calls isolated on your device.
 
 ---
 
-## 1. Operating System-Level Network Isolation
+## 1. Zero Network Access (Physical Isolation)
 
-The core pillar of Secure Dialer's zero-trust model is **Hardware & OS-Level Sandboxing**:
+The primary foundation of Secure Dialer is absolute **offline isolation**:
 
-* **Manifest Omission:** The `AndroidManifest.xml` file completely omits `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE`.
-* **Kernel Enforcement:** The Android Linux kernel strictly drops any attempt to open sockets (`socket()`, `connect()`). Network calls are rejected at the system call layer.
-* **Zero Telemetry SDKs:** The application binary contains zero analytics, tracking, or crash reporting SDKs (No Firebase, No Google Play Services, No Sentry).
+* **No Internet Permission:** `AndroidManifest.xml` does not declare `android.permission.INTERNET` or `android.permission.ACCESS_NETWORK_STATE`.
+* **Kernel Enforcement:** The Android operating system kernel physically blocks any network sockets from opening.
+* **No Analytics or Trackers:** There are zero third-party tracking or advertising SDKs (No Firebase, No Google Analytics, No Sentry).
 
 ---
 
-## 2. Hardware-Backed AES-256 GCM Database Encryption
+## 2. On-Device AES-256 SQLCipher Database Encryption
 
-All local app data (call history logs, contact notes, speed dial shortcuts, local encrypted contact cards, and blacklists) is stored inside a **SQLCipher-encrypted SQLite database**.
+All custom call notes, speed dial shortcuts, local contact cards, and blacklists are stored inside a **SQLCipher-encrypted SQLite database**.
 
-### Key Generation & Cryptographic Lifecycle:
-
-1. **KeyStore Provider:** Upon first initialization, Secure Dialer calls the Android KeyStore System (`AndroidKeyStore`).
-2. **Secure Enclave Generation:** A 256-bit AES cryptographic master key is generated inside the device's hardware-isolated **Trusted Execution Environment (TEE)** or **StrongBox Keymaster (HSM)**.
-3. **RAM Protection:** The master passphrase is never stored in unencrypted persistent storage and cannot be extracted via USB debugging or root access.
-4. **On-Disk Cipher:** SQLCipher encrypts all page sectors on disk using **AES-256 in Galois/Counter Mode (GCM)**.
+### How Encryption Keys are Managed:
+1. **Android KeyStore:** On first launch, Secure Dialer communicates with the hardware-backed **Android KeyStore System**.
+2. **Hardware Enclave:** A 256-bit AES master key is generated inside your device's secure hardware enclave (**TEE / StrongBox**).
+3. **Encrypted at Rest:** The database passphrase is encrypted using `AES/GCM/NoPadding` and stored in private app storage. Keys cannot be extracted even with file-system dumps.
+4. **Full Page Encryption:** SQLCipher encrypts all database pages on disk using **AES-256 in GCM mode**.
 
 ```text
-┌────────────────────────────────┐      ┌───────────────────────────────┐      ┌─────────────────────────────────┐
-│     Encrypted Local Database   │ ◄──► │  SQLCipher Database Engine    │ ◄──► │  Android KeyStore System        │
-│    (call_logs.db on disk)      │      │       (AES-256 GCM)           │      │   (Hardware TEE / StrongBox)    │
-└────────────────────────────────┘      └───────────────────────────────┘      └─────────────────────────────────┘
+┌──────────────────────────────┐        ┌────────────────────────────┐        ┌──────────────────────────────┐
+│   Encrypted Local Database   │ ◄────► │   SQLCipher DB Engine      │ ◄────► │  Android KeyStore System     │
+│   (AES-256 on device disk)   │        │     (AES-256 GCM)          │        │  (Hardware TEE / StrongBox)  │
+└──────────────────────────────┘        └────────────────────────────┘        └──────────────────────────────┘
 ```
 
 ---
 
-## 3. Isolated Encrypted Local Contacts Vault
+## 3. Fast Offline Call Screening
 
-Users can choose between two contact storage modes:
-
-* **System Contacts Integration:** Standard Android `ContactsContract` provider integration for seamless device-wide contact management.
-* **Encrypted Local Contacts Vault:** An isolated contacts vault stored strictly within Secure Dialer's encrypted database. Local contacts are completely invisible to other applications on your smartphone.
-
----
-
-## 4. Offline Call Screening & Zero-Latency Rejection
-
-Unlike cloud-dependent caller ID apps that upload incoming caller numbers to remote lookup servers, Secure Dialer relies on Android's native `CallScreeningService`:
+Instead of uploading caller numbers to cloud databases like commercial caller ID apps do, Secure Dialer runs **100% on-device** using Android's native `CallScreeningService`:
 
 ```text
-[ Incoming Call Event ] ──► [ CallScreeningService ] ──► [ Query SQLCipher Local DB (<5ms) ] ──► [ Reject & Silence / Allow ]
-                                                                   │
-                                                                   ▼
-                                                       (Zero Network Transmission)
+[ Incoming Call ] ──► [ CallScreeningService ] ──► [ Local Encrypted DB (<5ms) ] ──► [ Silence / Reject ]
+                                                            │
+                                                            ▼
+                                                (100% Local / Zero Network)
 ```
 
-1. **Instant Local Lookup:** When an incoming call arrives, `CallScreeningService` queries the encrypted local database in under 5 milliseconds.
-2. **Autonomous Decision:** If the caller is on your blocklist or matches your call-blocking criteria (e.g. unknown numbers), the call is automatically rejected or silenced before your phone rings.
-3. **Zero Leaks:** No phone numbers or timestamp telemetry leave the physical device.
+1. **Sub-5ms Local Query:** When a call comes in, `CallScreeningService` instantly checks your encrypted local blocklist.
+2. **Local Decision:** If the number matches your blocklist or rules (e.g. unknown numbers), the call is silenced or rejected before your phone even rings.
+3. **Zero Telemetry:** No caller identity or phone numbers are ever sent over the air.
 
 ---
 
-## 🛡️ Threat Model & Security Controls Matrix
+## 4. Threat Model & Security Defenses
 
-| Threat Vector | Attack Scenario | Secure Dialer Defense Control |
-| :--- | :--- | :--- |
-| **Physical Theft / Forensic Dumping** | Attacker extracts flash storage chips or takes device dump. | Database pages are encrypted with AES-256 GCM; master keys are locked in TEE / StrongBox hardware. |
-| **Malicious App Inter-Proc Extraction** | Malware attempts to read local app data. | Linux UID sandboxing and file permissions prevent other apps from accessing `/data/data/com.aistudio...`. |
-| **Network Traffic Sniffing / MITM** | Attacker monitors Wi-Fi or cellular traffic for voice logs. | Internet permission is omitted; 0 bytes are transmitted over Wi-Fi or cellular networks. |
-| **Cloud Leaks & Data Subpoenas** | Third-party database breaches or cloud subpoenas. | No cloud database exists. Secure Dialer developers do not host or store user data anywhere. |
+| Potential Threat | How Secure Dialer Protects You |
+| :--- | :--- |
+| **Physical Theft / Device Dump** | Database files on flash storage are encrypted with AES-256 GCM; master keys are locked in hardware KeyStore. |
+| **Malicious Apps on Same Device** | Android sandbox UID isolation prevents other apps from reading Secure Dialer's private storage folder. |
+| **Network Sniffing / Wi-Fi Snooping** | The app has no internet permission, so 0 bytes are transmitted over Wi-Fi or cellular networks. |
+| **Cloud Leaks & Server Hacks** | There is no cloud server. We never host, store, or see your data. |
 
 ---
 
-📍 **Quick Links:** [[Home]] | [[Wall of Honor]] | [[Installation and Obtainium Guide]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]]
-
-
+📍 **Quick Links:** [[Home]] | [[Installation and Obtainium Guide]] | [[FAQ and Troubleshooting]] | [[Permissions and Privacy Explained]] | [[Wall of Honor]]
