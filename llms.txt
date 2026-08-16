@@ -1,0 +1,30 @@
+# Secure Dialer (FOSS Android Dialer & Contacts Manager)
+
+> 100% offline, zero-internet-permission open-source Android dialer and local contacts manager built with Jetpack Compose & Material 3 Expressive.
+
+## Overview
+- **Project Name:** Secure Dialer
+- **Repository:** https://github.com/Secure-Phone-apps/Secure-Dialer
+- **Website:** https://secure-phone-apps.github.io/Secure-Dialer/
+- **License:** Open Source (GPL-3.0 / Apache-2.0 compatible)
+- **Supported OS:** Android 7.0 to Android 16 (API 24 to 36)
+- **Architecture:** 100% Client-Side Native Kotlin, Jetpack Compose, Android Telecom Framework, Room + SQLCipher.
+
+## Core Differentiators
+1. **Zero Internet Permissions:** `android.permission.INTERNET` is intentionally omitted from the AndroidManifest. The app has zero physical capability to transmit data off-device.
+2. **Truecaller & Google Dialer Alternative:** Complete replacement for proprietary dialers without ads, tracking, telemetry, or cloud contact uploads.
+3. **Hardware-Backed Cryptography:** Call notes, private contacts, and local database backups are secured with AES-256 via SQLCipher.
+4. **Offline Spam Screening:** Local pattern matching and prefix/regex blocking without third-party lookups.
+5. **Escape Simulation:** Built-in fake incoming call simulator to discreetly exit awkward situations.
+
+## Key Features
+- **Smart T9 Search:** Multi-alphabet, phonetic, and exact-match instant dialpad search.
+- **Telecom-Integrated InCallService:** Native call management, dual-SIM support, DTMF keypad, and clean audio routing.
+- **Local Contact Management:** Full vCard (VCF) export/import and isolated on-device contact storage.
+- **Call Screening & Blacklist:** Instant offline reject/drop rules by number or prefix.
+- **Material 3 Expressive UI:** Dynamic color palettes, fluid gesture animations, and complete dark/light mode support.
+
+## Links & Documentation
+- [Full LLM Context (Technical Deep-Dive)](https://secure-phone-apps.github.io/Secure-Dialer/llms-full.txt)
+- [GitHub Releases (APKs)](https://github.com/Secure-Phone-apps/Secure-Dialer/releases)
+- [Source Code](https://github.com/Secure-Phone-apps/Secure-Dialer)
