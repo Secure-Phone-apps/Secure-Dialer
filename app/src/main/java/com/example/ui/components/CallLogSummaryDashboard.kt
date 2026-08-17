@@ -23,6 +23,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -79,6 +80,8 @@ fun SummaryTimeRange.getLabel(): String {
 @Composable
 fun CallLogSummaryDashboard(
     callRecords: List<CallRecord>,
+    selectedFilter: RecentsFilter = RecentsFilter.ALL,
+    onFilterSelect: (RecentsFilter) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var isExpanded by remember { mutableStateOf(true) }
@@ -320,19 +323,15 @@ fun CallLogSummaryDashboard(
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         SummaryBox(
                             value = totalCallsCount.toString(),
-                            label = when (selectedRange) {
-                                SummaryTimeRange.TODAY -> stringResource(R.string.summary_range_today)
-                                SummaryTimeRange.WEEK -> stringResource(R.string.summary_range_this_week)
-                                SummaryTimeRange.MONTH -> stringResource(R.string.summary_range_this_month)
-                                SummaryTimeRange.YEAR -> stringResource(R.string.summary_range_this_year)
-                                SummaryTimeRange.ALL -> stringResource(R.string.summary_range_total)
-                            },
+                            label = stringResource(R.string.filter_all),
                             icon = Icons.Default.Call,
                             iconColor = MaterialTheme.colorScheme.primary,
+                            isSelected = (selectedFilter == RecentsFilter.ALL),
+                            onClick = { onFilterSelect(RecentsFilter.ALL) },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -341,6 +340,10 @@ fun CallLogSummaryDashboard(
                             label = stringResource(R.string.filter_missed),
                             icon = Icons.Default.CallMissed,
                             iconColor = getMissedCallColor(),
+                            isSelected = (selectedFilter == RecentsFilter.MISSED),
+                            onClick = {
+                                onFilterSelect(if (selectedFilter == RecentsFilter.MISSED) RecentsFilter.ALL else RecentsFilter.MISSED)
+                            },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -349,6 +352,10 @@ fun CallLogSummaryDashboard(
                             label = stringResource(R.string.filter_dialed),
                             icon = Icons.AutoMirrored.Filled.CallMade,
                             iconColor = getDialedCallColor(),
+                            isSelected = (selectedFilter == RecentsFilter.DIALED),
+                            onClick = {
+                                onFilterSelect(if (selectedFilter == RecentsFilter.DIALED) RecentsFilter.ALL else RecentsFilter.DIALED)
+                            },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -357,6 +364,10 @@ fun CallLogSummaryDashboard(
                             label = stringResource(R.string.filter_received),
                             icon = Icons.AutoMirrored.Filled.CallReceived,
                             iconColor = getReceivedCallColor(),
+                            isSelected = (selectedFilter == RecentsFilter.RECEIVED),
+                            onClick = {
+                                onFilterSelect(if (selectedFilter == RecentsFilter.RECEIVED) RecentsFilter.ALL else RecentsFilter.RECEIVED)
+                            },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -406,19 +417,44 @@ fun SummaryBox(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconColor: Color,
+    isSelected: Boolean = false,
+    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isExpressive = LocalM3Expressive.current
-    val boxBgColor = if (isExpressive) {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-    } else {
-        MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-    }
     
+    // Fast animated color & border transitions (150ms snap)
+    val animatedBgColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer
+        } else if (isExpressive) {
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+        } else {
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+        },
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
+        label = "summaryBoxBg"
+    )
+
+    val animatedBorderColor by androidx.compose.animation.animateColorAsState(
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
+        label = "summaryBoxBorder"
+    )
+
+    val valueColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
+    val labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+
     Column(
         modifier = modifier
             .clip(MaterialTheme.shapes.small)
-            .background(boxBgColor)
+            .background(animatedBgColor)
+            .border(
+                width = if (isSelected) 1.5.dp else 0.dp,
+                color = animatedBorderColor,
+                shape = MaterialTheme.shapes.small
+            )
+            .clickable(onClick = onClick)
             .padding(vertical = 8.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -426,7 +462,7 @@ fun SummaryBox(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = iconColor,
+            tint = if (isSelected) MaterialTheme.colorScheme.primary else iconColor,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.height(4.dp))
@@ -434,13 +470,14 @@ fun SummaryBox(
             text = value,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = valueColor,
             textAlign = TextAlign.Center
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            color = labelColor,
             fontSize = 9.sp,
             textAlign = TextAlign.Center,
             maxLines = 1
