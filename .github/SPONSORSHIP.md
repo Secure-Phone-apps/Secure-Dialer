@@ -20,7 +20,7 @@ Your support directly helps fund the **time, testing hardware, and tools** neede
 
 ## 🎯 Sponsorship Tiers
 
-### ☕ 1. Well Wisher — *$2 to $5 / month*
+### ☕ 1. Well Wisher — *$3 to $5 / month*
 * **Impact:** Fuels everyday bug fixes, UI polish, and continuous care.
 * **Recognition:** Public Sponsor badge on your GitHub profile and my sincere gratitude!
 
@@ -32,7 +32,7 @@ Your support directly helps fund the **time, testing hardware, and tools** neede
 * **Impact:** Helps cover the cost of physical Android test devices for dual-SIM and cross-OEM compatibility testing.
 * **Recognition:** Featured sponsor badge + mention in the repository.
 
-### ⭐ 4. Visionary Leader — *$200+ / month*
+### ⭐ 4. Visionary Leader — *$250+ / month*
 * **Impact:** Dedicated backing for independent, tracker-free mobile software development.
 * **Recognition:** Featured name/logo in the project README & website sponsor wall.
 

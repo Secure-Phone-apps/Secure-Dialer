@@ -10,7 +10,7 @@ If you enjoy using Secure Dialer and want to support my work, you can visit my *
 
 ## 💎 Community Sponsors & Backers
 
-### 👑 Visionary Leader ($200+ / month)
+### 👑 Visionary Leader ($250+ / month)
 *Dedicated backers supporting independent, zero-tracker mobile software development.*
 
 <!-- SPONSORS_VISIONARY:START -->
@@ -37,7 +37,7 @@ If you enjoy using Secure Dialer and want to support my work, you can visit my *
 
 ---
 
-### 🌟 Well Wisher ($2 – $5 / month)
+### 🌟 Well Wisher ($3 – $5 / month)
 *Supporting everyday bug fixing, UI refinements, and open-source care.*
 
 <!-- SPONSORS_WELL_WISHER:START -->
