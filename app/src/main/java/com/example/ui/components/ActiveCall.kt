@@ -113,17 +113,12 @@ fun ActiveCallScreen(
 
     DisposableEffect(Unit) {
         onDispose {
-            if (currentIsRecording) {
-                val duration = (System.currentTimeMillis() - currentRecordingStartTime) / 1000
-                val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
-                val localFile = java.io.File(context.filesDir, fileName)
-                try {
-                    localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                if (duration >= 0) {
-                    currentOnSaveRecording(duration, localFile.absolutePath)
+            if (currentIsRecording || com.example.util.CallAudioRecorder.isRecording.value) {
+                val result = com.example.util.CallAudioRecorder.stopRecording()
+                val file = result.file
+                if (file != null && file.exists() && file.length() > 0L) {
+                    val duration = result.durationSeconds.coerceAtLeast(1L)
+                    currentOnSaveRecording(duration, file.absolutePath)
                 }
             }
         }
@@ -410,22 +405,26 @@ fun ActiveCallScreen(
                 isRecording = isRecording,
                 onToggleRecording = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    if (isRecording) {
-                        val duration = (System.currentTimeMillis() - recordingStartTime) / 1000
-                        val fileName = "SecureDialer_Rec_${System.currentTimeMillis()}.m4a"
-                        val localFile = java.io.File(context.filesDir, fileName)
-                        try {
-                            localFile.writeText("Secure Dialer Call Recording Placeholder Data for duration of $duration seconds.")
-                        } catch (e: Exception) {
-                            e.printStackTrace()
+                    if (isRecording || com.example.util.CallAudioRecorder.isRecording.value) {
+                        val result = com.example.util.CallAudioRecorder.stopRecording()
+                        val file = result.file
+                        if (file != null && file.exists() && file.length() > 0L) {
+                            val duration = result.durationSeconds.coerceAtLeast(1L)
+                            onSaveRecording(duration, file.absolutePath)
+                            Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Call recording failed or file empty", Toast.LENGTH_SHORT).show()
                         }
-                        onSaveRecording(duration, localFile.absolutePath)
-                        Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
                         isRecording = false
                     } else {
-                        recordingStartTime = System.currentTimeMillis()
-                        isRecording = true
-                        Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
+                        val started = com.example.util.CallAudioRecorder.startRecording(context, contactNumber)
+                        if (started) {
+                            recordingStartTime = System.currentTimeMillis()
+                            isRecording = true
+                            Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(context, "Cannot start recording. Grant Microphone permission in app settings.", Toast.LENGTH_LONG).show()
+                        }
                     }
                 },
                 isNoteDialogOpen = isNoteDialogOpen,

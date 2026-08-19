@@ -184,9 +184,10 @@ object CallManager {
 
     fun autoStopRecordingIfNeeded() {
         if (com.example.util.CallAudioRecorder.isRecording.value) {
-            val file = com.example.util.CallAudioRecorder.stopRecording()
-            if (file != null && file.exists()) {
-                val durationSec = com.example.util.CallAudioRecorder.recordingDuration.value.toLong()
+            val result = com.example.util.CallAudioRecorder.stopRecording()
+            val file = result.file
+            if (file != null && file.exists() && file.length() > 0L) {
+                val durationSec = result.durationSeconds.coerceAtLeast(1L)
                 val number = _callerNumber.value.ifEmpty { "Unknown" }
                 val name = _callerName.value.ifEmpty { number }
                 val locale = inCallService?.let { com.example.ui.components.getCurrentLocale(it) } ?: java.util.Locale.getDefault()

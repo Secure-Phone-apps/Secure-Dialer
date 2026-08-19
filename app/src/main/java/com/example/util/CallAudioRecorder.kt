@@ -64,22 +64,46 @@ object CallAudioRecorder {
             val fileName = "REC_${cleanNum}_$timestamp.m4a"
             val outputFile = File(recordDir, fileName)
 
-            @Suppress("DEPRECATION")
-            val recorder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                MediaRecorder(context)
-            } else {
-                MediaRecorder()
+            var recorder: MediaRecorder? = null
+            var success = false
+            val sources = listOf(
+                MediaRecorder.AudioSource.MIC,
+                MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                MediaRecorder.AudioSource.DEFAULT
+            )
+
+            for (src in sources) {
+                try {
+                    @Suppress("DEPRECATION")
+                    val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        MediaRecorder(context)
+                    } else {
+                        MediaRecorder()
+                    }
+
+                    rec.apply {
+                        setAudioSource(src)
+                        setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                        setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                        setAudioSamplingRate(44100)
+                        setAudioEncodingBitRate(96000)
+                        setOutputFile(outputFile.absolutePath)
+                        prepare()
+                        start()
+                    }
+                    recorder = rec
+                    success = true
+                    break
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    try { recorder?.release() } catch (_: Exception) {}
+                    recorder = null
+                }
             }
 
-            recorder.apply {
-                setAudioSource(MediaRecorder.AudioSource.MIC)
-                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                setAudioSamplingRate(44100)
-                setAudioEncodingBitRate(96000)
-                setOutputFile(outputFile.absolutePath)
-                prepare()
-                start()
+            if (!success || recorder == null) {
+                try { if (outputFile.exists()) outputFile.delete() } catch (_: Exception) {}
+                return false
             }
 
             mediaRecorder = recorder
@@ -102,10 +126,13 @@ object CallAudioRecorder {
         }
     }
 
-    fun stopRecording(): File? {
+    data class RecordingResult(val file: File?, val durationSeconds: Long)
+
+    fun stopRecording(): RecordingResult {
         timerJob?.cancel()
         timerJob = null
 
+        val finalDuration = _recordingDuration.value.toLong()
         val file = currentOutputFile
 
         try {
@@ -126,7 +153,12 @@ object CallAudioRecorder {
             currentOutputFile = null
         }
 
-        return file
+        if (file != null && file.exists() && file.length() == 0L) {
+            try { file.delete() } catch (_: Exception) {}
+            return RecordingResult(null, 0L)
+        }
+
+        return RecordingResult(file, finalDuration)
     }
 
     fun getRecordedFiles(context: Context): List<File> {

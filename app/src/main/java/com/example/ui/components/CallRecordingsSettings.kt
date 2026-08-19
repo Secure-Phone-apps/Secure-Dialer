@@ -152,6 +152,10 @@ fun CallRecordingsSettings(
                                                     Toast.makeText(context, "Audio file not found on disk", Toast.LENGTH_SHORT).show()
                                                     return@IconButton
                                                 }
+                                                if (file.length() == 0L) {
+                                                    Toast.makeText(context, "Audio file is empty. Please re-record during a call.", Toast.LENGTH_SHORT).show()
+                                                    return@IconButton
+                                                }
                                                 try {
                                                     val mp = MediaPlayer().apply {
                                                         setDataSource(rec.filePath)
@@ -166,7 +170,7 @@ fun CallRecordingsSettings(
                                                     durationMs = mp.duration.coerceAtLeast(1)
                                                     playingId = rec.id
                                                 } catch (e: Exception) {
-                                                    Toast.makeText(context, "Error playing recording", Toast.LENGTH_SHORT).show()
+                                                    Toast.makeText(context, "Unable to play audio file. Invalid format or empty recording.", Toast.LENGTH_LONG).show()
                                                     e.printStackTrace()
                                                 }
                                             }

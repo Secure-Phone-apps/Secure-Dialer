@@ -449,9 +449,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun toggleCallRecording(context: android.content.Context, phoneNumber: String, callerName: String = "Unknown") {
         if (com.example.util.CallAudioRecorder.isRecording.value) {
-            val file = com.example.util.CallAudioRecorder.stopRecording()
-            if (file != null && file.exists()) {
-                val durationSec = com.example.util.CallAudioRecorder.recordingDuration.value.toLong()
+            val result = com.example.util.CallAudioRecorder.stopRecording()
+            val file = result.file
+            if (file != null && file.exists() && file.length() > 0L) {
+                val durationSec = result.durationSeconds.coerceAtLeast(1L)
                 val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
                 val timestamp = sdf.format(java.util.Date())
                 val recording = CallRecording(
