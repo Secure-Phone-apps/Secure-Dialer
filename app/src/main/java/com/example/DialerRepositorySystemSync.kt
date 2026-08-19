@@ -25,6 +25,7 @@ import com.example.model.AppSetting
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.model.Contact
+import com.example.model.ContactAccount
 import com.example.model.getInitials
 import com.example.ui.theme.AvatarBlue
 import com.example.ui.theme.AvatarBlueText
@@ -54,8 +55,22 @@ internal fun nameToT9(name: String): String {
     }.joinToString("")
 }
 
+internal fun getNormalizedPhoneNumberKey(number: String): String {
+    val digits = number.filter { it.isDigit() }
+    return if (digits.length >= 10) digits.takeLast(10) else digits
+}
+
+internal fun getPhoneNumberQualityScore(number: String): Int {
+    var score = 0
+    val trimmed = number.trim()
+    if (trimmed.startsWith("+")) score += 100
+    if (trimmed.contains(" ")) score += 10
+    if (!trimmed.startsWith("0")) score += 5
+    return score
+}
+
 suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(Dispatchers.IO) {
-    val contacts = mutableListOf<Contact>()
+    val contactMap = LinkedHashMap<String, Contact>()
     val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
 
     val emailMap = mutableMapOf<String, String>()
@@ -82,26 +97,101 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
     }
 
     try {
+        val projection = arrayOf(
+            Phone._ID,
+            Phone.RAW_CONTACT_ID,
+            Phone.CONTACT_ID,
+            Phone.DISPLAY_NAME,
+            Phone.NUMBER,
+            Phone.STARRED,
+            Phone.PHOTO_THUMBNAIL_URI,
+            Phone.TYPE,
+            Phone.LABEL,
+            ContactsContract.RawContacts.ACCOUNT_NAME,
+            ContactsContract.RawContacts.ACCOUNT_TYPE
+        )
         context.contentResolver.query(
             Phone.CONTENT_URI,
-            arrayOf(Phone.DISPLAY_NAME, Phone.NUMBER, Phone.STARRED, Phone.PHOTO_THUMBNAIL_URI, Phone.CONTACT_ID),
+            projection,
             null, null, "${Phone.DISPLAY_NAME} ASC"
         )?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(Phone._ID)
+            val rawIdIdx = cursor.getColumnIndex(Phone.RAW_CONTACT_ID)
+            val cidIdx = cursor.getColumnIndex(Phone.CONTACT_ID)
             val nameIdx = cursor.getColumnIndex(Phone.DISPLAY_NAME)
             val numIdx = cursor.getColumnIndex(Phone.NUMBER)
             val favIdx = cursor.getColumnIndex(Phone.STARRED)
             val photoIdx = cursor.getColumnIndex(Phone.PHOTO_THUMBNAIL_URI)
-            val cidIdx = cursor.getColumnIndex(Phone.CONTACT_ID)
+            val typeIdx = cursor.getColumnIndex(Phone.TYPE)
+            val labelIdx = cursor.getColumnIndex(Phone.LABEL)
+            val accNameIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
+            val accTypeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
+
             while (cursor.moveToNext()) {
+                val idVal = if (idIdx != -1) cursor.getLong(idIdx) else 0L
+                val rawIdVal = if (rawIdIdx != -1) cursor.getLong(rawIdIdx) else 0L
+                val contactIdVal = if (cidIdx != -1) cursor.getLong(cidIdx) else 0L
                 val num = cursor.getString(numIdx) ?: ""
                 val rawName = cursor.getString(nameIdx)
                 val name = if (rawName.isNullOrBlank()) (if (num.isBlank()) "Unknown" else num) else rawName
                 val fav = cursor.getInt(favIdx) == 1
                 val photoUri = if (photoIdx != -1) cursor.getString(photoIdx) ?: "" else ""
-                val contactId = if (cidIdx != -1) cursor.getString(cidIdx) ?: "" else ""
-                val email = emailMap[contactId] ?: ""
+                val contactIdStr = if (cidIdx != -1) cursor.getString(cidIdx) ?: "" else ""
+                val email = emailMap[contactIdStr] ?: ""
+                val accName = if (accNameIdx != -1) cursor.getString(accNameIdx) ?: "" else ""
+                val accType = if (accTypeIdx != -1) cursor.getString(accTypeIdx) ?: "" else ""
+                val phoneType = if (typeIdx != -1) cursor.getInt(typeIdx) else Phone.TYPE_MOBILE
+                val phoneLabel = if (phoneType == Phone.TYPE_CUSTOM && labelIdx != -1) {
+                    cursor.getString(labelIdx) ?: "Custom"
+                } else when (phoneType) {
+                    Phone.TYPE_HOME -> "Home"
+                    Phone.TYPE_WORK -> "Work"
+                    Phone.TYPE_MOBILE -> "Mobile"
+                    Phone.TYPE_OTHER -> "Other"
+                    else -> "Mobile"
+                }
+
                 val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                contacts.add(Contact(num, name, "Mobile", fav, getInitials(name), pair.first.value.toLong(), pair.second.value.toLong(), nameToT9(name), email, photoUri))
+                val uniqueId = if (idVal != 0L) idVal else (contactMap.size + 1).toLong()
+                
+                val newContact = Contact(
+                    id = uniqueId,
+                    rawContactId = rawIdVal,
+                    contactId = contactIdVal,
+                    number = num,
+                    name = name,
+                    label = phoneLabel,
+                    favorite = fav,
+                    avatarText = getInitials(name),
+                    avatarBgValue = pair.first.value.toLong(),
+                    avatarTextColorValue = pair.second.value.toLong(),
+                    t9Mapping = nameToT9(name),
+                    email = email,
+                    photoUri = photoUri,
+                    accountName = accName,
+                    accountType = accType
+                )
+
+                val normKey = getNormalizedPhoneNumberKey(num)
+                val personKey = if (contactIdVal != 0L) "$contactIdVal-$normKey" else "${name.lowercase().trim()}-$normKey"
+
+                val existing = contactMap[personKey]
+                if (existing == null) {
+                    contactMap[personKey] = newContact
+                } else {
+                    val existingScore = getPhoneNumberQualityScore(existing.number)
+                    val newScore = getPhoneNumberQualityScore(newContact.number)
+
+                    val preferredContact = if (newScore > existingScore) newContact else existing
+                    val mergedContact = preferredContact.copy(
+                        favorite = preferredContact.favorite || existing.favorite,
+                        photoUri = preferredContact.photoUri.ifEmpty { existing.photoUri },
+                        email = preferredContact.email.ifEmpty { existing.email },
+                        accountName = preferredContact.accountName.ifEmpty { existing.accountName },
+                        accountType = preferredContact.accountType.ifEmpty { existing.accountType }
+                    )
+                    contactMap[personKey] = mergedContact
+                }
             }
         }
     } catch (e: SecurityException) {
@@ -109,7 +199,65 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
     } catch (e: Exception) {
         e.printStackTrace()
     }
-    return@withContext contacts.distinctBy { it.number }
+    return@withContext contactMap.values.toList()
+}
+
+suspend fun DialerRepository.fetchAvailableAccounts(): List<ContactAccount> = withContext(Dispatchers.IO) {
+    val list = mutableListOf<ContactAccount>()
+    val seen = mutableSetOf<Pair<String, String>>()
+    try {
+        context.contentResolver.query(
+            ContactsContract.RawContacts.CONTENT_URI,
+            arrayOf(ContactsContract.RawContacts.ACCOUNT_NAME, ContactsContract.RawContacts.ACCOUNT_TYPE),
+            "${ContactsContract.RawContacts.DELETED} = 0",
+            null,
+            null
+        )?.use { cursor ->
+            val nameIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_NAME)
+            val typeIdx = cursor.getColumnIndex(ContactsContract.RawContacts.ACCOUNT_TYPE)
+            while (cursor.moveToNext()) {
+                val accName = if (nameIdx != -1) cursor.getString(nameIdx) ?: "" else ""
+                val accType = if (typeIdx != -1) cursor.getString(typeIdx) ?: "" else ""
+                if (accName.isNotBlank() || accType.isNotBlank()) {
+                    val key = Pair(accName, accType)
+                    if (key !in seen) {
+                        seen.add(key)
+                        val display = when {
+                            accType.equals("com.google", ignoreCase = true) -> "Google • $accName"
+                            accType.contains("exchange", ignoreCase = true) -> "Exchange • $accName"
+                            accType.contains("whatsapp", ignoreCase = true) -> "WhatsApp • $accName"
+                            accType.contains("sim", ignoreCase = true) -> "SIM • $accName"
+                            accName.isBlank() -> "Phone storage"
+                            else -> "$accName (${accType.substringAfterLast('.')})"
+                        }
+                        list.add(ContactAccount(name = accName, type = accType, displayName = display))
+                    }
+                }
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
+    try {
+        val am = android.accounts.AccountManager.get(context)
+        val accounts = am.accounts
+        for (acc in accounts) {
+            val key = Pair(acc.name, acc.type)
+            if (acc.name.isNotBlank() && key !in seen) {
+                seen.add(key)
+                val display = if (acc.type == "com.google") "Google • ${acc.name}" else "${acc.name} (${acc.type.substringAfterLast('.')})"
+                list.add(ContactAccount(name = acc.name, type = acc.type, displayName = display))
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
+    if (list.none { it.name.isBlank() || it.type.contains("local") || it.name == "Phone" }) {
+        list.add(ContactAccount(name = "Phone", type = "com.android.localphone", displayName = "Phone storage"))
+    }
+    list
 }
 
 suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withContext(Dispatchers.IO) {
@@ -165,11 +313,44 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
         }
     }
 
+    val subIdToSlotMap = mutableMapOf<String, Int>()
+    try {
+        val subManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? android.telephony.SubscriptionManager
+        subManager?.let { sm ->
+            val subList = try {
+                sm.activeSubscriptionInfoList
+            } catch (e: SecurityException) {
+                null
+            }
+            subList?.forEach { subInfo ->
+                val slot = subInfo.simSlotIndex + 1
+                val subIdStr = subInfo.subscriptionId.toString()
+                subIdToSlotMap[subIdStr] = slot
+                subInfo.iccId?.let { if (it.isNotBlank()) subIdToSlotMap[it] = slot }
+                if (subInfo.cardId > 0) subIdToSlotMap[subInfo.cardId.toString()] = slot
+                subIdToSlotMap["sub_${subInfo.subscriptionId}"] = slot
+                subIdToSlotMap["slot_${subInfo.simSlotIndex}"] = slot
+                subIdToSlotMap["sim_${subInfo.simSlotIndex}"] = slot
+                subIdToSlotMap["sim_${slot}"] = slot
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
     try {
         val queryUri = CallLog.Calls.CONTENT_URI
         context.contentResolver.query(
             queryUri,
-            arrayOf(CallLog.Calls._ID, CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION),
+            arrayOf(
+                CallLog.Calls._ID,
+                CallLog.Calls.CACHED_NAME,
+                CallLog.Calls.NUMBER,
+                CallLog.Calls.TYPE,
+                CallLog.Calls.DATE,
+                CallLog.Calls.DURATION,
+                CallLog.Calls.PHONE_ACCOUNT_ID
+            ),
             null, null, "${CallLog.Calls.DATE} DESC"
         )?.use { cursor ->
             val idIdx = cursor.getColumnIndex(CallLog.Calls._ID)
@@ -178,6 +359,7 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
             val typeIdx = cursor.getColumnIndex(CallLog.Calls.TYPE)
             val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
             val durIdx = cursor.getColumnIndex(CallLog.Calls.DURATION)
+            val accountIdIdx = cursor.getColumnIndex(CallLog.Calls.PHONE_ACCOUNT_ID)
 
             while (cursor.moveToNext()) {
                 val num = if (numIdx != -1) cursor.getString(numIdx) ?: "" else ""
@@ -204,12 +386,44 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                     }
                 } else null
 
+                val isSavedContact = (matchingContact != null)
+                val isVerified = !isSavedContact && (!cachedName.isNullOrBlank() || !matchingCnapName.isNullOrBlank())
+
                 val name = when {
                     matchingContact != null -> matchingContact.name
                     !cachedName.isNullOrBlank() -> cachedName
                     !matchingCnapName.isNullOrBlank() -> matchingCnapName
                     num.isBlank() -> "Unknown"
                     else -> num
+                }
+
+                val dateVal = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
+                val phoneAccountId = if (accountIdIdx != -1) cursor.getString(accountIdIdx) ?: "" else ""
+                val trackedSimSlot = com.example.util.SimCallTracker.getSimSlotForCall(context, num, dateVal)
+
+                val simSlot = when {
+                    trackedSimSlot != null -> trackedSimSlot
+                    phoneAccountId in subIdToSlotMap -> subIdToSlotMap[phoneAccountId] ?: 1
+                    subIdToSlotMap.entries.any { (key, _) -> key.isNotEmpty() && phoneAccountId.contains(key) } -> {
+                        subIdToSlotMap.entries.first { (key, _) -> key.isNotEmpty() && phoneAccountId.contains(key) }.value
+                    }
+                    phoneAccountId.contains("sim_2", ignoreCase = true) ||
+                    phoneAccountId.contains("sim2", ignoreCase = true) ||
+                    phoneAccountId.contains("sub_2", ignoreCase = true) ||
+                    phoneAccountId.contains("slot_2", ignoreCase = true) ||
+                    phoneAccountId.contains("slot2", ignoreCase = true) ||
+                    phoneAccountId.contains(", 2,") ||
+                    phoneAccountId.endsWith("_1") ||
+                    (phoneAccountId.equals("1") && !subIdToSlotMap.containsKey("1")) -> 2
+                    phoneAccountId.contains("sim_1", ignoreCase = true) ||
+                    phoneAccountId.contains("sim1", ignoreCase = true) ||
+                    phoneAccountId.contains("sub_1", ignoreCase = true) ||
+                    phoneAccountId.contains("slot_1", ignoreCase = true) ||
+                    phoneAccountId.contains("slot1", ignoreCase = true) ||
+                    phoneAccountId.contains(", 1,") ||
+                    phoneAccountId.equals("0") ||
+                    phoneAccountId.endsWith("_0") -> 1
+                    else -> 1
                 }
 
                 val typeVal = if (typeIdx != -1) cursor.getInt(typeIdx) else CallLog.Calls.INCOMING_TYPE
@@ -219,12 +433,30 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                     else -> CallType.INCOMING
                 }
                 val idVal = if (idIdx != -1) cursor.getInt(idIdx) else 0
-                val dateVal = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
                 val durVal = if (durIdx != -1) cursor.getLong(durIdx) else 0L
 
+                val contactLabel = matchingContact?.label ?: ""
                 val pair = colors[Math.abs(name.hashCode()) % colors.size]
                 val photoUriVal = matchingContact?.photoUri ?: ""
-                logs.add(CallRecord(idVal, name, num, "Mobile", sdf.format(Date(dateVal)), type, getInitials(name), pair.first.value.toLong(), pair.second.value.toLong(), durVal, false, photoUriVal, dateVal))
+                logs.add(
+                    CallRecord(
+                        id = idVal,
+                        name = name,
+                        number = num,
+                        label = contactLabel,
+                        timestamp = sdf.format(Date(dateVal)),
+                        type = type,
+                        avatarText = getInitials(name),
+                        avatarBgValue = pair.first.value.toLong(),
+                        avatarTextColorValue = pair.second.value.toLong(),
+                        duration = durVal,
+                        hasVoicemail = false,
+                        photoUri = photoUriVal,
+                        timestampMs = dateVal,
+                        isVerified = isVerified,
+                        simSlot = simSlot
+                    )
+                )
             }
         }
     } catch (e: SecurityException) {

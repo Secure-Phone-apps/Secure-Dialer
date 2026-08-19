@@ -98,11 +98,21 @@ fun ContactsTabContent(
     val coroutineScope = rememberCoroutineScope()
     
     val allContacts by viewModel.allContactsFlow.collectAsState()
+    val selectedAccountFilter by viewModel.selectedAccountFilter
     var showOnlyFavorites by remember { mutableStateOf(false) }
     val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
 
-    val alphabet = remember(allContacts, showOnlyFavorites, sortedFavorites) {
-        val contactsList = if (showOnlyFavorites) sortedFavorites else allContacts
+    val alphabet = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter) {
+        val contactsList = if (showOnlyFavorites) {
+            sortedFavorites
+        } else if (selectedAccountFilter.isBlank()) {
+            allContacts
+        } else if (selectedAccountFilter.equals("Phone", ignoreCase = true)) {
+            allContacts.filter { it.accountName.isBlank() || it.accountName.equals("Phone", ignoreCase = true) || it.accountType.contains("local", ignoreCase = true) }
+        } else {
+            allContacts.filter { it.accountName == selectedAccountFilter }
+        }
+
         val uniqueLetters = contactsList.asSequence()
             .map { it.name.trim() }
             .filter { it.isNotEmpty() }
@@ -126,8 +136,17 @@ fun ContactsTabContent(
         }
     }
 
-    val letterToIndex = remember(allContacts, showOnlyFavorites, sortedFavorites) {
-        val contactsList = if (showOnlyFavorites) sortedFavorites else allContacts
+    val letterToIndex = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter) {
+        val contactsList = if (showOnlyFavorites) {
+            sortedFavorites
+        } else if (selectedAccountFilter.isBlank()) {
+            allContacts
+        } else if (selectedAccountFilter.equals("Phone", ignoreCase = true)) {
+            allContacts.filter { it.accountName.isBlank() || it.accountName.equals("Phone", ignoreCase = true) || it.accountType.contains("local", ignoreCase = true) }
+        } else {
+            allContacts.filter { it.accountName == selectedAccountFilter }
+        }
+
         val map = HashMap<Char, Int>()
         for (i in contactsList.indices) {
             val contact = contactsList[i]
@@ -221,77 +240,144 @@ fun ContactsTabContent(
             Spacer(modifier = Modifier.height(4.dp))
 
             if (hasPermission && !isLoading) {
-                Row(
+                val availableAccounts = viewModel.availableAccounts
+                var isAccountMenuExpanded by remember { mutableStateOf(false) }
+
+                val accountFilterDisplayLabel = remember(selectedAccountFilter, availableAccounts) {
+                    if (selectedAccountFilter.isBlank()) {
+                        "All Contacts"
+                    } else {
+                        availableAccounts.firstOrNull { it.name == selectedAccountFilter }?.displayName
+                            ?: selectedAccountFilter
+                    }
+                }
+
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(end = 36.dp, bottom = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    FilterChip(
-                        selected = !showOnlyFavorites,
-                        onClick = { showOnlyFavorites = false },
-                        label = { Text(stringResource(R.string.filter_all_contacts)) },
-                        shape = RoundedCornerShape(16.dp),
-                        border = null,
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
+                    // Row 1: Account / Source Filter Selector Button
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = {
+                                if (showOnlyFavorites) {
+                                    showOnlyFavorites = false
+                                } else {
+                                    isAccountMenuExpanded = true
+                                }
+                            },
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                contentColor = if (!showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier.testTag("contact_source_header_dropdown")
+                        ) {
+                            Text(
+                                text = accountFilterDisplayLabel,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = "Select Contact Source",
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
 
-                    FilterChip(
-                        selected = showOnlyFavorites,
-                        onClick = { showOnlyFavorites = true },
-                        label = { Text(stringResource(R.string.tab_favorites)) },
-                        leadingIcon = {
+                        DropdownMenu(
+                            expanded = isAccountMenuExpanded,
+                            onDismissRequest = { isAccountMenuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = stringResource(R.string.account_filter_all),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        fontWeight = if (selectedAccountFilter.isBlank()) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                onClick = {
+                                    showOnlyFavorites = false
+                                    viewModel.onAccountFilterChange("")
+                                    isAccountMenuExpanded = false
+                                }
+                            )
+                            availableAccounts.forEach { acc ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = acc.displayName,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontWeight = if (selectedAccountFilter == acc.name) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        showOnlyFavorites = false
+                                        viewModel.onAccountFilterChange(acc.name)
+                                        isAccountMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Row 2: Favorites Filter on Left, Add Contact Button on Right
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Button(
+                            onClick = { showOnlyFavorites = !showOnlyFavorites },
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier.testTag("favorites_toggle_fab")
+                        ) {
                             Icon(
                                 imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
                                 contentDescription = "Toggle Favorites",
                                 modifier = Modifier.size(18.dp)
                             )
-                        },
-                        shape = RoundedCornerShape(16.dp),
-                        border = null,
-                        modifier = Modifier.testTag("favorites_toggle_fab"),
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                            labelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(R.string.tab_favorites),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(end = 36.dp, bottom = 2.dp),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = onAddContactClick,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        modifier = Modifier.testTag("add_contact_fab")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.action_add_contact),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = stringResource(R.string.action_add_contact),
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        Button(
+                            onClick = onAddContactClick,
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            modifier = Modifier.testTag("add_contact_fab")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = stringResource(R.string.action_add_contact),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = stringResource(R.string.action_add_contact),
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
                     }
                 }
             }
@@ -320,7 +406,7 @@ fun ContactsTabContent(
                     if (showOnlyFavorites) {
                         items(
                             items = sortedFavorites,
-                            key = { it.number }
+                            key = { "${it.id}_${it.number}" }
                         ) { contact ->
                             val index = sortedFavorites.indexOf(contact)
                             val firstLetter = contact.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
@@ -348,7 +434,7 @@ fun ContactsTabContent(
                     } else {
                         items(
                             count = contactsPaged.itemCount,
-                            key = contactsPaged.itemKey { it.number },
+                            key = contactsPaged.itemKey { "${it.id}_${it.number}" },
                             contentType = contactsPaged.itemContentType { "contact" }
                         ) { index ->
                             val contact = contactsPaged[index]

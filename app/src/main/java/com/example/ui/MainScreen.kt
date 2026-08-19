@@ -523,7 +523,7 @@ fun MainScreen(
                                     hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
                                     onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
                                     onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
-                                    onDeleteContact = { it -> viewModel.deleteContact(it.number) }
+                                    onDeleteContact = { it -> viewModel.deleteContact(it) }
                                 )
                             }
                             2 -> {

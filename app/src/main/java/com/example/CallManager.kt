@@ -64,6 +64,9 @@ object CallManager {
     private val _activeStartTimestamp = MutableStateFlow<Long>(0L)
     val activeStartTimestamp: StateFlow<Long> = _activeStartTimestamp
 
+    private val _currentSimSlot = MutableStateFlow<Int>(1)
+    val currentSimSlot: StateFlow<Int> = _currentSimSlot
+
     fun autoSelectCurrentCall() {
         val allCallsList = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
         
@@ -368,6 +371,10 @@ object CallManager {
         } catch (e: Exception) {
             e.printStackTrace()
         }
+
+        val targetSlot = if (preferredSim.contains("2")) 2 else 1
+        _currentSimSlot.value = targetSlot
+        com.example.util.SimCallTracker.recordOutgoingCall(context, number, targetSlot)
 
         try {
             val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager

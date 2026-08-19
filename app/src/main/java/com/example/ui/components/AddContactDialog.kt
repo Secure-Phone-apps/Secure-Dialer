@@ -33,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.model.ContactAccount
 import com.example.ui.theme.LocalM3Expressive
 
 data class Country(val code: String, val name: String, val prefix: String, val flag: String)
@@ -75,14 +76,31 @@ fun AddContactDialog(
     initialNumber: String,
     initialLabel: String,
     initialEmail: String = "",
+    availableAccounts: List<ContactAccount> = emptyList(),
+    selectedAccountFilter: String = "",
     onDismiss: () -> Unit,
-    onConfirm: (name: String, number: String, label: String, email: String) -> Unit
+    onConfirm: (name: String, number: String, label: String, email: String, accountName: String, accountType: String) -> Unit
 ) {
     val context = LocalContext.current
     val dialogShape = RoundedCornerShape(16.dp)
     val fieldShape = RoundedCornerShape(16.dp)
     val buttonShape = RoundedCornerShape(16.dp)
     val isExpressive = LocalM3Expressive.current
+
+    val defaultSaveAccount = remember(availableAccounts, selectedAccountFilter) {
+        val specificAccounts = availableAccounts.filter { it.name.isNotBlank() }
+        if (selectedAccountFilter.isNotBlank()) {
+            specificAccounts.firstOrNull { it.name == selectedAccountFilter }
+                ?: specificAccounts.firstOrNull { it.type == "com.google" }
+                ?: specificAccounts.firstOrNull()
+        } else {
+            specificAccounts.firstOrNull { it.type == "com.google" }
+                ?: specificAccounts.firstOrNull()
+        }
+    }
+
+    var selectedAccount by remember(defaultSaveAccount) { mutableStateOf<ContactAccount?>(defaultSaveAccount) }
+    var accountMenuExpanded by remember { mutableStateOf(false) }
 
     val countryIso = remember {
         try {
@@ -150,8 +168,73 @@ fun AddContactDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
+                val accountsToPick = remember(availableAccounts) {
+                    availableAccounts.filter { it.name.isNotBlank() }
+                }
+                if (accountsToPick.isNotEmpty()) {
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedCard(
+                            onClick = { accountMenuExpanded = true },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = fieldShape,
+                            colors = CardDefaults.outlinedCardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.contact_source_label),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = selectedAccount?.displayName ?: stringResource(R.string.contact_source_phone),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = stringResource(R.string.contact_source_select),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = accountMenuExpanded,
+                            onDismissRequest = { accountMenuExpanded = false },
+                            modifier = Modifier.fillMaxWidth(0.85f)
+                        ) {
+                            accountsToPick.forEach { account ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = account.displayName,
+                                            fontWeight = if (account.name == selectedAccount?.name) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        selectedAccount = account
+                                        accountMenuExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -286,7 +369,9 @@ fun AddContactDialog(
                     } else {
                         "$prefix${rawNumberInput.trim()}"
                     }
-                    onConfirm(finalName, finalNumber, selectedLabel, emailInput.trim())
+                    val accName = selectedAccount?.name ?: ""
+                    val accType = selectedAccount?.type ?: ""
+                    onConfirm(finalName, finalNumber, selectedLabel, emailInput.trim(), accName, accType)
                 },
                 enabled = firstName.trim().isNotEmpty() && rawNumberInput.trim().isNotEmpty(),
                 shape = buttonShape

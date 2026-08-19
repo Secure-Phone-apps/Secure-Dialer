@@ -37,6 +37,11 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var searchQuery = mutableStateOf("")
     private val _searchQueryFlow = MutableStateFlow("")
 
+    // Account Source Filter
+    var selectedAccountFilter = mutableStateOf("")
+    private val _selectedAccountFilterFlow = MutableStateFlow("")
+    var availableAccounts = mutableStateListOf<ContactAccount>()
+
     // Dialpad Input Flow
     private val _dialpadInputFlow = MutableStateFlow("")
 
@@ -48,15 +53,22 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         _searchQueryFlow.value = newQuery
     }
 
+    fun onAccountFilterChange(accountName: String) {
+        selectedAccountFilter.value = accountName
+        _selectedAccountFilterFlow.value = accountName
+    }
+
     fun onDialpadInputChange(newInput: String) {
         dialpadInput.value = newInput
         _dialpadInputFlow.value = newInput
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val contactsPaged: Flow<PagingData<Contact>> = _searchQueryFlow
-        .flatMapLatest { query -> repository.getContactsPaged(query) }
-        .cachedIn(viewModelScope)
+    val contactsPaged: Flow<PagingData<Contact>> = combine(_searchQueryFlow, _selectedAccountFilterFlow) { query, account ->
+        Pair(query, account)
+    }.flatMapLatest { (query, account) ->
+        repository.getContactsPaged(query, account)
+    }.cachedIn(viewModelScope)
 
     val callHistoryPaged: Flow<PagingData<CallRecord>> = repository.getCallHistoryPaged()
         .cachedIn(viewModelScope)
@@ -362,17 +374,31 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         
         // Initial sync
         syncData()
+        refreshAvailableAccounts()
         
         // Real-time sync observation
         repository.startObservingChanges {
             syncData()
+            refreshAvailableAccounts()
         }
     }
 
-    fun syncData() {
+    fun refreshAvailableAccounts() {
+        viewModelScope.launch {
+            try {
+                val accounts = repository.fetchAvailableAccounts()
+                availableAccounts.clear()
+                availableAccounts.addAll(accounts)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun syncData(force: Boolean = true) {
         viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
-                launch { repository.syncContacts() }
+                launch { repository.syncContacts(force) }
                 launch { repository.syncCallLogs() }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -380,15 +406,24 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun addContact(name: String, number: String, label: String, email: String = "") {
+    fun addContact(
+        name: String, 
+        number: String, 
+        label: String, 
+        email: String = "",
+        accountName: String = "",
+        accountType: String = ""
+    ) {
         viewModelScope.launch {
-            repository.addContact(name, number, label, email)
+            repository.addContact(name, number, label, email, accountName, accountType)
+            refreshAvailableAccounts()
         }
     }
 
     fun saveCallNote(number: String, note: String) {
+        if (note.isBlank()) return
         viewModelScope.launch {
-            repository.saveCallNote(number, note)
+            repository.saveCallNote(CallNote(number = number, note = note, lastUpdated = System.currentTimeMillis()))
         }
     }
 
@@ -398,8 +433,18 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun deleteCallNote(number: String) {
         viewModelScope.launch {
-            repository.deleteCallNote(number)
+            repository.deleteCallNotesForNumber(number)
         }
+    }
+
+    fun deleteCallNoteById(id: Long) {
+        viewModelScope.launch {
+            repository.deleteCallNoteById(id)
+        }
+    }
+
+    fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>> {
+        return repository.getCallNotesForNumberFlow(number)
     }
 
     fun toggleCallRecording(context: android.content.Context, phoneNumber: String, callerName: String = "Unknown") {
@@ -435,9 +480,17 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun deleteContact(contact: Contact) {
+        viewModelScope.launch {
+            repository.deleteContact(contact)
+            refreshAvailableAccounts()
+        }
+    }
+
     fun deleteContact(number: String) {
         viewModelScope.launch {
             repository.deleteContact(number)
+            refreshAvailableAccounts()
         }
     }
 
@@ -524,9 +577,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun logFakeCall(name: String, number: String, type: com.example.model.CallType, durationSeconds: Long) {
+    fun logFakeCall(name: String, number: String, type: com.example.model.CallType, durationSeconds: Long, simSlot: Int = 1) {
         viewModelScope.launch {
-            repository.insertManualCallRecord(name, number, type, durationSeconds)
+            repository.insertManualCallRecord(name, number, type, durationSeconds, simSlot)
             syncData()
         }
     }

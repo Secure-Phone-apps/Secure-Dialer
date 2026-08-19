@@ -38,6 +38,9 @@ object DatabaseKeyManager {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                try {
+                    prefs.edit().remove(ENCRYPTED_DB_KEY).remove(GCM_IV).apply()
+                } catch (_: Exception) {}
             }
         }
 

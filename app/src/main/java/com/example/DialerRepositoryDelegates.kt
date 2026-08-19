@@ -53,10 +53,12 @@ suspend fun DialerRepository.saveVoicemailNumber(number: String) = dao.insertSet
 suspend fun DialerRepository.getPreferredSim(): String = dao.getSetting("preferred_sim") ?: "Ask"
 suspend fun DialerRepository.savePreferredSim(sim: String) = dao.insertSetting(AppSetting("preferred_sim", sim))
 
-suspend fun DialerRepository.getCallNote(number: String): CallNote? = dao.getCallNote(number)
+suspend fun DialerRepository.getCallNote(number: String): CallNote? = dao.getLatestCallNote(number)
 fun DialerRepository.getAllCallNotes(): Flow<List<CallNote>> = dao.getAllCallNotesFlow()
-suspend fun DialerRepository.saveCallNote(number: String, note: String) = dao.insertCallNote(CallNote(number, note))
-suspend fun DialerRepository.deleteCallNote(number: String) = dao.deleteCallNote(number)
+suspend fun DialerRepository.saveCallNote(callNote: CallNote) = dao.insertCallNote(callNote)
+suspend fun DialerRepository.saveCallNote(number: String, note: String) = dao.insertCallNote(CallNote(number = number, note = note, lastUpdated = System.currentTimeMillis()))
+suspend fun DialerRepository.deleteCallNote(number: String) = dao.deleteCallNotesForNumber(number)
+suspend fun DialerRepository.deleteCallNoteById(id: Long) = dao.deleteCallNoteById(id)
 
 fun DialerRepository.getAllCallRecordings(): Flow<List<CallRecording>> = dao.getAllCallRecordingsFlow()
 suspend fun DialerRepository.saveCallRecording(recording: CallRecording) = dao.insertCallRecording(recording)

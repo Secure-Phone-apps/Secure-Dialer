@@ -437,12 +437,12 @@ fun GeneralSettings(
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowNav(
-                        title = stringResource(R.string.settings_merge_duplicate_contacts),
-                        subtitle = stringResource(R.string.settings_merge_duplicate_contacts_sub),
-                        onClick = { onNavigateToTab(5) },
-                        icon = Icons.AutoMirrored.Filled.MergeType,
-                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
-                        iconTint = MaterialTheme.colorScheme.secondary
+                        title = stringResource(R.string.settings_all_call_notes),
+                        subtitle = stringResource(R.string.settings_all_call_notes_sub),
+                        onClick = { onNavigateToTab(12) },
+                        icon = Icons.Default.Description,
+                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        iconTint = MaterialTheme.colorScheme.tertiary
                     )
                     HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     SettingsRowNav(

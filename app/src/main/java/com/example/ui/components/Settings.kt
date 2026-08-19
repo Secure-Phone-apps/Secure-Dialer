@@ -105,13 +105,13 @@ fun SettingsPanel(
                             2 -> stringResource(R.string.settings_speed_dial)
                             3 -> stringResource(R.string.settings_quick_resp_title)
                             4 -> stringResource(R.string.settings_voicemail_setup_title)
-                            5 -> stringResource(R.string.settings_dedup_title)
                             6 -> stringResource(R.string.settings_updates_title)
                             7 -> stringResource(R.string.settings_recordings_title)
                             8 -> stringResource(R.string.backup_service_health_title)
                             9 -> stringResource(R.string.tab_spam_database)
                             10 -> stringResource(R.string.tab_scheduled_reminders)
                             11 -> stringResource(R.string.tab_fake_call_sim)
+                            12 -> stringResource(R.string.tab_call_notes)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -179,10 +179,6 @@ fun SettingsPanel(
                         viewModel = viewModel,
                         onBackToGeneral = { activeTab = 0 }
                     )
-                    5 -> MergeDuplicateSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
                     6 -> AppUpdatesSettings()
                     7 -> CallRecordingsSettings(
                         viewModel = viewModel,
@@ -201,6 +197,10 @@ fun SettingsPanel(
                         cardBgColor = cardBgColor
                     )
                     11 -> FakeCallSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    12 -> CallNotesSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )

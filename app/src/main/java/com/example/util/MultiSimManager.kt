@@ -65,10 +65,22 @@ object MultiSimManager {
             e.printStackTrace()
         }
 
-        // Fallback default if no SIM list returned or missing permission
+        // Fallback default if no SIM list returned or only 1 SIM available
         if (simList.isEmpty()) {
             simList.add(SimAccountInfo(0, 1, "SIM 1", "Default Carrier", "", null))
             simList.add(SimAccountInfo(1, 2, "SIM 2", "Secondary Carrier", "", null))
+        } else if (simList.size == 1) {
+            val primary = simList[0]
+            simList.add(
+                SimAccountInfo(
+                    slotIndex = 1,
+                    subscriptionId = primary.subscriptionId + 1,
+                    displayName = "SIM 2",
+                    carrierName = "Secondary Carrier",
+                    number = "",
+                    accountHandle = null
+                )
+            )
         }
 
         return simList

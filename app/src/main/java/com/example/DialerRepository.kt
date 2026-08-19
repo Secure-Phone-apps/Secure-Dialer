@@ -59,12 +59,12 @@ class DialerRepository(rawContext: Context) {
 
     // --- Paging ---
 
-    fun getContactsPaged(query: String): Flow<PagingData<Contact>> {
+    fun getContactsPaged(query: String, accountName: String = ""): Flow<PagingData<Contact>> {
         return Pager(
             config = PagingConfig(pageSize = 50, enablePlaceholders = false),
             pagingSourceFactory = {
-                if (query.isEmpty()) dao.getContactsPaged()
-                else dao.searchContacts("%$query%")
+                if (query.isEmpty()) dao.getContactsPaged(accountName)
+                else dao.searchContacts("%$query%", accountName)
             }
         ).flow
     }
@@ -124,7 +124,7 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
-    suspend fun syncContacts() = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    suspend fun syncContacts(force: Boolean = false) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         try {
             val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
             var systemContactsCount = 0
@@ -145,22 +145,18 @@ class DialerRepository(rawContext: Context) {
             val lastSyncedCount = prefs.getInt("last_synced_contacts_count", -1)
             val lastSyncedTimestamp = prefs.getLong("last_synced_contacts_timestamp", -1L)
             
-            if (localCount > 0 && systemContactsCount == lastSyncedCount && maxTimestamp == lastSyncedTimestamp) {
+            if (!force && localCount > 0 && systemContactsCount == lastSyncedCount && maxTimestamp == lastSyncedTimestamp) {
                 // No changes in system contacts; skip heavy sync
                 return@withContext
             }
             
             val systemContacts = fetchSystemContacts()
             
-            // Delete local contacts that are no longer present in system contacts to prevent stale cached contacts from reappearing
-            val systemNumbers = systemContacts.map { it.number }.toSet()
-            val localContacts = dao.getAllContactsList()
-            val toDelete = localContacts.filter { it.number !in systemNumbers }
-            for (contact in toDelete) {
-                dao.deleteContact(contact)
+            // Atomically clear old local contacts cache and insert fresh system contacts snapshot
+            dao.clearContacts()
+            if (systemContacts.isNotEmpty()) {
+                dao.insertContacts(systemContacts)
             }
-            
-            dao.insertContacts(systemContacts)
             
             prefs.edit()
                 .putInt("last_synced_contacts_count", systemContactsCount)
@@ -171,12 +167,7 @@ class DialerRepository(rawContext: Context) {
             try {
                 val systemContacts = fetchSystemContacts()
                 if (systemContacts.isNotEmpty()) {
-                    val systemNumbers = systemContacts.map { it.number }.toSet()
-                    val localContacts = dao.getAllContactsList()
-                    val toDelete = localContacts.filter { it.number !in systemNumbers }
-                    for (contact in toDelete) {
-                        dao.deleteContact(contact)
-                    }
+                    dao.clearContacts()
                     dao.insertContacts(systemContacts)
                 }
             } catch (ex: Exception) {
@@ -241,11 +232,42 @@ class DialerRepository(rawContext: Context) {
 
     // --- Actions ---
 
-    suspend fun addContact(name: String, number: String, label: String, email: String = "") {
+    suspend fun addContact(
+        name: String, 
+        number: String, 
+        label: String, 
+        email: String = "",
+        accountName: String = "",
+        accountType: String = ""
+    ) {
         val ops = arrayListOf<ContentProviderOperation>()
-        ops.add(ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI).withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null).withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null).build())
-        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE).withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name).build())
-        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI).withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0).withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE).withValue(Phone.NUMBER, number).withValue(Phone.TYPE, Phone.TYPE_MOBILE).build())
+        val rawInsert = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
+        if (accountName.isNotBlank() && accountType.isNotBlank() && accountName != "Phone") {
+            rawInsert.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, accountName)
+            rawInsert.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, accountType)
+        } else {
+            rawInsert.withValue(ContactsContract.RawContacts.ACCOUNT_NAME, null)
+            rawInsert.withValue(ContactsContract.RawContacts.ACCOUNT_TYPE, null)
+        }
+        ops.add(rawInsert.build())
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+            .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+            .build())
+        
+        val phoneType = when (label.lowercase()) {
+            "work" -> Phone.TYPE_WORK
+            "home" -> Phone.TYPE_HOME
+            else -> Phone.TYPE_MOBILE
+        }
+        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            .withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
+            .withValue(Phone.NUMBER, number)
+            .withValue(Phone.TYPE, phoneType)
+            .build())
+        
         if (email.isNotEmpty()) {
             ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                 .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
@@ -258,34 +280,50 @@ class DialerRepository(rawContext: Context) {
         syncContacts() // Update local cache
     }
 
-    suspend fun deleteContact(number: String) {
+    suspend fun deleteContact(contact: Contact) {
         try {
-            // First, delete from system ContactsContract to propagate to other dialers and system
-            val contactId = getContactIdFromNumber(number)
-            if (contactId != null) {
-                // Delete using the Contacts content URI (the complete aggregated contact)
-                context.contentResolver.delete(
-                    ContactsContract.Contacts.CONTENT_URI,
-                    "${ContactsContract.Contacts._ID} = ?",
-                    arrayOf(contactId)
-                )
-                // Also delete from RawContacts to clean up any raw components
+            if (contact.rawContactId > 0) {
                 context.contentResolver.delete(
                     ContactsContract.RawContacts.CONTENT_URI,
-                    "${ContactsContract.RawContacts.CONTACT_ID} = ?",
-                    arrayOf(contactId)
+                    "${ContactsContract.RawContacts._ID} = ?",
+                    arrayOf(contact.rawContactId.toString())
                 )
-                // Attempt to delete via lookup URI if possible (recommended Android standard)
-                getContactLookupUriFromNumber(number)?.let { lookupUri ->
-                    context.contentResolver.delete(lookupUri, null, null)
+            } else {
+                val contactId = getContactIdFromNumber(contact.number)
+                if (contactId != null) {
+                    context.contentResolver.delete(
+                        ContactsContract.RawContacts.CONTENT_URI,
+                        "${ContactsContract.RawContacts.CONTACT_ID} = ?",
+                        arrayOf(contactId)
+                    )
                 }
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        // Delete from the local database
-        dao.getContactByNumber(number)?.let { dao.deleteContact(it) }
+        dao.deleteContact(contact)
         syncContacts()
+    }
+
+    suspend fun deleteContact(number: String) {
+        val contact = dao.getContactByNumber(number)
+        if (contact != null) {
+            deleteContact(contact)
+        } else {
+            try {
+                val contactId = getContactIdFromNumber(number)
+                if (contactId != null) {
+                    context.contentResolver.delete(
+                        ContactsContract.RawContacts.CONTENT_URI,
+                        "${ContactsContract.RawContacts.CONTACT_ID} = ?",
+                        arrayOf(contactId)
+                    )
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            syncContacts()
+        }
     }
 
     suspend fun deleteCallLog(id: Int) {
@@ -398,8 +436,9 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
-    suspend fun insertManualCallRecord(name: String, number: String, type: CallType, durationSeconds: Long) = withContext(Dispatchers.IO) {
+    suspend fun insertManualCallRecord(name: String, number: String, type: CallType, durationSeconds: Long, simSlot: Int = 1) = withContext(Dispatchers.IO) {
         val timestampMs = System.currentTimeMillis()
+        com.example.util.SimCallTracker.recordOutgoingCall(context, number, simSlot)
         try {
             val systemType = when (type) {
                 CallType.MISSED -> CallLog.Calls.MISSED_TYPE
@@ -413,6 +452,7 @@ class DialerRepository(rawContext: Context) {
                 put(CallLog.Calls.DATE, timestampMs)
                 put(CallLog.Calls.DURATION, durationSeconds)
                 put(CallLog.Calls.IS_READ, 1)
+                put(CallLog.Calls.PHONE_ACCOUNT_ID, if (simSlot == 2) "sim_2" else "sim_1")
             }
             context.contentResolver.insert(CallLog.Calls.CONTENT_URI, values)
         } catch (e: SecurityException) {
@@ -436,11 +476,20 @@ class DialerRepository(rawContext: Context) {
                 avatarTextColorValue = pair.second.value.toLong(),
                 duration = durationSeconds,
                 hasVoicemail = false,
-                timestampMs = timestampMs
+                timestampMs = timestampMs,
+                simSlot = simSlot
             )
             dao.insertCallLogs(listOf(record))
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
+
+    // --- Call Notes ---
+    suspend fun getCallNote(number: String): CallNote? = dao.getLatestCallNote(number)
+    fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>> = dao.getCallNotesForNumberFlow(number)
+    fun getAllCallNotes(): Flow<List<CallNote>> = dao.getAllCallNotesFlow()
+    suspend fun saveCallNote(callNote: CallNote) = dao.insertCallNote(callNote)
+    suspend fun deleteCallNoteById(id: Long) = dao.deleteCallNoteById(id)
+    suspend fun deleteCallNotesForNumber(number: String) = dao.deleteCallNotesForNumber(number)
 }

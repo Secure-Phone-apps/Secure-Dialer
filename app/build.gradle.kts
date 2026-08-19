@@ -23,9 +23,13 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  val isDebugBuild = gradle.startParameter.taskNames.any {
+    it.contains("Debug", ignoreCase = true) || it.contains("test", ignoreCase = true)
+  }
+
   splits {
     abi {
-      isEnable = true
+      isEnable = !isDebugBuild
       reset()
       include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
       isUniversalApk = true

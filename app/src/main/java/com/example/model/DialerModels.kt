@@ -63,7 +63,9 @@ data class CallRecord(
     val duration: Long,
     val hasVoicemail: Boolean,
     val photoUri: String = "",
-    val timestampMs: Long = 0L
+    val timestampMs: Long = 0L,
+    val isVerified: Boolean = false,
+    val simSlot: Int = 1
 ) {
     @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
     @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
@@ -73,12 +75,27 @@ enum class CallType {
     MISSED, OUTGOING, INCOMING
 }
 
+data class ContactAccount(
+    val name: String,
+    val type: String,
+    val displayName: String
+)
+
 @Entity(
     tableName = "contacts",
-    indices = [Index(value = ["number"], unique = true), Index(value = ["name"]), Index(value = ["t9Mapping"])]
+    indices = [
+        Index(value = ["number"]),
+        Index(value = ["name"]),
+        Index(value = ["t9Mapping"]),
+        Index(value = ["accountName"]),
+        Index(value = ["rawContactId"])
+    ]
 )
 data class Contact(
-    @PrimaryKey val number: String,
+    @PrimaryKey val id: Long = 0L,
+    val rawContactId: Long = 0L,
+    val contactId: Long = 0L,
+    val number: String,
     val name: String,
     val label: String,
     val favorite: Boolean = false,
@@ -87,7 +104,9 @@ data class Contact(
     val avatarTextColorValue: Long,
     val t9Mapping: String = "",
     val email: String = "",
-    val photoUri: String = ""
+    val photoUri: String = "",
+    val accountName: String = "",
+    val accountType: String = ""
 ) {
     @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
     @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
@@ -95,7 +114,8 @@ data class Contact(
 
 @Entity(tableName = "call_notes")
 data class CallNote(
-    @PrimaryKey val number: String,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val number: String,
     val note: String,
     val lastUpdated: Long = System.currentTimeMillis()
 )

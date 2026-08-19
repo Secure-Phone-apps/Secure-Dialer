@@ -51,7 +51,7 @@ class Converters {
         SpamNumber::class,
         CallReminder::class
     ],
-    version = 4,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -64,20 +64,43 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                SQLiteDatabase.loadLibs(context)
-                val dbKey = DatabaseKeyManager.getDatabaseKey(context)
-                val factory = SupportFactory(dbKey)
-                val instance = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "dialer_database"
-                )
-                    .openHelperFactory(factory)
-                    .fallbackToDestructiveMigration()
-                    .build()
-                INSTANCE = instance
-                instance
+                val appCtx = context.applicationContext
+                val db = buildDatabase(appCtx)
+                try {
+                    // Test connection to ensure key and schema integrity
+                    val helper = db.openHelper.writableDatabase
+                    helper.query("SELECT 1").close()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    try { db.close() } catch (_: Exception) {}
+                    try { appCtx.deleteDatabase("dialer_database") } catch (_: Exception) {}
+                    val freshDb = buildDatabase(appCtx)
+                    try {
+                        freshDb.openHelper.writableDatabase.query("SELECT 1").close()
+                    } catch (e2: Exception) {
+                        e2.printStackTrace()
+                    }
+                    INSTANCE = freshDb
+                    return@synchronized freshDb
+                }
+                INSTANCE = db
+                db
             }
+        }
+
+        private fun buildDatabase(context: Context): AppDatabase {
+            SQLiteDatabase.loadLibs(context)
+            val dbKey = DatabaseKeyManager.getDatabaseKey(context)
+            val factory = SupportFactory(dbKey)
+            return Room.databaseBuilder(
+                context,
+                AppDatabase::class.java,
+                "dialer_database"
+            )
+                .openHelperFactory(factory)
+                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigrationOnDowngrade()
+                .build()
         }
     }
 }

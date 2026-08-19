@@ -124,11 +124,6 @@ class MainActivity : ComponentActivity() {
 
         enableEdgeToEdge()
         try {
-            checkDefaultDialerRole()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        try {
             handleIntent(intent)
         } catch (e: Exception) {
             e.printStackTrace()

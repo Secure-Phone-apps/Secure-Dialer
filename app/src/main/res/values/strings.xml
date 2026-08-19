@@ -26,6 +26,10 @@
     
     <string name="contacts_header">Contacts</string>
     <string name="add_new_contact">Add New</string>
+    <string name="contact_source_label">Save to Account</string>
+    <string name="contact_source_phone">Phone storage</string>
+    <string name="contact_source_select">Select Account</string>
+    <string name="account_filter_all">All Accounts</string>
     <string name="no_contacts_title">No contacts found</string>
     <string name="no_contacts_subtitle">Tap \'Add New\' to create a contact</string>
     <string name="add_contact_dialog_title">Add Contact</string>
@@ -173,8 +177,17 @@
     <string name="settings_pocket_protection">Pocket Touch Protection</string>
     <string name="settings_pocket_protection_sub">Block touch input during calls when proximity sensor detects proximity (e.g., in pocket)</string>
     <string name="settings_info_utilities">Information &amp; Utilities</string>
-    <string name="settings_merge_duplicate_contacts">Merge Duplicate Contacts</string>
-    <string name="settings_merge_duplicate_contacts_sub">Scan and clean duplicate contact listings</string>
+    <string name="settings_all_call_notes">Call Notes</string>
+    <string name="settings_all_call_notes_sub">View, search, and manage all saved call notes</string>
+    <string name="tab_call_notes">Call Notes</string>
+    <string name="no_notes_title">No Call Notes</string>
+    <string name="no_notes_desc">Notes created during calls or from call details will appear here.</string>
+    <string name="search_notes_placeholder">Search notes or numbers...</string>
+    <string name="edit_note_title">Edit Call Note</string>
+    <string name="delete_note_confirm">Delete call note for %1$s?</string>
+    <string name="note_deleted_toast">Call note deleted</string>
+    <string name="call_note_card_title">Call Note</string>
+    <string name="add_call_note_btn">Add Call Note</string>
     <string name="settings_check_updates">Check for Updates</string>
     <string name="settings_check_updates_sub">Ensure app is up to date &amp; secure</string>
     <string name="settings_contribution">Contribution</string>
@@ -244,6 +257,7 @@
     <string name="error_open_messages">Could not open messages</string>
     <string name="sim_1">SIM 1</string>
     <string name="sim_2">SIM 2</string>
+    <string name="caller_verified">Verified</string>
     <string name="toast_merged_all_duplicates">All duplicates merged successfully</string>
     <string name="toast_merged_duplicates_for">Merged duplicates for %1$s</string>
     <string name="toast_deleted_recording">Deleted recording</string>

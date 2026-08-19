@@ -29,14 +29,34 @@ import com.example.R
 
 @Composable
 fun InCallNoteDialog(
+    initialNote: String = "",
     onDismiss: () -> Unit,
     onSaveNote: (String) -> Unit
 ) {
     val context = LocalContext.current
-    var noteText by remember { mutableStateOf("") }
+    var noteText by remember { mutableStateOf(initialNote) }
+    val savedState = remember { mutableStateOf(false) }
+
+    fun performSaveAndDismiss() {
+        if (!savedState.value && noteText.isNotBlank()) {
+            savedState.value = true
+            onSaveNote(noteText)
+            Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+        }
+        onDismiss()
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            if (!savedState.value && noteText.isNotBlank()) {
+                savedState.value = true
+                onSaveNote(noteText)
+            }
+        }
+    }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { performSaveAndDismiss() },
         title = { Text(stringResource(R.string.jot_call_note_title)) },
         text = {
             OutlinedTextField(
@@ -50,19 +70,21 @@ fun InCallNoteDialog(
         },
         confirmButton = {
             Button(
-                onClick = {
-                    if (noteText.isNotBlank()) {
-                        onSaveNote(noteText)
-                        Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
-                    }
-                    onDismiss()
-                }
+                onClick = { performSaveAndDismiss() }
             ) {
                 Text(stringResource(R.string.btn_save_note))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = {
+                    if (noteText.isNotBlank()) {
+                        performSaveAndDismiss()
+                    } else {
+                        onDismiss()
+                    }
+                }
+            ) {
                 Text(stringResource(R.string.btn_discard))
             }
         }

@@ -25,8 +25,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DialerDao {
     // Contacts
-    @Query("SELECT * FROM contacts ORDER BY name ASC")
-    fun getContactsPaged(): PagingSource<Int, Contact>
+    @Query("SELECT * FROM contacts WHERE (:accountName = '' OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR LOWER(accountName) = 'phone' OR LOWER(accountType) LIKE '%local%')) OR accountName = :accountName) ORDER BY name ASC")
+    fun getContactsPaged(accountName: String = ""): PagingSource<Int, Contact>
 
     @Query("SELECT * FROM contacts ORDER BY name ASC")
     fun getAllContactsFlow(): Flow<List<Contact>>
@@ -40,8 +40,8 @@ interface DialerDao {
     @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name ASC")
     fun getFavoriteContacts(): Flow<List<Contact>>
 
-    @Query("SELECT * FROM contacts WHERE name LIKE :query OR number LIKE :query OR t9Mapping LIKE :query ORDER BY name ASC")
-    fun searchContacts(query: String): PagingSource<Int, Contact>
+    @Query("SELECT * FROM contacts WHERE (:accountName = '' OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR LOWER(accountName) = 'phone' OR LOWER(accountType) LIKE '%local%')) OR accountName = :accountName) AND (name LIKE :query OR number LIKE :query OR t9Mapping LIKE :query) ORDER BY name ASC")
+    fun searchContacts(query: String, accountName: String = ""): PagingSource<Int, Contact>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertContacts(contacts: List<Contact>)
@@ -54,6 +54,9 @@ interface DialerDao {
 
     @Delete
     suspend fun deleteContact(contact: Contact)
+
+    @Query("DELETE FROM contacts WHERE id = :id")
+    suspend fun deleteContactById(id: Long)
 
     @Query("SELECT * FROM contacts WHERE number = :number LIMIT 1")
     suspend fun getContactByNumber(number: String): Contact?
@@ -139,20 +142,26 @@ interface DialerDao {
     suspend fun insertSetting(setting: AppSetting)
 
     // Call Notes
-    @Query("SELECT * FROM call_notes WHERE number = :number LIMIT 1")
-    suspend fun getCallNote(number: String): CallNote?
+    @Query("SELECT * FROM call_notes WHERE number = :number ORDER BY id DESC")
+    fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>>
 
-    @Query("SELECT * FROM call_notes")
+    @Query("SELECT * FROM call_notes WHERE number = :number ORDER BY id DESC LIMIT 1")
+    suspend fun getLatestCallNote(number: String): CallNote?
+
+    @Query("SELECT * FROM call_notes ORDER BY id DESC")
     fun getAllCallNotesFlow(): Flow<List<CallNote>>
 
-    @Query("SELECT * FROM call_notes")
+    @Query("SELECT * FROM call_notes ORDER BY id DESC")
     suspend fun getAllCallNotesList(): List<CallNote>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallNote(callNote: CallNote)
 
+    @Query("DELETE FROM call_notes WHERE id = :id")
+    suspend fun deleteCallNoteById(id: Long)
+
     @Query("DELETE FROM call_notes WHERE number = :number")
-    suspend fun deleteCallNote(number: String)
+    suspend fun deleteCallNotesForNumber(number: String)
 
     // Call Recordings
     @Query("SELECT * FROM call_recordings ORDER BY id DESC")
