@@ -26,6 +26,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -86,18 +87,22 @@ fun RecentCallRow(
         searchBarColor
     }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                isExpanded = !isExpanded
-            },
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor
-        ),
-        shape = MaterialTheme.shapes.medium
-    ) {
+    val context = LocalContext.current
+    val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
+
+    val rowCardContent = @Composable {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable {
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    isExpanded = !isExpanded
+                },
+            colors = CardDefaults.cardColors(
+                containerColor = containerColor
+            ),
+            shape = MaterialTheme.shapes.medium
+        ) {
         Column {
             ListItem(
                 headlineContent = {
@@ -384,6 +389,70 @@ fun RecentCallRow(
                 }
             }
         }
+    }
+}
+
+    if (isRowSwipeEnabled) {
+        val dismissState = rememberSwipeToDismissBoxState(
+            confirmValueChange = { dismissValue ->
+                when (dismissValue) {
+                    SwipeToDismissBoxValue.StartToEnd -> {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onCallClick()
+                        false
+                    }
+                    SwipeToDismissBoxValue.EndToStart -> {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        try {
+                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${record.number}"))
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Messaging app not available", Toast.LENGTH_SHORT).show()
+                        }
+                        false
+                    }
+                    else -> false
+                }
+            }
+        )
+
+        SwipeToDismissBox(
+            state = dismissState,
+            backgroundContent = {
+                val direction = dismissState.dismissDirection
+                val bgContainerColor = when (direction) {
+                    SwipeToDismissBoxValue.StartToEnd -> com.example.ui.theme.getCallGreenColor()
+                    SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.primaryContainer
+                    else -> Color.Transparent
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(bgContainerColor)
+                        .padding(horizontal = 20.dp),
+                    contentAlignment = if (direction == SwipeToDismissBoxValue.StartToEnd) Alignment.CenterStart else Alignment.CenterEnd
+                ) {
+                    if (direction == SwipeToDismissBoxValue.StartToEnd) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Call, contentDescription = "Call", tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Call", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    } else if (direction == SwipeToDismissBoxValue.EndToStart) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Message", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Icon(Icons.Default.Email, contentDescription = "Message", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                        }
+                    }
+                }
+            }
+        ) {
+            rowCardContent()
+        }
+    } else {
+        rowCardContent()
     }
 }
 

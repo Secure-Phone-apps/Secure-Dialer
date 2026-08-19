@@ -334,8 +334,15 @@ fun MainScreen(
                     DefaultDialerWarningCard(onShowRestrictedSettings = onShowRestrictedSettings)
                 }
 
+                val tabSlotLeft by viewModel.tabSlotLeft
+                val tabSlotMiddle by viewModel.tabSlotMiddle
+                val tabSlotRight by viewModel.tabSlotRight
+                val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
+                val tabSlots = listOf(tabSlotLeft, tabSlotMiddle, tabSlotRight)
+                val currentSlotKey = tabSlots.getOrElse(selectedTab) { "RECENTS" }
+
                 AnimatedVisibility(
-                    visible = selectedTab != 2 && !isCallHistoryDetailsOpen,
+                    visible = currentSlotKey != "DIALPAD" && !isCallHistoryDetailsOpen,
                     enter = expandVertically(
                         animationSpec = spring(
                             stiffness = Spring.StiffnessMedium,
@@ -367,10 +374,12 @@ fun MainScreen(
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
-                        beyondViewportPageCount = 1
+                        beyondViewportPageCount = 1,
+                        userScrollEnabled = !isRowSwipeEnabled
                     ) { page ->
-                        when (page) {
-                            0 -> {
+                        val slotKey = tabSlots.getOrElse(page) { "RECENTS" }
+                        when (slotKey) {
+                            "RECENTS" -> {
                                 val allCallHistory by viewModel.allCallHistoryFlow.collectAsState()
                                 RecentsTabContent(
                                     viewModel = viewModel,
@@ -381,7 +390,7 @@ fun MainScreen(
                                     onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
                                 )
                             }
-                            1 -> {
+                            "CONTACTS" -> {
                                 val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
                                 val favoriteContacts by viewModel.favoriteContacts.collectAsState()
                                 ContactsTabContent(
@@ -397,7 +406,7 @@ fun MainScreen(
                                     onDeleteContact = { it -> viewModel.deleteContact(it) }
                                 )
                             }
-                            2 -> {
+                            "DIALPAD" -> {
                                 val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
                                 val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
                                 val voicemailNumber by viewModel.voicemailNumber
@@ -449,7 +458,8 @@ fun MainScreen(
                             coroutineScope.launch {
                                 pagerState.scrollToPage(targetTab)
                             }
-                        }
+                        },
+                        tabSlots = tabSlots
                     )
                 }
             }

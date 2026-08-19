@@ -179,10 +179,12 @@ fun RecentsTabContent(
                 }
             } else {
                 // 1. Unified Interactive Call Log Summary Dashboard (Dashboard + Filter in one)
+                val dashboardMode by viewModel.dashboardMode
                 CallLogSummaryDashboard(
                     callRecords = callRecords,
                     selectedFilter = currentFilter,
                     onFilterSelect = { newFilter -> currentFilter = newFilter },
+                    dashboardMode = dashboardMode,
                     modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
                 )
 

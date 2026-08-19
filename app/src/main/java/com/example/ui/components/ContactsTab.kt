@@ -252,14 +252,15 @@ fun ContactsTabContent(
                     }
                 }
 
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(end = 36.dp, bottom = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Row 1: Account / Source Filter Selector Button
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    // All Contacts / Account Filter Dropdown Button
+                    Box {
                         Button(
                             onClick = {
                                 if (showOnlyFavorites) {
@@ -269,7 +270,7 @@ fun ContactsTabContent(
                                 }
                             },
                             shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = if (!showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                                 contentColor = if (!showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -282,7 +283,7 @@ fun ContactsTabContent(
                                 overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.labelLarge
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(2.dp))
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = "Select Contact Source",
@@ -329,44 +330,43 @@ fun ContactsTabContent(
                         }
                     }
 
-                    // Row 2: Favorites Filter on Left, Add Contact Button on Right
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Favorites Filter Toggle Button
+                    Button(
+                        onClick = { showOnlyFavorites = !showOnlyFavorites },
+                        shape = RoundedCornerShape(16.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.testTag("favorites_toggle_fab")
                     ) {
-                        Button(
-                            onClick = { showOnlyFavorites = !showOnlyFavorites },
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            modifier = Modifier.testTag("favorites_toggle_fab")
-                        ) {
-                            Icon(
-                                imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
-                                contentDescription = "Toggle Favorites",
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = stringResource(R.string.tab_favorites),
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                        }
+                        Icon(
+                            imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = "Toggle Favorites",
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = stringResource(R.string.tab_favorites),
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
 
-                        Button(
-                            onClick = onAddContactClick,
-                            shape = RoundedCornerShape(16.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                            modifier = Modifier.testTag("add_contact_fab")
-                        ) {
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Squircle Add Contact Button (+ Add)
+                    Button(
+                        onClick = onAddContactClick,
+                        shape = RoundedCornerShape(16.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.testTag("add_contact_fab")
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
                                 imageVector = Icons.Default.Add,
                                 contentDescription = stringResource(R.string.action_add_contact),
@@ -374,8 +374,9 @@ fun ContactsTabContent(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = stringResource(R.string.action_add_contact),
-                                style = MaterialTheme.typography.labelLarge
+                                text = "Add",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }

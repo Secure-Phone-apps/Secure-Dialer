@@ -158,6 +158,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var flashAlertsEnabled = mutableStateOf(prefs.getBoolean("flash_alerts_enabled", false))
 
+    // Dashboard & Tab Layout & Swipe Preferences
+    var dashboardMode = mutableStateOf(prefs.getString("dashboard_mode", "FULL") ?: "FULL")
+    var tabSlotLeft = mutableStateOf(prefs.getString("tab_slot_left", "RECENTS") ?: "RECENTS")
+    var tabSlotMiddle = mutableStateOf(prefs.getString("tab_slot_middle", "CONTACTS") ?: "CONTACTS")
+    var tabSlotRight = mutableStateOf(prefs.getString("tab_slot_right", "DIALPAD") ?: "DIALPAD")
+    var isRowSwipeEnabled = mutableStateOf(prefs.getBoolean("is_row_swipe_enabled", true))
+    var lastDialedNumber = mutableStateOf(prefs.getString("last_dialed_number", "") ?: "")
+
     // Fake Call Simulation State
     var isFakeCallActive = mutableStateOf(false)
     var fakeCallerName = mutableStateOf("Unknown")
@@ -287,6 +295,106 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updatePocketProtectionEnabled(enabled: Boolean) {
         isPocketProtectionEnabled.value = enabled
         prefs.edit().putBoolean("is_pocket_protection_enabled", enabled).apply()
+    }
+
+    fun updateDashboardMode(mode: String) {
+        dashboardMode.value = mode
+        prefs.edit().putString("dashboard_mode", mode).apply()
+    }
+
+    fun updateTabSlotLeft(screen: String) {
+        val currentLeft = tabSlotLeft.value
+        val currentMiddle = tabSlotMiddle.value
+        val currentRight = tabSlotRight.value
+
+        var newMiddle = currentMiddle
+        var newRight = currentRight
+
+        if (screen == currentMiddle) {
+            newMiddle = currentLeft
+        } else if (screen == currentRight) {
+            newRight = currentLeft
+        }
+
+        tabSlotLeft.value = screen
+        tabSlotMiddle.value = newMiddle
+        tabSlotRight.value = newRight
+
+        prefs.edit()
+            .putString("tab_slot_left", screen)
+            .putString("tab_slot_middle", newMiddle)
+            .putString("tab_slot_right", newRight)
+            .apply()
+    }
+
+    fun updateTabSlotMiddle(screen: String) {
+        val currentLeft = tabSlotLeft.value
+        val currentMiddle = tabSlotMiddle.value
+        val currentRight = tabSlotRight.value
+
+        var newLeft = currentLeft
+        var newRight = currentRight
+
+        if (screen == currentLeft) {
+            newLeft = currentMiddle
+        } else if (screen == currentRight) {
+            newRight = currentMiddle
+        }
+
+        tabSlotMiddle.value = screen
+        tabSlotLeft.value = newLeft
+        tabSlotRight.value = newRight
+
+        prefs.edit()
+            .putString("tab_slot_left", newLeft)
+            .putString("tab_slot_middle", screen)
+            .putString("tab_slot_right", newRight)
+            .apply()
+    }
+
+    fun updateTabSlotRight(screen: String) {
+        val currentLeft = tabSlotLeft.value
+        val currentMiddle = tabSlotMiddle.value
+        val currentRight = tabSlotRight.value
+
+        var newLeft = currentLeft
+        var newMiddle = currentMiddle
+
+        if (screen == currentLeft) {
+            newLeft = currentRight
+        } else if (screen == currentMiddle) {
+            newMiddle = currentRight
+        }
+
+        tabSlotRight.value = screen
+        tabSlotLeft.value = newLeft
+        tabSlotMiddle.value = newMiddle
+
+        prefs.edit()
+            .putString("tab_slot_left", newLeft)
+            .putString("tab_slot_middle", newMiddle)
+            .putString("tab_slot_right", screen)
+            .apply()
+    }
+
+    fun updateRowSwipeEnabled(enabled: Boolean) {
+        isRowSwipeEnabled.value = enabled
+        prefs.edit().putBoolean("is_row_swipe_enabled", enabled).apply()
+    }
+
+    fun saveLastOutgoingNumber(number: String) {
+        if (number.isNotBlank()) {
+            lastDialedNumber.value = number
+            prefs.edit().putString("last_dialed_number", number).apply()
+        }
+    }
+
+    fun getLastOutgoingNumber(): String {
+        if (lastDialedNumber.value.isNotBlank()) {
+            return lastDialedNumber.value
+        }
+        val lastOutgoing = allCallHistoryFlow.value.firstOrNull { it.type == com.example.model.CallType.OUTGOING }
+        return lastOutgoing?.number ?: ""
     }
 
     fun updateVoicemailNumber(num: String) {

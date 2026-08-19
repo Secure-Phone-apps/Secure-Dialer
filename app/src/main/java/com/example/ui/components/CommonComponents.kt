@@ -131,7 +131,8 @@ fun HeaderSearchBar(
 @Composable
 fun BottomNavBar(
     selectedTab: Int,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+    tabSlots: List<String> = listOf("RECENTS", "CONTACTS", "DIALPAD")
 ) {
     val haptic = LocalHapticFeedback.current
 
@@ -140,11 +141,14 @@ fun BottomNavBar(
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 3.dp
     ) {
-        val items = listOf(
-            Triple(0, stringResource(R.string.tab_recents), Icons.Default.History),
-            Triple(1, stringResource(R.string.tab_contacts), Icons.Default.Person),
-            Triple(2, stringResource(R.string.tab_dialpad), Icons.Default.Dialpad)
-        )
+        val items = tabSlots.mapIndexed { index, slotKey ->
+            val (labelRes, icon) = when (slotKey) {
+                "CONTACTS" -> R.string.tab_contacts to Icons.Default.Person
+                "DIALPAD" -> R.string.tab_dialpad to Icons.Default.Dialpad
+                else -> R.string.tab_recents to Icons.Default.History
+            }
+            Triple(index, stringResource(labelRes), icon)
+        }
 
         items.forEach { (index, label, icon) ->
             val isSelected = selectedTab == index

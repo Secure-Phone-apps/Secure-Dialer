@@ -382,7 +382,17 @@ fun DialpadTabContent(
             Surface(
                 onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onCallClick(inputValue)
+                    if (inputValue.isEmpty()) {
+                        val lastNumber = viewModel?.getLastOutgoingNumber() ?: ""
+                        if (lastNumber.isNotBlank()) {
+                            onValueChange(lastNumber)
+                        } else {
+                            Toast.makeText(context, "No recent dialed number", Toast.LENGTH_SHORT).show()
+                        }
+                    } else {
+                        viewModel?.saveLastOutgoingNumber(inputValue)
+                        onCallClick(inputValue)
+                    }
                 },
                 shape = actionButtonShape,
                 color = com.example.ui.theme.getCallGreenColor(),
