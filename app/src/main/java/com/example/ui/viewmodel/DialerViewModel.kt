@@ -33,15 +33,19 @@ import kotlinx.coroutines.launch
 
 class DialerViewModel(application: Application) : AndroidViewModel(application) {
     private val repository = DialerRepository(application)
+    private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
     // Search Query
     var searchQuery = mutableStateOf("")
     private val _searchQueryFlow = MutableStateFlow("")
 
-    // Account Source Filter
-    var selectedAccountFilter = mutableStateOf("")
-    private val _selectedAccountFilterFlow = MutableStateFlow("")
+    // Account Source Filter & Default Contact Account
+    private val initialAccountFilter = prefs.getString("selected_account_filter", "") ?: ""
+    var selectedAccountFilter = mutableStateOf(initialAccountFilter)
+    private val _selectedAccountFilterFlow = MutableStateFlow(initialAccountFilter)
     var availableAccounts = mutableStateListOf<ContactAccount>()
+    var defaultContactAccountName = mutableStateOf(prefs.getString("default_contact_account_name", "") ?: "")
+    var defaultContactAccountType = mutableStateOf(prefs.getString("default_contact_account_type", "") ?: "")
 
     // Dialpad Input Flow
     private val _dialpadInputFlow = MutableStateFlow("")
@@ -57,6 +61,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun onAccountFilterChange(accountName: String) {
         selectedAccountFilter.value = accountName
         _selectedAccountFilterFlow.value = accountName
+        prefs.edit().putString("selected_account_filter", accountName).apply()
+    }
+
+    fun updateDefaultContactAccount(accountName: String, accountType: String) {
+        defaultContactAccountName.value = accountName
+        defaultContactAccountType.value = accountType
+        prefs.edit()
+            .putString("default_contact_account_name", accountName)
+            .putString("default_contact_account_type", accountType)
+            .apply()
     }
 
     fun onDialpadInputChange(newInput: String) {
@@ -138,8 +152,6 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }.flowOn(kotlinx.coroutines.Dispatchers.Default)
      .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
     // UI State
     var isDialpadVisible = mutableStateOf(false)

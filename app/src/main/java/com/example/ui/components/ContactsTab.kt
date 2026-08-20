@@ -240,96 +240,13 @@ fun ContactsTabContent(
             Spacer(modifier = Modifier.height(4.dp))
 
             if (hasPermission && !isLoading) {
-                val availableAccounts = viewModel.availableAccounts
-                var isAccountMenuExpanded by remember { mutableStateOf(false) }
-
-                val accountFilterDisplayLabel = remember(selectedAccountFilter, availableAccounts) {
-                    if (selectedAccountFilter.isBlank()) {
-                        "All Contacts"
-                    } else {
-                        availableAccounts.firstOrNull { it.name == selectedAccountFilter }?.displayName
-                            ?: selectedAccountFilter
-                    }
-                }
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(end = 36.dp, bottom = 6.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // All Contacts / Account Filter Dropdown Button
-                    Box {
-                        Button(
-                            onClick = {
-                                if (showOnlyFavorites) {
-                                    showOnlyFavorites = false
-                                } else {
-                                    isAccountMenuExpanded = true
-                                }
-                            },
-                            shape = RoundedCornerShape(16.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (!showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                contentColor = if (!showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            modifier = Modifier.testTag("contact_source_header_dropdown")
-                        ) {
-                            Text(
-                                text = accountFilterDisplayLabel,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                style = MaterialTheme.typography.labelLarge
-                            )
-                            Spacer(modifier = Modifier.width(2.dp))
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Select Contact Source",
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-
-                        DropdownMenu(
-                            expanded = isAccountMenuExpanded,
-                            onDismissRequest = { isAccountMenuExpanded = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = stringResource(R.string.account_filter_all),
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        fontWeight = if (selectedAccountFilter.isBlank()) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                },
-                                onClick = {
-                                    showOnlyFavorites = false
-                                    viewModel.onAccountFilterChange("")
-                                    isAccountMenuExpanded = false
-                                }
-                            )
-                            availableAccounts.forEach { acc ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = acc.displayName,
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis,
-                                            fontWeight = if (selectedAccountFilter == acc.name) FontWeight.Bold else FontWeight.Normal
-                                        )
-                                    },
-                                    onClick = {
-                                        showOnlyFavorites = false
-                                        viewModel.onAccountFilterChange(acc.name)
-                                        isAccountMenuExpanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
                     // Favorites Filter Toggle Button
                     Button(
                         onClick = { showOnlyFavorites = !showOnlyFavorites },
@@ -353,8 +270,6 @@ fun ContactsTabContent(
                         )
                     }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
                     // Squircle Add Contact Button (+ Add)
                     Button(
                         onClick = onAddContactClick,
@@ -363,7 +278,7 @@ fun ContactsTabContent(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                         modifier = Modifier.testTag("add_contact_fab")
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {

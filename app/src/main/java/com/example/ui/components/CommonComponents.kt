@@ -73,7 +73,7 @@ fun HeaderSearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 4.dp),
         shape = searchShape,
         color = containerColor,
         tonalElevation = if (isExpressive) 6.dp else 3.dp

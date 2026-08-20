@@ -78,6 +78,7 @@ fun AddContactDialog(
     initialEmail: String = "",
     availableAccounts: List<ContactAccount> = emptyList(),
     selectedAccountFilter: String = "",
+    defaultAccountName: String = "",
     onDismiss: () -> Unit,
     onConfirm: (name: String, number: String, label: String, email: String, accountName: String, accountType: String) -> Unit
 ) {
@@ -87,9 +88,13 @@ fun AddContactDialog(
     val buttonShape = RoundedCornerShape(16.dp)
     val isExpressive = LocalM3Expressive.current
 
-    val defaultSaveAccount = remember(availableAccounts, selectedAccountFilter) {
+    val defaultSaveAccount = remember(availableAccounts, defaultAccountName, selectedAccountFilter) {
         val specificAccounts = availableAccounts.filter { it.name.isNotBlank() }
-        if (selectedAccountFilter.isNotBlank()) {
+        if (defaultAccountName.isNotBlank()) {
+            specificAccounts.firstOrNull { it.name == defaultAccountName }
+                ?: specificAccounts.firstOrNull { it.type == "com.google" }
+                ?: specificAccounts.firstOrNull()
+        } else if (selectedAccountFilter.isNotBlank()) {
             specificAccounts.firstOrNull { it.name == selectedAccountFilter }
                 ?: specificAccounts.firstOrNull { it.type == "com.google" }
                 ?: specificAccounts.firstOrNull()

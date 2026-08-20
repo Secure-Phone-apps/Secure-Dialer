@@ -114,6 +114,11 @@
 
     
     <string name="settings_appearance">Appearance</string>
+    <string name="settings_contact_preferences">Contact Preferences</string>
+    <string name="settings_contacts_to_display">Contacts to Display</string>
+    <string name="settings_contacts_to_display_sub">Filter contacts by account source (e.g. Google, Phone, SIM)</string>
+    <string name="settings_default_account_for_new">Default Account for New Contacts</string>
+    <string name="settings_default_account_for_new_sub">Pre-selected account when creating new contacts</string>
     <string name="settings_dark_theme">Dark Theme</string>
     <string name="settings_dark_theme_sub">Apply dark visual theme to the interface</string>
     <string name="settings_dynamic_color">Dynamic Color</string>

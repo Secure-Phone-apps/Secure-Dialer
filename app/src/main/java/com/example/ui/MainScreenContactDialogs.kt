@@ -42,6 +42,7 @@ fun MainScreenContactDialogs(
             initialEmail = "",
             availableAccounts = viewModel.availableAccounts,
             selectedAccountFilter = viewModel.selectedAccountFilter.value,
+            defaultAccountName = viewModel.defaultContactAccountName.value,
             onDismiss = { isAddContactDialogVisible = false },
             onConfirm = { name, number, label, email, accountName, accountType ->
                 viewModel.addContact(name, number, label, email, accountName, accountType)

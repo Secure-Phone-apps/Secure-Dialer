@@ -89,6 +89,9 @@ fun GeneralSettings(
     val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
     val isPocketProtectionEnabled by viewModel.isPocketProtectionEnabled
 
+    var showContactsToDisplayDialog by remember { mutableStateOf(false) }
+    var showDefaultAccountDialog by remember { mutableStateOf(false) }
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(bottom = 24.dp)
@@ -167,6 +170,55 @@ fun GeneralSettings(
                         icon = Icons.Default.AutoAwesome,
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                         iconTint = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+            }
+        }
+
+        // Contact Preferences Card
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            PreferenceHeader(stringResource(R.string.settings_contact_preferences))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column {
+                    val currentFilter = viewModel.selectedAccountFilter.value
+                    val currentFilterDisplay = if (currentFilter.isBlank()) {
+                        stringResource(R.string.account_filter_all)
+                    } else {
+                        viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
+                    }
+
+                    SettingsRowNav(
+                        title = stringResource(R.string.settings_contacts_to_display),
+                        subtitle = currentFilterDisplay,
+                        onClick = { showContactsToDisplayDialog = true },
+                        icon = Icons.Default.FilterList,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                        iconTint = MaterialTheme.colorScheme.primary
+                    )
+
+                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+                    val defaultAccName = viewModel.defaultContactAccountName.value
+                    val defaultAccDisplay = if (defaultAccName.isBlank()) {
+                        "Default / Same as Filter"
+                    } else {
+                        viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
+                    }
+
+                    SettingsRowNav(
+                        title = stringResource(R.string.settings_default_account_for_new),
+                        subtitle = defaultAccDisplay,
+                        onClick = { showDefaultAccountDialog = true },
+                        icon = Icons.Default.PersonAdd,
+                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                        iconTint = MaterialTheme.colorScheme.secondary
                     )
                 }
             }
@@ -481,6 +533,164 @@ fun GeneralSettings(
             PreferenceHeader(stringResource(R.string.settings_contribution))
             GeneralSettingsSupportCard(context)
         }
+    }
+
+    if (showContactsToDisplayDialog) {
+        val availableAccounts = viewModel.availableAccounts
+        val currentFilter = viewModel.selectedAccountFilter.value
+        AlertDialog(
+            onDismissRequest = { showContactsToDisplayDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.settings_contacts_to_display),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Option 1: All Contacts
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                viewModel.onAccountFilterChange("")
+                                showContactsToDisplayDialog = false
+                            }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentFilter.isBlank(),
+                            onClick = null
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.account_filter_all),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (currentFilter.isBlank()) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+
+                    // Available Accounts
+                    availableAccounts.forEach { account ->
+                        val isSelected = currentFilter == account.name
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.onAccountFilterChange(account.name)
+                                    showContactsToDisplayDialog = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = null
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = account.displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showContactsToDisplayDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+    if (showDefaultAccountDialog) {
+        val availableAccounts = viewModel.availableAccounts
+        val defaultAccName = viewModel.defaultContactAccountName.value
+        AlertDialog(
+            onDismissRequest = { showDefaultAccountDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.settings_default_account_for_new),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Option 1: Default / Same as Filter
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                viewModel.updateDefaultContactAccount("", "")
+                                showDefaultAccountDialog = false
+                            }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = defaultAccName.isBlank(),
+                            onClick = null
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Default / Same as Filter",
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (defaultAccName.isBlank()) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+
+                    // Available Accounts
+                    availableAccounts.filter { it.name.isNotBlank() }.forEach { account ->
+                        val isSelected = defaultAccName == account.name
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    viewModel.updateDefaultContactAccount(account.name, account.type)
+                                    showDefaultAccountDialog = false
+                                }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isSelected,
+                                onClick = null
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = account.displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDefaultAccountDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
     }
 }
 
