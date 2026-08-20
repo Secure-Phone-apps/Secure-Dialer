@@ -237,13 +237,11 @@ fun ContactsTabContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
             if (hasPermission && !isLoading) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 8.dp),
+                        .padding(top = 0.dp, bottom = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
