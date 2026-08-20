@@ -365,4 +365,27 @@
     <string name="vcf_import_title">Kontakte aus vCard importieren</string>
     <string name="vcf_migration_desc">Exportieren oder importieren Sie Kontakte über vCard (.vcf).</string>
     <string name="vcf_migration_title">vCard (VCF) Kontakt-Migration</string>
-<string name="btn_call_back">Rückrufen</string></resources>
+<string name="btn_call_back">Rückrufen</string>
+
+    <string name="settings_pure_black">Amoled tiefschwarz</string>
+    <string name="settings_pure_black_sub">Tiefschwarze Oberflächen für OLED-Akkueinsparung und hohen Kontrast</string>
+    <string name="settings_dashboard_style">Anrufliste Dashboard-Stil</string>
+    <string name="settings_dashboard_style_sub">Wähle zwischen vollständigem Statistik-Dashboard oder kompakter Filterleiste</string>
+    <string name="settings_tab_layout">Benutzerdefiniertes Tab-Layout (Links, Mitte, Rechts)</string>
+    <string name="settings_tab_layout_sub">Weise jedem Navigationsplatz eigene Ansichten zu. Auswahl tauscht Duplikate automatisch.</string>
+    <string name="settings_swipe_actions">Wischen zum Anrufen / Nachricht senden</string>
+    <string name="settings_swipe_actions_sub">Nach rechts wischen zum Anrufen, nach links für Nachricht in Anruflisten.</string>
+    <string name="theme_custom_title">Benutzerdefinierte Design-Farbe</string>
+    <string name="theme_custom_desc">Gib einen HEX-Farbcode ein (z. B. #FF5722 oder #00E676), um ein dynamisches M3-Farbschema zu erzeugen.</string>
+    <string name="theme_hex_code_label">HEX-Farbcode</string>
+    <string name="theme_hex_code_chip">HEX-Code</string>
+    <string name="theme_apply">Design anwenden</string>
+    <string name="action_swipe_call">Anrufen</string>
+    <string name="action_swipe_message">Nachricht</string>
+    <string name="pocket_lock_active">Taschensperre aktiv</string>
+    <string name="pocket_lock_desc">Halte den Näherungssensor frei zum Entsperren</string>
+    <string name="call_notes_count_title">Anrufnotizen (%1$d)</string>
+    <string name="call_notes_count_badge">%1$d Notizen</string>
+    <string name="voicemail_sample_transcript">Transkription: \"Hallo! Wollte mich nur kurz melden. Sag Bescheid, wenn du heute Abend Zeit hast!\"</string>
+    <string name="spam_csv_placeholder">18005550199,Werbeanruf Spam\n18885550122,Betrugsanruf</string>
+</resources>

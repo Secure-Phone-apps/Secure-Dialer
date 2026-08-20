@@ -365,4 +365,27 @@
     <string name="vcf_import_title">Importer des contacts vCard</string>
     <string name="vcf_migration_desc">Exportez ou importez vos contacts au format vCard (.vcf).</string>
     <string name="vcf_migration_title">Migration de contacts vCard (VCF)</string>
-<string name="btn_call_back">Rappeler</string></resources>
+<string name="btn_call_back">Rappeler</string>
+
+    <string name="settings_pure_black">Noir pur AMOLED</string>
+    <string name="settings_pure_black_sub">Surfaces noires profondes pour économiser la batterie OLED et offrir un contraste élevé</string>
+    <string name="settings_dashboard_style">Style du tableau de bord d\'appels</string>
+    <string name="settings_dashboard_style_sub">Choisissez entre un tableau de bord complet ou une barre de filtres compacte</string>
+    <string name="settings_tab_layout">Disposition personnalisée des onglets (Gauche, Centre, Droite)</string>
+    <string name="settings_tab_layout_sub">Attribuez un écran à chaque emplacement. La sélection permute automatiquement les doublons.</string>
+    <string name="settings_swipe_actions">Glisser pour Appeler / Envoyer un message</string>
+    <string name="settings_swipe_actions_sub">Glissez vers la droite pour appeler, vers la gauche pour envoyer un message sur l\'historique.</string>
+    <string name="theme_custom_title">Couleur personnalisée du thème</string>
+    <string name="theme_custom_desc">Saisissez un code couleur HEX (ex. #FF5722 ou #00E676) pour générer un thème Material 3.</string>
+    <string name="theme_hex_code_label">Code couleur HEX</string>
+    <string name="theme_hex_code_chip">Code HEX</string>
+    <string name="theme_apply">Appliquer le thème</string>
+    <string name="action_swipe_call">Appeler</string>
+    <string name="action_swipe_message">Message</string>
+    <string name="pocket_lock_active">Mode anti-poche actif</string>
+    <string name="pocket_lock_desc">Dégagez le capteur de proximité pour déverrouiller</string>
+    <string name="call_notes_count_title">Notes d\'appel (%1$d)</string>
+    <string name="call_notes_count_badge">%1$d notes</string>
+    <string name="voicemail_sample_transcript">Transcription: \"Salut, je voulais prendre de tes nouvelles. Dis-moi quand tu es disponible ce soir !\"</string>
+    <string name="spam_csv_placeholder">18005550199,Démarchage abusif\n18885550122,Appel frauduleux</string>
+</resources>

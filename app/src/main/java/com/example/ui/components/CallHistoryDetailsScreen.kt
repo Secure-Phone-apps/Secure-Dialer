@@ -416,7 +416,7 @@ fun CallHistoryDetailsScreen(
                                             color = MaterialTheme.colorScheme.tertiaryContainer
                                         ) {
                                             Text(
-                                                text = "${numberNotes.size} notes",
+                                                text = stringResource(R.string.call_notes_count_badge, numberNotes.size),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onTertiaryContainer,
                                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
@@ -493,7 +493,7 @@ fun CallHistoryDetailsScreen(
                 if (showNotesListModal && numberNotes.isNotEmpty()) {
                     AlertDialog(
                         onDismissRequest = { showNotesListModal = false },
-                        title = { Text("Call Notes (${numberNotes.size})") },
+                        title = { Text(stringResource(R.string.call_notes_count_title, numberNotes.size)) },
                         text = {
                             LazyColumn(
                                 verticalArrangement = Arrangement.spacedBy(10.dp),

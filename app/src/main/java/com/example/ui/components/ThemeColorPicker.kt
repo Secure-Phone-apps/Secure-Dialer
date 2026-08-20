@@ -164,7 +164,7 @@ fun ThemeColorPicker(
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = "Hex Code", fontSize = 12.sp)
+                    Text(text = stringResource(R.string.theme_hex_code_chip), fontSize = 12.sp)
                 }
             }
         }
@@ -293,11 +293,11 @@ fun ThemeColorPicker(
         AlertDialog(
             onDismissRequest = { showCustomHexDialog = false },
             icon = { Icon(Icons.Default.ColorLens, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
-            title = { Text("Custom Theme Seed Color", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.theme_custom_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
                     Text(
-                        text = "Enter any HEX color code (e.g. #FF5722 or #00E676) to dynamically generate an M3 color scheme.",
+                        text = stringResource(R.string.theme_custom_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -305,7 +305,7 @@ fun ThemeColorPicker(
                     OutlinedTextField(
                         value = tempHexInput,
                         onValueChange = { tempHexInput = it },
-                        label = { Text("HEX Color Code") },
+                        label = { Text(stringResource(R.string.theme_hex_code_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -331,12 +331,12 @@ fun ThemeColorPicker(
                         showCustomHexDialog = false
                     }
                 ) {
-                    Text("Apply Theme")
+                    Text(stringResource(R.string.theme_apply))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCustomHexDialog = false }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )

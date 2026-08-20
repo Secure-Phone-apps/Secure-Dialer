@@ -365,4 +365,27 @@
     <string name="vcf_import_title">استيراد جهات الاتصال من vCard</string>
     <string name="vcf_migration_desc">تصدير أو استيراد جهات الاتصال بصيغة vCard (.vcf).</string>
     <string name="vcf_migration_title">نقل جهات اتصال vCard (VCF)</string>
-<string name="btn_call_back">إعادة الاتصال</string></resources>
+<string name="btn_call_back">إعادة الاتصال</string>
+
+    <string name="settings_pure_black">أسود داكن للشاشات AMOLED</string>
+    <string name="settings_pure_black_sub">أسود داكن حقيقي لتوفير طاقة بطارية OLED وتباين عالي</string>
+    <string name="settings_dashboard_style">نمط لوحة سجل المكالمات</string>
+    <string name="settings_dashboard_style_sub">اختر بين لوحة الإحصائيات الكاملة أو شريط التصفية المدمج فقط</string>
+    <string name="settings_tab_layout">تخطيط التبويبات المخصص (يسار، وسط، يمين)</string>
+    <string name="settings_tab_layout_sub">تعيين شاشات فردية لكل خيار تنقل. التحديد يستبدل التكرارات تلقائيًا.</string>
+    <string name="settings_swipe_actions">السحب للاتصال / إرسال رسالة</string>
+    <string name="settings_swipe_actions_sub">اسحب لليمين للاتصال، ولليسار لإرسال رسالة في سجل المكالمات.</string>
+    <string name="theme_custom_title">لون المظهر المخصص</string>
+    <string name="theme_custom_desc">أدخل أي رمز لون HEX (مثل #FF5722 أو #00E676) لتوليد نمط ألوان M3.</string>
+    <string name="theme_hex_code_label">رمز اللون HEX</string>
+    <string name="theme_hex_code_chip">رمز HEX</string>
+    <string name="theme_apply">تطبيق المظهر</string>
+    <string name="action_swipe_call">اتصال</string>
+    <string name="action_swipe_message">رسالة</string>
+    <string name="pocket_lock_active">قفل الجيب نشط</string>
+    <string name="pocket_lock_desc">حافظ على مستشعر التقارب مكشوفًا لإلغاء القفل</string>
+    <string name="call_notes_count_title">ملاحظات المكالمات (%1$d)</string>
+    <string name="call_notes_count_badge">%1$d ملاحظات</string>
+    <string name="voicemail_sample_transcript">النص: \"مرحبًا! أردت الاطمئنان عليك. أخبرني عندما تكون متفرغًا هذا المساء!\"</string>
+    <string name="spam_csv_placeholder">18005550199,تسويق إزعاج\n18885550122,مكالمة احتيالية</string>
+</resources>

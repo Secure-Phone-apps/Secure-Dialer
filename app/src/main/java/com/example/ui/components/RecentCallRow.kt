@@ -435,15 +435,15 @@ fun RecentCallRow(
                 ) {
                     if (direction == SwipeToDismissBoxValue.StartToEnd) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Call, contentDescription = "Call", tint = Color.White)
+                            Icon(Icons.Default.Call, contentDescription = stringResource(R.string.action_swipe_call), tint = Color.White)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Call", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.action_swipe_call), color = Color.White, fontWeight = FontWeight.Bold)
                         }
                     } else if (direction == SwipeToDismissBoxValue.EndToStart) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Message", color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.action_swipe_message), color = MaterialTheme.colorScheme.onPrimaryContainer, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Icon(Icons.Default.Email, contentDescription = "Message", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                            Icon(Icons.Default.Email, contentDescription = stringResource(R.string.action_swipe_message), tint = MaterialTheme.colorScheme.onPrimaryContainer)
                         }
                     }
                 }

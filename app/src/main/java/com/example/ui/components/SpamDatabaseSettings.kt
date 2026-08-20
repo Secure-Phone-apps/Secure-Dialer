@@ -280,7 +280,7 @@ fun SpamDatabaseSettings(
                     OutlinedTextField(
                         value = csvPasteArea,
                         onValueChange = { csvPasteArea = it },
-                        placeholder = { Text("18005550199,Spam Telemarketer\n18885550122,Scam Caller") },
+                        placeholder = { Text(stringResource(R.string.spam_csv_placeholder)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(140.dp),

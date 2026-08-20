@@ -101,13 +101,13 @@ fun DefaultStartupTabCard(
 
             // 2. Call Log Dashboard Mode
             Text(
-                text = "Call Log Dashboard Style",
+                text = stringResource(R.string.settings_dashboard_style),
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = "Choose between full statistics dashboard or compact filter bar only",
+                text = stringResource(R.string.settings_dashboard_style_sub),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 8.dp)
@@ -155,13 +155,13 @@ fun DefaultStartupTabCard(
 
             // 3. Customizable Tab Position (Left, Middle, Right Dropdowns)
             Text(
-                text = "Custom Tab Layout (Left, Middle, Right)",
+                text = stringResource(R.string.settings_tab_layout),
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
             Text(
-                text = "Assign individual screens to each navigation slot. Selection automatically swaps duplicates.",
+                text = stringResource(R.string.settings_tab_layout_sub),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -222,12 +222,12 @@ fun DefaultStartupTabCard(
             ) {
                 Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
                     Text(
-                        text = "Swipe Row to Call / Message",
+                        text = stringResource(R.string.settings_swipe_actions),
                         fontWeight = FontWeight.Medium,
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Text(
-                        text = "Swipe right to Call, left to Message on call logs. Disables tab drag to prevent gesture conflict.",
+                        text = stringResource(R.string.settings_swipe_actions_sub),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

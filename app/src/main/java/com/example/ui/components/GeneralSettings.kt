@@ -119,8 +119,8 @@ fun GeneralSettings(
                     if (isDarkTheme) {
                         HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                         SettingsRowToggle(
-                            title = "Pure AMOLED Pitch Black",
-                            subtitle = "Deep black surfaces for true OLED battery savings and high contrast",
+                            title = stringResource(R.string.settings_pure_black),
+                            subtitle = stringResource(R.string.settings_pure_black_sub),
                             checked = isAmoledMode,
                             onCheckedChange = onAmoledChange,
                             icon = Icons.Default.Contrast,

@@ -420,4 +420,27 @@
     <string name="tab_spam_database">Offline Spam Database</string>
     <string name="tab_scheduled_reminders">Scheduled Reminders</string>
     <string name="tab_fake_call_sim">Fake Call Simulator</string>
-<string name="btn_call_back">Call Back</string></resources>
+    <string name="btn_call_back">Call Back</string>
+
+    <string name="settings_pure_black">Pure AMOLED Pitch Black</string>
+    <string name="settings_pure_black_sub">Deep black surfaces for true OLED battery savings and high contrast</string>
+    <string name="settings_dashboard_style">Call Log Dashboard Style</string>
+    <string name="settings_dashboard_style_sub">Choose between full statistics dashboard or compact filter bar only</string>
+    <string name="settings_tab_layout">Custom Tab Layout (Left, Middle, Right)</string>
+    <string name="settings_tab_layout_sub">Assign individual screens to each navigation slot. Selection automatically swaps duplicates.</string>
+    <string name="settings_swipe_actions">Swipe Row to Call / Message</string>
+    <string name="settings_swipe_actions_sub">Swipe right to Call, left to Message on call logs. Disables tab drag to prevent gesture conflict.</string>
+    <string name="theme_custom_title">Custom Theme Seed Color</string>
+    <string name="theme_custom_desc">Enter any HEX color code (e.g. #FF5722 or #00E676) to dynamically generate an M3 color scheme.</string>
+    <string name="theme_hex_code_label">HEX Color Code</string>
+    <string name="theme_hex_code_chip">Hex Code</string>
+    <string name="theme_apply">Apply Theme</string>
+    <string name="action_swipe_call">Call</string>
+    <string name="action_swipe_message">Message</string>
+    <string name="pocket_lock_active">Pocket Lock Active</string>
+    <string name="pocket_lock_desc">Keep proximity sensor clear to unlock</string>
+    <string name="call_notes_count_title">Call Notes (%1$d)</string>
+    <string name="call_notes_count_badge">%1$d notes</string>
+    <string name="voicemail_sample_transcript">Transcript: \"Hey, just calling to catch up. Let me know when you\'re free this evening!\"</string>
+    <string name="spam_csv_placeholder">18005550199,Spam Telemarketer\n18885550122,Scam Caller</string>
+</resources>

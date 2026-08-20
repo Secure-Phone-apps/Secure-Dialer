@@ -178,7 +178,7 @@ fun VoicemailTabContent(
                             )
 
                             Text(
-                                text = "Transcript: \"Hey, just calling to catch up. Let me know when you're free this evening!\"",
+                                text = stringResource(R.string.voicemail_sample_transcript),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 2,

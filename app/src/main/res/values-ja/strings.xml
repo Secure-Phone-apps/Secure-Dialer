@@ -365,4 +365,27 @@
     <string name="vcf_import_title">vCardから連絡先をインポート</string>
     <string name="vcf_migration_desc">vCard (.vcf) ファイルを使用して連絡先をバックアップ/復元します。</string>
     <string name="vcf_migration_title">vCard (VCF) 連絡先移行</string>
-<string name="btn_call_back">折り返し電話</string></resources>
+<string name="btn_call_back">折り返し電話</string>
+
+    <string name="settings_pure_black">ピュアAMOLED漆黒モード</string>
+    <string name="settings_pure_black_sub">OLEDの省電力と高コントラストを実現する完全な黒背景</string>
+    <string name="settings_dashboard_style">通話履歴ダッシュボードスタイル</string>
+    <string name="settings_dashboard_style_sub">詳細な統計ダッシュボードまたはコンパクトなフィルターバーを選択</string>
+    <string name="settings_tab_layout">カスタムタブ配置 (左・中央・右)</string>
+    <string name="settings_tab_layout_sub">各スロットに画面を割り当てます。選択すると重複が自動的に入れ替わります。</string>
+    <string name="settings_swipe_actions">スワイプで発信・メッセージ送信</string>
+    <string name="settings_swipe_actions_sub">履歴上で右スワイプで発信、左スワイプでメッセージ作成。</string>
+    <string name="theme_custom_title">カスタムテーマカラー</string>
+    <string name="theme_custom_desc">HEXカラーコード（例: #FF5722、#00E676）を入力してM3テーマを生成します。</string>
+    <string name="theme_hex_code_label">HEXカラーコード</string>
+    <string name="theme_hex_code_chip">HEXコード</string>
+    <string name="theme_apply">テーマを適用</string>
+    <string name="action_swipe_call">発信</string>
+    <string name="action_swipe_message">メッセージ</string>
+    <string name="pocket_lock_active">ポケット誤動作防止アクティブ</string>
+    <string name="pocket_lock_desc">解除するには近接センサーを覆わないでください</string>
+    <string name="call_notes_count_title">通話メモ (%1$d)</string>
+    <string name="call_notes_count_badge">メモ %1$d件</string>
+    <string name="voicemail_sample_transcript">文字起こし: 「こんにちは！近況報告で電話しました。今晩時間がある時に連絡してね！」</string>
+    <string name="spam_csv_placeholder">18005550199,迷惑電話セールス\n18885550122,詐欺電話</string>
+</resources>

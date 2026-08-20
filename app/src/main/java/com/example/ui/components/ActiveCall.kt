@@ -490,20 +490,20 @@ fun ActiveCallScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = "Pocket Lock Active",
+                        contentDescription = stringResource(R.string.pocket_lock_active),
                         tint = Color.White.copy(alpha = 0.6f),
                         modifier = Modifier.size(64.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Pocket Lock Active",
+                        text = stringResource(R.string.pocket_lock_active),
                         color = Color.White.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Keep proximity sensor clear to unlock",
+                        text = stringResource(R.string.pocket_lock_desc),
                         color = Color.White.copy(alpha = 0.5f),
                         style = MaterialTheme.typography.bodySmall
                     )
