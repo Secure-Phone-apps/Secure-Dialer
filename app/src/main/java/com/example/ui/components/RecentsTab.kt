@@ -165,36 +165,96 @@ fun RecentsTabContent(
 
             if (isLoading) {
                 RecentsSkeleton()
-            } else if (callRecords.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    EmptyStateIllustration(
-                        title = stringResource(R.string.no_call_log_title),
-                        subtitle = stringResource(R.string.no_call_log_subtitle)
+            } else {
+                val isDashboardEnabled by viewModel.isCallLogDashboardEnabled
+                val isFiltersEnabled by viewModel.isCallLogFiltersEnabled
+
+                // 1. Call Log Summary Dashboard
+                if (isDashboardEnabled) {
+                    CallLogSummaryDashboard(
+                        callRecords = callRecords,
+                        modifier = Modifier.padding(top = 4.dp, bottom = 2.dp)
                     )
                 }
-            } else {
-                // 1. Unified Interactive Call Log Summary Dashboard (Dashboard + Filter in one)
-                val dashboardMode by viewModel.dashboardMode
-                CallLogSummaryDashboard(
-                    callRecords = callRecords,
-                    selectedFilter = currentFilter,
-                    onFilterSelect = { newFilter -> currentFilter = newFilter },
-                    dashboardMode = dashboardMode,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
-                )
 
-                // 2. Consolidated Call Logs list or search results state
-                val query by viewModel.searchQuery
-                val consolidatedRecords = remember(callRecords, currentFilter, query) {
-                    groupCallRecords(callRecords, currentFilter, query)
+                // 2. Borderless Color-Adapting Call Log Filter Chips (Squircle / Rounded Pill)
+                if (isFiltersEnabled) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        data class RecentsFilterItem(
+                            val label: String,
+                            val filter: RecentsFilter,
+                            val icon: androidx.compose.ui.graphics.vector.ImageVector,
+                            val iconColor: Color
+                        )
+
+                        val filterOptions = listOf(
+                            RecentsFilterItem("All", RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
+                            RecentsFilterItem("Missed", RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
+                            RecentsFilterItem("Dialed", RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, Color(0xFF0288D1)),
+                            RecentsFilterItem("Received", RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
+                        )
+
+                        filterOptions.forEach { item ->
+                            val isSelected = currentFilter == item.filter
+
+                            val containerColor by androidx.compose.animation.animateColorAsState(
+                                targetValue = if (isSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                },
+                                animationSpec = androidx.compose.animation.core.tween(150),
+                                label = "filterChipBg"
+                            )
+
+                            val contentColor by androidx.compose.animation.animateColorAsState(
+                                targetValue = if (isSelected) {
+                                    MaterialTheme.colorScheme.onPrimaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSurface
+                                },
+                                animationSpec = androidx.compose.animation.core.tween(150),
+                                label = "filterChipText"
+                            )
+
+                            val iconTint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else item.iconColor
+
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .background(containerColor)
+                                    .clickable { currentFilter = item.filter }
+                                    .padding(horizontal = 8.dp, vertical = 7.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = item.icon,
+                                    contentDescription = item.label,
+                                    tint = iconTint,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = item.label,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = contentColor,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
                 }
 
-                if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
+                if (callRecords.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -202,30 +262,50 @@ fun RecentsTabContent(
                         contentAlignment = Alignment.Center
                     ) {
                         EmptyStateIllustration(
-                            title = stringResource(R.string.no_results_title),
-                            subtitle = stringResource(R.string.no_matching_calls_for, query)
+                            title = stringResource(R.string.no_call_log_title),
+                            subtitle = stringResource(R.string.no_call_log_subtitle)
                         )
                     }
                 } else {
-                    LazyColumn(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(vertical = 2.dp)
-                    ) {
-                        items(
-                            items = consolidatedRecords,
-                            key = { it.primary.id },
-                            contentType = { "recent_call_group" }
-                        ) { group ->
-                            RecentCallRow(
-                                group = group,
-                                onCallClick = { onCallClick(group.primary) },
-                                onDeleteRecord = { id -> onDeleteRecord(id) },
-                                getHistory = { viewModel.getCallHistoryByNumber(it) },
-                                viewModel = viewModel,
-                                onHistoryClick = { selectedHistoryNumber = it }
+                    // 2. Consolidated Call Logs list or search results state
+                    val query by viewModel.searchQuery
+                    val consolidatedRecords = remember(callRecords, currentFilter, query) {
+                        groupCallRecords(callRecords, currentFilter, query)
+                    }
+
+                    if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyStateIllustration(
+                                title = stringResource(R.string.no_results_title),
+                                subtitle = stringResource(R.string.no_matching_calls_for, query)
                             )
+                        }
+                    } else {
+                        LazyColumn(
+                            verticalArrangement = Arrangement.spacedBy(4.dp),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(vertical = 2.dp)
+                        ) {
+                            items(
+                                items = consolidatedRecords,
+                                key = { it.primary.id },
+                                contentType = { "recent_call_group" }
+                            ) { group ->
+                                RecentCallRow(
+                                    group = group,
+                                    onCallClick = { onCallClick(group.primary) },
+                                    onDeleteRecord = { id -> onDeleteRecord(id) },
+                                    getHistory = { viewModel.getCallHistoryByNumber(it) },
+                                    viewModel = viewModel,
+                                    onHistoryClick = { selectedHistoryNumber = it }
+                                )
+                            }
                         }
                     }
                 }

@@ -431,6 +431,10 @@
     <string name="settings_pure_black_sub">Deep black surfaces for true OLED battery savings and high contrast</string>
     <string name="settings_dashboard_style">Call Log Dashboard Style</string>
     <string name="settings_dashboard_style_sub">Choose between full statistics dashboard or compact filter bar only</string>
+    <string name="settings_call_log_dashboard">Call Log Summary Dashboard</string>
+    <string name="settings_call_log_dashboard_sub">Show overview statistics and talk time for recent calls</string>
+    <string name="settings_call_log_filters">Call Log Quick Filters</string>
+    <string name="settings_call_log_filters_sub">Show quick filter chips (All, Missed, Received, Dialed) above call logs</string>
     <string name="settings_tab_layout">Custom Tab Layout (Left, Middle, Right)</string>
     <string name="settings_tab_layout_sub">Assign individual screens to each navigation slot. Selection automatically swaps duplicates.</string>
     <string name="settings_swipe_actions">Swipe Row to Call / Message</string>

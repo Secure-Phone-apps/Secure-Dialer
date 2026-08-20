@@ -80,8 +80,6 @@ fun SummaryTimeRange.getLabel(): String {
 @Composable
 fun CallLogSummaryDashboard(
     callRecords: List<CallRecord>,
-    selectedFilter: RecentsFilter = RecentsFilter.ALL,
-    onFilterSelect: (RecentsFilter) -> Unit = {},
     dashboardMode: String = "FULL",
     modifier: Modifier = Modifier
 ) {
@@ -239,7 +237,7 @@ fun CallLogSummaryDashboard(
         colors = CardDefaults.cardColors(containerColor = cardColor),
         shape = MaterialTheme.shapes.medium
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(8.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -252,9 +250,9 @@ fun CallLogSummaryDashboard(
                         imageVector = Icons.Default.History,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(16.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     val headerTitle = if (dashboardMode == "COMPACT_FILTERS") {
                         "Call Summary"
                     } else if (activeRange == SummaryTimeRange.TODAY) {
@@ -277,14 +275,14 @@ fun CallLogSummaryDashboard(
                             text = stringResource(R.string.summary_missed_and_time, missedCallsCount, formattedTotalDuration),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(end = 8.dp)
+                            modifier = Modifier.padding(end = 6.dp)
                         )
                     }
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                         contentDescription = if (isExpanded) "Collapse" else "Expand",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -295,29 +293,29 @@ fun CallLogSummaryDashboard(
                 exit = shrinkVertically() + fadeOut()
             ) {
                 Column {
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     
                     if (dashboardMode == "FULL") {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                                 .padding(2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             SummaryTimeRange.values().forEach { range ->
                                 val isSelected = selectedRange == range
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(16.dp))
+                                        .clip(RoundedCornerShape(10.dp))
                                         .background(
                                             if (isSelected) MaterialTheme.colorScheme.primary
                                             else Color.Transparent
                                         )
                                         .clickable { selectedRange = range }
-                                        .padding(vertical = 6.dp),
+                                        .padding(vertical = 3.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
@@ -331,21 +329,18 @@ fun CallLogSummaryDashboard(
                             }
                         }
                         
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                     
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         SummaryBox(
                             value = totalCallsCount.toString(),
                             label = stringResource(R.string.filter_all),
                             icon = Icons.Default.Call,
                             iconColor = MaterialTheme.colorScheme.primary,
-                            isSelected = (selectedFilter == RecentsFilter.ALL),
-                            showNumber = (dashboardMode == "FULL"),
-                            onClick = { onFilterSelect(RecentsFilter.ALL) },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -354,11 +349,6 @@ fun CallLogSummaryDashboard(
                             label = stringResource(R.string.filter_missed),
                             icon = Icons.Default.CallMissed,
                             iconColor = getMissedCallColor(),
-                            isSelected = (selectedFilter == RecentsFilter.MISSED),
-                            showNumber = (dashboardMode == "FULL"),
-                            onClick = {
-                                onFilterSelect(if (selectedFilter == RecentsFilter.MISSED) RecentsFilter.ALL else RecentsFilter.MISSED)
-                            },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -367,11 +357,6 @@ fun CallLogSummaryDashboard(
                             label = stringResource(R.string.filter_dialed),
                             icon = Icons.AutoMirrored.Filled.CallMade,
                             iconColor = getDialedCallColor(),
-                            isSelected = (selectedFilter == RecentsFilter.DIALED),
-                            showNumber = (dashboardMode == "FULL"),
-                            onClick = {
-                                onFilterSelect(if (selectedFilter == RecentsFilter.DIALED) RecentsFilter.ALL else RecentsFilter.DIALED)
-                            },
                             modifier = Modifier.weight(1f)
                         )
 
@@ -380,24 +365,19 @@ fun CallLogSummaryDashboard(
                             label = stringResource(R.string.filter_received),
                             icon = Icons.AutoMirrored.Filled.CallReceived,
                             iconColor = getReceivedCallColor(),
-                            isSelected = (selectedFilter == RecentsFilter.RECEIVED),
-                            showNumber = (dashboardMode == "FULL"),
-                            onClick = {
-                                onFilterSelect(if (selectedFilter == RecentsFilter.RECEIVED) RecentsFilter.ALL else RecentsFilter.RECEIVED)
-                            },
                             modifier = Modifier.weight(1f)
                         )
                     }
                     
                     if (dashboardMode == "FULL") {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(MaterialTheme.shapes.small)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -406,19 +386,19 @@ fun CallLogSummaryDashboard(
                                     imageVector = Icons.Default.Schedule,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
-                                Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = stringResource(R.string.total_talk_time),
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = FontWeight.Medium
                                 )
                             }
                             Text(
                                 text = formattedTotalDuration,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontWeight = FontWeight.Bold
                             )
@@ -436,102 +416,53 @@ fun SummaryBox(
     label: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     iconColor: Color,
-    isSelected: Boolean = false,
-    showNumber: Boolean = true,
-    onClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isExpressive = LocalM3Expressive.current
-    
-    // Fast animated color & border transitions (150ms snap)
-    val animatedBgColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer
-        } else if (isExpressive) {
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-        } else {
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
-        },
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
-        label = "summaryBoxBg"
-    )
-
-    val animatedBorderColor by androidx.compose.animation.animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-        animationSpec = androidx.compose.animation.core.tween(durationMillis = 150),
-        label = "summaryBoxBorder"
-    )
-
-    val valueColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-    val labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-
-    if (showNumber) {
-        Column(
-            modifier = modifier
-                .clip(MaterialTheme.shapes.small)
-                .background(animatedBgColor)
-                .border(
-                    width = if (isSelected) 1.5.dp else 0.dp,
-                    color = animatedBorderColor,
-                    shape = MaterialTheme.shapes.small
-                )
-                .clickable(onClick = onClick)
-                .padding(vertical = 8.dp, horizontal = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else iconColor,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = valueColor,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                color = labelColor,
-                fontSize = 9.sp,
-                textAlign = TextAlign.Center,
-                maxLines = 1
-            )
-        }
+    val bgColor = if (isExpressive) {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     } else {
+        MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)
+    }
+
+    Column(
+        modifier = modifier
+            .clip(MaterialTheme.shapes.small)
+            .background(bgColor)
+            .padding(vertical = 6.dp, horizontal = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleMedium.copy(
+                fontSize = 18.sp,
+                lineHeight = 20.sp
+            ),
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+            maxLines = 1
+        )
+        Spacer(modifier = Modifier.height(2.dp))
         Row(
-            modifier = modifier
-                .clip(MaterialTheme.shapes.small)
-                .background(animatedBgColor)
-                .border(
-                    width = if (isSelected) 1.5.dp else 0.dp,
-                    color = animatedBorderColor,
-                    shape = MaterialTheme.shapes.small
-                )
-                .clickable(onClick = onClick)
-                .padding(vertical = 10.dp, horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth()
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (isSelected) MaterialTheme.colorScheme.primary else iconColor,
-                modifier = Modifier.size(16.dp)
+                tint = iconColor,
+                modifier = Modifier.size(11.dp)
             )
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(3.dp))
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
+                fontSize = 10.sp,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )

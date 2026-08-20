@@ -174,6 +174,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     // Dashboard & Tab Layout & Swipe Preferences
     var dashboardMode = mutableStateOf(prefs.getString("dashboard_mode", "FULL") ?: "FULL")
+    var isCallLogDashboardEnabled = mutableStateOf(prefs.getBoolean("is_call_log_dashboard_enabled", true))
+    var isCallLogFiltersEnabled = mutableStateOf(prefs.getBoolean("is_call_log_filters_enabled", true))
     var tabSlotLeft = mutableStateOf(prefs.getString("tab_slot_left", "RECENTS") ?: "RECENTS")
     var tabSlotMiddle = mutableStateOf(prefs.getString("tab_slot_middle", "CONTACTS") ?: "CONTACTS")
     var tabSlotRight = mutableStateOf(prefs.getString("tab_slot_right", "DIALPAD") ?: "DIALPAD")
@@ -314,6 +316,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updateDashboardMode(mode: String) {
         dashboardMode.value = mode
         prefs.edit().putString("dashboard_mode", mode).apply()
+    }
+
+    fun updateCallLogDashboardEnabled(enabled: Boolean) {
+        isCallLogDashboardEnabled.value = enabled
+        prefs.edit().putBoolean("is_call_log_dashboard_enabled", enabled).apply()
+    }
+
+    fun updateCallLogFiltersEnabled(enabled: Boolean) {
+        isCallLogFiltersEnabled.value = enabled
+        prefs.edit().putBoolean("is_call_log_filters_enabled", enabled).apply()
     }
 
     fun updateTabSlotLeft(screen: String) {

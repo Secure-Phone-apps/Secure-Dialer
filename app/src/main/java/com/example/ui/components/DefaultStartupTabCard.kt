@@ -99,54 +99,55 @@ fun DefaultStartupTabCard(
             HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 2. Call Log Dashboard Mode
-            Text(
-                text = stringResource(R.string.settings_dashboard_style),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            Text(
-                text = stringResource(R.string.settings_dashboard_style_sub),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-
-            val currentDashboardMode by viewModel.dashboardMode
+            // 2. Call Log Dashboard & Filters Settings
+            val isCallLogDashboardEnabled by viewModel.isCallLogDashboardEnabled
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val modes = listOf("FULL" to "Full Dashboard", "COMPACT_FILTERS" to "Compact Filters Only")
-                modes.forEach { (modeKey, modeTitle) ->
-                    val isSel = currentDashboardMode == modeKey
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(
-                                if (isSel) MaterialTheme.colorScheme.primary
-                                else Color.Transparent
-                            )
-                            .clickable { viewModel.updateDashboardMode(modeKey) }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = modeTitle,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSel) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
-                        )
-                    }
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_call_log_dashboard),
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_call_log_dashboard_sub),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
+                Switch(
+                    checked = isCallLogDashboardEnabled,
+                    onCheckedChange = { viewModel.updateCallLogDashboardEnabled(it) }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val isCallLogFiltersEnabled by viewModel.isCallLogFiltersEnabled
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_call_log_filters),
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_call_log_filters_sub),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = isCallLogFiltersEnabled,
+                    onCheckedChange = { viewModel.updateCallLogFiltersEnabled(it) }
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
