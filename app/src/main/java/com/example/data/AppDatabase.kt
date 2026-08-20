@@ -70,15 +70,13 @@ abstract class AppDatabase : RoomDatabase() {
                     // Test connection to ensure key and schema integrity
                     val helper = db.openHelper.writableDatabase
                     helper.query("SELECT 1").close()
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                     try { db.close() } catch (_: Exception) {}
                     try { appCtx.deleteDatabase("dialer_database") } catch (_: Exception) {}
                     val freshDb = buildDatabase(appCtx)
                     try {
                         freshDb.openHelper.writableDatabase.query("SELECT 1").close()
-                    } catch (e2: Exception) {
-                        e2.printStackTrace()
+                    } catch (_: Exception) {
                     }
                     INSTANCE = freshDb
                     return@synchronized freshDb
@@ -98,6 +96,7 @@ abstract class AppDatabase : RoomDatabase() {
                 "dialer_database"
             )
                 .openHelperFactory(factory)
+                .setJournalMode(RoomDatabase.JournalMode.TRUNCATE) // Avoid persistent unencrypted WAL files on disk
                 .fallbackToDestructiveMigration()
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()

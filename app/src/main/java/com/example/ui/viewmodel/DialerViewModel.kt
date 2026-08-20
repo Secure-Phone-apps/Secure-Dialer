@@ -27,6 +27,7 @@ import com.example.DialerRepository
 import com.example.*
 import com.example.model.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -63,8 +64,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         _dialpadInputFlow.value = newInput
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val contactsPaged: Flow<PagingData<Contact>> = combine(_searchQueryFlow, _selectedAccountFilterFlow) { query, account ->
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    val contactsPaged: Flow<PagingData<Contact>> = combine(_searchQueryFlow.debounce(100), _selectedAccountFilterFlow) { query, account ->
         Pair(query, account)
     }.flatMapLatest { (query, account) ->
         repository.getContactsPaged(query, account)
@@ -82,10 +83,11 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val allCallHistoryFlow: StateFlow<List<CallRecord>> = repository.getAllCallHistoryFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    @OptIn(FlowPreview::class)
     val dialpadMatches: StateFlow<List<DialpadMatch>> = combine(
         allContactsFlow,
         allCallHistoryFlow,
-        _dialpadInputFlow
+        _dialpadInputFlow.debounce(100)
     ) { contacts, recents, query ->
         if (query.isBlank()) {
             emptyList()

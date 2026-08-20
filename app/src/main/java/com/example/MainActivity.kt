@@ -116,6 +116,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Obscure UI content visibility in system Recents switcher to prevent PII snapshot leaks
+        window.setFlags(
+            android.view.WindowManager.LayoutParams.FLAG_SECURE,
+            android.view.WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         if (savedInstanceState != null) {
             isAppAuthenticated.value = savedInstanceState.getBoolean("is_authenticated", false)
         } else {
@@ -125,8 +131,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         try {
             handleIntent(intent)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
 
         setContent {
@@ -138,8 +143,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(isCallActive) {
                 try {
                     setLockScreenVisibility(isCallActive)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
 

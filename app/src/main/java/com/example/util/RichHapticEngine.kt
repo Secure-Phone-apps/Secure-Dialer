@@ -67,8 +67,7 @@ object RichHapticEngine {
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(durationMs)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 
