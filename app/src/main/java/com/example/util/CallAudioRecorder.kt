@@ -18,7 +18,9 @@
 package com.example.util
 
 import android.content.Context
+import android.media.AudioManager
 import android.media.MediaRecorder
+import android.media.ToneGenerator
 import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,8 +96,7 @@ object CallAudioRecorder {
                     recorder = rec
                     success = true
                     break
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                     try { recorder?.release() } catch (_: Exception) {}
                     recorder = null
                 }
@@ -105,6 +106,12 @@ object CallAudioRecorder {
                 try { if (outputFile.exists()) outputFile.delete() } catch (_: Exception) {}
                 return false
             }
+
+            // Play continuous disclosure / consent tone for wiretapping law compliance
+            try {
+                val toneGenerator = ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80)
+                toneGenerator.startTone(ToneGenerator.TONE_SUP_PIP, 500)
+            } catch (_: Exception) {}
 
             mediaRecorder = recorder
             currentOutputFile = outputFile
@@ -119,8 +126,7 @@ object CallAudioRecorder {
             }
 
             return true
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             stopRecording()
             return false
         }
@@ -139,13 +145,11 @@ object CallAudioRecorder {
             mediaRecorder?.let { recorder ->
                 try {
                     recorder.stop()
-                } catch (stopEx: Exception) {
-                    stopEx.printStackTrace()
+                } catch (_: Exception) {
                 }
                 recorder.release()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         } finally {
             mediaRecorder = null
             _isRecording.value = false

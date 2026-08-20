@@ -151,6 +151,7 @@ fun MainScreen(
     var hasCallLogPermission by viewModel.hasCallLogPermission
     var hasNotificationPermission by viewModel.hasNotificationPermission
     var isLoadingPermissions by viewModel.isLoadingPermissions
+    var showProminentDisclosure by remember { mutableStateOf(false) }
 
     // Real-time Telecom Call observers
     val systemActiveCall by CallManager.currentCall.collectAsState()
@@ -215,15 +216,8 @@ fun MainScreen(
             viewModel.startDataSyncAndObservation()
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val notifPermission = Manifest.permission.POST_NOTIFICATIONS
-            if (ContextCompat.checkSelfPermission(context, notifPermission) != PackageManager.PERMISSION_GRANTED) {
-                permissionLauncher.launch(arrayOf(
-                    Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS,
-                    Manifest.permission.READ_CALL_LOG, Manifest.permission.WRITE_CALL_LOG,
-                    Manifest.permission.CALL_PHONE, notifPermission
-                ))
-            }
+        if (!contactsGranted || !callLogGranted) {
+            showProminentDisclosure = true
         }
     }
 
@@ -314,6 +308,44 @@ fun MainScreen(
                 .padding(paddingValues)
                 .consumeWindowInsets(paddingValues)
         ) {
+            if (showProminentDisclosure) {
+                AlertDialog(
+                    onDismissRequest = { showProminentDisclosure = false },
+                    title = { Text("Permissions & Local Data Privacy", fontWeight = FontWeight.Bold) },
+                    text = {
+                        Text(
+                            "Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                showProminentDisclosure = false
+                                val perms = mutableListOf(
+                                    Manifest.permission.READ_CONTACTS,
+                                    Manifest.permission.WRITE_CONTACTS,
+                                    Manifest.permission.READ_CALL_LOG,
+                                    Manifest.permission.WRITE_CALL_LOG,
+                                    Manifest.permission.CALL_PHONE
+                                )
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    perms.add(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                                permissionLauncher.launch(perms.toTypedArray())
+                            }
+                        ) {
+                            Text("Continue")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showProminentDisclosure = false }) {
+                            Text("Not Now")
+                        }
+                    }
+                )
+            }
+
             if (showSimSelectDialog) {
                 SimSelectDialog(
                     context = context,
@@ -387,7 +419,7 @@ fun MainScreen(
                                     onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
                                     onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
                                     hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
-                                    onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CALL_LOG, Manifest.permission.CALL_PHONE)) }
+                                    onRequestPermission = { showProminentDisclosure = true }
                                 )
                             }
                             "CONTACTS" -> {
@@ -401,7 +433,7 @@ fun MainScreen(
                                     onAddContactClick = { isAddContactDialogVisible = true },
                                     onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
                                     hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
-                                    onRequestPermission = { permissionLauncher.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS)) },
+                                    onRequestPermission = { showProminentDisclosure = true },
                                     onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
                                     onDeleteContact = { it -> viewModel.deleteContact(it) }
                                 )

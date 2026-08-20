@@ -67,8 +67,7 @@ class MyInCallService : InCallService() {
                 try {
                     val db = com.example.data.AppDatabase.getDatabase(this@MyInCallService)
                     db.dialerDao().insertSetting(com.example.model.AppSetting("cnap_" + number.filter { it.isDigit() }, cnapName))
-                } catch (e: Exception) {
-                    e.printStackTrace()
+                } catch (_: Exception) {
                 }
             }
         }
@@ -126,8 +125,7 @@ class MyInCallService : InCallService() {
                 putExtra("SHOW_CALL_SCREEN", true)
             }
             startActivity(intent)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 
@@ -209,18 +207,18 @@ class MyInCallService : InCallService() {
         }
         val pendingIntent = PendingIntent.getActivity(
             this, 
-            System.currentTimeMillis().toInt(), 
+            202, 
             intent, 
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val callBackIntent = Intent(Intent.ACTION_CALL).apply {
+        val callBackIntent = Intent(Intent.ACTION_DIAL).apply {
             setPackage(packageName)
             data = Uri.parse("tel:$number")
         }
         val callBackPendingIntent = PendingIntent.getActivity(
             this, 
-            System.currentTimeMillis().toInt() + 1, 
+            203, 
             callBackIntent, 
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )

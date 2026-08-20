@@ -37,7 +37,6 @@ object DatabaseKeyManager {
                     return cipher.doFinal(encryptedKey)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 try {
                     prefs.edit().remove(ENCRYPTED_DB_KEY).remove(GCM_IV).apply()
                 } catch (_: Exception) {}
@@ -76,8 +75,7 @@ object DatabaseKeyManager {
                 .putString(GCM_IV, Base64.encodeToString(iv, Base64.DEFAULT))
                 .apply()
         } catch (e: Exception) {
-            e.printStackTrace()
-            return "dialer_secure_fallback_passphrase_key_32bytes_len".toByteArray(Charsets.UTF_8).sliceArray(0..31)
+            throw IllegalStateException("AndroidKeyStore hardware security module unavailable or corrupted. Database access halted to protect PII.")
         }
 
         return dbKey
