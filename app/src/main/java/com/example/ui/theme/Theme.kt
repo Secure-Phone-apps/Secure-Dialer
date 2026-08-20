@@ -124,7 +124,7 @@ fun getOnDeclineRedColor(): Color {
 @Composable
 fun getDialedCallColor(): Color {
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    return if (isDark) Color(0xFFA0AAB0) else Color(0xFF607D8B)
+    return if (isDark) Color(0xFFB0BEC5) else Color(0xFF546E7A)
 }
 
 @Composable

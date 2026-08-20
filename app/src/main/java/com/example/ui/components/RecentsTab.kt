@@ -182,8 +182,8 @@ fun RecentsTabContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         data class RecentsFilterItem(
@@ -194,10 +194,10 @@ fun RecentsTabContent(
                         )
 
                         val filterOptions = listOf(
-                            RecentsFilterItem("All", RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
-                            RecentsFilterItem("Missed", RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
-                            RecentsFilterItem("Dialed", RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, Color(0xFF0288D1)),
-                            RecentsFilterItem("Received", RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
+                            RecentsFilterItem(stringResource(R.string.filter_all), RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
+                            RecentsFilterItem(stringResource(R.string.filter_missed), RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
+                            RecentsFilterItem(stringResource(R.string.filter_dialed), RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, getDialedCallColor()),
+                            RecentsFilterItem(stringResource(R.string.filter_received), RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
                         )
 
                         filterOptions.forEach { item ->
@@ -231,7 +231,7 @@ fun RecentsTabContent(
                                     .clip(RoundedCornerShape(20.dp))
                                     .background(containerColor)
                                     .clickable { currentFilter = item.filter }
-                                    .padding(horizontal = 8.dp, vertical = 7.dp),
+                                    .padding(horizontal = 4.dp, vertical = 7.dp),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -239,12 +239,12 @@ fun RecentsTabContent(
                                     imageVector = item.icon,
                                     contentDescription = item.label,
                                     tint = iconTint,
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(13.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     text = item.label,
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                     color = contentColor,
                                     maxLines = 1
