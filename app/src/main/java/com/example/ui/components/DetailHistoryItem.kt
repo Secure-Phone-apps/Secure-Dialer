@@ -185,6 +185,27 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                                 )
                             }
                         }
+                    } else {
+                        val isUnsavedWithoutCnap = record.name == record.number || record.name == "Unknown" || record.name.isBlank() || record.name == "-1" || record.name == "-2" || record.name == "-3"
+                        if (isUnsavedWithoutCnap) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                                border = BorderStroke(
+                                    0.5.dp,
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.unknown),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                )
+                            }
+                        }
                     }
 
                     Text(

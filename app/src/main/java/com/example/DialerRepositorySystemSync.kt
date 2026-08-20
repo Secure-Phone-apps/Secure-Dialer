@@ -386,16 +386,28 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                     }
                 } else null
 
-                val isSavedContact = (matchingContact != null)
-                val isVerified = !isSavedContact && (!cachedName.isNullOrBlank() || !matchingCnapName.isNullOrBlank())
+                val rawNumTrimmed = num.trim()
+                val isUnknownNum = rawNumTrimmed.isBlank() ||
+                        rawNumTrimmed == "-1" || rawNumTrimmed == "-2" || rawNumTrimmed == "-3" ||
+                        rawNumTrimmed.equals("unknown", ignoreCase = true) ||
+                        rawNumTrimmed.equals("private", ignoreCase = true) ||
+                        rawNumTrimmed.equals("restricted", ignoreCase = true) ||
+                        rawNumTrimmed.equals("anonymous", ignoreCase = true) ||
+                        rawNumTrimmed.equals("p", ignoreCase = true) ||
+                        rawNumTrimmed.equals("0", ignoreCase = true)
+
+                val isSavedContact = (matchingContact != null) || (!cachedName.isNullOrBlank() && !cachedName.equals(num, ignoreCase = true) && !isUnknownNum)
+                val isVerified = !isSavedContact && !matchingCnapName.isNullOrBlank()
 
                 val name = when {
                     matchingContact != null -> matchingContact.name
-                    !cachedName.isNullOrBlank() -> cachedName
+                    !cachedName.isNullOrBlank() && !cachedName.equals(num, ignoreCase = true) -> cachedName
                     !matchingCnapName.isNullOrBlank() -> matchingCnapName
-                    num.isBlank() -> "Unknown"
+                    isUnknownNum -> "Unknown"
                     else -> num
                 }
+
+                val finalNum = if (isUnknownNum) "" else num
 
                 val dateVal = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
                 val phoneAccountId = if (accountIdIdx != -1) cursor.getString(accountIdIdx) ?: "" else ""
@@ -442,7 +454,7 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                     CallRecord(
                         id = idVal,
                         name = name,
-                        number = num,
+                        number = finalNum,
                         label = contactLabel,
                         timestamp = sdf.format(Date(dateVal)),
                         type = type,
