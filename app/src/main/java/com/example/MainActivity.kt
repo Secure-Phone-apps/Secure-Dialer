@@ -116,11 +116,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Obscure UI content visibility in system Recents switcher to prevent PII snapshot leaks
-        window.setFlags(
-            android.view.WindowManager.LayoutParams.FLAG_SECURE,
-            android.view.WindowManager.LayoutParams.FLAG_SECURE
-        )
+        // Obscure UI content visibility in release builds to prevent PII snapshot leaks without blocking emulator preview
+        if (!BuildConfig.DEBUG) {
+            window.setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_SECURE,
+                android.view.WindowManager.LayoutParams.FLAG_SECURE
+            )
+        }
 
         if (savedInstanceState != null) {
             isAppAuthenticated.value = savedInstanceState.getBoolean("is_authenticated", false)
