@@ -1,17 +1,17 @@
 # Secure Dialer 📞 — Pure, Private, & Offline-First Open-Source Android Dialer App
 
 <p align="center">
-  <img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support" />
-  <img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" />
-  <img src="https://img.shields.io/badge/Compose-M3-4285F4?style=flat&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose Material 3" />
-  <img src="https://img.shields.io/github/license/Secure-Phone-apps/Secure-Dialer?style=flat&color=A3E635" alt="Open Source FOSS GPLv3" />
-  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
+  <a href="https://developer.android.com/about/versions/nougat/android-7.0"><img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support 24+" /></a>
+  <a href="https://kotlinlang.org/"><img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" /></a>
+  <a href="https://developer.android.com/develop/ui/compose/material3"><img src="https://img.shields.io/badge/Compose-M3-4285F4?style=flat&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose Material 3" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-A3E635?style=flat&logo=opensourceinitiative&logoColor=white" alt="Open Source FOSS GPLv3" /></a>
+  <a href="https://apps.obtainium.imranr.dev/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/discussions"><img src="https://img.shields.io/badge/Community-Discussions-1F6FEB?style=flat&logo=github&logoColor=white" alt="GitHub Discussions" /></a>
   <a href="https://github.com/sponsors/Secure-Phone-apps"><img src="https://img.shields.io/badge/Sponsor-GitHub_Sponsors-EA4AAA?style=flat&logo=githubsponsors&logoColor=white" alt="Sponsor Project" /></a>
 </p>
 
 <p align="center">
-  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
+  <a href="https://apps.obtainium.imranr.dev/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="80" alt="Get it on Obtainium" />
   </a>
 </p>
@@ -140,7 +140,7 @@ To work properly as your **Default Phone App**, Android requires standard teleph
 If you use [Obtainium](https://github.com/ImranR98/Obtainium), you can get automatic update notifications directly from our GitHub Releases:
 
 <p align="center">
-  <a href="https://apps.obtainium.im/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
+  <a href="https://apps.obtainium.imranr.dev/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="52" alt="Get it on Obtainium" />
   </a>
 </p>

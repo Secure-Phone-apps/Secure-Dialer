@@ -18,6 +18,7 @@
 package com.example.data
 
 import android.content.Context
+import android.net.Uri
 import android.util.Base64
 import com.example.model.*
 import com.example.DialerRepository
@@ -25,6 +26,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.security.SecureRandom
 import javax.crypto.Cipher
 import javax.crypto.SecretKeyFactory
@@ -33,6 +37,119 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 object BackupRestoreManager {
+
+    suspend fun writeTextToUri(context: Context, uri: Uri, content: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                OutputStreamWriter(outputStream, Charsets.UTF_8).use { writer ->
+                    writer.write(content)
+                    writer.flush()
+                }
+            }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    suspend fun readTextFromUri(context: Context, uri: Uri): String? = withContext(Dispatchers.IO) {
+        try {
+            context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).use { reader ->
+                    reader.readText()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    suspend fun exportBlockedNumbers(context: Context): String = withContext(Dispatchers.IO) {
+        try {
+            val db = AppDatabase.getDatabase(context)
+            val dao = db.dialerDao()
+            val list = dao.getBlockedNumbersList()
+            val sb = StringBuilder()
+            sb.append("# Dialer Blocked Numbers Export\n")
+            sb.append("# Exported: ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())}\n")
+            sb.append("# Format: One phone number per line\n\n")
+            list.forEach { item ->
+                if (item.number.isNotBlank()) {
+                    sb.append(item.number.trim()).append("\n")
+                }
+            }
+            sb.toString()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            ""
+        }
+    }
+
+    suspend fun importBlockedNumbers(context: Context, rawData: String): Int = withContext(Dispatchers.IO) {
+        try {
+            val db = AppDatabase.getDatabase(context)
+            val dao = db.dialerDao()
+            var count = 0
+            val trimmed = rawData.trim()
+
+            if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+                // Try parsing JSON format
+                try {
+                    if (trimmed.startsWith("[")) {
+                        val array = JSONArray(trimmed)
+                        for (i in 0 until array.length()) {
+                            val num = array.optString(i, "").trim()
+                            if (num.isNotBlank()) {
+                                dao.insertBlockedNumber(BlockedNumber(number = num))
+                                count++
+                            }
+                        }
+                    } else {
+                        val obj = JSONObject(trimmed)
+                        if (obj.has("blocked_numbers")) {
+                            val array = obj.getJSONArray("blocked_numbers")
+                            for (i in 0 until array.length()) {
+                                val num = array.optString(i, "").trim()
+                                if (num.isNotBlank()) {
+                                    dao.insertBlockedNumber(BlockedNumber(number = num))
+                                    count++
+                                }
+                            }
+                        }
+                    }
+                } catch (je: Exception) {
+                    je.printStackTrace()
+                }
+            }
+
+            if (count == 0) {
+                // Parse text / CSV lines
+                val lines = rawData.split(Regex("\\r?\\n"))
+                for (line in lines) {
+                    val cleanLine = line.trim()
+                    if (cleanLine.isBlank() || cleanLine.startsWith("#") || cleanLine.startsWith("//")) {
+                        continue
+                    }
+                    // Handle potential CSV with comma
+                    val numberPart = if (cleanLine.contains(",")) {
+                        cleanLine.split(",")[0].trim().replace("\"", "")
+                    } else {
+                        cleanLine.replace("\"", "")
+                    }
+                    if (numberPart.isNotBlank() && numberPart.length >= 2) {
+                        dao.insertBlockedNumber(BlockedNumber(number = numberPart))
+                        count++
+                    }
+                }
+            }
+            count
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0
+        }
+    }
 
     suspend fun exportBackup(context: Context, password: String = ""): String = withContext(Dispatchers.IO) {
         val db = AppDatabase.getDatabase(context)

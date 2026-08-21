@@ -87,6 +87,17 @@ suspend fun DialerRepository.importSpamNumbersFromCsv(csvContent: String): Int {
     return listToInsert.size
 }
 
+suspend fun DialerRepository.exportSpamNumbersToCsv(): String {
+    val list = dao.getAllSpamNumbersList()
+    val sb = StringBuilder()
+    sb.append("# Dialer Offline Spam Database Export\n")
+    sb.append("# Format: Number,Label\n")
+    for (item in list) {
+        sb.append("${item.number},${item.label}\n")
+    }
+    return sb.toString()
+}
+
 // Call Reminder Delegates
 fun DialerRepository.getAllReminders(): Flow<List<com.example.model.CallReminder>> = dao.getAllRemindersFlow()
 suspend fun DialerRepository.saveReminder(reminder: com.example.model.CallReminder): Long = dao.insertReminder(reminder)

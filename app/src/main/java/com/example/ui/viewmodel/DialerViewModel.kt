@@ -19,6 +19,7 @@ package com.example.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.compose.runtime.*
 import androidx.lifecycle.*
@@ -436,7 +437,38 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch { repository.removeBlockedNumber(num) }
     }
 
-    // Encrypted Backup & Restore
+    // Encrypted Backup & Restore & File IO
+    fun writeTextToUri(uri: Uri, content: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = com.example.data.BackupRestoreManager.writeTextToUri(getApplication(), uri, content)
+            onResult(success)
+        }
+    }
+
+    fun readTextFromUri(uri: Uri, onResult: (String?) -> Unit) {
+        viewModelScope.launch {
+            val content = com.example.data.BackupRestoreManager.readTextFromUri(getApplication(), uri)
+            onResult(content)
+        }
+    }
+
+    fun exportBlockedNumbers(onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val data = com.example.data.BackupRestoreManager.exportBlockedNumbers(getApplication())
+            onResult(data)
+        }
+    }
+
+    fun importBlockedNumbers(rawData: String, onResult: (Int) -> Unit) {
+        viewModelScope.launch {
+            val count = com.example.data.BackupRestoreManager.importBlockedNumbers(getApplication(), rawData)
+            if (count > 0) {
+                syncData()
+            }
+            onResult(count)
+        }
+    }
+
     fun exportBackup(password: String = "", onResult: (String) -> Unit) {
         viewModelScope.launch {
             val data = repository.exportBackup(password)
@@ -673,6 +705,13 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val count = repository.importSpamNumbersFromCsv(csvContent)
             onResult(count)
+        }
+    }
+
+    fun exportSpamNumbersToCsv(onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            val data = repository.exportSpamNumbersToCsv()
+            onResult(data)
         }
     }
 

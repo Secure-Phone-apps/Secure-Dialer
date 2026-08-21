@@ -17,7 +17,10 @@
 
 package com.example.ui.components
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -38,7 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
-import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun SpamDatabaseSettings(
@@ -46,13 +51,45 @@ fun SpamDatabaseSettings(
     cardBgColor: Color
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val timestamp = remember { SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date()) }
     val spamList by viewModel.spamFlow.collectAsState()
 
     var manualNumber by remember { mutableStateOf("") }
     var manualLabel by remember { mutableStateOf("") }
     var showImportDialog by remember { mutableStateOf(false) }
     var csvPasteArea by remember { mutableStateOf("") }
+
+    val saveSpamCsvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.exportSpamNumbersToCsv { csvData ->
+                viewModel.writeTextToUri(uri, csvData) { success ->
+                    if (success) {
+                        Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    val openSpamFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.readTextFromUri(uri) { content ->
+                if (!content.isNullOrBlank()) {
+                    viewModel.importSpamNumbersFromCsv(content) { count ->
+                        Toast.makeText(context, context.getString(R.string.spam_import_count_success, count), Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier
@@ -68,7 +105,7 @@ fun SpamDatabaseSettings(
             ) {
                 Column(
                     modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
@@ -122,13 +159,42 @@ fun SpamDatabaseSettings(
                             )
                         }
 
-                        Button(
-                            onClick = { showImportDialog = true },
-                            shape = RoundedCornerShape(12.dp)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = {
+                                    val defaultName = "spam_database_$timestamp.csv"
+                                    saveSpamCsvLauncher.launch(defaultName)
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Download, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(stringResource(R.string.btn_export_spam_csv))
+                            }
+
+                            Button(
+                                onClick = {
+                                    openSpamFileLauncher.launch(arrayOf("text/csv", "text/plain", "text/comma-separated-values", "*/*"))
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text(stringResource(R.string.btn_import_spam_file))
+                            }
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = { showImportDialog = true }
                         ) {
-                            Icon(Icons.Default.UploadFile, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.btn_csv_import))
+                            Icon(Icons.Default.ContentPaste, null, modifier = Modifier.size(14.dp))
+                            Spacer(Modifier.width(4.dp))
+                            Text("Paste CSV Text", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

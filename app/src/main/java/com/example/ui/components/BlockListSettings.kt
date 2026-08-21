@@ -17,11 +17,14 @@
 
 package com.example.ui.components
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -32,24 +35,62 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun BlockListSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val timestamp = remember { SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date()) }
+
     val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
     val blockedNumbers = remember(blockedNumbersEntities) { blockedNumbersEntities.map { it.number } }
     var newBlockedInput by remember { mutableStateOf("") }
+
+    val saveBlocklistLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.exportBlockedNumbers { blocklistData ->
+                viewModel.writeTextToUri(uri, blocklistData) { success ->
+                    if (success) {
+                        Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    val openBlocklistLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.readTextFromUri(uri) { content ->
+                if (!content.isNullOrBlank()) {
+                    viewModel.importBlockedNumbers(content) { count ->
+                        Toast.makeText(context, context.getString(R.string.blocklist_import_count_success, count), Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -79,7 +120,7 @@ fun BlockListSettings(
             shape = MaterialTheme.shapes.small
         )
         
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         
         Button(
             onClick = {
@@ -97,7 +138,40 @@ fun BlockListSettings(
             Text(stringResource(R.string.block_this_number), fontWeight = FontWeight.SemiBold)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // File-Based Import / Export Action Strip
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {
+                    val defaultName = "blocked_numbers_$timestamp.txt"
+                    saveBlocklistLauncher.launch(defaultName)
+                },
+                modifier = Modifier.weight(1f).height(42.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Icon(Icons.Default.Download, null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(stringResource(R.string.btn_export_blocklist), style = MaterialTheme.typography.labelMedium)
+            }
+
+            OutlinedButton(
+                onClick = {
+                    openBlocklistLauncher.launch(arrayOf("text/plain", "text/csv", "application/json", "*/*"))
+                },
+                modifier = Modifier.weight(1f).height(42.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(stringResource(R.string.btn_import_blocklist), style = MaterialTheme.typography.labelMedium)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         Text(
             stringResource(R.string.blocked_callers_header),

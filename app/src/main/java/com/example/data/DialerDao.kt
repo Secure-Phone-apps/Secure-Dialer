@@ -177,6 +177,9 @@ interface DialerDao {
     @Query("SELECT * FROM spam_numbers ORDER BY number ASC")
     fun getAllSpamNumbersFlow(): Flow<List<SpamNumber>>
 
+    @Query("SELECT * FROM spam_numbers ORDER BY number ASC")
+    suspend fun getAllSpamNumbersList(): List<SpamNumber>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSpamNumber(spam: SpamNumber)
 

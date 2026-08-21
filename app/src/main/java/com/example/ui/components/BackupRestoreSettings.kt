@@ -17,11 +17,13 @@
 
 package com.example.ui.components
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -43,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun BackupRestoreSettings(
@@ -51,16 +56,130 @@ fun BackupRestoreSettings(
 ) {
     val context = LocalContext.current
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    val timestamp = remember { SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date()) }
+
     var exportPassword by remember { mutableStateOf("") }
-    var importPassword by remember { mutableStateOf("") }
-    var importDataInput by remember { mutableStateOf("") }
+    var pendingBackupData by remember { mutableStateOf<String?>(null) }
+    var pendingEncryptedRestoreContent by remember { mutableStateOf<String?>(null) }
+    var restorePasswordInput by remember { mutableStateOf("") }
+    var showPasswordPromptDialog by remember { mutableStateOf(false) }
 
+    // Text fallback dialog states
     var exportedDataDialog by remember { mutableStateOf<String?>(null) }
-    var showImportDialog by remember { mutableStateOf(false) }
+    var showManualTextImportDialog by remember { mutableStateOf(false) }
+    var manualTextInput by remember { mutableStateOf("") }
+    var manualTextPassword by remember { mutableStateOf("") }
 
-    var exportedVcfDialog by remember { mutableStateOf<String?>(null) }
-    var showImportVcfDialog by remember { mutableStateOf(false) }
-    var importVcfInput by remember { mutableStateOf("") }
+    // --- File Pickers (SAF) ---
+    val saveBackupFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        if (uri != null && pendingBackupData != null) {
+            viewModel.writeTextToUri(uri, pendingBackupData!!) { success ->
+                if (success) {
+                    Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                }
+                pendingBackupData = null
+            }
+        }
+    }
+
+    val openBackupFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.readTextFromUri(uri) { content ->
+                if (!content.isNullOrBlank()) {
+                    val trimmed = content.trim()
+                    if (trimmed.startsWith("{")) {
+                        viewModel.importBackup(trimmed) { success ->
+                            if (success) {
+                                Toast.makeText(context, context.getString(R.string.backup_restored_success_toast), Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, context.getString(R.string.backup_restore_failed_toast), Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else {
+                        pendingEncryptedRestoreContent = trimmed
+                        restorePasswordInput = ""
+                        showPasswordPromptDialog = true
+                    }
+                } else {
+                    Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val saveVcfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/x-vcard")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.exportContactsVcf { vcfData ->
+                viewModel.writeTextToUri(uri, vcfData) { success ->
+                    if (success) {
+                        Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    val openVcfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.readTextFromUri(uri) { content ->
+                if (!content.isNullOrBlank()) {
+                    viewModel.importContactsVcf(content) { success ->
+                        if (success) {
+                            Toast.makeText(context, context.getString(R.string.vcf_import_count_success), Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(context, "Failed to import contacts. Please verify .vcf format.", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    val saveBlocklistLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.exportBlockedNumbers { blocklistData ->
+                viewModel.writeTextToUri(uri, blocklistData) { success ->
+                    if (success) {
+                        Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
+    val openBlocklistLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.readTextFromUri(uri) { content ->
+                if (!content.isNullOrBlank()) {
+                    viewModel.importBlockedNumbers(content) { count ->
+                        Toast.makeText(context, context.getString(R.string.blocklist_import_count_success, count), Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -69,19 +188,30 @@ fun BackupRestoreSettings(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // --- Encrypted Backup Card ---
+        // --- Full App Data & Settings Backup ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
             shape = MaterialTheme.shapes.medium
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = stringResource(R.string.backup_export_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudDownload,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.backup_export_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.backup_export_desc),
@@ -101,71 +231,82 @@ fun BackupRestoreSettings(
                     shape = MaterialTheme.shapes.small
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                Button(
-                    onClick = {
-                        viewModel.exportBackup(exportPassword) { data ->
-                            exportedDataDialog = data
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = MaterialTheme.shapes.small
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.backup_export_btn), fontWeight = FontWeight.SemiBold)
+                    Button(
+                        onClick = {
+                            viewModel.exportBackup(exportPassword) { data ->
+                                pendingBackupData = data
+                                val defaultName = "dialer_backup_$timestamp.json"
+                                saveBackupFileLauncher.launch(defaultName)
+                            }
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_save_backup_file), fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            openBackupFileLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_restore_backup_file), fontWeight = FontWeight.SemiBold)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = { showManualTextImportDialog = true }
+                    ) {
+                        Icon(Icons.Default.ContentPaste, null, modifier = Modifier.size(14.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("Paste Raw Text", style = MaterialTheme.typography.labelSmall)
+                    }
                 }
             }
         }
 
-        // --- Encrypted Restore Card ---
+        // --- Contacts vCard (.vcf) Migration Card ---
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
             shape = MaterialTheme.shapes.medium
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = stringResource(R.string.backup_restore_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = stringResource(R.string.backup_restore_desc),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = { showImportDialog = true },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
-                    shape = MaterialTheme.shapes.small
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.backup_import_btn), fontWeight = FontWeight.SemiBold)
+                    Icon(
+                        imageVector = Icons.Default.Contacts,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.tertiary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.vcf_migration_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
                 }
-            }
-        }
-
-        // --- vCard (VCF) Contacts Migration Card ---
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = stringResource(R.string.vcf_migration_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.tertiary
-                )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = stringResource(R.string.vcf_migration_desc),
@@ -173,93 +314,174 @@ fun BackupRestoreSettings(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Button(
                         onClick = {
-                            viewModel.exportContactsVcf { data ->
-                                exportedVcfDialog = data
-                            }
+                            val defaultName = "contacts_$timestamp.vcf"
+                            saveVcfLauncher.launch(defaultName)
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = MaterialTheme.shapes.small
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.btn_export_vcf), fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_save_vcf_file), fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
-                        onClick = { showImportVcfDialog = true },
+                        onClick = {
+                            openVcfLauncher.launch(arrayOf("text/x-vcard", "text/vcard", "text/plain", "*/*"))
+                        },
                         modifier = Modifier.weight(1f).height(48.dp),
                         shape = MaterialTheme.shapes.small
                     ) {
-                        Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.btn_import_vcf), fontWeight = FontWeight.SemiBold)
+                        Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_choose_vcf_file), fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+        }
+
+        // --- Blocked Numbers File Migration Card ---
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Block,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Text(
+                        text = stringResource(R.string.blocklist_file_action_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.blocklist_file_action_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            val defaultName = "blocked_numbers_$timestamp.txt"
+                            saveBlocklistLauncher.launch(defaultName)
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_export_blocklist), fontWeight = FontWeight.SemiBold)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            openBlocklistLauncher.launch(arrayOf("text/plain", "text/csv", "application/json", "*/*"))
+                        },
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.btn_import_blocklist), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
         }
     }
 
-    // Exported Dialog
-    if (exportedDataDialog != null) {
-        val dataStr = exportedDataDialog ?: ""
+    // Encrypted Restore Password Prompt Dialog
+    if (showPasswordPromptDialog && pendingEncryptedRestoreContent != null) {
         AlertDialog(
-            onDismissRequest = { exportedDataDialog = null },
-            title = { Text(stringResource(R.string.backup_exported_dialog_title)) },
+            onDismissRequest = {
+                showPasswordPromptDialog = false
+                pendingEncryptedRestoreContent = null
+            },
+            title = { Text(stringResource(R.string.backup_password_label)) },
             text = {
-                Column {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        stringResource(R.string.backup_exported_dialog_desc),
+                        "This backup file is encrypted. Enter the decryption password to restore your data:",
                         style = MaterialTheme.typography.bodySmall
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
-                        value = dataStr,
-                        onValueChange = {},
-                        readOnly = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
+                        value = restorePasswordInput,
+                        onValueChange = { restorePasswordInput = it },
+                        label = { Text(stringResource(R.string.backup_password_label)) },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.small
                     )
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    clipboardManager.setText(AnnotatedString(dataStr))
-                    Toast.makeText(context, context.getString(R.string.backup_copied_toast), Toast.LENGTH_SHORT).show()
-                    exportedDataDialog = null
-                }) {
-                    Text(stringResource(R.string.backup_copy_clipboard))
+                Button(
+                    onClick = {
+                        val content = pendingEncryptedRestoreContent ?: ""
+                        viewModel.importBackup(content, restorePasswordInput) { success ->
+                            if (success) {
+                                Toast.makeText(context, context.getString(R.string.backup_restored_success_toast), Toast.LENGTH_LONG).show()
+                                showPasswordPromptDialog = false
+                                pendingEncryptedRestoreContent = null
+                                restorePasswordInput = ""
+                            } else {
+                                Toast.makeText(context, context.getString(R.string.backup_restore_failed_toast), Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.backup_restore_btn))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { exportedDataDialog = null }) {
-                    Text(stringResource(R.string.close))
+                TextButton(onClick = {
+                    showPasswordPromptDialog = false
+                    pendingEncryptedRestoreContent = null
+                }) {
+                    Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
     }
 
-    // Import Dialog
-    if (showImportDialog) {
+    // Manual Text Import Dialog
+    if (showManualTextImportDialog) {
         AlertDialog(
-            onDismissRequest = { showImportDialog = false },
+            onDismissRequest = { showManualTextImportDialog = false },
             title = { Text(stringResource(R.string.backup_import_dialog_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.backup_import_dialog_desc))
                     OutlinedTextField(
-                        value = importDataInput,
-                        onValueChange = { importDataInput = it },
+                        value = manualTextInput,
+                        onValueChange = { manualTextInput = it },
                         label = { Text(stringResource(R.string.backup_string_label)) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -267,8 +489,8 @@ fun BackupRestoreSettings(
                         shape = MaterialTheme.shapes.small
                     )
                     OutlinedTextField(
-                        value = importPassword,
-                        onValueChange = { importPassword = it },
+                        value = manualTextPassword,
+                        onValueChange = { manualTextPassword = it },
                         label = { Text(stringResource(R.string.backup_password_label)) },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
@@ -279,13 +501,13 @@ fun BackupRestoreSettings(
             },
             confirmButton = {
                 Button(onClick = {
-                    if (importDataInput.isNotBlank()) {
-                        viewModel.importBackup(importDataInput.trim(), importPassword) { success ->
+                    if (manualTextInput.isNotBlank()) {
+                        viewModel.importBackup(manualTextInput.trim(), manualTextPassword) { success ->
                             if (success) {
                                 Toast.makeText(context, context.getString(R.string.backup_restored_success_toast), Toast.LENGTH_LONG).show()
-                                showImportDialog = false
-                                importDataInput = ""
-                                importPassword = ""
+                                showManualTextImportDialog = false
+                                manualTextInput = ""
+                                manualTextPassword = ""
                             } else {
                                 Toast.makeText(context, context.getString(R.string.backup_restore_failed_toast), Toast.LENGTH_LONG).show()
                             }
@@ -296,92 +518,7 @@ fun BackupRestoreSettings(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showImportDialog = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
-    }
-
-    // Exported VCF Dialog
-    if (exportedVcfDialog != null) {
-        val dataStr = exportedVcfDialog ?: ""
-        AlertDialog(
-            onDismissRequest = { exportedVcfDialog = null },
-            title = { Text(stringResource(R.string.vcf_exported_title)) },
-            text = {
-                Column {
-                    Text(
-                        stringResource(R.string.vcf_exported_desc),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = dataStr,
-                        onValueChange = {},
-                        readOnly = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        shape = MaterialTheme.shapes.small
-                    )
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    clipboardManager.setText(AnnotatedString(dataStr))
-                    Toast.makeText(context, "vCard content copied to clipboard!", Toast.LENGTH_SHORT).show()
-                    exportedVcfDialog = null
-                }) {
-                    Text(stringResource(R.string.backup_copy_clipboard))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { exportedVcfDialog = null }) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
-    }
-
-    // Import VCF Dialog
-    if (showImportVcfDialog) {
-        AlertDialog(
-            onDismissRequest = { showImportVcfDialog = false },
-            title = { Text(stringResource(R.string.vcf_import_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.vcf_import_desc))
-                    OutlinedTextField(
-                        value = importVcfInput,
-                        onValueChange = { importVcfInput = it },
-                        label = { Text(stringResource(R.string.vcf_content_label)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp),
-                        shape = MaterialTheme.shapes.small
-                    )
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    if (importVcfInput.isNotBlank()) {
-                        viewModel.importContactsVcf(importVcfInput.trim()) { success ->
-                            if (success) {
-                                Toast.makeText(context, "Contacts imported successfully!", Toast.LENGTH_LONG).show()
-                                showImportVcfDialog = false
-                                importVcfInput = ""
-                            } else {
-                                Toast.makeText(context, "Failed to import contacts. Please verify the vCard format.", Toast.LENGTH_LONG).show()
-                            }
-                        }
-                    }
-                }) {
-                    Text(stringResource(R.string.btn_import_contacts))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showImportVcfDialog = false }) {
+                TextButton(onClick = { showManualTextImportDialog = false }) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }
