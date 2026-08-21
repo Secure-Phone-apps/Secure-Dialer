@@ -9,7 +9,7 @@ Hey everyone! Here is a simple guide on how to install **Secure Dialer**, set up
 [Obtainium](https://github.com/ImranR98/Obtainium) is an open-source Android app that lets you download and receive automatic updates directly from our GitHub Releases without needing the Google Play Store.
 
 <p align="center">
-  <a href="https://apps.obtainium.imranr.dev/add?url=https://github.com/Secure-Phone-apps/Secure-Dialer">
+  <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="52" alt="Get it on Obtainium" />
   </a>
 </p>
