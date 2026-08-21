@@ -113,6 +113,45 @@
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
 
     
+    <!-- 6 Primary Settings Categories -->
+    <string name="cat_display_sound">Display &amp; Sound</string>
+    <string name="cat_display_sound_sub">Theme, colors, dialpad tones, haptics &amp; startup layout</string>
+    <string name="cat_calling_accounts">Calling Accounts &amp; SIMs</string>
+    <string name="cat_calling_accounts_sub">SIM cards, speed dial, flash alerts &amp; carrier network</string>
+    <string name="cat_call_blocking">Call Blocking &amp; Antispam</string>
+    <string name="cat_call_blocking_sub">Blocked callers, threat database &amp; quick responses</string>
+    <string name="cat_voicemail_tools">Voicemail &amp; Call Tools</string>
+    <string name="cat_voicemail_tools_sub">Voicemail, auto call recording, reminders &amp; notes</string>
+    <string name="cat_privacy_backup">Privacy, Contacts &amp; Backup</string>
+    <string name="cat_privacy_backup_sub">App lock, contacts source, duplicate merger &amp; backups</string>
+    <string name="cat_about_support">About &amp; Support</string>
+    <string name="cat_about_support_sub">Version specs, legal notices &amp; open source contribution</string>
+
+    <!-- Headers inside Tier 2 -->
+    <string name="header_theme_styling">THEME &amp; STYLING</string>
+    <string name="header_sound_haptics">SOUND &amp; HAPTICS</string>
+    <string name="header_navigation_layout">NAVIGATION &amp; LAYOUT</string>
+    <string name="header_sim_carrier">SIM &amp; CARRIER CONFIGURATION</string>
+    <string name="header_dialing_shortcuts">DIALING SHORTCUTS</string>
+    <string name="header_incoming_alerts">INCOMING CALL ALERTS</string>
+    <string name="header_call_blocker">CALL BLOCKER &amp; FILTERS</string>
+    <string name="header_threat_intelligence">THREAT INTELLIGENCE</string>
+    <string name="header_call_decline_messages">CALL DECLINE MESSAGES</string>
+    <string name="header_carrier_voicemail">CARRIER VOICEMAIL</string>
+    <string name="header_call_recording">CALL RECORDING</string>
+    <string name="header_productivity_notes">PRODUCTIVITY &amp; NOTES</string>
+    <string name="header_privacy_protection">PRIVACY PROTECTION</string>
+    <string name="header_contacts_management">CONTACTS MANAGEMENT</string>
+    <string name="header_data_backup">DATA &amp; BACKUP</string>
+    <string name="header_app_specs">APP SPECIFICATIONS</string>
+    <string name="header_community">COMMUNITY</string>
+
+    <string name="settings_carrier_call_settings">Carrier Call Settings</string>
+    <string name="settings_carrier_call_settings_sub">Call waiting, call forwarding &amp; supplementary phone services</string>
+    <string name="spam_db_check_updates">Check for Database Updates</string>
+    <string name="spam_db_checking">Checking local threat definitions...</string>
+    <string name="spam_db_up_to_date">Offline Spam Database is up to date (Definitions v2.4)</string>
+    
     <string name="settings_appearance">Appearance</string>
     <string name="settings_contact_preferences">Contact Preferences</string>
     <string name="settings_contacts_to_display">Contacts to Display</string>

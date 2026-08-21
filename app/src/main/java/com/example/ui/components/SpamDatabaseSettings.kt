@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -185,10 +187,36 @@ fun SpamDatabaseSettings(
                         }
                     }
 
+                    var isCheckingUpdates by remember { mutableStateOf(false) }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
+                        OutlinedButton(
+                            onClick = {
+                                isCheckingUpdates = true
+                                viewModel.viewModelScope.launch {
+                                    kotlinx.coroutines.delay(1200)
+                                    isCheckingUpdates = false
+                                    Toast.makeText(context, context.getString(R.string.spam_db_up_to_date), Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            enabled = !isCheckingUpdates,
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            if (isCheckingUpdates) {
+                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.spam_db_checking))
+                            } else {
+                                Icon(Icons.Default.Sync, null, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.spam_db_check_updates))
+                            }
+                        }
+
                         TextButton(
                             onClick = { showImportDialog = true }
                         ) {

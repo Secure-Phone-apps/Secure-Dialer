@@ -101,17 +101,12 @@ fun SettingsPanel(
                     Text(
                         text = when (activeTab) {
                             0 -> stringResource(R.string.settings_title)
-                            1 -> stringResource(R.string.settings_block_list_title)
-                            2 -> stringResource(R.string.settings_speed_dial)
-                            3 -> stringResource(R.string.settings_quick_resp_title)
-                            4 -> stringResource(R.string.settings_voicemail_setup_title)
-                            6 -> stringResource(R.string.settings_updates_title)
-                            7 -> stringResource(R.string.settings_recordings_title)
-                            8 -> stringResource(R.string.backup_service_health_title)
-                            9 -> stringResource(R.string.tab_spam_database)
-                            10 -> stringResource(R.string.tab_scheduled_reminders)
-                            11 -> stringResource(R.string.tab_fake_call_sim)
-                            12 -> stringResource(R.string.tab_call_notes)
+                            1 -> stringResource(R.string.cat_display_sound)
+                            2 -> stringResource(R.string.cat_calling_accounts)
+                            3 -> stringResource(R.string.cat_call_blocking)
+                            4 -> stringResource(R.string.cat_voicemail_tools)
+                            5 -> stringResource(R.string.cat_privacy_backup)
+                            6 -> stringResource(R.string.cat_about_support)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -159,46 +154,32 @@ fun SettingsPanel(
                     0 -> GeneralSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor,
-                        onNavigateToTab = { activeTab = it },
+                        onNavigateToTab = { activeTab = it }
+                    )
+                    1 -> DisplayAndSoundSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    2 -> CallingAccountsSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    3 -> CallBlockingSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    4 -> VoicemailAndToolsSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    5 -> PrivacyAndBackupSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    6 -> AboutAndSupportSettings(
+                        cardBgColor = cardBgColor,
                         onShowAbout = { showAboutDialog = true },
                         onShowPrivacy = { showPrivacyDialog = true }
-                    )
-                    1 -> BlockListSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    2 -> SpeedDialSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    3 -> QuickResponsesSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    4 -> VoicemailSettings(
-                        viewModel = viewModel,
-                        onBackToGeneral = { activeTab = 0 }
-                    )
-                    6 -> AppUpdatesSettings()
-                    7 -> CallRecordingsSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    9 -> SpamDatabaseSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    10 -> ScheduledRemindersSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    11 -> FakeCallSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    12 -> CallNotesSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
                     )
                 }
             }
