@@ -113,19 +113,23 @@
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
 
     
-    <!-- 6 Primary Settings Categories -->
-    <string name="cat_display_sound">Display &amp; Sound</string>
-    <string name="cat_display_sound_sub">Theme, colors, dialpad tones, haptics &amp; startup layout</string>
-    <string name="cat_calling_accounts">Calling Accounts &amp; SIMs</string>
-    <string name="cat_calling_accounts_sub">SIM cards, speed dial, flash alerts &amp; carrier network</string>
-    <string name="cat_call_blocking">Call Blocking &amp; Antispam</string>
-    <string name="cat_call_blocking_sub">Blocked callers, threat database &amp; quick responses</string>
-    <string name="cat_voicemail_tools">Voicemail &amp; Call Tools</string>
-    <string name="cat_voicemail_tools_sub">Voicemail, auto call recording, reminders &amp; notes</string>
-    <string name="cat_privacy_backup">Privacy, Contacts &amp; Backup</string>
-    <string name="cat_privacy_backup_sub">App lock, contacts source, duplicate merger &amp; backups</string>
-    <string name="cat_about_support">About &amp; Support</string>
-    <string name="cat_about_support_sub">Version specs, legal notices &amp; open source contribution</string>
+    <!-- 8 Primary Settings Categories -->
+    <string name="cat_appearance_color">Appearance &amp; Color</string>
+    <string name="cat_appearance_color_sub">Theme, dark mode, dynamic colors &amp; accent palette</string>
+    <string name="cat_sound_gestures">Sound, Haptics &amp; Gestures</string>
+    <string name="cat_sound_gestures_sub">Dialpad tones, vibration, startup tab &amp; swipe gestures</string>
+    <string name="cat_calling_accounts">SIM &amp; Calling Accounts</string>
+    <string name="cat_calling_accounts_sub">Preferred SIM, call waiting &amp; carrier configuration</string>
+    <string name="cat_speed_dial_quick_responses">Speed Dial &amp; Quick Responses</string>
+    <string name="cat_speed_dial_quick_responses_sub">Dialpad 1–9 shortcuts &amp; quick decline SMS messages</string>
+    <string name="cat_call_blocking">Spam Defense &amp; Blocking</string>
+    <string name="cat_call_blocking_sub">Blacklisted numbers, offline spam database &amp; caller ID</string>
+    <string name="cat_voicemail_tools">Voicemail, Call Notes &amp; Recording</string>
+    <string name="cat_voicemail_tools_sub">Visual voicemail, call recording, post-call notes &amp; reminders</string>
+    <string name="cat_contacts_data">Contacts &amp; Data Management</string>
+    <string name="cat_contacts_data_sub">Account filters, default save account, backup &amp; vCard</string>
+    <string name="cat_privacy_security_about">Privacy, Security &amp; About</string>
+    <string name="cat_privacy_security_about_sub">Biometric lock, pocket mode, fake calls, specs &amp; support</string>
 
     <!-- Headers inside Tier 2 -->
     <string name="header_theme_styling">THEME &amp; STYLING</string>

@@ -94,7 +94,7 @@ fun BlockListSettings(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
         OutlinedTextField(
@@ -191,11 +191,11 @@ fun BlockListSettings(
                 tintColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             )
         } else {
-            LazyColumn(
+            Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
-                items(blockedNumbers, key = { it }) { num ->
+                blockedNumbers.forEach { num ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,

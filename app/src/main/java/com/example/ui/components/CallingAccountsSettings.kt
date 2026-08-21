@@ -158,11 +158,5 @@ fun CallingAccountsSettings(
             }
         }
 
-        // [Header] DIALING SHORTCUTS
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            PreferenceHeader(stringResource(R.string.header_dialing_shortcuts))
-            SpeedDialSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-        }
     }
 }

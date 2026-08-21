@@ -70,7 +70,7 @@ fun CallRecordingsSettings(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
         Text(
@@ -89,7 +89,7 @@ fun CallRecordingsSettings(
         Spacer(modifier = Modifier.height(16.dp))
 
         if (recordings.isEmpty()) {
-            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
                 SettingsEmptyState(
                     icon = Icons.Default.Mic,
                     title = stringResource(R.string.no_recordings_title),
@@ -98,11 +98,11 @@ fun CallRecordingsSettings(
                 )
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(bottom = 16.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(recordings, key = { it.id }) { rec ->
+                recordings.forEach { rec ->
                     val isPlaying = playingId == rec.id
                     Card(
                         modifier = Modifier

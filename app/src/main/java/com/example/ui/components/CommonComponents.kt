@@ -73,15 +73,15 @@ fun HeaderSearchBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 4.dp),
+            .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
         shape = searchShape,
         color = containerColor,
         tonalElevation = if (isExpressive) 6.dp else 3.dp
     ) {
         Row(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .height(48.dp),
+                .padding(horizontal = 16.dp, vertical = 4.dp)
+                .height(44.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(

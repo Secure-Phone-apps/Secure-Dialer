@@ -35,7 +35,7 @@ import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 
 @Composable
-fun CallBlockingSettings(
+fun SpeedDialAndQuickResponsesSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
@@ -48,54 +48,7 @@ fun CallBlockingSettings(
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Feature Row 1: Blocklist
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(20.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Block,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_blocked_numbers),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_blocked_numbers_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
-                BlockListSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-            }
-        }
-
-        // Feature Row 2: Spam Defense Database
+        // Feature Row 1: Speed Dial
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -115,7 +68,7 @@ fun CallBlockingSettings(
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
-                                Icons.Default.Shield,
+                                Icons.Default.TouchApp,
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.size(20.dp)
@@ -124,12 +77,12 @@ fun CallBlockingSettings(
                     }
                     Column {
                         Text(
-                            text = stringResource(R.string.settings_spam_protection),
+                            text = stringResource(R.string.settings_speed_dial),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = stringResource(R.string.local_offline_protection),
+                            text = stringResource(R.string.speed_dial_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -138,7 +91,54 @@ fun CallBlockingSettings(
                 Spacer(modifier = Modifier.height(12.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(8.dp))
-                SpamDatabaseSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+                SpeedDialSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            }
+        }
+
+        // Feature Row 2: Quick Responses
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Default.Quickreply,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                    Column {
+                        Text(
+                            text = stringResource(R.string.settings_quick_responses),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = stringResource(R.string.quick_decline_messages),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(8.dp))
+                QuickResponsesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }
         }
     }

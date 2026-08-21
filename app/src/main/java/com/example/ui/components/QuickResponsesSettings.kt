@@ -50,7 +50,7 @@ fun QuickResponsesSettings(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp)
     ) {
         OutlinedTextField(
@@ -101,11 +101,11 @@ fun QuickResponsesSettings(
                 tintColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
             )
         } else {
-            LazyColumn(
+            Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
-                items(quickResponses, key = { it }) { resp ->
+                quickResponses.forEach { resp ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,

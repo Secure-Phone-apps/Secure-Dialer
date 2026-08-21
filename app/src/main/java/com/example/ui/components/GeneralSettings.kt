@@ -64,7 +64,7 @@ fun GeneralSettings(
             }
         }
 
-        // 1. Display & Sound
+        // 1. Appearance & Color
         item {
             Card(
                 modifier = Modifier
@@ -74,8 +74,8 @@ fun GeneralSettings(
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
-                    title = stringResource(R.string.cat_display_sound),
-                    subtitle = stringResource(R.string.cat_display_sound_sub),
+                    title = stringResource(R.string.cat_appearance_color),
+                    subtitle = stringResource(R.string.cat_appearance_color_sub),
                     onClick = { onNavigateToTab(1) },
                     icon = Icons.Default.Palette,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer,
@@ -84,7 +84,27 @@ fun GeneralSettings(
             }
         }
 
-        // 2. Calling Accounts & SIMs
+        // 2. Sound, Haptics & Gestures
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.cat_sound_gestures),
+                    subtitle = stringResource(R.string.cat_sound_gestures_sub),
+                    onClick = { onNavigateToTab(2) },
+                    icon = Icons.Default.VolumeUp,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
+
+        // 3. SIM & Calling Accounts
         item {
             Card(
                 modifier = Modifier
@@ -96,15 +116,35 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_calling_accounts),
                     subtitle = stringResource(R.string.cat_calling_accounts_sub),
-                    onClick = { onNavigateToTab(2) },
+                    onClick = { onNavigateToTab(3) },
                     icon = Icons.Default.SimCard,
-                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
-                    iconTint = MaterialTheme.colorScheme.secondary
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    iconTint = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
 
-        // 3. Call Blocking & Antispam
+        // 4. Speed Dial & Quick Responses
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.cat_speed_dial_quick_responses),
+                    subtitle = stringResource(R.string.cat_speed_dial_quick_responses_sub),
+                    onClick = { onNavigateToTab(4) },
+                    icon = Icons.Default.TouchApp,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // 5. Spam Defense & Blocking
         item {
             Card(
                 modifier = Modifier
@@ -116,7 +156,7 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_call_blocking),
                     subtitle = stringResource(R.string.cat_call_blocking_sub),
-                    onClick = { onNavigateToTab(3) },
+                    onClick = { onNavigateToTab(5) },
                     icon = Icons.Default.Shield,
                     iconBgColor = MaterialTheme.colorScheme.errorContainer,
                     iconTint = MaterialTheme.colorScheme.error
@@ -124,7 +164,7 @@ fun GeneralSettings(
             }
         }
 
-        // 4. Voicemail & Call Tools
+        // 6. Voicemail, Call Notes & Recording
         item {
             Card(
                 modifier = Modifier
@@ -136,15 +176,15 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_voicemail_tools),
                     subtitle = stringResource(R.string.cat_voicemail_tools_sub),
-                    onClick = { onNavigateToTab(4) },
+                    onClick = { onNavigateToTab(6) },
                     icon = Icons.Default.Voicemail,
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f),
                     iconTint = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
 
-        // 5. Privacy, Contacts & Backup
+        // 7. Contacts & Data Management
         item {
             Card(
                 modifier = Modifier
@@ -154,17 +194,17 @@ fun GeneralSettings(
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
-                    title = stringResource(R.string.cat_privacy_backup),
-                    subtitle = stringResource(R.string.cat_privacy_backup_sub),
-                    onClick = { onNavigateToTab(5) },
-                    icon = Icons.Default.Lock,
-                    iconBgColor = MaterialTheme.colorScheme.primaryContainer,
-                    iconTint = MaterialTheme.colorScheme.primary
+                    title = stringResource(R.string.cat_contacts_data),
+                    subtitle = stringResource(R.string.cat_contacts_data_sub),
+                    onClick = { onNavigateToTab(7) },
+                    icon = Icons.Default.Contacts,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                    iconTint = MaterialTheme.colorScheme.secondary
                 )
             }
         }
 
-        // 6. About & Support
+        // 8. Privacy, Security & About
         item {
             Card(
                 modifier = Modifier
@@ -174,10 +214,10 @@ fun GeneralSettings(
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
-                    title = stringResource(R.string.cat_about_support),
-                    subtitle = stringResource(R.string.cat_about_support_sub),
-                    onClick = { onNavigateToTab(6) },
-                    icon = Icons.Default.Info,
+                    title = stringResource(R.string.cat_privacy_security_about),
+                    subtitle = stringResource(R.string.cat_privacy_security_about_sub),
+                    onClick = { onNavigateToTab(8) },
+                    icon = Icons.Default.Lock,
                     iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
                     iconTint = MaterialTheme.colorScheme.onSurfaceVariant
                 )

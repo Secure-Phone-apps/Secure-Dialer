@@ -93,15 +93,14 @@ fun SpamDatabaseSettings(
         }
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // CRM Header / Status info
-        item {
-            Card(
+        Card(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = RoundedCornerShape(24.dp)
             ) {
@@ -230,11 +229,10 @@ fun SpamDatabaseSettings(
         }
 
         // Add Manual Entry Item
-        item {
-            Card(
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                shape = RoundedCornerShape(16.dp)
-            ) {
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+            shape = RoundedCornerShape(16.dp)
+        ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -286,78 +284,74 @@ fun SpamDatabaseSettings(
                     }
                 }
             }
-        }
 
         // List block
         if (spamList.isEmpty()) {
-            item {
-                SettingsEmptyState(
-                    icon = Icons.Default.VerifiedUser,
-                    title = stringResource(R.string.blocklist_empty_title),
-                    description = stringResource(R.string.blocklist_empty_desc),
-                    tintColor = MaterialTheme.colorScheme.primary
-                )
-            }
+            SettingsEmptyState(
+                icon = Icons.Default.VerifiedUser,
+                title = stringResource(R.string.blocklist_empty_title),
+                description = stringResource(R.string.blocklist_empty_desc),
+                tintColor = MaterialTheme.colorScheme.primary
+            )
         } else {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.blocked_offline_numbers_title),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.blocked_offline_numbers_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-                    TextButton(onClick = {
-                        viewModel.clearAllSpam()
-                        Toast.makeText(context, "Cleared spam blocklist", Toast.LENGTH_SHORT).show()
-                    }) {
-                        Icon(Icons.Default.DeleteSweep, null, modifier = Modifier.size(16.dp))
-                        Spacer(Modifier.width(4.dp))
-                        Text(stringResource(R.string.btn_clear_all))
-                    }
+                TextButton(onClick = {
+                    viewModel.clearAllSpam()
+                    Toast.makeText(context, "Cleared spam blocklist", Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(Icons.Default.DeleteSweep, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.btn_clear_all))
                 }
             }
 
-            items(spamList, key = { it.number }) { spam ->
-                ListItem(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surface),
-                    headlineContent = { Text(spam.number, fontWeight = FontWeight.SemiBold) },
-                    supportingContent = { Text(spam.label) },
-                    leadingContent = {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Block,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
-                                    modifier = Modifier.size(18.dp)
-                                )
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                spamList.forEach { spam ->
+                    ListItem(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surface),
+                        headlineContent = { Text(spam.number, fontWeight = FontWeight.SemiBold) },
+                        supportingContent = { Text(spam.label) },
+                        leadingContent = {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Block,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        },
+                        trailingContent = {
+                            IconButton(onClick = {
+                                viewModel.deleteSpamNumber(spam)
+                                Toast.makeText(context, "Removed ${spam.number}", Toast.LENGTH_SHORT).show()
+                            }) {
+                                Icon(Icons.Default.Delete, stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.error)
                             }
                         }
-                    },
-                    trailingContent = {
-                        IconButton(onClick = {
-                            viewModel.deleteSpamNumber(spam)
-                            Toast.makeText(context, "Removed ${spam.number}", Toast.LENGTH_SHORT).show()
-                        }) {
-                            Icon(Icons.Default.Delete, stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.error)
-                        }
-                    }
-                )
+                    )
+                }
             }
         }
-    }
 
     if (showImportDialog) {
         AlertDialog(

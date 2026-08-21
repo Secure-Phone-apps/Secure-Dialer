@@ -222,30 +222,6 @@ private fun ContactsManagementSection(
             }
         }
 
-        // Deduplication Card
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                SettingsRowNav(
-                    title = stringResource(R.string.settings_dedup),
-                    subtitle = stringResource(R.string.settings_dedup_sub),
-                    onClick = {
-                        isMergingDuplicates = true
-                        viewModel.refreshAvailableAccounts()
-                        Toast.makeText(context, "Scanning local contacts database for duplicates...", Toast.LENGTH_SHORT).show()
-                        isMergingDuplicates = false
-                    },
-                    icon = Icons.Default.MergeType,
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                    iconTint = MaterialTheme.colorScheme.tertiary
-                )
-            }
-        }
     }
 
     if (showContactsToDisplayDialog) {

@@ -101,12 +101,14 @@ fun SettingsPanel(
                     Text(
                         text = when (activeTab) {
                             0 -> stringResource(R.string.settings_title)
-                            1 -> stringResource(R.string.cat_display_sound)
-                            2 -> stringResource(R.string.cat_calling_accounts)
-                            3 -> stringResource(R.string.cat_call_blocking)
-                            4 -> stringResource(R.string.cat_voicemail_tools)
-                            5 -> stringResource(R.string.cat_privacy_backup)
-                            6 -> stringResource(R.string.cat_about_support)
+                            1 -> stringResource(R.string.cat_appearance_color)
+                            2 -> stringResource(R.string.cat_sound_gestures)
+                            3 -> stringResource(R.string.cat_calling_accounts)
+                            4 -> stringResource(R.string.cat_speed_dial_quick_responses)
+                            5 -> stringResource(R.string.cat_call_blocking)
+                            6 -> stringResource(R.string.cat_voicemail_tools)
+                            7 -> stringResource(R.string.cat_contacts_data)
+                            8 -> stringResource(R.string.cat_privacy_security_about)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -156,27 +158,36 @@ fun SettingsPanel(
                         cardBgColor = cardBgColor,
                         onNavigateToTab = { activeTab = it }
                     )
-                    1 -> DisplayAndSoundSettings(
+                    1 -> AppearanceSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    2 -> CallingAccountsSettings(
+                    2 -> SoundAndGesturesSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    3 -> CallBlockingSettings(
+                    3 -> CallingAccountsSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    4 -> VoicemailAndToolsSettings(
+                    4 -> SpeedDialAndQuickResponsesSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    5 -> PrivacyAndBackupSettings(
+                    5 -> CallBlockingSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    6 -> AboutAndSupportSettings(
+                    6 -> VoicemailAndToolsSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    7 -> ContactsAndDataSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    8 -> PrivacySecurityAboutSettings(
+                        viewModel = viewModel,
                         cardBgColor = cardBgColor,
                         onShowAbout = { showAboutDialog = true },
                         onShowPrivacy = { showPrivacyDialog = true }

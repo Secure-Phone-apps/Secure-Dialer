@@ -36,15 +36,15 @@ import com.example.ui.viewmodel.DialerViewModel
 @Composable
 fun VoicemailSettings(
     viewModel: DialerViewModel,
-    onBackToGeneral: () -> Unit
+    onBackToGeneral: () -> Unit = {}
 ) {
     val voicemailNumber by viewModel.voicemailNumber
     val onVoicemailChange = { newVal: String -> viewModel.updateVoicemailNumber(newVal) }
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
+            .fillMaxWidth()
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Surface(

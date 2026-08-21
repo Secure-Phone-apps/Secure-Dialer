@@ -64,15 +64,14 @@ fun CallNotesSettings(
         }
     }
 
-    LazyColumn(
+    Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Summary Header Card
-        item {
-            Card(
+        Card(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = RoundedCornerShape(24.dp)
             ) {
@@ -119,45 +118,42 @@ fun CallNotesSettings(
 
         // Search Field
         if (allNotes.isNotEmpty()) {
-            item {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    placeholder = { Text(stringResource(R.string.search_notes_placeholder)) },
-                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    trailingIcon = {
-                        if (searchQuery.isNotEmpty()) {
-                            IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Default.Clear, contentDescription = "Clear search")
-                            }
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text(stringResource(R.string.search_notes_placeholder)) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (searchQuery.isNotEmpty()) {
+                        IconButton(onClick = { searchQuery = "" }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    singleLine = true
-                )
-            }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                singleLine = true
+            )
         }
 
         // Empty State or Notes List
         if (filteredNotes.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 32.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    SettingsEmptyState(
-                        icon = Icons.Default.Description,
-                        title = stringResource(R.string.no_notes_title),
-                        description = stringResource(R.string.no_notes_desc),
-                        tintColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                SettingsEmptyState(
+                    icon = Icons.Default.Description,
+                    title = stringResource(R.string.no_notes_title),
+                    description = stringResource(R.string.no_notes_desc),
+                    tintColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
+                )
             }
         } else {
-            items(filteredNotes, key = { it.id }) { note ->
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                filteredNotes.forEach { note ->
                 val contactName = remember(allContacts, note.number) {
                     allContacts.find { it.number == note.number }?.name ?: note.number
                 }
