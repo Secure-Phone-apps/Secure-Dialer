@@ -11,6 +11,11 @@ on:
 permissions:
   contents: write
 
+env:
+  ACTIONS_AUDIT_NODE_VERSION: 'false'
+  ACTIONS_SILENCE_DEPRECATED_NODE_VERSION_WARNING: 'true'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   build-release:
     name: Build & Publish Release
@@ -22,7 +27,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'
