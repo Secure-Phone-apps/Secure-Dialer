@@ -54,6 +54,10 @@ fun CallingAccountsSettings(
         // [Header] SIM & CARRIER CONFIGURATION
         item {
             PreferenceHeader(stringResource(R.string.header_sim_carrier))
+        }
+
+        // Preferred SIM
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -61,51 +65,71 @@ fun CallingAccountsSettings(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Column {
-                    SettingsPreferredSimRow(
-                        preferredSim = viewModel.preferredSim.value,
-                        onSimChange = { viewModel.updatePreferredSim(it) },
-                        haptic = haptic
-                    )
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRowNav(
-                        title = stringResource(R.string.settings_carrier_call_settings),
-                        subtitle = stringResource(R.string.settings_carrier_call_settings_sub),
-                        onClick = {
-                            val telecomIntent = Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS)
-                            val wirelessIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
-                            val settingsIntent = Intent(Settings.ACTION_SETTINGS)
-                            try {
-                                if (telecomIntent.resolveActivity(context.packageManager) != null) {
-                                    context.startActivity(telecomIntent)
-                                } else if (wirelessIntent.resolveActivity(context.packageManager) != null) {
-                                    context.startActivity(wirelessIntent)
-                                } else {
-                                    context.startActivity(settingsIntent)
-                                }
-                            } catch (e: Exception) {
-                                try {
-                                    context.startActivity(settingsIntent)
-                                } catch (e2: Exception) {
-                                    Toast.makeText(context, "Could not open phone account settings", Toast.LENGTH_SHORT).show()
-                                }
+                SettingsPreferredSimRow(
+                    preferredSim = viewModel.preferredSim.value,
+                    onSimChange = { viewModel.updatePreferredSim(it) },
+                    haptic = haptic
+                )
+            }
+        }
+
+        // Carrier Call Settings
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_carrier_call_settings),
+                    subtitle = stringResource(R.string.settings_carrier_call_settings_sub),
+                    onClick = {
+                        val telecomIntent = Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS)
+                        val wirelessIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
+                        val settingsIntent = Intent(Settings.ACTION_SETTINGS)
+                        try {
+                            if (telecomIntent.resolveActivity(context.packageManager) != null) {
+                                context.startActivity(telecomIntent)
+                            } else if (wirelessIntent.resolveActivity(context.packageManager) != null) {
+                                context.startActivity(wirelessIntent)
+                            } else {
+                                context.startActivity(settingsIntent)
                             }
-                        },
-                        icon = Icons.Default.SettingsPhone,
-                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.primary
-                    )
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_call_waiting),
-                        subtitle = stringResource(R.string.settings_call_waiting_sub),
-                        checked = callWaitingEnabled,
-                        onCheckedChange = { viewModel.callWaitingEnabled.value = it },
-                        icon = Icons.Default.PhonePaused,
-                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.secondary
-                    )
-                }
+                        } catch (e: Exception) {
+                            try {
+                                context.startActivity(settingsIntent)
+                            } catch (e2: Exception) {
+                                Toast.makeText(context, "Could not open phone account settings", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    icon = Icons.Default.SettingsPhone,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Call Waiting
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_call_waiting),
+                    subtitle = stringResource(R.string.settings_call_waiting_sub),
+                    checked = callWaitingEnabled,
+                    onCheckedChange = { viewModel.callWaitingEnabled.value = it },
+                    icon = Icons.Default.PhonePaused,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
             }
         }
 

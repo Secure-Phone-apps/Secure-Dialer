@@ -51,6 +51,10 @@ fun DisplayAndSoundSettings(
         // [Header] THEME & STYLING
         item {
             PreferenceHeader(stringResource(R.string.header_theme_styling))
+        }
+
+        // Dark Theme Card
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -58,77 +62,117 @@ fun DisplayAndSoundSettings(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Column {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_dark_theme),
+                    subtitle = stringResource(R.string.settings_dark_theme_sub),
+                    checked = isDarkTheme,
+                    onCheckedChange = { viewModel.updateDarkTheme(it) },
+                    icon = Icons.Default.DarkMode,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Pure Black AMOLED Card
+        if (isDarkTheme) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                    shape = MaterialTheme.shapes.medium
+                ) {
                     SettingsRowToggle(
-                        title = stringResource(R.string.settings_dark_theme),
-                        subtitle = stringResource(R.string.settings_dark_theme_sub),
-                        checked = isDarkTheme,
-                        onCheckedChange = { viewModel.updateDarkTheme(it) },
-                        icon = Icons.Default.DarkMode,
-                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.primary
-                    )
-
-                    if (isDarkTheme) {
-                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        SettingsRowToggle(
-                            title = stringResource(R.string.settings_pure_black),
-                            subtitle = stringResource(R.string.settings_pure_black_sub),
-                            checked = isAmoledMode,
-                            onCheckedChange = { viewModel.updateAmoledMode(it) },
-                            icon = Icons.Default.Contrast,
-                            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                            iconTint = MaterialTheme.colorScheme.tertiary
-                        )
-                    }
-
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    val isDynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_dynamic_color),
-                        subtitle = if (isDynamicSupported) {
-                            stringResource(R.string.settings_dynamic_color_sub)
-                        } else {
-                            stringResource(R.string.settings_dynamic_color_sub_fallback)
-                        },
-                        checked = useDynamicColor && isDynamicSupported,
-                        onCheckedChange = { if (isDynamicSupported) viewModel.updateUseDynamicColor(it) },
-                        icon = Icons.Default.Palette,
-                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.secondary,
-                        enabled = isDynamicSupported
-                    )
-
-                    if (!useDynamicColor || !isDynamicSupported) {
-                        HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                        ThemeColorPicker(
-                            currentSelected = viewModel.themeColor.value,
-                            customColorHex = viewModel.customColorHex.value,
-                            onColorSelected = { viewModel.updateThemeColor(it) },
-                            onCustomColorChange = { viewModel.updateCustomColorHex(it) }
-                        )
-                    }
-
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_m3_expressive),
-                        subtitle = stringResource(R.string.settings_m3_expressive_sub),
-                        checked = isM3Expressive,
-                        onCheckedChange = { viewModel.updateM3Expressive(it) },
-                        icon = Icons.Default.AutoAwesome,
+                        title = stringResource(R.string.settings_pure_black),
+                        subtitle = stringResource(R.string.settings_pure_black_sub),
+                        checked = isAmoledMode,
+                        onCheckedChange = { viewModel.updateAmoledMode(it) },
+                        icon = Icons.Default.Contrast,
                         iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                         iconTint = MaterialTheme.colorScheme.tertiary
                     )
                 }
+            }
+        }
+
+        // Dynamic Color Card
+        val isDynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_dynamic_color),
+                    subtitle = if (isDynamicSupported) {
+                        stringResource(R.string.settings_dynamic_color_sub)
+                    } else {
+                        stringResource(R.string.settings_dynamic_color_sub_fallback)
+                    },
+                    checked = useDynamicColor && isDynamicSupported,
+                    onCheckedChange = { if (isDynamicSupported) viewModel.updateUseDynamicColor(it) },
+                    icon = Icons.Default.Palette,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary,
+                    enabled = isDynamicSupported
+                )
+            }
+        }
+
+        // Theme Color Picker Card
+        if (!useDynamicColor || !isDynamicSupported) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    ThemeColorPicker(
+                        currentSelected = viewModel.themeColor.value,
+                        customColorHex = viewModel.customColorHex.value,
+                        onColorSelected = { viewModel.updateThemeColor(it) },
+                        onCustomColorChange = { viewModel.updateCustomColorHex(it) }
+                    )
+                }
+            }
+        }
+
+        // M3 Expressive Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_m3_expressive),
+                    subtitle = stringResource(R.string.settings_m3_expressive_sub),
+                    checked = isM3Expressive,
+                    onCheckedChange = { viewModel.updateM3Expressive(it) },
+                    icon = Icons.Default.AutoAwesome,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
 
         // [Header] SOUND & HAPTICS
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             PreferenceHeader(stringResource(R.string.header_sound_haptics))
+        }
+
+        // Dialpad Tones Card
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -136,33 +180,42 @@ fun DisplayAndSoundSettings(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Column {
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_dialpad_tones),
-                        subtitle = stringResource(R.string.settings_dialpad_tones_sub),
-                        checked = dialpadTonesEnabled,
-                        onCheckedChange = { viewModel.dialpadTonesEnabled.value = it },
-                        icon = Icons.AutoMirrored.Filled.VolumeUp,
-                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.secondary
-                    )
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_vibrate),
-                        subtitle = stringResource(R.string.settings_vibrate_sub),
-                        checked = vibrateOnClickEnabled,
-                        onCheckedChange = { viewModel.vibrateOnClickEnabled.value = it },
-                        icon = Icons.Default.Vibration,
-                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.tertiary
-                    )
-                }
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_dialpad_tones),
+                    subtitle = stringResource(R.string.settings_dialpad_tones_sub),
+                    checked = dialpadTonesEnabled,
+                    onCheckedChange = { viewModel.dialpadTonesEnabled.value = it },
+                    icon = Icons.AutoMirrored.Filled.VolumeUp,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
+
+        // Vibrate on Click Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_vibrate),
+                    subtitle = stringResource(R.string.settings_vibrate_sub),
+                    checked = vibrateOnClickEnabled,
+                    onCheckedChange = { viewModel.vibrateOnClickEnabled.value = it },
+                    icon = Icons.Default.Vibration,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
 
         // [Header] NAVIGATION & LAYOUT
         item {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             PreferenceHeader(stringResource(R.string.header_navigation_layout))
             DefaultStartupTabCard(viewModel = viewModel, cardBgColor = cardBgColor)
         }

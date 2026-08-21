@@ -40,69 +40,79 @@ fun DefaultStartupTabCard(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = cardBgColor),
-        shape = MaterialTheme.shapes.medium
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // 1. Default Startup Tab
-            Text(
-                stringResource(R.string.settings_default_startup_tab),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            val tabs = listOf(
-                stringResource(R.string.tab_recents),
-                stringResource(R.string.tab_contacts),
-                stringResource(R.string.tab_dialpad)
-            )
-            val currentTabSelected = viewModel.defaultTab.intValue
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.small)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                tabs.forEachIndexed { idx, title ->
-                    val isSel = currentTabSelected == idx
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(MaterialTheme.shapes.extraSmall)
-                            .background(
-                                if (isSel) MaterialTheme.colorScheme.primary
-                                else Color.Transparent
+        // 1. Default Startup Tab Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    stringResource(R.string.settings_default_startup_tab),
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                val tabs = listOf(
+                    stringResource(R.string.tab_recents),
+                    stringResource(R.string.tab_contacts),
+                    stringResource(R.string.tab_dialpad)
+                )
+                val currentTabSelected = viewModel.defaultTab.intValue
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(MaterialTheme.shapes.small)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    tabs.forEachIndexed { idx, title ->
+                        val isSel = currentTabSelected == idx
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(MaterialTheme.shapes.extraSmall)
+                                .background(
+                                    if (isSel) MaterialTheme.colorScheme.primary
+                                    else Color.Transparent
+                                )
+                                .clickable { viewModel.updateDefaultTab(idx) }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSel) MaterialTheme.colorScheme.onPrimary
+                                else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
                             )
-                            .clickable { viewModel.updateDefaultTab(idx) }
-                            .padding(vertical = 10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSel) MaterialTheme.colorScheme.onPrimary
-                            else MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1
-                        )
+                        }
                     }
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 2. Call Log Dashboard & Filters Settings
-            val isCallLogDashboardEnabled by viewModel.isCallLogDashboardEnabled
+        // 2. Call Log Dashboard Card
+        val isCallLogDashboardEnabled by viewModel.isCallLogDashboardEnabled
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -123,12 +133,21 @@ fun DefaultStartupTabCard(
                     onCheckedChange = { viewModel.updateCallLogDashboardEnabled(it) }
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            val isCallLogFiltersEnabled by viewModel.isCallLogFiltersEnabled
+        // 3. Call Log Filters Card
+        val isCallLogFiltersEnabled by viewModel.isCallLogFiltersEnabled
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -149,75 +168,84 @@ fun DefaultStartupTabCard(
                     onCheckedChange = { viewModel.updateCallLogFiltersEnabled(it) }
                 )
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 3. Customizable Tab Position (Left, Middle, Right Dropdowns)
-            Text(
-                text = stringResource(R.string.settings_tab_layout),
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 4.dp)
-            )
-            Text(
-                text = stringResource(R.string.settings_tab_layout_sub),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
-
-            val tabSlotLeft by viewModel.tabSlotLeft
-            val tabSlotMiddle by viewModel.tabSlotMiddle
-            val tabSlotRight by viewModel.tabSlotRight
-
-            val availableScreens = listOf(
-                "RECENTS" to stringResource(R.string.tab_recents),
-                "CONTACTS" to stringResource(R.string.tab_contacts),
-                "DIALPAD" to stringResource(R.string.tab_dialpad)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Left Slot Dropdown
-                TabSlotDropdown(
-                    label = "Left Slot",
-                    selectedKey = tabSlotLeft,
-                    screens = availableScreens,
-                    onSelect = { viewModel.updateTabSlotLeft(it) },
-                    modifier = Modifier.weight(1f)
+        // 4. Customizable Tab Position Card
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text(
+                    text = stringResource(R.string.settings_tab_layout),
+                    fontWeight = FontWeight.Medium,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = stringResource(R.string.settings_tab_layout_sub),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
 
-                // Middle Slot Dropdown
-                TabSlotDropdown(
-                    label = "Middle Slot",
-                    selectedKey = tabSlotMiddle,
-                    screens = availableScreens,
-                    onSelect = { viewModel.updateTabSlotMiddle(it) },
-                    modifier = Modifier.weight(1f)
+                val tabSlotLeft by viewModel.tabSlotLeft
+                val tabSlotMiddle by viewModel.tabSlotMiddle
+                val tabSlotRight by viewModel.tabSlotRight
+
+                val availableScreens = listOf(
+                    "RECENTS" to stringResource(R.string.tab_recents),
+                    "CONTACTS" to stringResource(R.string.tab_contacts),
+                    "DIALPAD" to stringResource(R.string.tab_dialpad)
                 )
 
-                // Right Slot Dropdown
-                TabSlotDropdown(
-                    label = "Right Slot",
-                    selectedKey = tabSlotRight,
-                    screens = availableScreens,
-                    onSelect = { viewModel.updateTabSlotRight(it) },
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TabSlotDropdown(
+                        label = "Left Slot",
+                        selectedKey = tabSlotLeft,
+                        screens = availableScreens,
+                        onSelect = { viewModel.updateTabSlotLeft(it) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    TabSlotDropdown(
+                        label = "Middle Slot",
+                        selectedKey = tabSlotMiddle,
+                        screens = availableScreens,
+                        onSelect = { viewModel.updateTabSlotMiddle(it) },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    TabSlotDropdown(
+                        label = "Right Slot",
+                        selectedKey = tabSlotRight,
+                        screens = availableScreens,
+                        onSelect = { viewModel.updateTabSlotRight(it) },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 4. Row Swiping vs Tab Swiping
-            val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
+        // 5. Swipe Actions Toggle Card
+        val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = MaterialTheme.shapes.medium
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {

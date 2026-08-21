@@ -322,16 +322,32 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
             } catch (e: SecurityException) {
                 null
             }
-            subList?.forEach { subInfo ->
-                val slot = subInfo.simSlotIndex + 1
-                val subIdStr = subInfo.subscriptionId.toString()
-                subIdToSlotMap[subIdStr] = slot
-                subInfo.iccId?.let { if (it.isNotBlank()) subIdToSlotMap[it] = slot }
-                if (subInfo.cardId > 0) subIdToSlotMap[subInfo.cardId.toString()] = slot
-                subIdToSlotMap["sub_${subInfo.subscriptionId}"] = slot
-                subIdToSlotMap["slot_${subInfo.simSlotIndex}"] = slot
-                subIdToSlotMap["sim_${subInfo.simSlotIndex}"] = slot
-                subIdToSlotMap["sim_${slot}"] = slot
+            if (subList != null && subList.isNotEmpty()) {
+                if (subList.size == 1) {
+                    val subInfo = subList[0]
+                    val slot = 1
+                    val subIdStr = subInfo.subscriptionId.toString()
+                    subIdToSlotMap[subIdStr] = slot
+                    subInfo.iccId?.let { if (it.isNotBlank()) subIdToSlotMap[it] = slot }
+                    if (subInfo.cardId > 0) subIdToSlotMap[subInfo.cardId.toString()] = slot
+                    subIdToSlotMap["sub_${subInfo.subscriptionId}"] = slot
+                    subIdToSlotMap["slot_${subInfo.simSlotIndex}"] = slot
+                    subIdToSlotMap["sim_${subInfo.simSlotIndex}"] = slot
+                    subIdToSlotMap["sim_1"] = slot
+                    subIdToSlotMap["sim_2"] = slot
+                } else {
+                    subList.forEachIndexed { index, subInfo ->
+                        val slot = index + 1
+                        val subIdStr = subInfo.subscriptionId.toString()
+                        subIdToSlotMap[subIdStr] = slot
+                        subInfo.iccId?.let { if (it.isNotBlank()) subIdToSlotMap[it] = slot }
+                        if (subInfo.cardId > 0) subIdToSlotMap[subInfo.cardId.toString()] = slot
+                        subIdToSlotMap["sub_${subInfo.subscriptionId}"] = slot
+                        subIdToSlotMap["slot_${subInfo.simSlotIndex}"] = slot
+                        subIdToSlotMap["sim_${subInfo.simSlotIndex}"] = slot
+                        subIdToSlotMap["sim_${slot}"] = slot
+                    }
+                }
             }
         }
     } catch (e: Exception) {

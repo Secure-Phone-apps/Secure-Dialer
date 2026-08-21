@@ -395,21 +395,27 @@ fun MainScreen(
                     )
                 }
 
-                val pagerState = rememberPagerState(initialPage = selectedTab) { 3 }
+                val virtualPageCount = 3000
+                val initialVirtualPage = 1500
+                val pagerState = rememberPagerState(initialPage = initialVirtualPage + selectedTab) { virtualPageCount }
+                
                 LaunchedEffect(pagerState.currentPage) {
-                    if (selectedTab != pagerState.currentPage) {
-                        selectedTab = pagerState.currentPage
+                    val activeIndex = pagerState.currentPage % tabSlots.size
+                    if (selectedTab != activeIndex) {
+                        selectedTab = activeIndex
                     }
                 }
 
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                    val currentVirtualSlot = tabSlots.getOrElse(pagerState.currentPage % tabSlots.size) { "RECENTS" }
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
                         beyondViewportPageCount = 1,
-                        userScrollEnabled = !isRowSwipeEnabled
+                        userScrollEnabled = !isRowSwipeEnabled || currentVirtualSlot != "RECENTS"
                     ) { page ->
-                        val slotKey = tabSlots.getOrElse(page) { "RECENTS" }
+                        val slotIndex = page % tabSlots.size
+                        val slotKey = tabSlots.getOrElse(slotIndex) { "RECENTS" }
                         when (slotKey) {
                             "RECENTS" -> {
                                 val allCallHistory by viewModel.allCallHistoryFlow.collectAsState()
@@ -486,9 +492,18 @@ fun MainScreen(
                     BottomNavBar(
                         selectedTab = selectedTab,
                         onTabSelected = { targetTab ->
+                            val currentVirtualPage = pagerState.currentPage
+                            val currentTab = currentVirtualPage % tabSlots.size
+                            val tabDiff = targetTab - currentTab
+                            val shortestDiff = when (tabDiff) {
+                                2 -> -1
+                                -2 -> 1
+                                else -> tabDiff
+                            }
+                            val targetVirtualPage = currentVirtualPage + shortestDiff
                             selectedTab = targetTab
                             coroutineScope.launch {
-                                pagerState.scrollToPage(targetTab)
+                                pagerState.animateScrollToPage(targetVirtualPage)
                             }
                         },
                         tabSlots = tabSlots

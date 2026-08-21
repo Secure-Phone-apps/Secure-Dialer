@@ -58,7 +58,7 @@ fun PrivacyAndBackupSettings(
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
-        PrimaryTabRow(
+        TabRow(
             selectedTabIndex = selectedSubTab,
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.primary,
@@ -99,6 +99,10 @@ private fun PrivacyProtectionSection(
         // [Header] PRIVACY PROTECTION
         item {
             PreferenceHeader(stringResource(R.string.header_privacy_protection))
+        }
+
+        // Biometric Lock Card
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -106,27 +110,36 @@ private fun PrivacyProtectionSection(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Column {
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_biometric_lock),
-                        subtitle = stringResource(R.string.settings_biometric_lock_sub),
-                        checked = isBiometricLockEnabled,
-                        onCheckedChange = { viewModel.updateBiometricLockEnabled(it) },
-                        icon = Icons.Default.Lock,
-                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.primary
-                    )
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_pocket_protection),
-                        subtitle = stringResource(R.string.settings_pocket_protection_sub),
-                        checked = isPocketProtectionEnabled,
-                        onCheckedChange = { viewModel.updatePocketProtectionEnabled(it) },
-                        icon = Icons.Default.ScreenLockPortrait,
-                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.secondary
-                    )
-                }
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_biometric_lock),
+                    subtitle = stringResource(R.string.settings_biometric_lock_sub),
+                    checked = isBiometricLockEnabled,
+                    onCheckedChange = { viewModel.updateBiometricLockEnabled(it) },
+                    icon = Icons.Default.Lock,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Pocket Protection Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_pocket_protection),
+                    subtitle = stringResource(R.string.settings_pocket_protection_sub),
+                    checked = isPocketProtectionEnabled,
+                    onCheckedChange = { viewModel.updatePocketProtectionEnabled(it) },
+                    icon = Icons.Default.ScreenLockPortrait,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
             }
         }
 
@@ -155,6 +168,10 @@ private fun ContactsManagementSection(
     ) {
         item {
             PreferenceHeader(stringResource(R.string.header_contacts_management))
+        }
+
+        // Contacts to display Card
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,55 +179,71 @@ private fun ContactsManagementSection(
                 colors = CardDefaults.cardColors(containerColor = cardBgColor),
                 shape = MaterialTheme.shapes.medium
             ) {
-                Column {
-                    val currentFilter = viewModel.selectedAccountFilter.value
-                    val filterSub = if (currentFilter.isBlank()) {
-                        stringResource(R.string.account_filter_all)
-                    } else {
-                        viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
-                    }
-                    SettingsRowNav(
-                        title = stringResource(R.string.settings_contacts_to_display),
-                        subtitle = filterSub,
-                        onClick = { showContactsToDisplayDialog = true },
-                        icon = Icons.Default.FilterList,
-                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.primary
-                    )
-
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    val defaultAccName = viewModel.defaultContactAccountName.value
-                    val defaultAccSub = if (defaultAccName.isBlank()) {
-                        "Default / Same as Filter"
-                    } else {
-                        viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
-                    }
-                    SettingsRowNav(
-                        title = stringResource(R.string.settings_default_account_for_new),
-                        subtitle = defaultAccSub,
-                        onClick = { showDefaultAccountDialog = true },
-                        icon = Icons.Default.PersonAdd,
-                        iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.secondary
-                    )
-
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-
-                    SettingsRowNav(
-                        title = stringResource(R.string.settings_dedup),
-                        subtitle = stringResource(R.string.settings_dedup_sub),
-                        onClick = {
-                            isMergingDuplicates = true
-                            viewModel.refreshAvailableAccounts()
-                            Toast.makeText(context, "Scanning local contacts database for duplicates...", Toast.LENGTH_SHORT).show()
-                            isMergingDuplicates = false
-                        },
-                        icon = Icons.Default.MergeType,
-                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.tertiary
-                    )
+                val currentFilter = viewModel.selectedAccountFilter.value
+                val filterSub = if (currentFilter.isBlank()) {
+                    stringResource(R.string.account_filter_all)
+                } else {
+                    viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
                 }
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_contacts_to_display),
+                    subtitle = filterSub,
+                    onClick = { showContactsToDisplayDialog = true },
+                    icon = Icons.Default.FilterList,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Default Account Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                val defaultAccName = viewModel.defaultContactAccountName.value
+                val defaultAccSub = if (defaultAccName.isBlank()) {
+                    "Default / Same as Filter"
+                } else {
+                    viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
+                }
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_default_account_for_new),
+                    subtitle = defaultAccSub,
+                    onClick = { showDefaultAccountDialog = true },
+                    icon = Icons.Default.PersonAdd,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
+
+        // Deduplication Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_dedup),
+                    subtitle = stringResource(R.string.settings_dedup_sub),
+                    onClick = {
+                        isMergingDuplicates = true
+                        viewModel.refreshAvailableAccounts()
+                        Toast.makeText(context, "Scanning local contacts database for duplicates...", Toast.LENGTH_SHORT).show()
+                        isMergingDuplicates = false
+                    },
+                    icon = Icons.Default.MergeType,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
     }
@@ -451,6 +484,10 @@ private fun DataAndBackupSection(
     ) {
         item {
             PreferenceHeader(stringResource(R.string.header_data_backup))
+        }
+
+        // Encrypted Local Backup Card
+        item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -459,7 +496,6 @@ private fun DataAndBackupSection(
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    // Encrypted Local Backup Section
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -530,12 +566,20 @@ private fun DataAndBackupSection(
                             Text(stringResource(R.string.btn_restore_backup_file), fontWeight = FontWeight.SemiBold)
                         }
                     }
+                }
+            }
+        }
 
-                    Spacer(modifier = Modifier.height(20.dp))
-                    HorizontalDivider(thickness = 0.5.dp, color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Contacts vCard (.vcf) Migration Section
+        // Contacts vCard (.vcf) Migration Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)

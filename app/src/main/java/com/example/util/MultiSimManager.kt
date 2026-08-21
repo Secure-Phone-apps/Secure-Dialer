@@ -50,12 +50,19 @@ object MultiSimManager {
             val activeSubs = subscriptionManager?.activeSubscriptionInfoList ?: emptyList()
 
             activeSubs.forEachIndexed { index, subInfo ->
-                val handle = handles.getOrNull(index)
+                val handle = handles.find { h ->
+                    h.id.contains(subInfo.subscriptionId.toString()) || 
+                    (!subInfo.iccId.isNullOrBlank() && h.id.contains(subInfo.iccId))
+                } ?: handles.getOrNull(index)
+
+                val displayLabel = subInfo.displayName?.toString()?.takeIf { it.isNotBlank() } ?: "SIM ${index + 1}"
+                val carrier = subInfo.carrierName?.toString()?.takeIf { it.isNotBlank() } ?: "Carrier"
+
                 val simInfo = SimAccountInfo(
-                    slotIndex = subInfo.simSlotIndex,
+                    slotIndex = index,
                     subscriptionId = subInfo.subscriptionId,
-                    displayName = subInfo.displayName?.toString() ?: "SIM ${index + 1}",
-                    carrierName = subInfo.carrierName?.toString() ?: "Carrier",
+                    displayName = displayLabel,
+                    carrierName = carrier,
                     number = subInfo.number ?: "",
                     accountHandle = handle
                 )
@@ -65,22 +72,9 @@ object MultiSimManager {
             e.printStackTrace()
         }
 
-        // Fallback default if no SIM list returned or only 1 SIM available
+        // Fallback default if no active subscriptions returned
         if (simList.isEmpty()) {
             simList.add(SimAccountInfo(0, 1, "SIM 1", "Default Carrier", "", null))
-            simList.add(SimAccountInfo(1, 2, "SIM 2", "Secondary Carrier", "", null))
-        } else if (simList.size == 1) {
-            val primary = simList[0]
-            simList.add(
-                SimAccountInfo(
-                    slotIndex = 1,
-                    subscriptionId = primary.subscriptionId + 1,
-                    displayName = "SIM 2",
-                    carrierName = "Secondary Carrier",
-                    number = "",
-                    accountHandle = null
-                )
-            )
         }
 
         return simList

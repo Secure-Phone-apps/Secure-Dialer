@@ -125,11 +125,11 @@ fun SpeedDialSettings(
                 }
             }
         } else {
-            LazyColumn(
+            Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
-                items((1..9).toList(), key = { it }) { digit ->
+                (1..9).forEach { digit ->
                     val assignedNum = speedDialMap[digit]
 
                     Card(
