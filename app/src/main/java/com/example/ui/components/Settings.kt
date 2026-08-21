@@ -184,10 +184,6 @@ fun SettingsPanel(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    8 -> BackupRestoreSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
                     9 -> SpamDatabaseSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor

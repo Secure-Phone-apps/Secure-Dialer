@@ -268,7 +268,7 @@
     <string name="toast_deleted_recording">Deleted recording</string>
     <string name="label_first_name">First Name</string>
     <string name="label_last_name">Last Name</string>
-    <string name="backup_service_health_title">Backup &amp; Service Health</string>
+    <string name="backup_service_health_title">Data &amp; Backup</string>
     <string name="backup_service_health_sub">Encrypted local JSON backup, restore &amp; watchdog status</string>
     <string name="service_health_header">Call Blocker Service Health</string>
     <string name="service_health_active">Active &amp; Protected</string>
