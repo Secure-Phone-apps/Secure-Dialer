@@ -72,9 +72,24 @@ object MultiSimManager {
             e.printStackTrace()
         }
 
-        // Fallback default if no active subscriptions returned
+        // Ensure at least 2 SIM options exist so Dual SIM (SIM 1 & SIM 2) selection is always available
         if (simList.isEmpty()) {
-            simList.add(SimAccountInfo(0, 1, "SIM 1", "Default Carrier", "", null))
+            simList.add(SimAccountInfo(0, 1, "SIM 1", "SIM 1 Carrier", "", null))
+            simList.add(SimAccountInfo(1, 2, "SIM 2", "SIM 2 Carrier", "", null))
+        } else if (simList.size == 1) {
+            val first = simList[0]
+            val secondSlot = if (first.slotIndex == 0) 1 else 0
+            val secondSub = if (first.subscriptionId == 1) 2 else 1
+            simList.add(
+                SimAccountInfo(
+                    slotIndex = secondSlot,
+                    subscriptionId = secondSub,
+                    displayName = "SIM 2",
+                    carrierName = "SIM 2 Carrier",
+                    number = "",
+                    accountHandle = null
+                )
+            )
         }
 
         return simList

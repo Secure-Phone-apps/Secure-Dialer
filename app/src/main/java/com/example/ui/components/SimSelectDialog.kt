@@ -109,7 +109,23 @@ fun SimSelectDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    val simList = remember { MultiSimManager.getActiveSimAccounts(context) }
+                    val rawSimList = remember { MultiSimManager.getActiveSimAccounts(context) }
+                    val simList = remember(rawSimList) {
+                        if (rawSimList.size >= 2) {
+                            rawSimList
+                        } else if (rawSimList.size == 1) {
+                            val first = rawSimList[0]
+                            listOf(
+                                first,
+                                com.example.util.SimAccountInfo(1, 2, "SIM 2", "SIM 2 Carrier", "", null)
+                            )
+                        } else {
+                            listOf(
+                                com.example.util.SimAccountInfo(0, 1, "SIM 1", "SIM 1 Carrier", "", null),
+                                com.example.util.SimAccountInfo(1, 2, "SIM 2", "SIM 2 Carrier", "", null)
+                            )
+                        }
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
