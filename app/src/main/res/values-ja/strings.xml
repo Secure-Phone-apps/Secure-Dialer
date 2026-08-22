@@ -312,7 +312,7 @@
     <string name="import_csv_dialog_desc">形式: \'電話番号,ラベル\' (1行に1つ)。以下にCSVの内容を貼り付けてください:</string>
     <string name="import_csv_dialog_title">CSVブロックリストをインポート</string>
     <string name="label_phone_number_hint">電話番号</string>
-    <string name="label_spam_label_hint">ラベル (例: 迷惑電話)</string>
+    <string name="label_spam_label_hint">ラベル</string>
     <string name="load_sample_dataset">またはサンプルデータを読み込む:</string>
     <string name="local_offline_protection">ローカルオフライン保護</string>
     <string name="local_offline_protection_sub">通信なし。完全オフライン動作。</string>

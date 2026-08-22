@@ -312,7 +312,7 @@
     <string name="import_csv_dialog_desc">التنسيق: \'الرقم,التصنيف\' (واحدة في كل سطر). الصق محتوى CSV أدنها:</string>
     <string name="import_csv_dialog_title">استيراد قائمة الحظر CSV</string>
     <string name="label_phone_number_hint">رقم الهاتف</string>
-    <string name="label_spam_label_hint">التصنيف (مثال: تسويق)</string>
+    <string name="label_spam_label_hint">التصنيف</string>
     <string name="load_sample_dataset">أو تحميل عينة بيانات محلياً:</string>
     <string name="local_offline_protection">حماية محلية دون اتصال</string>
     <string name="local_offline_protection_sub">بدون أي اتصال بالإنترنت. محلي تماماً.</string>

@@ -59,46 +59,13 @@ fun ScheduledRemindersSettings(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Stats Overview Card
-        Card(
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.NotificationsActive,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-
-                    Column {
-                        Text(
-                            text = stringResource(R.string.callback_reminders_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.callback_reminders_stats, activeReminders.size, completedReminders.size),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+        if (activeReminders.isNotEmpty() || completedReminders.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.callback_reminders_stats, activeReminders.size, completedReminders.size),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
 
         // Active Reminders section
         Text(

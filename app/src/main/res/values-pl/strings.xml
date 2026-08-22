@@ -332,7 +332,7 @@
     <string name="btn_csv_import">Import CSV</string>
     <string name="add_spam_manually_title">Dodaj numer spamu ręcznie</string>
     <string name="label_phone_number_hint">Numer telefonu</string>
-    <string name="label_spam_label_hint">Etykieta (np. Telemarketing)</string>
+    <string name="label_spam_label_hint">Etykieta</string>
     <string name="btn_add_to_offline_db">Dodaj do bazy offline</string>
     
     <string name="blocklist_empty_title">Lista blokowanych jest pusta</string>

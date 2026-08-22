@@ -19,17 +19,14 @@ package com.example.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
@@ -40,104 +37,42 @@ fun CallBlockingSettings(
     cardBgColor: Color
 ) {
     val scrollState = rememberScrollState()
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+    val spamList by viewModel.spamFlow.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Feature Row 1: Blocklist
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(20.dp)
+        // Expandable Blocklist
+        ExpandableSettingsCard(
+            title = stringResource(R.string.settings_blocked_numbers),
+            subtitle = stringResource(R.string.settings_blocked_numbers_sub),
+            icon = Icons.Default.Block,
+            iconBgColor = MaterialTheme.colorScheme.errorContainer,
+            iconTint = MaterialTheme.colorScheme.onErrorContainer,
+            cardBgColor = cardBgColor,
+            badgeText = if (blockedNumbersEntities.isNotEmpty()) "${blockedNumbersEntities.size} blocked" else null,
+            initiallyExpanded = false
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.errorContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Block,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onErrorContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_blocked_numbers),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_blocked_numbers_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
-                BlockListSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-            }
+            BlockListSettings(viewModel = viewModel, cardBgColor = cardBgColor)
         }
 
-        // Feature Row 2: Spam Defense Database
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(20.dp)
+        // Expandable Spam Defense Database
+        ExpandableSettingsCard(
+            title = stringResource(R.string.settings_spam_protection),
+            subtitle = stringResource(R.string.local_offline_protection),
+            icon = Icons.Default.Shield,
+            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+            cardBgColor = cardBgColor,
+            badgeText = if (spamList.isNotEmpty()) "${spamList.size} rules" else null,
+            initiallyExpanded = false
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Shield,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_spam_protection),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.local_offline_protection),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
+            Box(modifier = Modifier.padding(16.dp)) {
                 SpamDatabaseSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }
         }

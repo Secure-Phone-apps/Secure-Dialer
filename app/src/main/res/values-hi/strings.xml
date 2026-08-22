@@ -312,7 +312,7 @@
     <string name="import_csv_dialog_desc">प्रारूप: \'नंबर,लेबल\'। नीचे अपना CSV ब्लॉकलिस्ट पेस्ट करें:</string>
     <string name="import_csv_dialog_title">CSV ब्लॉकलिस्ट इम्पोर्ट करें</string>
     <string name="label_phone_number_hint">फ़ोन नंबर</string>
-    <string name="label_spam_label_hint">लेबल (जैसे स्पैम)</string>
+    <string name="label_spam_label_hint">लेबल</string>
     <string name="load_sample_dataset">या सैंपल डेटा लोड करें:</string>
     <string name="local_offline_protection">स्थानीय ऑफ़लाइन सुरक्षा</string>
     <string name="local_offline_protection_sub">शून्य नेटवर्क कॉल। पूरी तरह से ऑफ़लाइन।</string>

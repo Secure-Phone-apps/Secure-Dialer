@@ -396,7 +396,7 @@
     <string name="btn_csv_import">CSV Import</string>
     <string name="add_spam_manually_title">Add Spam Number Manually</string>
     <string name="label_phone_number_hint">Phone Number</string>
-    <string name="label_spam_label_hint">Label (e.g. Robocall)</string>
+    <string name="label_spam_label_hint">Label</string>
     <string name="btn_add_to_offline_db">Add to Offline Database</string>
     <string name="blocklist_empty_title">Blocklist is empty</string>
     <string name="blocklist_empty_desc">Import a CSV blocklist or add numbers manually to block telemarketers and scammers locally.</string>

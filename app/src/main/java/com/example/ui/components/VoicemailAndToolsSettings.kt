@@ -28,12 +28,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
@@ -44,200 +42,71 @@ fun VoicemailAndToolsSettings(
     cardBgColor: Color
 ) {
     val scrollState = rememberScrollState()
+    val recordings by viewModel.recordingsFlow.collectAsState()
+    val reminders by viewModel.remindersFlow.collectAsState()
+    val activeReminders = remember(reminders) { reminders.filter { !it.isCompleted } }
+    val allNotes by viewModel.notesFlow.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
             .padding(vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Feature Container 1: Carrier Voicemail
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 4.dp),
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
             shape = RoundedCornerShape(20.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Voicemail,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.header_carrier_voicemail),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.voicemail_setup_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
                 VoicemailSection(viewModel = viewModel, cardBgColor = cardBgColor)
             }
         }
 
-        // Feature Container 2: Call Recording
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(20.dp)
+        // Feature Container 2: Call Recording (Expandable)
+        ExpandableSettingsCard(
+            title = stringResource(R.string.header_call_recording),
+            subtitle = stringResource(R.string.settings_call_recording_sub),
+            icon = Icons.Default.Mic,
+            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+            iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
+            cardBgColor = cardBgColor,
+            badgeText = if (recordings.isNotEmpty()) "${recordings.size} files" else null,
+            initiallyExpanded = false
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Mic,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.header_call_recording),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_call_recording_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
-                CallRecordingSection(viewModel = viewModel, cardBgColor = cardBgColor)
-            }
+            CallRecordingSection(viewModel = viewModel, cardBgColor = cardBgColor)
         }
 
-        // Feature Container 3: Reminders
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(20.dp)
+        // Feature Container 3: Callback Reminders (Expandable)
+        ExpandableSettingsCard(
+            title = stringResource(R.string.settings_callback_reminders),
+            subtitle = stringResource(R.string.settings_callback_reminders_sub),
+            icon = Icons.Default.NotificationsActive,
+            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+            cardBgColor = cardBgColor,
+            badgeText = if (activeReminders.isNotEmpty()) "${activeReminders.size} active" else null,
+            initiallyExpanded = false
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.NotificationsActive,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_callback_reminders),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_callback_reminders_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
-                ScheduledRemindersSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-            }
+            ScheduledRemindersSettings(viewModel = viewModel, cardBgColor = cardBgColor)
         }
 
-        // Feature Row 3: Call Notes
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(20.dp)
+        // Feature Row 4: Call Notes (Expandable)
+        ExpandableSettingsCard(
+            title = stringResource(R.string.settings_all_call_notes),
+            subtitle = stringResource(R.string.settings_all_call_notes_sub),
+            icon = Icons.Default.Description,
+            iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+            iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+            cardBgColor = cardBgColor,
+            badgeText = if (allNotes.isNotEmpty()) "${allNotes.size} notes" else null,
+            initiallyExpanded = false
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Default.Description,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_all_call_notes),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_all_call_notes_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
-                Spacer(modifier = Modifier.height(8.dp))
-                CallNotesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-            }
+            CallNotesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
         }
     }
 }
@@ -251,26 +120,14 @@ private fun VoicemailSection(
     var voicemailInput by remember { mutableStateOf(viewModel.voicemailNumber.value) }
     var showVoicemailDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            SettingsRowNav(
-                title = stringResource(R.string.settings_voicemail_num),
-                subtitle = if (voicemailInput.isNotBlank()) voicemailInput else stringResource(R.string.settings_voicemail_num_sub),
-                onClick = { showVoicemailDialog = true },
-                icon = Icons.Default.Voicemail,
-                iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                iconTint = MaterialTheme.colorScheme.primary
-            )
-        }
-    }
+    SettingsRowNav(
+        title = stringResource(R.string.header_carrier_voicemail),
+        subtitle = if (voicemailInput.isNotBlank()) voicemailInput else stringResource(R.string.settings_voicemail_num_sub),
+        onClick = { showVoicemailDialog = true },
+        icon = Icons.Default.Voicemail,
+        iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+        iconTint = MaterialTheme.colorScheme.onPrimaryContainer
+    )
 
     if (showVoicemailDialog) {
         AlertDialog(
@@ -346,25 +203,15 @@ private fun CallRecordingSection(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
-        ) {
-            Column {
-                SettingsRowToggle(
-                    title = stringResource(R.string.settings_call_recording),
-                    subtitle = stringResource(R.string.settings_call_recording_sub),
-                    checked = isRecordingEnabled,
-                    onCheckedChange = { viewModel.recordingEnabled.value = it },
-                    icon = Icons.Default.Mic,
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                    iconTint = MaterialTheme.colorScheme.tertiary
-                )
-            }
-        }
+        SettingsRowToggle(
+            title = stringResource(R.string.header_call_recording),
+            subtitle = stringResource(R.string.settings_call_recording_sub),
+            checked = isRecordingEnabled,
+            onCheckedChange = { viewModel.recordingEnabled.value = it },
+            icon = Icons.Default.Mic,
+            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+            iconTint = MaterialTheme.colorScheme.onTertiaryContainer
+        )
 
         // Saved Recordings List
         Spacer(modifier = Modifier.height(8.dp))

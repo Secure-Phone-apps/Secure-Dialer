@@ -18,6 +18,7 @@
 package com.example.ui.components
 
 import android.content.Context
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -36,6 +37,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -258,5 +260,115 @@ fun getCurrentLocale(context: Context): java.util.Locale {
     } else {
         @Suppress("DEPRECATION")
         context.resources.configuration.locale
+    }
+}
+
+@Composable
+fun ExpandableSettingsCard(
+    title: String,
+    subtitle: String? = null,
+    icon: ImageVector,
+    iconBgColor: Color = MaterialTheme.colorScheme.primaryContainer,
+    iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer,
+    cardBgColor: Color = MaterialTheme.colorScheme.surface,
+    initiallyExpanded: Boolean = false,
+    badgeText: String? = null,
+    content: @Composable () -> Unit
+) {
+    var expanded by remember { mutableStateOf(initiallyExpanded) }
+    val rotationState by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = spring(
+            stiffness = Spring.StiffnessMediumLow,
+            dampingRatio = Spring.DampingRatioMediumBouncy
+        ),
+        label = "expand_icon_rotation"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .animateContentSize(
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = Spring.DampingRatioNoBouncy
+                )
+            ),
+        colors = CardDefaults.cardColors(containerColor = cardBgColor),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded }
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = iconBgColor,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = iconTint,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (!subtitle.isNullOrBlank()) {
+                        Text(
+                            text = subtitle,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                if (badgeText != null) {
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                    ) {
+                        Text(
+                            text = badgeText,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        modifier = Modifier.rotate(rotationState),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            if (expanded) {
+                HorizontalDivider(
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                content()
+            }
+        }
     }
 }

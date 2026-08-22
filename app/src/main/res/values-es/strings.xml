@@ -312,7 +312,7 @@
     <string name="import_csv_dialog_desc">Formato: \'número,etiqueta\' (uno por línea). Pegue el contenido de su lista CSV a continuación:</string>
     <string name="import_csv_dialog_title">Importar lista de bloqueo CSV</string>
     <string name="label_phone_number_hint">Número de teléfono</string>
-    <string name="label_spam_label_hint">Etiqueta (ej. Spam)</string>
+    <string name="label_spam_label_hint">Etiqueta</string>
     <string name="load_sample_dataset">O cargue una lista de ejemplo local:</string>
     <string name="local_offline_protection">Protección local sin conexión</string>
     <string name="local_offline_protection_sub">Sin llamadas de red. Completamente fuera de línea.</string>

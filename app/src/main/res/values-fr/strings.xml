@@ -312,7 +312,7 @@
     <string name="import_csv_dialog_desc">Format: \'numéro,étiquette\' (un par ligne). Collez votre contenu CSV ci-dessous :</string>
     <string name="import_csv_dialog_title">Importer une liste CSV indésirable</string>
     <string name="label_phone_number_hint">Numéro de téléphone</string>
-    <string name="label_spam_label_hint">Étiquette (ex: Démarchage)</string>
+    <string name="label_spam_label_hint">Étiquette</string>
     <string name="load_sample_dataset">Ou charger un échantillon :</string>
     <string name="local_offline_protection">Protection locale hors ligne</string>
     <string name="local_offline_protection_sub">Zéro appel réseau. Entièrement hors ligne.</string>

@@ -70,50 +70,12 @@ fun CallNotesSettings(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Summary Header Card
-        Card(
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = RoundedCornerShape(24.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.tertiaryContainer,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                        }
-                    }
-
-                    Column {
-                        Text(
-                            text = stringResource(R.string.settings_all_call_notes),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = if (allNotes.isEmpty()) {
-                                stringResource(R.string.no_notes_title)
-                            } else {
-                                "${allNotes.size} saved notes"
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
+        if (allNotes.isNotEmpty()) {
+            Text(
+                text = "${allNotes.size} saved notes",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
 
         // Search Field
@@ -274,4 +236,5 @@ fun CallNotesSettings(
             }
         )
     }
+}
 }

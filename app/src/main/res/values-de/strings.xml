@@ -312,7 +312,7 @@
     <string name="import_csv_dialog_desc">Format: \'Nummer,Label\' (eine pro Zeile). Füge deinen CSV-Inhalt unten ein:</string>
     <string name="import_csv_dialog_title">CSV-Sperrliste importieren</string>
     <string name="label_phone_number_hint">Telefonnummer</string>
-    <string name="label_spam_label_hint">Bezeichnung (z. B. Werbeanruf)</string>
+    <string name="label_spam_label_hint">Bezeichnung</string>
     <string name="load_sample_dataset">Oder Beispieldaten laden:</string>
     <string name="local_offline_protection">Lokaler Offline-Schutz</string>
     <string name="local_offline_protection_sub">Keine Netzwerkzugriffe. Vollkommen offline.</string>

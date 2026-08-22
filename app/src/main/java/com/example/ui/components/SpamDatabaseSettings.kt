@@ -58,8 +58,6 @@ fun SpamDatabaseSettings(
 
     var manualNumber by remember { mutableStateOf("") }
     var manualLabel by remember { mutableStateOf("") }
-    var showImportDialog by remember { mutableStateOf(false) }
-    var csvPasteArea by remember { mutableStateOf("") }
 
     val saveSpamCsvLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/csv")
@@ -94,136 +92,65 @@ fun SpamDatabaseSettings(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // CRM Header / Status info
-        Card(
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = RoundedCornerShape(24.dp)
+        // Status info & Export/Import Controls
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column {
+                Text(
+                    text = stringResource(R.string.spam_entries_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(R.string.spam_numbers_blocked, spamList.size),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            // Export / Import CSV Buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                OutlinedButton(
+                    onClick = {
+                        val defaultName = "spam_database_$timestamp.csv"
+                        saveSpamCsvLauncher.launch(defaultName)
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.errorContainer,
-                            modifier = Modifier.size(44.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Shield,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onErrorContainer
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = stringResource(R.string.local_offline_protection),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = stringResource(R.string.local_offline_protection_sub),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    Icon(Icons.Default.Download, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.btn_export_spam_csv),
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1
+                    )
+                }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.spam_entries_label),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = stringResource(R.string.spam_numbers_blocked, spamList.size),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            OutlinedButton(
-                                onClick = {
-                                    val defaultName = "spam_database_$timestamp.csv"
-                                    saveSpamCsvLauncher.launch(defaultName)
-                                },
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.Download, null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(R.string.btn_export_spam_csv))
-                            }
-
-                            Button(
-                                onClick = {
-                                    openSpamFileLauncher.launch(arrayOf("text/csv", "text/plain", "text/comma-separated-values", "*/*"))
-                                },
-                                shape = RoundedCornerShape(12.dp)
-                            ) {
-                                Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text(stringResource(R.string.btn_import_spam_file))
-                            }
-                        }
-                    }
-
-                    var isCheckingUpdates by remember { mutableStateOf(false) }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                isCheckingUpdates = true
-                                viewModel.viewModelScope.launch {
-                                    kotlinx.coroutines.delay(1200)
-                                    isCheckingUpdates = false
-                                    Toast.makeText(context, context.getString(R.string.spam_db_up_to_date), Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            enabled = !isCheckingUpdates,
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            if (isCheckingUpdates) {
-                                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                                Spacer(Modifier.width(6.dp))
-                                Text(stringResource(R.string.spam_db_checking))
-                            } else {
-                                Icon(Icons.Default.Sync, null, modifier = Modifier.size(16.dp))
-                                Spacer(Modifier.width(6.dp))
-                                Text(stringResource(R.string.spam_db_check_updates))
-                            }
-                        }
-
-                        TextButton(
-                            onClick = { showImportDialog = true }
-                        ) {
-                            Icon(Icons.Default.ContentPaste, null, modifier = Modifier.size(14.dp))
-                            Spacer(Modifier.width(4.dp))
-                            Text("Paste CSV Text", style = MaterialTheme.typography.labelSmall)
-                        }
-                    }
+                Button(
+                    onClick = {
+                        openSpamFileLauncher.launch(arrayOf("text/csv", "text/plain", "text/comma-separated-values", "*/*"))
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
+                ) {
+                    Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(16.dp))
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.btn_import_spam_file),
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1
+                    )
                 }
             }
         }
@@ -244,16 +171,22 @@ fun SpamDatabaseSettings(
                     )
 
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         OutlinedTextField(
                             value = manualNumber,
                             onValueChange = { manualNumber = it },
                             label = { Text(stringResource(R.string.label_phone_number_hint)) },
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1.3f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(1.3f)
+                                .fillMaxHeight(),
+                            singleLine = true,
+                            maxLines = 1
                         )
 
                         OutlinedTextField(
@@ -261,8 +194,11 @@ fun SpamDatabaseSettings(
                             onValueChange = { manualLabel = it },
                             label = { Text(stringResource(R.string.label_spam_label_hint)) },
                             shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            singleLine = true,
+                            maxLines = 1
                         )
                     }
 
@@ -352,75 +288,5 @@ fun SpamDatabaseSettings(
                 }
             }
         }
-
-    if (showImportDialog) {
-        AlertDialog(
-            onDismissRequest = { showImportDialog = false },
-            title = { Text(stringResource(R.string.import_csv_dialog_title)) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(
-                        text = stringResource(R.string.import_csv_dialog_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    OutlinedTextField(
-                        value = csvPasteArea,
-                        onValueChange = { csvPasteArea = it },
-                        placeholder = { Text(stringResource(R.string.spam_csv_placeholder)) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-
-                    HorizontalDivider()
-
-                    Text(
-                        text = stringResource(R.string.load_sample_dataset),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        AssistChip(
-                            onClick = {
-                                csvPasteArea = """
-                                    +15550199000,Premium Scam Alert
-                                    +18005551212,Robocall Spammer
-                                    +18885551928,Fake IRS Agent
-                                    +15551234567,Telemarketing Offer
-                                """.trimIndent()
-                            },
-                            label = { Text(stringResource(R.string.btn_load_sample_list)) }
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        if (csvPasteArea.isNotBlank()) {
-                            viewModel.importSpamNumbersFromCsv(csvPasteArea) { count ->
-                                Toast.makeText(context, "Successfully imported $count numbers", Toast.LENGTH_LONG).show()
-                                showImportDialog = false
-                                csvPasteArea = ""
-                            }
-                        }
-                    }
-                ) {
-                    Text(stringResource(R.string.btn_import))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showImportDialog = false }) {
-                    Text(stringResource(R.string.btn_cancel))
-                }
-            }
-        )
     }
 }
