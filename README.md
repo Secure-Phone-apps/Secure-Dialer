@@ -1,9 +1,15 @@
-# Secure Dialer 📞 — Pure, Private, & Offline-First Open-Source Android Dialer App
+# Secure Dialer 📞 — Pure, Private, Lightweight & Offline FOSS Google Dialer Alternative
 
 <p align="center">
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/stargazers"><img src="https://img.shields.io/github/stars/Secure-Phone-apps/Secure-Dialer?style=flat&logo=github&color=FFD700" alt="GitHub Stars" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/releases"><img src="https://img.shields.io/github/v/release/Secure-Phone-apps/Secure-Dialer?style=flat&logo=github&color=22C55E&label=release" alt="Latest Release" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Secure-Phone-apps/Secure-Dialer/ci.yml?branch=main&style=flat&logo=github&label=build" alt="Build Status" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/releases"><img src="https://img.shields.io/github/downloads/Secure-Phone-apps/Secure-Dialer/total?style=flat&logo=github&color=00BCD4&label=downloads" alt="Total Downloads" /></a>
   <a href="https://developer.android.com/about/versions/nougat/android-7.0"><img src="https://img.shields.io/badge/API-24%2B-22C55E?style=flat&logo=android&logoColor=white&labelColor=15803D" alt="Android API Support 24+" /></a>
   <a href="https://kotlinlang.org/"><img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" /></a>
   <a href="https://developer.android.com/develop/ui/compose"><img src="https://img.shields.io/badge/Compose-M3-4285F4?style=flat&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose Material 3" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Permissions-0_Internet%20%7C%20100%25%20Offline-10B981?style=flat&logo=android&logoColor=white" alt="0 Internet Permissions" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Locales-8_Languages-6366F1?style=flat&logo=translate&logoColor=white" alt="8 Languages Supported" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-A3E635?style=flat&logo=opensourceinitiative&logoColor=white" alt="Open Source FOSS GPLv3" /></a>
   <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/discussions"><img src="https://img.shields.io/badge/Community-Discussions-1F6FEB?style=flat&logo=github&logoColor=white" alt="GitHub Discussions" /></a>
@@ -29,7 +35,7 @@
   <img src="assets/screenshots/setting.jpg" width="31%" alt="Secure Dialer - App preferences and configuration panel featuring dark mode, dynamic color schemes, and speed dial setup." />
 </p>
 
-Hey everyone! Welcome to **Secure Dialer**, my open-source, privacy-first, 100% offline Android phone app.
+Hey everyone! Welcome to **Secure Dialer**, my open-source, privacy-first, lightweight, 100% offline Android phone app and FOSS Google Dialer alternative.
 
 I built this dialer from scratch because I believe your phone dialer is the single most important app on any phone. Every phone call you make or receive should stay completely private and safe between you and the other person. Most pre-installed stock dialers and commercial caller ID apps track your call records, upload your address book to remote servers, and drain your battery with background telemetry and ads. Secure Dialer is built with a simple, honest promise: **zero internet permission, zero ads, zero trackers, and complete on-device privacy.**
 
