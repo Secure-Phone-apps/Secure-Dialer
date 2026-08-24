@@ -42,6 +42,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          validate-wrappers: false
 
       - name: Build Release APK
         env:
@@ -58,7 +60,7 @@ jobs:
           mkdir -p app/build/outputs/apk/release/combined
           VERSION="$RELEASE_VERSION"
           if [ -z "$VERSION" ]; then
-            VERSION="1.3.0"
+            VERSION="1.4.0"
           fi
           
           for apk in $(find app/build/outputs/apk/release -name "*.apk"); do
