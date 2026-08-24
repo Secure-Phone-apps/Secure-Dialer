@@ -33,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.R
@@ -89,14 +90,27 @@ fun ScheduledRemindersSettings(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.surface),
-                        headlineContent = { Text(reminder.name, fontWeight = FontWeight.SemiBold) },
+                        headlineContent = {
+                            Text(
+                                text = reminder.name,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
                         supportingContent = {
                             Column {
-                                Text(reminder.number)
+                                Text(
+                                    text = reminder.number,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                                 Text(
                                     text = stringResource(R.string.scheduled_prefix, sdf.format(Date(reminder.reminderTime))),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         },
@@ -144,14 +158,28 @@ fun ScheduledRemindersSettings(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
-                        headlineContent = { Text(reminder.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+                        headlineContent = {
+                            Text(
+                                text = reminder.name,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        },
                         supportingContent = {
                             Column {
-                                Text(reminder.number, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    text = reminder.number,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                                 Text(
                                     text = stringResource(R.string.triggered_prefix, sdf.format(Date(reminder.reminderTime))),
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         },

@@ -482,6 +482,17 @@ fun MainScreen(
                         callState = systemCallState,
                         onExpand = { isCallMinimized = false },
                         onHangUp = {
+                            val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
+                                (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
+                            } else {
+                                0L
+                            }
+                            val currentSlot = CallManager.currentSimSlot.value
+                            val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
+                            if (callingContactNumber.isNotEmpty()) {
+                                viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
+                            }
+
                             CallManager.disconnect()
                             if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
                                 isCallActive = false
@@ -565,6 +576,17 @@ fun MainScreen(
                             viewModel.isFakeCallActive.value = false
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
+                            val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
+                                (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
+                            } else {
+                                0L
+                            }
+                            val currentSlot = CallManager.currentSimSlot.value
+                            val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
+                            if (callingContactNumber.isNotEmpty()) {
+                                viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
+                            }
+
                             CallManager.disconnect()
                             if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
                                 isCallActive = false
@@ -589,6 +611,13 @@ fun MainScreen(
                             viewModel.isFakeCallActive.value = false
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
+                            val durationSeconds = 0L
+                            val currentSlot = CallManager.currentSimSlot.value
+                            val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
+                            if (callingContactNumber.isNotEmpty()) {
+                                viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.MISSED, durationSeconds, currentSlot)
+                            }
+
                             CallManager.disconnect()
                             if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
                                 isCallActive = false
@@ -603,6 +632,7 @@ fun MainScreen(
                         systemCallState
                     },
                     recordingEnabled = viewModel.recordingEnabled.value,
+                    callNotesEnabled = viewModel.isCallNotesEnabled.value,
                     onSaveRecording = { duration, filePath ->
                         viewModel.saveCallRecording(
                             com.example.model.CallRecording(

@@ -43,9 +43,6 @@ fun VoicemailAndToolsSettings(
 ) {
     val scrollState = rememberScrollState()
     val recordings by viewModel.recordingsFlow.collectAsState()
-    val reminders by viewModel.remindersFlow.collectAsState()
-    val activeReminders = remember(reminders) { reminders.filter { !it.isCompleted } }
-    val allNotes by viewModel.notesFlow.collectAsState()
 
     Column(
         modifier = Modifier
@@ -76,37 +73,9 @@ fun VoicemailAndToolsSettings(
             iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
             cardBgColor = cardBgColor,
             badgeText = if (recordings.isNotEmpty()) "${recordings.size} files" else null,
-            initiallyExpanded = false
+            initiallyExpanded = true
         ) {
             CallRecordingSection(viewModel = viewModel, cardBgColor = cardBgColor)
-        }
-
-        // Feature Container 3: Callback Reminders (Expandable)
-        ExpandableSettingsCard(
-            title = stringResource(R.string.settings_callback_reminders),
-            subtitle = stringResource(R.string.settings_callback_reminders_sub),
-            icon = Icons.Default.NotificationsActive,
-            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
-            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
-            cardBgColor = cardBgColor,
-            badgeText = if (activeReminders.isNotEmpty()) "${activeReminders.size} active" else null,
-            initiallyExpanded = false
-        ) {
-            ScheduledRemindersSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-        }
-
-        // Feature Row 4: Call Notes (Expandable)
-        ExpandableSettingsCard(
-            title = stringResource(R.string.settings_all_call_notes),
-            subtitle = stringResource(R.string.settings_all_call_notes_sub),
-            icon = Icons.Default.Description,
-            iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
-            iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
-            cardBgColor = cardBgColor,
-            badgeText = if (allNotes.isNotEmpty()) "${allNotes.size} notes" else null,
-            initiallyExpanded = false
-        ) {
-            CallNotesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
         }
     }
 }

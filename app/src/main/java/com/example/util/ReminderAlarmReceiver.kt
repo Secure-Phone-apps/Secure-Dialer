@@ -36,6 +36,10 @@ import kotlinx.coroutines.launch
 class ReminderAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
+        val prefs = context.getSharedPreferences("dialer_settings", Context.MODE_PRIVATE)
+        val isCallbackRemindersEnabled = prefs.getBoolean("is_callback_reminders_enabled", true)
+        if (!isCallbackRemindersEnabled) return
+
         val reminderId = intent.getIntExtra("reminder_id", -1)
         if (reminderId == -1) return
 

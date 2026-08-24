@@ -210,8 +210,13 @@ class DialerRepository(rawContext: Context) {
             }
             
             val systemLogs = fetchSystemCallLogs()
-            dao.clearCallLogs()
-            dao.insertCallLogs(systemLogs)
+            if (systemLogs.isNotEmpty()) {
+                dao.clearCallLogs()
+                dao.insertCallLogs(systemLogs)
+            } else if (systemCount == 0 && lastSyncedCount > 0) {
+                // System call logs were explicitly deleted
+                dao.clearCallLogs()
+            }
             
             prefs.edit()
                 .putInt("last_synced_call_log_max_id", systemMaxId)
@@ -222,8 +227,10 @@ class DialerRepository(rawContext: Context) {
             e.printStackTrace()
             try {
                 val systemLogs = fetchSystemCallLogs()
-                dao.clearCallLogs()
-                dao.insertCallLogs(systemLogs)
+                if (systemLogs.isNotEmpty()) {
+                    dao.clearCallLogs()
+                    dao.insertCallLogs(systemLogs)
+                }
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }

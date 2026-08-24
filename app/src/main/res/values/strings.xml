@@ -113,7 +113,7 @@
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
 
     
-    <!-- 8 Primary Settings Categories -->
+    <!-- 9 Primary Settings Categories -->
     <string name="cat_appearance_color">Appearance &amp; Color</string>
     <string name="cat_appearance_color_sub">Theme, dark mode, dynamic colors &amp; accent palette</string>
     <string name="cat_sound_gestures">Sound, Haptics &amp; Gestures</string>
@@ -124,12 +124,19 @@
     <string name="cat_speed_dial_quick_responses_sub">Dialpad 1–9 shortcuts &amp; quick decline SMS messages</string>
     <string name="cat_call_blocking">Spam Defense &amp; Blocking</string>
     <string name="cat_call_blocking_sub">Blacklisted numbers, offline spam database &amp; caller ID</string>
-    <string name="cat_voicemail_tools">Voicemail, Call Notes &amp; Recording</string>
-    <string name="cat_voicemail_tools_sub">Visual voicemail, call recording, post-call notes &amp; reminders</string>
+    <string name="cat_voicemail_tools">Voicemail &amp; Recording</string>
+    <string name="cat_voicemail_tools_sub">Carrier voicemail directory &amp; high-fidelity call recording</string>
     <string name="cat_contacts_data">Contacts &amp; Data Management</string>
     <string name="cat_contacts_data_sub">Account filters, default save account, backup &amp; vCard</string>
+    <string name="cat_advanced_features">Advanced Features</string>
+    <string name="cat_advanced_features_sub">Callback reminder dashboard, call notes &amp; fake call simulator</string>
+    <string name="feature_disabled_hint">Feature is disabled</string>
+    <string name="feature_enable_prompt">Toggle the switch above to activate</string>
+    <string name="btn_enable_feature">Enable Feature</string>
+    <string name="state_enabled">Enabled</string>
+    <string name="state_disabled">Disabled</string>
     <string name="cat_privacy_security_about">Privacy, Security &amp; About</string>
-    <string name="cat_privacy_security_about_sub">Biometric lock, pocket mode, fake calls, specs &amp; support</string>
+    <string name="cat_privacy_security_about_sub">Biometric lock, pocket protection, specs &amp; support</string>
 
     <!-- Headers inside Tier 2 -->
     <string name="header_theme_styling">THEME &amp; STYLING</string>
@@ -226,10 +233,10 @@
     <string name="settings_pocket_protection_sub">Block touch input during calls when proximity sensor detects proximity (e.g., in pocket)</string>
     <string name="settings_info_utilities">Information &amp; Utilities</string>
     <string name="settings_all_call_notes">Call Notes</string>
-    <string name="settings_all_call_notes_sub">View, search, and manage all saved call notes</string>
+    <string name="settings_all_call_notes_sub">View and manage saved call notes</string>
     <string name="tab_call_notes">Call Notes</string>
     <string name="no_notes_title">No Call Notes</string>
-    <string name="no_notes_desc">Notes created during calls or from call details will appear here.</string>
+    <string name="no_notes_desc">Notes added during calls will appear here</string>
     <string name="search_notes_placeholder">Search notes or numbers...</string>
     <string name="edit_note_title">Edit Call Note</string>
     <string name="delete_note_confirm">Delete call note for %1$s?</string>
@@ -384,9 +391,9 @@
     <string name="settings_flash_alerts">Flash Alerts on Call</string>
     <string name="settings_flash_alerts_sub">Blinks the camera flash on incoming ringing calls</string>
     <string name="settings_fake_call_sim">Fake Call Simulator</string>
-    <string name="settings_fake_call_sim_sub">Schedule a simulated incoming call to escape awkward meetups</string>
-    <string name="settings_callback_reminders">Callback Reminders Dashboard</string>
-    <string name="settings_callback_reminders_sub">View and cancel pending call alarm reminders</string>
+    <string name="settings_fake_call_sim_sub">Schedule simulated incoming calls</string>
+    <string name="settings_callback_reminders">Callback Reminders</string>
+    <string name="settings_callback_reminders_sub">Manage pending callback alarms</string>
 
     
     <string name="local_offline_protection">Local Offline Protection</string>
@@ -416,13 +423,13 @@
     <string name="trigger_delay_timer">Trigger Delay Timer</string>
     <string name="duration_label">Duration</string>
     <string name="sequential_multi_call_title">Sequential Multi-Call Options</string>
-    <string name="sequential_multi_call_desc">Triggers multiple calls in sequence so that if a single excuse call isn\'t sufficient, subsequent calls keep coming.</string>
+    <string name="sequential_multi_call_desc">Trigger consecutive incoming calls</string>
     <string name="call_count_label">Call Count:</string>
     <string name="repeat_interval_label">Repeat Interval</string>
-    <string name="multi_call_note">Note: Repeat interval applies when Call Count is 2 or more.</string>
-    <string name="schedule_sequential_calls">Schedule %1$d Sequential Calls</string>
-    <string name="schedule_escape_call">Schedule Escape Call (%1$d sec)</string>
-    <string name="btn_cancel_scheduled_escape_calls">Cancel Scheduled Escape Calls</string>
+    <string name="multi_call_note">Interval applies when count &gt; 1</string>
+    <string name="schedule_sequential_calls">Schedule %1$d Calls</string>
+    <string name="schedule_escape_call">Schedule Call (%1$d sec)</string>
+    <string name="btn_cancel_scheduled_escape_calls">Cancel Scheduled Calls</string>
     <string name="unit_sec">sec</string>
     <string name="unit_min">min</string>
     <string name="unit_hour">hour</string>
@@ -433,7 +440,7 @@
     <string name="callback_reminders_stats">%1$d active, %2$d processed</string>
     <string name="active_reminders_title">Active Reminders</string>
     <string name="no_active_reminders_title">No Active Reminders</string>
-    <string name="no_active_reminders_desc">When viewing any call log detail page, you can set a custom callback alarm reminder.</string>
+    <string name="no_active_reminders_desc">Set callback alarms directly from call details</string>
     <string name="history_passed_title">History (Passed)</string>
     <string name="scheduled_prefix">Scheduled: %1$s</string>
     <string name="triggered_prefix">Triggered: %1$s</string>

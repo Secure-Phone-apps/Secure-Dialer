@@ -204,7 +204,27 @@ fun GeneralSettings(
             }
         }
 
-        // 8. Privacy, Security & About
+        // 8. Advanced Features
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.cat_advanced_features),
+                    subtitle = stringResource(R.string.cat_advanced_features_sub),
+                    onClick = { onNavigateToTab(8) },
+                    icon = Icons.Default.AutoAwesome,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // 9. Privacy, Security & About
         item {
             Card(
                 modifier = Modifier
@@ -216,7 +236,7 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_privacy_security_about),
                     subtitle = stringResource(R.string.cat_privacy_security_about_sub),
-                    onClick = { onNavigateToTab(8) },
+                    onClick = { onNavigateToTab(9) },
                     icon = Icons.Default.Lock,
                     iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
                     iconTint = MaterialTheme.colorScheme.onSurfaceVariant

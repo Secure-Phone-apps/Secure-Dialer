@@ -142,13 +142,6 @@ private fun PrivacyProtectionSection(
                 )
             }
         }
-
-        // Fake Call Simulator
-        item {
-            Spacer(modifier = Modifier.height(16.dp))
-            PreferenceHeader("FAKE CALL SIMULATOR")
-            FakeCallSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-        }
     }
 }
 

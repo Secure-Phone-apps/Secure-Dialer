@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.ui.viewmodel.DialerViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -108,7 +109,8 @@ fun SettingsPanel(
                             5 -> stringResource(R.string.cat_call_blocking)
                             6 -> stringResource(R.string.cat_voicemail_tools)
                             7 -> stringResource(R.string.cat_contacts_data)
-                            8 -> stringResource(R.string.cat_privacy_security_about)
+                            8 -> stringResource(R.string.cat_advanced_features)
+                            9 -> stringResource(R.string.cat_privacy_security_about)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -186,7 +188,11 @@ fun SettingsPanel(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    8 -> PrivacySecurityAboutSettings(
+                    8 -> AdvancedFeaturesSettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
+                    )
+                    9 -> PrivacySecurityAboutSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor,
                         onShowAbout = { showAboutDialog = true },
@@ -350,13 +356,13 @@ fun SettingsEmptyState(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(24.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Surface(
-            modifier = Modifier.size(72.dp),
-            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.size(52.dp),
+            shape = RoundedCornerShape(14.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
         ) {
             Box(contentAlignment = Alignment.Center) {
@@ -364,24 +370,28 @@ fun SettingsEmptyState(
                     imageVector = icon,
                     contentDescription = null,
                     tint = tintColor,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = title,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = description,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 24.dp)
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
     }
 }

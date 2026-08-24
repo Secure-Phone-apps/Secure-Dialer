@@ -172,6 +172,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isPocketProtectionEnabled = mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false))
     var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var flashAlertsEnabled = mutableStateOf(prefs.getBoolean("flash_alerts_enabled", false))
+    var isCallbackRemindersEnabled = mutableStateOf(prefs.getBoolean("is_callback_reminders_enabled", true))
+    var isCallNotesEnabled = mutableStateOf(prefs.getBoolean("is_call_notes_enabled", true))
+    var isFakeCallSimulatorEnabled = mutableStateOf(prefs.getBoolean("is_fake_call_simulator_enabled", true))
 
     // Dashboard & Tab Layout & Swipe Preferences
     var dashboardMode = mutableStateOf(prefs.getString("dashboard_mode", "FULL") ?: "FULL")
@@ -312,6 +315,21 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updatePocketProtectionEnabled(enabled: Boolean) {
         isPocketProtectionEnabled.value = enabled
         prefs.edit().putBoolean("is_pocket_protection_enabled", enabled).apply()
+    }
+
+    fun updateCallbackRemindersEnabled(enabled: Boolean) {
+        isCallbackRemindersEnabled.value = enabled
+        prefs.edit().putBoolean("is_callback_reminders_enabled", enabled).apply()
+    }
+
+    fun updateCallNotesEnabled(enabled: Boolean) {
+        isCallNotesEnabled.value = enabled
+        prefs.edit().putBoolean("is_call_notes_enabled", enabled).apply()
+    }
+
+    fun updateFakeCallSimulatorEnabled(enabled: Boolean) {
+        isFakeCallSimulatorEnabled.value = enabled
+        prefs.edit().putBoolean("is_fake_call_simulator_enabled", enabled).apply()
     }
 
     fun updateDashboardMode(mode: String) {
@@ -751,11 +769,15 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun logFakeCall(name: String, number: String, type: com.example.model.CallType, durationSeconds: Long, simSlot: Int = 1) {
+    fun logCall(name: String, number: String, type: com.example.model.CallType, durationSeconds: Long, simSlot: Int = 1) {
         viewModelScope.launch {
             repository.insertManualCallRecord(name, number, type, durationSeconds, simSlot)
             syncData()
         }
+    }
+
+    fun logFakeCall(name: String, number: String, type: com.example.model.CallType, durationSeconds: Long, simSlot: Int = 1) {
+        logCall(name, number, type, durationSeconds, simSlot)
     }
 
     override fun onCleared() {

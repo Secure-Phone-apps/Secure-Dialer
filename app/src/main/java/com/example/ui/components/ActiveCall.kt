@@ -77,6 +77,7 @@ fun ActiveCallScreen(
     callState: Int = android.telecom.Call.STATE_DISCONNECTED,
     recordingEnabled: Boolean = false,
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
+    callNotesEnabled: Boolean = true,
     onSaveNote: (String) -> Unit = {},
     onMinimize: (() -> Unit)? = null,
     avatarShapeType: String = "circular",
@@ -402,6 +403,7 @@ fun ActiveCallScreen(
                     isAddCallDialogOpen = true
                 },
                 recordingEnabled = recordingEnabled,
+                callNotesEnabled = callNotesEnabled,
                 isRecording = isRecording,
                 onToggleRecording = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)

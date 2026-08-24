@@ -49,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -273,6 +274,9 @@ fun ExpandableSettingsCard(
     cardBgColor: Color = MaterialTheme.colorScheme.surface,
     initiallyExpanded: Boolean = false,
     badgeText: String? = null,
+    hasSwitch: Boolean = false,
+    isSwitchChecked: Boolean = true,
+    onSwitchChange: ((Boolean) -> Unit)? = null,
     content: @Composable () -> Unit
 ) {
     var expanded by remember { mutableStateOf(initiallyExpanded) }
@@ -303,20 +307,20 @@ fun ExpandableSettingsCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { expanded = !expanded }
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = iconBgColor,
-                    modifier = Modifier.size(40.dp)
+                    color = if (hasSwitch && !isSwitchChecked) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f) else iconBgColor,
+                    modifier = Modifier.size(38.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
-                            tint = iconTint,
+                            tint = if (hasSwitch && !isSwitchChecked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else iconTint,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -325,17 +329,22 @@ fun ExpandableSettingsCard(
                     Text(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = if (hasSwitch && !isSwitchChecked) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
                     )
                     if (!subtitle.isNullOrBlank()) {
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            color = if (hasSwitch && !isSwitchChecked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
-                if (badgeText != null) {
+                if (badgeText != null && (!hasSwitch || isSwitchChecked)) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
@@ -345,9 +354,21 @@ fun ExpandableSettingsCard(
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
                         )
                     }
+                }
+                if (hasSwitch && onSwitchChange != null) {
+                    Switch(
+                        checked = isSwitchChecked,
+                        onCheckedChange = { checked ->
+                            onSwitchChange(checked)
+                            if (checked && !expanded) {
+                                expanded = true
+                            }
+                        }
+                    )
                 }
                 IconButton(
                     onClick = { expanded = !expanded },
@@ -367,7 +388,44 @@ fun ExpandableSettingsCard(
                     color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
-                content()
+                if (hasSwitch && !isSwitchChecked) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.feature_disabled_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = stringResource(R.string.feature_enable_prompt),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        FilledTonalButton(
+                            onClick = { onSwitchChange?.invoke(true) }
+                        ) {
+                            Text(
+                                text = stringResource(R.string.btn_enable_feature),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                } else {
+                    content()
+                }
             }
         }
     }

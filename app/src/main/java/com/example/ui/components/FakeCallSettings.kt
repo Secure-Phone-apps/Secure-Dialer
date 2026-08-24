@@ -20,6 +20,8 @@ package com.example.ui.components
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -34,20 +36,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.FakeCallReceiver
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FakeCallSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
 
     var fakeName by remember { mutableStateOf("Boss") }
     var fakeNumber by remember { mutableStateOf("+1 (555) 492-0192") }
@@ -68,58 +69,8 @@ fun FakeCallSettings(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Explanatory Header Card
-        Card(
-            colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = RoundedCornerShape(24.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        modifier = Modifier.size(44.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.CallMerge,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
-                        }
-                    }
-                    Column {
-                        Text(
-                            text = stringResource(R.string.fake_call_sim_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = stringResource(R.string.settings_fake_call_sim_sub),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
-                Text(
-                    text = stringResource(R.string.fake_call_sim_explanation),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
         // Configuration Inputs
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -134,7 +85,9 @@ fun FakeCallSettings(
                     text = stringResource(R.string.caller_identity),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 OutlinedTextField(
@@ -146,26 +99,26 @@ fun FakeCallSettings(
                     singleLine = true
                 )
 
-                // Quick presets
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                // Quick presets in sleek single row
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    val presets = listOf("Boss", "Mom", "Doctor", "Attorney", "Delivery Driver")
-                    presets.forEach { preset ->
+                    val presets = listOf(
+                        "Boss" to "+1 (555) 492-0192",
+                        "Mom" to "+1 (555) 728-1100",
+                        "Doctor" to "+1 (800) 555-0133",
+                        "Lawyer" to "+1 (888) 555-9128",
+                        "Driver" to "+1 (555) 233-1090"
+                    )
+                    items(presets) { (presetName, presetNum) ->
                         FilterChip(
-                            selected = fakeName == preset,
+                            selected = fakeName == presetName,
                             onClick = {
-                                fakeName = preset
-                                when (preset) {
-                                    "Boss" -> fakeNumber = "+1 (555) 492-0192"
-                                    "Mom" -> fakeNumber = "+1 (555) 728-1100"
-                                    "Doctor" -> fakeNumber = "+1 (800) 555-0133"
-                                    "Attorney" -> fakeNumber = "+1 (888) 555-9128"
-                                    "Delivery Driver" -> fakeNumber = "+1 (555) 233-1090"
-                                }
+                                fakeName = presetName
+                                fakeNumber = presetNum
                             },
-                            label = { Text(preset) }
+                            label = { Text(presetName, maxLines = 1) }
                         )
                     }
                 }
@@ -195,7 +148,9 @@ fun FakeCallSettings(
                     text = stringResource(R.string.trigger_delay_timer),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Row(
@@ -221,7 +176,7 @@ fun FakeCallSettings(
                             FilterChip(
                                 selected = delayUnit == unit,
                                 onClick = { delayUnit = unit },
-                                label = { Text(unit) }
+                                label = { Text(unit, maxLines = 1) }
                             )
                         }
                     }
@@ -256,13 +211,17 @@ fun FakeCallSettings(
                     text = stringResource(R.string.sequential_multi_call_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Text(
                     text = stringResource(R.string.sequential_multi_call_desc),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Row(
@@ -273,14 +232,16 @@ fun FakeCallSettings(
                     Text(
                         text = stringResource(R.string.call_count_label),
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         listOf(1, 2, 3, 5).forEach { num ->
                             FilterChip(
                                 selected = repeatCount == num,
                                 onClick = { repeatCount = num },
-                                label = { Text(num.toString()) }
+                                label = { Text(num.toString(), maxLines = 1) }
                             )
                         }
                     }
@@ -311,7 +272,7 @@ fun FakeCallSettings(
                                 selected = intervalUnit == unit,
                                 enabled = repeatCount > 1,
                                 onClick = { intervalUnit = unit },
-                                label = { Text(unit) }
+                                label = { Text(unit, maxLines = 1) }
                             )
                         }
                     }
@@ -321,7 +282,9 @@ fun FakeCallSettings(
                     Text(
                         text = stringResource(R.string.multi_call_note),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -330,7 +293,7 @@ fun FakeCallSettings(
         // Action Buttons
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
                 onClick = {
@@ -350,7 +313,7 @@ fun FakeCallSettings(
                     Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
                 Icon(Icons.Default.AccessTime, null)
@@ -360,7 +323,7 @@ fun FakeCallSettings(
                 } else {
                     stringResource(R.string.schedule_escape_call, finalDelaySeconds)
                 }
-                Text(btnText)
+                Text(btnText, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
 
             OutlinedButton(
@@ -369,11 +332,11 @@ fun FakeCallSettings(
                     Toast.makeText(context, "Cancelled pending fake calls", Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp)
+                shape = RoundedCornerShape(14.dp)
             ) {
                 Icon(Icons.Default.Cancel, null)
                 Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.btn_cancel_scheduled_escape_calls))
+                Text(stringResource(R.string.btn_cancel_scheduled_escape_calls), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

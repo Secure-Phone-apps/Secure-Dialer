@@ -35,6 +35,10 @@ import com.example.MainActivity
 class FakeCallReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
+        val prefs = context.getSharedPreferences("dialer_settings", Context.MODE_PRIVATE)
+        val isFakeCallEnabled = prefs.getBoolean("is_fake_call_simulator_enabled", true)
+        if (!isFakeCallEnabled) return
+
         val name = intent.getStringExtra("caller_name") ?: "Unknown"
         val number = intent.getStringExtra("caller_number") ?: "Unknown"
 

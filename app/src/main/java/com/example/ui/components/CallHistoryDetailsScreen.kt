@@ -366,8 +366,9 @@ fun CallHistoryDetailsScreen(
                 CallLogSummaryDashboard(callRecords = logs)
             }
 
-            item {
-                val numberNotesFlow = remember(number) { viewModel.getCallNotesForNumberFlow(number) }
+            if (viewModel.isCallNotesEnabled.value) {
+                item {
+                    val numberNotesFlow = remember(number) { viewModel.getCallNotesForNumberFlow(number) }
                 val numberNotes by numberNotesFlow.collectAsState(initial = emptyList())
                 var showNotesListModal by remember { mutableStateOf(false) }
                 val noteSdf = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
@@ -548,61 +549,64 @@ fun CallHistoryDetailsScreen(
                     )
                 }
             }
+            }
             
-            item {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                    shape = RoundedCornerShape(16.dp),
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showReminderDialog = true }
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+            if (viewModel.isCallbackRemindersEnabled.value) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
                     ) {
-                        Surface(
-                            shape = RoundedCornerShape(12.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(40.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showReminderDialog = true }
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.Alarm,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer,
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Alarm,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                }
+                            }
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = stringResource(R.string.schedule_callback_reminder_title),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = stringResource(R.string.schedule_callback_reminder_sub),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        }
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.schedule_callback_reminder_title),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = stringResource(R.string.schedule_callback_reminder_sub),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            Icon(
+                                imageVector = Icons.Default.Schedule,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                    }
+
+                    if (showReminderDialog) {
+                        CallbackReminderDialog(
+                            context = context,
+                            primaryRecord = primaryRecord,
+                            viewModel = viewModel,
+                            onDismiss = { showReminderDialog = false }
                         )
                     }
-                }
-
-                if (showReminderDialog) {
-                    CallbackReminderDialog(
-                        context = context,
-                        primaryRecord = primaryRecord,
-                        viewModel = viewModel,
-                        onDismiss = { showReminderDialog = false }
-                    )
                 }
             }
             

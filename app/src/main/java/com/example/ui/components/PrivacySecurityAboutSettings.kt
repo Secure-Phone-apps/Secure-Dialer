@@ -45,7 +45,6 @@ fun PrivacySecurityAboutSettings(
     val context = LocalContext.current
     val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
     val isPocketProtectionEnabled by viewModel.isPocketProtectionEnabled
-    var showFakeCallDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -94,26 +93,6 @@ fun PrivacySecurityAboutSettings(
                     icon = Icons.Default.ScreenLockPortrait,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.secondary
-                )
-            }
-        }
-
-        // Fake Call Simulator Card
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                SettingsRowNav(
-                    title = stringResource(R.string.settings_fake_call_sim),
-                    subtitle = stringResource(R.string.settings_fake_call_sim_sub),
-                    onClick = { showFakeCallDialog = true },
-                    icon = Icons.Default.PhoneCallback,
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                    iconTint = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
@@ -192,20 +171,5 @@ fun PrivacySecurityAboutSettings(
                 )
             }
         }
-    }
-
-    if (showFakeCallDialog) {
-        AlertDialog(
-            onDismissRequest = { showFakeCallDialog = false },
-            title = { Text(stringResource(R.string.fake_call_sim_title)) },
-            text = {
-                FakeCallSettings(viewModel = viewModel, cardBgColor = cardBgColor)
-            },
-            confirmButton = {
-                TextButton(onClick = { showFakeCallDialog = false }) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
     }
 }

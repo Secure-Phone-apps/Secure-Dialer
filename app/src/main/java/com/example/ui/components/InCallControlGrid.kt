@@ -51,6 +51,7 @@ fun InCallControlGrid(
     recordingEnabled: Boolean,
     isRecording: Boolean,
     onToggleRecording: () -> Unit,
+    callNotesEnabled: Boolean = true,
     isNoteDialogOpen: Boolean,
     onOpenNoteDialog: () -> Unit,
     avatarShapeType: String = "circular"
@@ -128,62 +129,85 @@ fun InCallControlGrid(
             )
         }
 
-        // Row 3: Record & Note
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (recordingEnabled) {
-                InCallButton(
-                    icon = Icons.Default.Mic,
-                    label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
-                    isActive = isRecording,
-                    onClick = onToggleRecording,
-                    shape = btnShape,
-                    modifier = Modifier.weight(1f).height(64.dp)
-                )
+        // Row 3: Record & Note (Dynamic visibility based on user preferences)
+        if (recordingEnabled || callNotesEnabled) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (recordingEnabled && callNotesEnabled) {
+                    InCallButton(
+                        icon = Icons.Default.Mic,
+                        label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
+                        isActive = isRecording,
+                        onClick = onToggleRecording,
+                        shape = btnShape,
+                        modifier = Modifier.weight(1f).height(64.dp)
+                    )
 
-                InCallButton(
-                    icon = Icons.Default.EditNote,
-                    label = stringResource(R.string.call_note),
-                    isActive = isNoteDialogOpen,
-                    onClick = onOpenNoteDialog,
-                    shape = btnShape,
-                    modifier = Modifier.weight(1f).height(64.dp)
-                )
+                    InCallButton(
+                        icon = Icons.Default.EditNote,
+                        label = stringResource(R.string.call_note),
+                        isActive = isNoteDialogOpen,
+                        onClick = onOpenNoteDialog,
+                        shape = btnShape,
+                        modifier = Modifier.weight(1f).height(64.dp)
+                    )
 
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Spacer to align symmetrically
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {}
+                } else if (recordingEnabled) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {}
+
+                    InCallButton(
+                        icon = Icons.Default.Mic,
+                        label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
+                        isActive = isRecording,
+                        onClick = onToggleRecording,
+                        shape = btnShape,
+                        modifier = Modifier.weight(1f).height(64.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {}
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {}
+
+                    InCallButton(
+                        icon = Icons.Default.EditNote,
+                        label = stringResource(R.string.call_note),
+                        isActive = isNoteDialogOpen,
+                        onClick = onOpenNoteDialog,
+                        shape = btnShape,
+                        modifier = Modifier.weight(1f).height(64.dp)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp),
+                        contentAlignment = Alignment.Center
+                    ) {}
                 }
-            } else {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp),
-                    contentAlignment = Alignment.Center
-                ) {}
-
-                InCallButton(
-                    icon = Icons.Default.EditNote,
-                    label = stringResource(R.string.call_note),
-                    isActive = isNoteDialogOpen,
-                    onClick = onOpenNoteDialog,
-                    shape = btnShape,
-                    modifier = Modifier.weight(1f).height(64.dp)
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp),
-                    contentAlignment = Alignment.Center
-                ) {}
             }
         }
     }
