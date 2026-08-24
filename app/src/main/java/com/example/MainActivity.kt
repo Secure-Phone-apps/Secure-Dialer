@@ -386,8 +386,11 @@ class MainActivity : ComponentActivity() {
             viewModel.fakeCallerName.value = intent.getStringExtra("FAKE_CALLER_NAME") ?: "Unknown"
             viewModel.fakeCallerNumber.value = intent.getStringExtra("FAKE_CALLER_NUMBER") ?: "Unknown"
             viewModel.fakeCallState.value = "RINGING"
+            viewModel.isSettingsVisible.value = false
+            viewModel.isCallMinimized.value = false
             // Also bypass lockscreen authentication automatically for safety/escape features
             isAppAuthenticated.value = true
+            setLockScreenVisibility(true)
         }
 
         if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false) || CallManager.currentCall.value != null) {

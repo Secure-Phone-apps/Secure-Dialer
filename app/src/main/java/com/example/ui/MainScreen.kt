@@ -18,6 +18,7 @@
 package com.example.ui
 
 import android.Manifest
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -124,6 +125,7 @@ fun MainScreen(
 
     LaunchedEffect(isCallActive, viewModel.isFakeCallActive.value) {
         if (isCallActive || viewModel.isFakeCallActive.value) {
+            isSettingsVisible = false
             focusManager.clearFocus()
             keyboardController?.hide()
         }
@@ -517,6 +519,22 @@ fun MainScreen(
             val fakeCallState by viewModel.fakeCallState
 
             AnimatedVisibility(
+                visible = isSettingsVisible && !isFakeCallActive && (!isCallActive || isCallMinimized),
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(150)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = tween(150, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                ) + fadeOut(animationSpec = tween(120))
+            ) {
+                SettingsPanel(
+                    viewModel = viewModel, onClose = { isSettingsVisible = false }
+                )
+            }
+
+            AnimatedVisibility(
                 visible = (isCallActive && !isCallMinimized) || isFakeCallActive,
                 enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
                 exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
@@ -532,6 +550,10 @@ fun MainScreen(
                     quickResponses = quickResponses,
                     onHangUp = {
                         if (isFakeCallActive) {
+                            try {
+                                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                                nm?.cancel(9999)
+                            } catch (_: Exception) {}
                             val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
                                 (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
                             } else {
@@ -552,6 +574,10 @@ fun MainScreen(
                     onAnswer = { CallManager.answer() },
                     onQuickDecline = {
                         if (isFakeCallActive) {
+                            try {
+                                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                                nm?.cancel(9999)
+                            } catch (_: Exception) {}
                             val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
                                 (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
                             } else {
@@ -597,10 +623,18 @@ fun MainScreen(
                     isFake = isFakeCallActive,
                     fakeState = fakeCallState,
                     onFakeAnswer = { 
+                        try {
+                            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                            nm?.cancel(9999)
+                        } catch (_: Exception) {}
                         viewModel.fakeCallStartTimestamp = System.currentTimeMillis()
                         viewModel.fakeCallState.value = "ACTIVE" 
                     },
                     onFakeHangUp = { 
+                        try {
+                            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
+                            nm?.cancel(9999)
+                        } catch (_: Exception) {}
                         val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
                             (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
                         } else {
@@ -612,22 +646,6 @@ fun MainScreen(
                         viewModel.isFakeCallActive.value = false 
                         viewModel.fakeCallState.value = "DISCONNECTED" 
                     }
-                )
-            }
-
-            AnimatedVisibility(
-                visible = isSettingsVisible,
-                enter = slideInVertically(
-                    initialOffsetY = { it },
-                    animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)
-                ) + fadeIn(animationSpec = tween(150)),
-                exit = slideOutVertically(
-                    targetOffsetY = { it },
-                    animationSpec = tween(150, easing = androidx.compose.animation.core.FastOutLinearInEasing)
-                ) + fadeOut(animationSpec = tween(120))
-            ) {
-                SettingsPanel(
-                    viewModel = viewModel, onClose = { isSettingsVisible = false }
                 )
             }
 
