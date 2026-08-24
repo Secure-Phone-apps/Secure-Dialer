@@ -164,27 +164,7 @@ fun GeneralSettings(
             }
         }
 
-        // 6. Voicemail, Call Notes & Recording
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                shape = MaterialTheme.shapes.medium
-            ) {
-                SettingsRowNav(
-                    title = stringResource(R.string.cat_voicemail_tools),
-                    subtitle = stringResource(R.string.cat_voicemail_tools_sub),
-                    onClick = { onNavigateToTab(6) },
-                    icon = Icons.Default.Voicemail,
-                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f),
-                    iconTint = MaterialTheme.colorScheme.tertiary
-                )
-            }
-        }
-
-        // 7. Contacts & Data Management
+        // 6. Contacts & Data Management
         item {
             Card(
                 modifier = Modifier
@@ -196,7 +176,7 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_contacts_data),
                     subtitle = stringResource(R.string.cat_contacts_data_sub),
-                    onClick = { onNavigateToTab(7) },
+                    onClick = { onNavigateToTab(6) },
                     icon = Icons.Default.Contacts,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
                     iconTint = MaterialTheme.colorScheme.secondary
@@ -204,7 +184,7 @@ fun GeneralSettings(
             }
         }
 
-        // 8. Advanced Features
+        // 7. Advanced Features
         item {
             Card(
                 modifier = Modifier
@@ -216,7 +196,7 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_advanced_features),
                     subtitle = stringResource(R.string.cat_advanced_features_sub),
-                    onClick = { onNavigateToTab(8) },
+                    onClick = { onNavigateToTab(7) },
                     icon = Icons.Default.AutoAwesome,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
                     iconTint = MaterialTheme.colorScheme.primary
@@ -224,7 +204,7 @@ fun GeneralSettings(
             }
         }
 
-        // 9. Privacy, Security & About
+        // 8. Privacy, Security & About
         item {
             Card(
                 modifier = Modifier
@@ -236,7 +216,7 @@ fun GeneralSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.cat_privacy_security_about),
                     subtitle = stringResource(R.string.cat_privacy_security_about_sub),
-                    onClick = { onNavigateToTab(9) },
+                    onClick = { onNavigateToTab(8) },
                     icon = Icons.Default.Lock,
                     iconBgColor = MaterialTheme.colorScheme.surfaceVariant,
                     iconTint = MaterialTheme.colorScheme.onSurfaceVariant

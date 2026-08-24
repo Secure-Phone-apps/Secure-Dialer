@@ -40,10 +40,12 @@ fun AdvancedFeaturesSettings(
     val reminders by viewModel.remindersFlow.collectAsState()
     val activeReminders = remember(reminders) { reminders.filter { !it.isCompleted } }
     val allNotes by viewModel.notesFlow.collectAsState()
+    val recordings by viewModel.recordingsFlow.collectAsState()
 
     val isCallbackRemindersEnabled by viewModel.isCallbackRemindersEnabled
     val isCallNotesEnabled by viewModel.isCallNotesEnabled
     val isFakeCallSimulatorEnabled by viewModel.isFakeCallSimulatorEnabled
+    val isRecordingEnabled by viewModel.recordingEnabled
 
     Column(
         modifier = Modifier
@@ -52,7 +54,24 @@ fun AdvancedFeaturesSettings(
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Feature Container 1: Callback Reminder Dashboard (Expandable with Switch)
+        // Feature Container 1: Automatic Call Recording (Expandable with Switch)
+        ExpandableSettingsCard(
+            title = stringResource(R.string.header_call_recording),
+            subtitle = stringResource(R.string.settings_call_recording_sub),
+            icon = Icons.Default.Mic,
+            iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
+            iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
+            cardBgColor = cardBgColor,
+            badgeText = if (recordings.isNotEmpty()) "${recordings.size} files" else null,
+            hasSwitch = true,
+            isSwitchChecked = isRecordingEnabled,
+            onSwitchChange = { viewModel.recordingEnabled.value = it },
+            initiallyExpanded = false
+        ) {
+            CallRecordingsSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+        }
+
+        // Feature Container 2: Callback Reminder Dashboard (Expandable with Switch)
         ExpandableSettingsCard(
             title = stringResource(R.string.settings_callback_reminders),
             subtitle = stringResource(R.string.settings_callback_reminders_sub),
@@ -69,7 +88,7 @@ fun AdvancedFeaturesSettings(
             ScheduledRemindersSettings(viewModel = viewModel, cardBgColor = cardBgColor)
         }
 
-        // Feature Container 2: Call Notes (Expandable with Switch)
+        // Feature Container 3: Call Notes (Expandable with Switch)
         ExpandableSettingsCard(
             title = stringResource(R.string.settings_all_call_notes),
             subtitle = stringResource(R.string.settings_all_call_notes_sub),
@@ -86,7 +105,7 @@ fun AdvancedFeaturesSettings(
             CallNotesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
         }
 
-        // Feature Container 3: Fake Call Simulator (Expandable with Switch)
+        // Feature Container 4: Fake Call Simulator (Expandable with Switch)
         ExpandableSettingsCard(
             title = stringResource(R.string.settings_fake_call_sim),
             subtitle = stringResource(R.string.settings_fake_call_sim_sub),

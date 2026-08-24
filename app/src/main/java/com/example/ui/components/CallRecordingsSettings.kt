@@ -71,32 +71,16 @@ fun CallRecordingsSettings(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            text = stringResource(R.string.secure_local_recordings),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = stringResource(R.string.recordings_privacy_notice),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
         if (recordings.isEmpty()) {
-            Box(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp), contentAlignment = Alignment.Center) {
-                SettingsEmptyState(
-                    icon = Icons.Default.Mic,
-                    title = stringResource(R.string.no_recordings_title),
-                    description = stringResource(R.string.no_recordings_desc),
-                    tintColor = MaterialTheme.colorScheme.primary
-                )
-            }
+            SettingsEmptyState(
+                icon = Icons.Default.Mic,
+                title = stringResource(R.string.no_recordings_title),
+                description = stringResource(R.string.no_recordings_desc),
+                tintColor = MaterialTheme.colorScheme.primary
+            )
         } else {
             Column(
                 modifier = Modifier.fillMaxWidth(),

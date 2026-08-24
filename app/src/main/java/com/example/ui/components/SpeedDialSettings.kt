@@ -151,8 +151,8 @@ fun SpeedDialSettings(
                                 modifier = Modifier.weight(1f)
                             ) {
                                 Surface(
-                                    modifier = Modifier.size(44.dp),
-                                    shape = RoundedCornerShape(16.dp),
+                                    modifier = Modifier.size(38.dp),
+                                    shape = RoundedCornerShape(12.dp),
                                     color = if (assignedNum != null) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
@@ -164,19 +164,23 @@ fun SpeedDialSettings(
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column {
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = assignedNum ?: stringResource(R.string.unassigned_key),
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = if (assignedNum != null) FontWeight.Medium else FontWeight.Normal,
-                                        color = if (assignedNum != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline
+                                        color = if (assignedNum != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
+                                        maxLines = 1,
+                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                     )
                                     if (assignedNum != null) {
                                         Text(
                                             text = stringResource(R.string.press_and_hold_dialpad, digit),
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                                         )
                                     }
                                 }

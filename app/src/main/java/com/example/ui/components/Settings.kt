@@ -107,10 +107,9 @@ fun SettingsPanel(
                             3 -> stringResource(R.string.cat_calling_accounts)
                             4 -> stringResource(R.string.cat_speed_dial_quick_responses)
                             5 -> stringResource(R.string.cat_call_blocking)
-                            6 -> stringResource(R.string.cat_voicemail_tools)
-                            7 -> stringResource(R.string.cat_contacts_data)
-                            8 -> stringResource(R.string.cat_advanced_features)
-                            9 -> stringResource(R.string.cat_privacy_security_about)
+                            6 -> stringResource(R.string.cat_contacts_data)
+                            7 -> stringResource(R.string.cat_advanced_features)
+                            8 -> stringResource(R.string.cat_privacy_security_about)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -180,19 +179,15 @@ fun SettingsPanel(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    6 -> VoicemailAndToolsSettings(
+                    6 -> ContactsAndDataSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    7 -> ContactsAndDataSettings(
+                    7 -> AdvancedFeaturesSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor
                     )
-                    8 -> AdvancedFeaturesSettings(
-                        viewModel = viewModel,
-                        cardBgColor = cardBgColor
-                    )
-                    9 -> PrivacySecurityAboutSettings(
+                    8 -> PrivacySecurityAboutSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor,
                         onShowAbout = { showAboutDialog = true },
@@ -235,14 +230,18 @@ fun SettingsRowToggle(
                 title,
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyLarge,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             ) 
         },
         supportingContent = { 
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             ) 
         },
         leadingContent = if (icon != null) {
@@ -299,14 +298,18 @@ fun SettingsRowNav(
             Text(
                 title,
                 fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             ) 
         },
         supportingContent = { 
             Text(
                 subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             ) 
         },
         leadingContent = if (icon != null) {

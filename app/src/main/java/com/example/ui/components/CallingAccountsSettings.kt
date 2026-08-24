@@ -18,6 +18,7 @@
 package com.example.ui.components
 
 import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import android.telecom.TelecomManager
 import android.widget.Toast
@@ -133,6 +134,21 @@ fun CallingAccountsSettings(
             }
         }
 
+        // [Header] CARRIER VOICEMAIL
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            PreferenceHeader(stringResource(R.string.header_carrier_voicemail))
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                VoicemailCallingAccountsRow(viewModel = viewModel)
+            }
+        }
+
         // [Header] INCOMING CALL ALERTS
         item {
             Spacer(modifier = Modifier.height(16.dp))
@@ -158,5 +174,87 @@ fun CallingAccountsSettings(
             }
         }
 
+    }
+}
+
+@Composable
+private fun VoicemailCallingAccountsRow(
+    viewModel: DialerViewModel
+) {
+    val context = LocalContext.current
+    val voicemailNum by viewModel.voicemailNumber
+    var voicemailInput by remember(voicemailNum) { mutableStateOf(voicemailNum) }
+    var showVoicemailDialog by remember { mutableStateOf(false) }
+
+    SettingsRowNav(
+        title = stringResource(R.string.settings_voicemail_num),
+        subtitle = if (voicemailNum.isNotBlank()) voicemailNum else stringResource(R.string.settings_voicemail_num_sub),
+        onClick = { showVoicemailDialog = true },
+        icon = Icons.Default.Voicemail,
+        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+        iconTint = MaterialTheme.colorScheme.tertiary
+    )
+
+    if (showVoicemailDialog) {
+        AlertDialog(
+            onDismissRequest = { showVoicemailDialog = false },
+            title = { Text(stringResource(R.string.settings_voicemail_num)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        stringResource(R.string.settings_voicemail_num_sub),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = voicemailInput,
+                        onValueChange = { voicemailInput = it },
+                        label = { Text(stringResource(R.string.voicemail_directory_number)) },
+                        singleLine = true,
+                        leadingIcon = { Icon(Icons.Default.Phone, null) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (voicemailInput.isNotBlank()) {
+                        OutlinedButton(
+                            onClick = {
+                                try {
+                                    val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$voicemailInput"))
+                                    context.startActivity(intent)
+                                } catch (e: Exception) {
+                                    try {
+                                        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$voicemailInput"))
+                                        context.startActivity(dialIntent)
+                                    } catch (e2: Exception) {
+                                        Toast.makeText(context, "Unable to place call", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Call, null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Call")
+                        }
+                    }
+                    Button(
+                        onClick = {
+                            viewModel.updateVoicemailNumber(voicemailInput)
+                            Toast.makeText(context, context.getString(R.string.save_voicemail_number), Toast.LENGTH_SHORT).show()
+                            showVoicemailDialog = false
+                        }
+                    ) {
+                        Text(stringResource(R.string.btn_save))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showVoicemailDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }
