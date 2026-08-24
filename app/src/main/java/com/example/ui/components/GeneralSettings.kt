@@ -449,7 +449,7 @@ fun GeneralSettings(
         if (searchQuery.isNotBlank()) {
             item {
                 Text(
-                    text = "SEARCH RESULTS (${searchResults.size})",
+                    text = stringResource(R.string.search_results_count, searchResults.size).uppercase(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
@@ -467,8 +467,8 @@ fun GeneralSettings(
                     ) {
                         SettingsEmptyState(
                             icon = Icons.Default.SearchOff,
-                            title = "No Matching Settings",
-                            description = "Try searching for terms like 'Dark Mode', 'Ringtone', 'Layout', 'Dashboard', 'SIM', 'Block', or 'Record'.",
+                            title = stringResource(R.string.no_matching_settings),
+                            description = stringResource(R.string.no_matching_settings_desc),
                             tintColor = MaterialTheme.colorScheme.primary
                         )
                     }

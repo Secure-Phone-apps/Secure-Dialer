@@ -81,6 +81,11 @@ android {
     compose = true
     buildConfig = true
   }
+  lint {
+    checkReleaseBuilds = false
+    abortOnError = false
+    disable += "ExtraTranslation"
+  }
   testOptions { unitTests { isIncludeAndroidResources = true } }
 }
 

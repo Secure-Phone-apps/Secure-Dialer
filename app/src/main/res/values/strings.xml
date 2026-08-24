@@ -529,4 +529,9 @@
     <string name="tab_slot_left">Left Slot</string>
     <string name="tab_slot_middle">Middle Slot</string>
     <string name="tab_slot_right">Right Slot</string>
+    <string name="settings_merge_duplicate_contacts">Merge duplicate contacts</string>
+    <string name="settings_merge_duplicate_contacts_sub">Scan and clean duplicate contact entries</string>
+    <string name="search_results_count">Search results (%1$d)</string>
+    <string name="no_matching_settings">No matching settings</string>
+    <string name="no_matching_settings_desc">Try searching for terms like Dark mode, SIM, Blocking, or Recording.</string>
 </resources>
