@@ -34,7 +34,8 @@ import com.example.ui.viewmodel.DialerViewModel
 @Composable
 fun AppearanceSettings(
     viewModel: DialerViewModel,
-    cardBgColor: Color
+    cardBgColor: Color,
+    highlightedTitle: String? = null
 ) {
     val isDarkTheme by viewModel.isDarkTheme
     val isAmoledMode by viewModel.isAmoledMode
@@ -52,11 +53,12 @@ fun AppearanceSettings(
 
         // Dark Theme Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Dark Mode & Theme Mode", highlightedTitle) || isMatchTitle("Appearance Settings", highlightedTitle) || isMatchTitle("Appearance & Theme", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -74,11 +76,12 @@ fun AppearanceSettings(
         // Pure Black AMOLED Card
         if (isDarkTheme) {
             item {
-                Card(
+                HighlightableCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                    cardBgColor = cardBgColor,
+                    isHighlighted = isMatchTitle("Pure Black", highlightedTitle),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     SettingsRowToggle(
@@ -97,11 +100,12 @@ fun AppearanceSettings(
         // Dynamic Color Card
         val isDynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Dynamic Colors (Monet)", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -124,11 +128,12 @@ fun AppearanceSettings(
         // Theme Color Picker Card
         if (!useDynamicColor || !isDynamicSupported) {
             item {
-                Card(
+                HighlightableCard(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                    cardBgColor = cardBgColor,
+                    isHighlighted = isMatchTitle("Accent Color Palette", highlightedTitle),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     ThemeColorPicker(
@@ -143,11 +148,12 @@ fun AppearanceSettings(
 
         // M3 Expressive Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Expressive Material 3 Layout", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(

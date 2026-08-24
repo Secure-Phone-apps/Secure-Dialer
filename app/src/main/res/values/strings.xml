@@ -11,6 +11,7 @@
 
     
     <string name="search_placeholder">Search contacts &amp; numbers</string>
+    <string name="search_settings_placeholder">Search settings...</string>
     <string name="search_clear">Clear</string>
     <string name="settings_title">Settings</string>
     <string name="default_dialer_warning">Set as default dialer to enable all features.</string>
@@ -113,30 +114,30 @@
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
 
     
-    <!-- 9 Primary Settings Categories -->
-    <string name="cat_appearance_color">Appearance &amp; Color</string>
-    <string name="cat_appearance_color_sub">Theme, dark mode, dynamic colors &amp; accent palette</string>
-    <string name="cat_sound_gestures">Sound, Haptics &amp; Gestures</string>
-    <string name="cat_sound_gestures_sub">Dialpad tones, vibration, startup tab &amp; swipe gestures</string>
-    <string name="cat_calling_accounts">SIM &amp; Calling Accounts</string>
-    <string name="cat_calling_accounts_sub">Preferred SIM, call waiting &amp; carrier configuration</string>
-    <string name="cat_speed_dial_quick_responses">Speed Dial &amp; Quick Responses</string>
-    <string name="cat_speed_dial_quick_responses_sub">Dialpad 1–9 shortcuts &amp; quick decline SMS messages</string>
-    <string name="cat_call_blocking">Spam Defense &amp; Blocking</string>
-    <string name="cat_call_blocking_sub">Blacklisted numbers, offline spam database &amp; caller ID</string>
+    <!-- 8 Primary Settings Categories -->
+    <string name="cat_appearance_color">Appearance</string>
+    <string name="cat_appearance_color_sub">Dynamic, dark mode &amp; colors</string>
+    <string name="cat_sound_gestures">Sound &amp; Gestures</string>
+    <string name="cat_sound_gestures_sub">Ringtones, tones &amp; gestures</string>
+    <string name="cat_calling_accounts">SIM &amp; Calling</string>
+    <string name="cat_calling_accounts_sub">SIM cards, waiting &amp; voicemail</string>
+    <string name="cat_speed_dial_quick_responses">Speed Dial &amp; Quick Reply</string>
+    <string name="cat_speed_dial_quick_responses_sub">Speed Dial &amp; quick replies</string>
+    <string name="cat_call_blocking">Spam &amp; Call Block</string>
+    <string name="cat_call_blocking_sub">Blocked numbers &amp; caller ID</string>
     <string name="cat_voicemail_tools">Voicemail &amp; Recording</string>
     <string name="cat_voicemail_tools_sub">Carrier voicemail directory &amp; high-fidelity call recording</string>
-    <string name="cat_contacts_data">Contacts &amp; Data Management</string>
-    <string name="cat_contacts_data_sub">Account filters, default save account, backup &amp; vCard</string>
-    <string name="cat_advanced_features">Advanced Features</string>
-    <string name="cat_advanced_features_sub">Callback reminder dashboard, call notes &amp; fake call simulator</string>
+    <string name="cat_contacts_data">Contacts &amp; Data</string>
+    <string name="cat_contacts_data_sub">Sync, import &amp; backup</string>
+    <string name="cat_advanced_features">Advanced Tools</string>
+    <string name="cat_advanced_features_sub">Call Record, Note, Fake Call &amp; Call Back</string>
     <string name="feature_disabled_hint">Feature is disabled</string>
     <string name="feature_enable_prompt">Toggle the switch above to activate</string>
     <string name="btn_enable_feature">Enable Feature</string>
     <string name="state_enabled">Enabled</string>
     <string name="state_disabled">Disabled</string>
-    <string name="cat_privacy_security_about">Privacy, Security &amp; About</string>
-    <string name="cat_privacy_security_about_sub">Biometric lock, pocket protection, specs &amp; support</string>
+    <string name="cat_privacy_security_about">Privacy &amp; About</string>
+    <string name="cat_privacy_security_about_sub">App lock, safety &amp; app info</string>
 
     <!-- Headers inside Tier 2 -->
     <string name="header_theme_styling">THEME &amp; STYLING</string>
@@ -280,7 +281,7 @@
     <string name="checking_mirrors">Checking secure mirrors...</string>
     <string name="app_up_to_date_desc">You are using the latest official cryptographic build of Secure Dialer.</string>
     <string name="check_for_updates_now">Check for Updates Now</string>
-    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.2.0 (Stable Release)</string>
+    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.4.0 (Stable Release)</string>
     <string name="secure_local_recordings">SECURE LOCAL RECORDINGS</string>
     <string name="recordings_privacy_notice">Recordings are stored securely inside the app\'s sandboxed private database and not shared with external servers.</string>
     <string name="no_recordings_title">No Recordings Found</string>
@@ -347,7 +348,7 @@
     <string name="action_call">Call</string>
     <string name="action_message">Message</string>
     <string name="action_add_contact">Add Contact</string>
-    <string name="app_version_name">Version 1.0.2</string>
+    <string name="app_version_name">Version 1.4.0</string>
 
     
     <string name="unknown">Unknown</string>
@@ -520,4 +521,12 @@
     <string name="vcf_import_count_success">Imported contacts successfully!</string>
     <string name="blocklist_file_action_title">File Backup &amp; Migration</string>
     <string name="blocklist_file_action_desc">Export your blocked callers to a .txt/.csv file or import numbers from external community blocklists.</string>
+    <string name="header_contacts_import_export">CONTACTS IMPORT &amp; EXPORT</string>
+    <string name="settings_export_contacts_vcard">Export Contacts (vCard)</string>
+    <string name="settings_import_contacts_vcard">Import Contacts (vCard)</string>
+    <string name="settings_import_contacts_vcard_sub">Restore contacts from standard .vcf card file</string>
+    <string name="settings_backup_restore_sub">Restore call logs and settings from encrypted JSON file</string>
+    <string name="tab_slot_left">Left Slot</string>
+    <string name="tab_slot_middle">Middle Slot</string>
+    <string name="tab_slot_right">Right Slot</string>
 </resources>

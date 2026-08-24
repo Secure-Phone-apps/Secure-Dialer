@@ -34,10 +34,12 @@ import com.example.ui.viewmodel.DialerViewModel
 @Composable
 fun SoundAndGesturesSettings(
     viewModel: DialerViewModel,
-    cardBgColor: Color
+    cardBgColor: Color,
+    highlightedTitle: String? = null
 ) {
     val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
     val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
+    val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -50,11 +52,12 @@ fun SoundAndGesturesSettings(
 
         // Dialpad Tones Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Dialpad Keypad Tones", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -71,11 +74,12 @@ fun SoundAndGesturesSettings(
 
         // Vibrate on Click Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Call Vibration & Haptics", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -94,6 +98,9 @@ fun SoundAndGesturesSettings(
         item {
             Spacer(modifier = Modifier.height(12.dp))
             PreferenceHeader(stringResource(R.string.header_navigation_layout))
+        }
+
+        item {
             DefaultStartupTabCard(viewModel = viewModel, cardBgColor = cardBgColor)
         }
     }

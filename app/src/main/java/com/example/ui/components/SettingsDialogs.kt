@@ -39,7 +39,7 @@ fun AboutDialog(onDismiss: () -> Unit) {
         title = { Text(stringResource(R.string.settings_about)) },
         text = {
             Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                Text("Secure Dialer v1.2.0", style = MaterialTheme.typography.titleMedium)
+                Text("Secure Dialer v1.4.0", style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(R.string.about_app_desc), style = MaterialTheme.typography.bodyMedium)
                 Text(stringResource(R.string.about_mission_desc), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }

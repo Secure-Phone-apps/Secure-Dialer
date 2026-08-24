@@ -34,7 +34,8 @@ import com.example.ui.viewmodel.DialerViewModel
 @Composable
 fun SpeedDialAndQuickResponsesSettings(
     viewModel: DialerViewModel,
-    cardBgColor: Color
+    cardBgColor: Color,
+    highlightedTitle: String? = null
 ) {
     val scrollState = rememberScrollState()
     val speedDialEntities by viewModel.speedDialFlow.collectAsState()
@@ -48,31 +49,45 @@ fun SpeedDialAndQuickResponsesSettings(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Expandable Speed Dial
-        ExpandableSettingsCard(
-            title = stringResource(R.string.settings_speed_dial),
-            subtitle = stringResource(R.string.settings_speed_dial_sub),
-            icon = Icons.Default.TouchApp,
-            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
-            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+        HighlightableCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            badgeText = if (speedDialEntities.isNotEmpty()) "${speedDialEntities.size} configured" else null,
-            initiallyExpanded = false
+            isHighlighted = isMatchTitle("Speed Dial Shortcuts (Keys 1–9)", highlightedTitle) || isMatchTitle("Speed Dial", highlightedTitle),
+            shape = MaterialTheme.shapes.medium
         ) {
-            SpeedDialSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            ExpandableSettingsCard(
+                title = stringResource(R.string.settings_speed_dial),
+                subtitle = stringResource(R.string.settings_speed_dial_sub),
+                icon = Icons.Default.TouchApp,
+                iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                cardBgColor = Color.Transparent,
+                badgeText = if (speedDialEntities.isNotEmpty()) "${speedDialEntities.size} configured" else null,
+                initiallyExpanded = isMatchTitle("Speed Dial Shortcuts (Keys 1–9)", highlightedTitle)
+            ) {
+                SpeedDialSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            }
         }
 
         // Expandable Quick Responses
-        ExpandableSettingsCard(
-            title = stringResource(R.string.settings_quick_responses),
-            subtitle = stringResource(R.string.quick_decline_messages),
-            icon = Icons.Default.Quickreply,
-            iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
-            iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+        HighlightableCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            badgeText = if (quickResponsesEntities.isNotEmpty()) "${quickResponsesEntities.size} templates" else null,
-            initiallyExpanded = false
+            isHighlighted = isMatchTitle("Quick Decline Text Replies", highlightedTitle) || isMatchTitle("Quick Reply", highlightedTitle),
+            shape = MaterialTheme.shapes.medium
         ) {
-            QuickResponsesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            ExpandableSettingsCard(
+                title = stringResource(R.string.settings_quick_responses),
+                subtitle = stringResource(R.string.quick_decline_messages),
+                icon = Icons.Default.Quickreply,
+                iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
+                iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
+                cardBgColor = Color.Transparent,
+                badgeText = if (quickResponsesEntities.isNotEmpty()) "${quickResponsesEntities.size} templates" else null,
+                initiallyExpanded = isMatchTitle("Quick Decline Text Replies", highlightedTitle)
+            ) {
+                QuickResponsesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            }
         }
     }
 }

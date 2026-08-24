@@ -41,7 +41,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 @Composable
 fun CallingAccountsSettings(
     viewModel: DialerViewModel,
-    cardBgColor: Color
+    cardBgColor: Color,
+    highlightedTitle: String? = null
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -59,11 +60,12 @@ fun CallingAccountsSettings(
 
         // Preferred SIM
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Preferred SIM Card", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsPreferredSimRow(
@@ -76,11 +78,12 @@ fun CallingAccountsSettings(
 
         // Carrier Call Settings
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Call Forwarding", highlightedTitle) || isMatchTitle("Carrier", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
@@ -115,11 +118,12 @@ fun CallingAccountsSettings(
 
         // Call Waiting
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Call Waiting", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -138,11 +142,12 @@ fun CallingAccountsSettings(
         item {
             Spacer(modifier = Modifier.height(16.dp))
             PreferenceHeader(stringResource(R.string.header_carrier_voicemail))
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Carrier Voicemail Setup", highlightedTitle) || isMatchTitle("Voicemail", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 VoicemailCallingAccountsRow(viewModel = viewModel)

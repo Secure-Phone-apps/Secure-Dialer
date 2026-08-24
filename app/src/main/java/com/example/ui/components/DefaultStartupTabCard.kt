@@ -207,7 +207,7 @@ fun DefaultStartupTabCard(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     TabSlotDropdown(
-                        label = "Left Slot",
+                        label = stringResource(R.string.tab_slot_left),
                         selectedKey = tabSlotLeft,
                         screens = availableScreens,
                         onSelect = { viewModel.updateTabSlotLeft(it) },
@@ -215,7 +215,7 @@ fun DefaultStartupTabCard(
                     )
 
                     TabSlotDropdown(
-                        label = "Middle Slot",
+                        label = stringResource(R.string.tab_slot_middle),
                         selectedKey = tabSlotMiddle,
                         screens = availableScreens,
                         onSelect = { viewModel.updateTabSlotMiddle(it) },
@@ -223,7 +223,7 @@ fun DefaultStartupTabCard(
                     )
 
                     TabSlotDropdown(
-                        label = "Right Slot",
+                        label = stringResource(R.string.tab_slot_right),
                         selectedKey = tabSlotRight,
                         screens = availableScreens,
                         onSelect = { viewModel.updateTabSlotRight(it) },

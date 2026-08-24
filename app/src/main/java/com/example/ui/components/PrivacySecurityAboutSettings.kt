@@ -40,7 +40,8 @@ fun PrivacySecurityAboutSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color,
     onShowAbout: () -> Unit,
-    onShowPrivacy: () -> Unit
+    onShowPrivacy: () -> Unit,
+    highlightedTitle: String? = null
 ) {
     val context = LocalContext.current
     val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
@@ -57,11 +58,12 @@ fun PrivacySecurityAboutSettings(
 
         // Biometric Lock Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Biometric App Lock", highlightedTitle) || isMatchTitle("Privacy & Security Settings", highlightedTitle) || isMatchTitle("App Biometric Lock", highlightedTitle) || isMatchTitle("Biometric Lock", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -78,11 +80,12 @@ fun PrivacySecurityAboutSettings(
 
         // Pocket Protection Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Pocket Protection Mode", highlightedTitle) || isMatchTitle("Pocket Protection Guard", highlightedTitle) || isMatchTitle("Pocket Protection", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -105,11 +108,12 @@ fun PrivacySecurityAboutSettings(
 
         // About Secure Dialer Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("App Version & Device Specifications", highlightedTitle) || isMatchTitle("App Information & Changelog", highlightedTitle) || isMatchTitle("About", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
@@ -125,11 +129,12 @@ fun PrivacySecurityAboutSettings(
 
         // Privacy Policy Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Zero-Data Privacy Policy", highlightedTitle) || isMatchTitle("Privacy", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
@@ -151,11 +156,12 @@ fun PrivacySecurityAboutSettings(
 
         // Support Open Source Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Help & Customer Support", highlightedTitle) || isMatchTitle("Support Open Source Development", highlightedTitle) || isMatchTitle("GitHub", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(

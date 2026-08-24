@@ -34,7 +34,8 @@ import com.example.ui.viewmodel.DialerViewModel
 @Composable
 fun CallBlockingSettings(
     viewModel: DialerViewModel,
-    cardBgColor: Color
+    cardBgColor: Color,
+    highlightedTitle: String? = null
 ) {
     val scrollState = rememberScrollState()
     val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
@@ -48,32 +49,46 @@ fun CallBlockingSettings(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Expandable Blocklist
-        ExpandableSettingsCard(
-            title = stringResource(R.string.settings_blocked_numbers),
-            subtitle = stringResource(R.string.settings_blocked_numbers_sub),
-            icon = Icons.Default.Block,
-            iconBgColor = MaterialTheme.colorScheme.errorContainer,
-            iconTint = MaterialTheme.colorScheme.onErrorContainer,
+        HighlightableCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            badgeText = if (blockedNumbersEntities.isNotEmpty()) "${blockedNumbersEntities.size} blocked" else null,
-            initiallyExpanded = false
+            isHighlighted = isMatchTitle("Blocked Numbers & Blacklist", highlightedTitle) || isMatchTitle("Block Unknown & Private Calls", highlightedTitle) || isMatchTitle("Blocked Numbers", highlightedTitle),
+            shape = MaterialTheme.shapes.medium
         ) {
-            BlockListSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            ExpandableSettingsCard(
+                title = stringResource(R.string.settings_blocked_numbers),
+                subtitle = stringResource(R.string.settings_blocked_numbers_sub),
+                icon = Icons.Default.Block,
+                iconBgColor = MaterialTheme.colorScheme.errorContainer,
+                iconTint = MaterialTheme.colorScheme.onErrorContainer,
+                cardBgColor = Color.Transparent,
+                badgeText = if (blockedNumbersEntities.isNotEmpty()) "${blockedNumbersEntities.size} blocked" else null,
+                initiallyExpanded = isMatchTitle("Blocked Numbers", highlightedTitle) || isMatchTitle("Block Unknown", highlightedTitle)
+            ) {
+                BlockListSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            }
         }
 
         // Expandable Spam Defense Database
-        ExpandableSettingsCard(
-            title = stringResource(R.string.settings_spam_protection),
-            subtitle = stringResource(R.string.local_offline_protection),
-            icon = Icons.Default.Shield,
-            iconBgColor = MaterialTheme.colorScheme.primaryContainer,
-            iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+        HighlightableCard(
+            modifier = Modifier.padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            badgeText = if (spamList.isNotEmpty()) "${spamList.size} rules" else null,
-            initiallyExpanded = false
+            isHighlighted = isMatchTitle("Offline Spam Database & Protection", highlightedTitle) || isMatchTitle("Spam", highlightedTitle),
+            shape = MaterialTheme.shapes.medium
         ) {
-            Box(modifier = Modifier.padding(16.dp)) {
-                SpamDatabaseSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            ExpandableSettingsCard(
+                title = stringResource(R.string.settings_spam_protection),
+                subtitle = stringResource(R.string.local_offline_protection),
+                icon = Icons.Default.Shield,
+                iconBgColor = MaterialTheme.colorScheme.primaryContainer,
+                iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
+                cardBgColor = Color.Transparent,
+                badgeText = if (spamList.isNotEmpty()) "${spamList.size} rules" else null,
+                initiallyExpanded = isMatchTitle("Offline Spam Database", highlightedTitle) || isMatchTitle("Spam", highlightedTitle)
+            ) {
+                Box(modifier = Modifier.padding(16.dp)) {
+                    SpamDatabaseSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+                }
             }
         }
     }

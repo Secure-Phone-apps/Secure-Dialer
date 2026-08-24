@@ -75,6 +75,7 @@ fun SettingsPanel(
     onClose: () -> Unit
 ) {
     var activeTab by remember { mutableStateOf(0) }
+    var highlightedTitle by remember { mutableStateOf<String?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
 
@@ -157,39 +158,50 @@ fun SettingsPanel(
                     0 -> GeneralSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor,
-                        onNavigateToTab = { activeTab = it }
+                        onNavigateToTab = { tab, title ->
+                            highlightedTitle = title
+                            activeTab = tab
+                        }
                     )
                     1 -> AppearanceSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     2 -> SoundAndGesturesSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     3 -> CallingAccountsSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     4 -> SpeedDialAndQuickResponsesSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     5 -> CallBlockingSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     6 -> ContactsAndDataSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     7 -> AdvancedFeaturesSettings(
                         viewModel = viewModel,
-                        cardBgColor = cardBgColor
+                        cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle
                     )
                     8 -> PrivacySecurityAboutSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor,
+                        highlightedTitle = highlightedTitle,
                         onShowAbout = { showAboutDialog = true },
                         onShowPrivacy = { showPrivacyDialog = true }
                     )
@@ -205,6 +217,37 @@ fun SettingsPanel(
     if (showPrivacyDialog) {
         PrivacyDialog(onDismiss = { showPrivacyDialog = false })
     }
+}
+
+@Composable
+fun HighlightableCard(
+    modifier: Modifier = Modifier,
+    isHighlighted: Boolean = false,
+    cardBgColor: Color,
+    shape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.medium,
+    onClick: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    if (onClick != null) {
+        Card(
+            modifier = modifier,
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = shape,
+            onClick = onClick,
+            content = content
+        )
+    } else {
+        Card(
+            modifier = modifier,
+            colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            shape = shape,
+            content = content
+        )
+    }
+}
+
+fun isMatchTitle(title: String, highlightedTitle: String?): Boolean {
+    return false
 }
 
 @Composable

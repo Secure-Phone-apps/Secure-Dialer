@@ -44,7 +44,8 @@ import java.util.Locale
 @Composable
 fun ContactsAndDataSettings(
     viewModel: DialerViewModel,
-    cardBgColor: Color
+    cardBgColor: Color,
+    highlightedTitle: String? = null
 ) {
     val context = LocalContext.current
     val timestamp = remember { SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date()) }
@@ -144,11 +145,12 @@ fun ContactsAndDataSettings(
 
         // Contacts to display Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Account Display Filters", highlightedTitle) || isMatchTitle("Contacts & Data Settings", highlightedTitle) || isMatchTitle("Contacts to display", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 val currentFilter = viewModel.selectedAccountFilter.value
@@ -170,11 +172,12 @@ fun ContactsAndDataSettings(
 
         // Default Account Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Default Save Account", highlightedTitle) || isMatchTitle("Default Account", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 val defaultAccName = viewModel.defaultContactAccountName.value
@@ -202,11 +205,12 @@ fun ContactsAndDataSettings(
 
         // Export Local Backup Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Database Backup & Restore", highlightedTitle) || isMatchTitle("Backup", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
@@ -228,16 +232,17 @@ fun ContactsAndDataSettings(
 
         // Restore Local Backup Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Restore", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
                     title = stringResource(R.string.btn_restore_backup_file),
-                    subtitle = "Restore call logs and settings from encrypted JSON file",
+                    subtitle = stringResource(R.string.settings_backup_restore_sub),
                     onClick = {
                         openBackupFileLauncher.launch(arrayOf("application/json", "text/plain", "*/*"))
                     },
@@ -251,20 +256,21 @@ fun ContactsAndDataSettings(
         // [Header] CONTACTS IMPORT & EXPORT
         item {
             Spacer(modifier = Modifier.height(12.dp))
-            PreferenceHeader("CONTACTS IMPORT & EXPORT")
+            PreferenceHeader(stringResource(R.string.header_contacts_import_export))
         }
 
         // Export Contacts (.vcf) Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Export Contacts (vCard / .vcf)", highlightedTitle) || isMatchTitle("Export Contacts", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
-                    title = "Export Contacts (vCard)",
+                    title = stringResource(R.string.settings_export_contacts_vcard),
                     subtitle = stringResource(R.string.vcf_migration_desc),
                     onClick = {
                         val defaultName = "contacts_$timestamp.vcf"
@@ -279,16 +285,17 @@ fun ContactsAndDataSettings(
 
         // Import Contacts (.vcf) Card
         item {
-            Card(
+            HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Import Contacts", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
-                    title = "Import Contacts (vCard)",
-                    subtitle = "Restore contacts from standard .vcf card file",
+                    title = stringResource(R.string.settings_import_contacts_vcard),
+                    subtitle = stringResource(R.string.settings_import_contacts_vcard_sub),
                     onClick = {
                         openVcfLauncher.launch(arrayOf("text/x-vcard", "text/vcard", "text/plain", "*/*"))
                     },

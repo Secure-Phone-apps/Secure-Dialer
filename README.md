@@ -154,10 +154,10 @@ You can download signed release APKs directly from our **[GitHub Releases Page](
 
 | APK File Name | Which One Should You Download? |
 | :--- | :--- |
-| **`secure-dialer-v1.3.0-arm64-v8a.apk`** | **Most modern Android phones** (Pixel, Samsung Galaxy, OnePlus, Xiaomi, Motorola from the last 6+ years). **Choose this one if unsure!** |
-| **`secure-dialer-v1.3.0-armeabi-v7a.apk`** | **Older 32-bit Android phones** and budget devices. |
-| **`secure-dialer-v1.3.0-x86_64.apk`** | **64-bit Emulators**, ChromeOS, or Android-x86 PC setups. |
-| **`secure-dialer-v1.3.0-universal.apk`** | **Universal build** that runs on any Android device. |
+| **`secure-dialer-v1.4.0-arm64-v8a.apk`** | **Most modern Android phones** (Pixel, Samsung Galaxy, OnePlus, Xiaomi, Motorola from the last 6+ years). **Choose this one if unsure!** |
+| **`secure-dialer-v1.4.0-armeabi-v7a.apk`** | **Older 32-bit Android phones** and budget devices. |
+| **`secure-dialer-v1.4.0-x86_64.apk`** | **64-bit Emulators**, ChromeOS, or Android-x86 PC setups. |
+| **`secure-dialer-v1.4.0-universal.apk`** | **Universal build** that runs on any Android device. |
 
 ---
 

@@ -2,6 +2,16 @@
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
 
+## [1.4.0] - 2026-08-24
+
+### Settings, Features & UI Improvements
+- **Improved Settings & UI Appearance**: Refined settings navigation, visual hierarchy, and Material 3 design layout for a cleaner, modern look.
+- **Contact Source Selection**: Added full support for selecting and managing contact sources (Device Contacts, Custom Secure Contacts, or both).
+- **Enhanced Existing Features & Security**: Upgraded core call handling mechanisms, data encryption controls, and local privacy safeguards.
+- **Expanded Feature Controls**: Introduced granular configuration toggles and enhanced controls across application preferences and call management features.
+
+---
+
 ## [1.3.0] - 2026-08-06
 
 ### Architecture & APK Splits
