@@ -17,13 +17,17 @@
 
 package com.example
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.DisconnectCause
@@ -36,12 +40,66 @@ import kotlinx.coroutines.launch
 
 class MyInCallService : InCallService() {
     private val serviceScope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    private fun acquireWakeLock() {
+        try {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+            releaseWakeLock()
+            @Suppress("DEPRECATION")
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK or
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                PowerManager.ON_AFTER_RELEASE,
+                "SecureDialer:IncomingCallWakeLock"
+            ).apply {
+                setReferenceCounted(false)
+                acquire(20000L) // 20 seconds timeout to keep screen on while ringing
+            }
+        } catch (e: Exception) {
+            try {
+                val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+                wakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK or PowerManager.ACQUIRE_CAUSES_WAKEUP,
+                    "SecureDialer:IncomingCallWakeLock"
+                ).apply {
+                    setReferenceCounted(false)
+                    acquire(20000L)
+                }
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (_: Exception) {
+        }
+        wakeLock = null
+    }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent != null) {
             when (intent.action) {
-                ACTION_HANG_UP -> {
+                ACTION_HANG_UP, ACTION_DECLINE -> {
+                    releaseWakeLock()
                     CallManager.disconnect()
+                }
+                ACTION_ANSWER -> {
+                    releaseWakeLock()
+                    CallManager.answer()
+                    try {
+                        val mainIntent = Intent(this, MainActivity::class.java).apply {
+                            setPackage(packageName)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                            putExtra("SHOW_CALL_SCREEN", true)
+                        }
+                        startActivity(mainIntent)
+                    } catch (_: Exception) {
+                    }
                 }
             }
         }
@@ -49,6 +107,7 @@ class MyInCallService : InCallService() {
     }
 
     override fun onDestroy() {
+        releaseWakeLock()
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -73,9 +132,11 @@ class MyInCallService : InCallService() {
         }
         
         if (call.state == Call.STATE_RINGING) {
+            acquireWakeLock()
             showIncomingCallNotification(call)
             com.example.util.FlashLightManager.startFlashing(this)
         } else if (call.state == Call.STATE_ACTIVE || call.state == Call.STATE_DIALING || call.state == Call.STATE_CONNECTING || call.state == Call.STATE_HOLDING) {
+            releaseWakeLock()
             showActiveCallNotification(call)
         }
 
@@ -89,6 +150,7 @@ class MyInCallService : InCallService() {
                     wasRinging = true
                 }
                 if (state == Call.STATE_ACTIVE || state == Call.STATE_DISCONNECTED) {
+                    releaseWakeLock()
                     // Cancel incoming call notification when call becomes active or disconnects
                     val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(1)
@@ -121,7 +183,8 @@ class MyInCallService : InCallService() {
         // Start the MainActivity to display the incoming/outgoing call screen
         try {
             val intent = Intent(this, MainActivity::class.java).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                setPackage(packageName)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 putExtra("SHOW_CALL_SCREEN", true)
             }
             startActivity(intent)
@@ -134,7 +197,21 @@ class MyInCallService : InCallService() {
         val channelId = "incoming_call_channel"
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            nm.createNotificationChannel(NotificationChannel(channelId, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH))
+            val channel = NotificationChannel(channelId, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Full screen and heads-up notifications for incoming phone calls"
+                importance = NotificationManager.IMPORTANCE_HIGH
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                setBypassDnd(true)
+                enableVibration(true)
+                setSound(
+                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                        .build()
+                )
+            }
+            nm.createNotificationChannel(channel)
         }
 
         val handle = call.details?.handle
@@ -155,22 +232,61 @@ class MyInCallService : InCallService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             setPackage(packageName)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            action = "com.example.INCOMING_CALL"
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra("SHOW_CALL_SCREEN", true)
         }
         val fullScreenPendingIntent = PendingIntent.getActivity(
             this, 
-            0, 
+            101, 
             intent, 
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        // Direct action pending intents for quick response from heads-up / lockscreen notification
+        val declineIntent = Intent(this, MyInCallService::class.java).apply {
+            setPackage(packageName)
+            action = ACTION_DECLINE
+        }
+        val declinePendingIntent = PendingIntent.getService(
+            this,
+            102,
+            declineIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val answerIntent = Intent(this, MyInCallService::class.java).apply {
+            setPackage(packageName)
+            action = ACTION_ANSWER
+        }
+        val answerPendingIntent = PendingIntent.getService(
+            this,
+            103,
+            answerIntent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_call_incoming)
-            .setContentTitle(getString(R.string.call_type_incoming))
-            .setContentText("${getString(R.string.call_type_incoming)}: $displayName")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentTitle(displayName)
+            .setContentText(getString(R.string.call_type_incoming))
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(true)
+            .setAutoCancel(false)
             .setFullScreenIntent(fullScreenPendingIntent, true)
-            .setAutoCancel(true)
+            .setContentIntent(fullScreenPendingIntent)
+            .addAction(
+                android.R.drawable.ic_menu_close_clear_cancel,
+                getString(R.string.btn_decline),
+                declinePendingIntent
+            )
+            .addAction(
+                android.R.drawable.sym_action_call,
+                getString(R.string.btn_answer),
+                answerPendingIntent
+            )
             .build()
 
         nm.notify(1, notification)
@@ -322,5 +438,7 @@ class MyInCallService : InCallService() {
 
     companion object {
         const val ACTION_HANG_UP = "com.example.ACTION_HANG_UP"
+        const val ACTION_ANSWER = "com.example.ACTION_ANSWER"
+        const val ACTION_DECLINE = "com.example.ACTION_DECLINE"
     }
 }

@@ -73,11 +73,29 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (isAppStopped) {
+        val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
+                                     CallManager.calls.value.isNotEmpty() ||
+                                     viewModel.isFakeCallActive.value ||
+                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+        if (hasActiveOrIncomingCall) {
+            isAppAuthenticated.value = true
+            setLockScreenVisibility(true)
+        } else if (isAppStopped) {
             isAppStopped = false
             if (viewModel.isBiometricLockEnabled.value) {
                 isAppAuthenticated.value = false
             }
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
+                                     CallManager.calls.value.isNotEmpty() ||
+                                     viewModel.isFakeCallActive.value ||
+                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+        if (hasActiveOrIncomingCall) {
+            setLockScreenVisibility(true)
         }
     }
 
@@ -131,6 +149,13 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
+        val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
+                                     CallManager.calls.value.isNotEmpty() ||
+                                     viewModel.isFakeCallActive.value ||
+                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+        if (hasActiveOrIncomingCall) {
+            setLockScreenVisibility(true)
+        }
         try {
             handleIntent(intent)
         } catch (_: Exception) {
@@ -155,7 +180,14 @@ class MainActivity : ComponentActivity() {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                         updateDefaultDialerStatus(context)
-                        if (viewModel.isBiometricLockEnabled.value) {
+                        val hasCall = CallManager.currentCall.value != null || 
+                                     CallManager.calls.value.isNotEmpty() ||
+                                     viewModel.isFakeCallActive.value ||
+                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+                        if (hasCall) {
+                            isAppAuthenticated.value = true
+                            setLockScreenVisibility(true)
+                        } else if (viewModel.isBiometricLockEnabled.value) {
                             if (!isAuthenticating && !isAppAuthenticated.value) {
                                 triggerDeviceAuthentication()
                             }
@@ -283,13 +315,22 @@ class MainActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
                 setShowWhenLocked(show)
                 setTurnScreenOn(show)
+            }
+            @Suppress("DEPRECATION")
+            if (show) {
+                window.addFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                )
             } else {
-                @Suppress("DEPRECATION")
-                if (show) {
-                    window.addFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
-                } else {
-                    window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
-                }
+                window.clearFlags(
+                    android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
+                    android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                )
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -349,9 +390,10 @@ class MainActivity : ComponentActivity() {
             isAppAuthenticated.value = true
         }
 
-        if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false)) {
+        if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false) || CallManager.currentCall.value != null) {
             viewModel.isCallMinimized.value = false
             isAppAuthenticated.value = true
+            setLockScreenVisibility(true)
         }
 
         if (intent.getBooleanExtra("SHOW_CALL_LOG", false)) {
