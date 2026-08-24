@@ -25,7 +25,6 @@
         "priceCurrency": "USD"
       },
       "description": "A 100% offline, privacy-first open-source Android dialer built with Jetpack Compose. Zero internet permissions, zero telemetry, on-device AES-256 encryption, T9 search, and built-in offline spam protection.",
-      "softwareVersion": "1.3.0",
       "license": "https://opensource.org/licenses/GPL-3.0",
       "url": "https://secure-phone-apps.github.io/Secure-Dialer/",
       "downloadUrl": "https://github.com/Secure-Phone-apps/Secure-Dialer/releases",
@@ -219,7 +218,7 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
-                        Download APK (v1.3.0)
+                        Download APK <span class="app-version-tag"></span>
                     </a>
                     <a href="#setup" class="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-2xl text-center font-display font-bold tracking-wide transition-all">
                         Compile from Source
@@ -1258,8 +1257,22 @@ cd Secure-Dialer
                 <div class="space-y-6">
                     <p class="text-xs text-slate-500">All notable updates and releases of the Secure Dialer application are documented here.</p>
                     
-                    <!-- v1.3.0 -->
+                    <!-- v1.4.0 -->
                     <div class="border-l-2 border-brand-500 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.4.0</span>
+                            <span class="text-xs text-slate-500">2026-08-24</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Release Pipeline & Localization Fallback Coverage</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>8-Locale Default Fallbacks:</strong> Integrated fallback string declarations across all supported languages for settings search and duplicate contact deduplication.</li>
+                            <li><strong>CI/CD Packaging Safeguards:</strong> Configured release lint rules in Gradle for smooth automated GitHub Actions build pipelines.</li>
+                            <li><strong>Dynamic Release Integration:</strong> Auto-fetches latest GitHub releases and binaries dynamically on landing pages.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.3.0 -->
+                    <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-4 space-y-2">
                         <div class="flex items-center gap-2">
                             <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.3.0</span>
                             <span class="text-xs text-slate-500">2026-08-06</span>
@@ -1412,38 +1425,91 @@ free programs, and that you know you can do these things.</pre>
             }, 300);
         }
 
+        let latestTag = '';
+
         const apkDetails = {
             'universal': {
-                fileName: 'secure-dialer-v1.3.0-universal.apk',
+                fileName: 'secure-dialer-universal.apk',
                 size: '16.7 MB',
                 hash: '55f82d22ec8c9463fc1835c78e2837d8a25c7e5ff38f1712825aef249278f99c',
                 desc: 'Includes all CPU architectures. Works on any device.'
             },
             'arm64': {
-                fileName: 'secure-dialer-v1.3.0-arm64-v8a.apk',
+                fileName: 'secure-dialer-arm64-v8a.apk',
                 size: '7.3 MB',
                 hash: '6c66659804d59a6a13dac2803919fd4e8ea74c836678b527d08d6bbd7dd65553',
                 desc: 'For modern 64-bit phones (e.g., Pixel, Samsung S-series, newer devices).'
             },
             'arm32': {
-                fileName: 'secure-dialer-v1.3.0-armeabi-v7a.apk',
+                fileName: 'secure-dialer-armeabi-v7a.apk',
                 size: '6.0 MB',
                 hash: '644da73b5f80ff7cf33625e71135895ba5ea21bea754c153aaf7438cf8f0b519',
                 desc: 'For older 32-bit Android phones and legacy devices.'
             },
             'x86_64': {
-                fileName: 'secure-dialer-v1.3.0-x86_64.apk',
+                fileName: 'secure-dialer-x86_64.apk',
                 size: '7.7 MB',
                 hash: '751b9ddcaab333d798695d5ca0bb1a7c094f13d6f6f384b883b2e815d1c76e11',
                 desc: 'For 64-bit Android emulators running on modern computer hardware.'
             },
             'x86': {
-                fileName: 'secure-dialer-v1.3.0-x86.apk',
+                fileName: 'secure-dialer-x86.apk',
                 size: '7.2 MB',
                 hash: 'a09ab6b853e64ac7ea62550218991587eeb2470f84fe4a8c22d728b3547533d5',
                 desc: 'For older 32-bit computer-based Android emulators.'
             }
         };
+
+        async function fetchLatestRelease() {
+            try {
+                const res = await fetch('https://api.github.com/repos/Secure-Phone-apps/Secure-Dialer/releases/latest');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (!data || !data.tag_name) return;
+
+                latestTag = data.tag_name;
+                const cleanVer = latestTag.replace(/^v/, '');
+
+                document.querySelectorAll('.app-version-tag').forEach(el => {
+                    el.innerText = '(' + latestTag + ')';
+                });
+                document.querySelectorAll('.app-version-text').forEach(el => {
+                    el.innerText = cleanVer;
+                });
+
+                if (data.assets && Array.isArray(data.assets)) {
+                    data.assets.forEach(asset => {
+                        const name = asset.name.toLowerCase();
+                        let typeKey = null;
+
+                        if (name.includes('universal')) typeKey = 'universal';
+                        else if (name.includes('arm64-v8a') || name.includes('arm64')) typeKey = 'arm64';
+                        else if (name.includes('armeabi-v7a') || name.includes('arm32') || name.includes('v7a')) typeKey = 'arm32';
+                        else if (name.includes('x86_64')) typeKey = 'x86_64';
+                        else if (name.includes('x86')) typeKey = 'x86';
+
+                        if (typeKey && apkDetails[typeKey]) {
+                            apkDetails[typeKey].fileName = asset.name;
+                            apkDetails[typeKey].downloadUrl = asset.browser_download_url;
+                            if (asset.size) {
+                                apkDetails[typeKey].size = (asset.size / (1024 * 1024)).toFixed(1) + ' MB';
+                            }
+                        }
+                    });
+                }
+                if (typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
+                    selectApkType(activeApkType);
+                }
+            } catch (err) {
+                console.log('GitHub Release sync fallback active:', err);
+            }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', fetchLatestRelease);
+        } else {
+            fetchLatestRelease();
+        }
 
         let activeApkType = 'universal';
 
@@ -1523,10 +1589,9 @@ free programs, and that you know you can do these things.</pre>
             `;
 
             // Trigger actual browser download directly from GitHub releases
-            // By omitting target="_blank", the browser fetches the file on the current tab.
-            // Because the server sends file headers, the browser starts download natively and NEVER leaves the current page.
+            const downloadTarget = detail.downloadUrl || ('https://github.com/Secure-Phone-apps/Secure-Dialer/releases/download/' + latestTag + '/' + detail.fileName);
             const a = document.createElement('a');
-            a.href = 'https://github.com/Secure-Phone-apps/Secure-Dialer/releases/download/v1.3.0/' + detail.fileName;
+            a.href = downloadTarget;
             a.download = detail.fileName;
             document.body.appendChild(a);
             a.click();
@@ -1632,7 +1697,7 @@ free programs, and that you know you can do these things.</pre>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="font-display font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white">Download Secure Dialer (v1.3.0)</h3>
+                        <h3 class="font-display font-extrabold text-lg sm:text-xl text-slate-900 dark:text-white">Download Secure Dialer <span class="app-version-tag"></span></h3>
                         <p class="text-xs text-slate-500 dark:text-slate-400">Choose the optimal build package or universal binary below</p>
                     </div>
                 </div>
