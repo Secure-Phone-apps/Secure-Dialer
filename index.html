@@ -1429,33 +1429,33 @@ free programs, and that you know you can do these things.</pre>
 
         const apkDetails = {
             'universal': {
-                fileName: 'secure-dialer-universal.apk',
-                size: '16.7 MB',
-                hash: 'Fetching SHA-256 signature...',
+                fileName: 'secure-dialer-v1.4.0-universal.apk',
+                size: '15.7 MB',
+                hash: 'ef4aed489f02c21bb47984fdb38e0e33715170396913a4017e6ab9e89e5b10ae',
                 desc: 'Includes all CPU architectures. Works on any device.'
             },
             'arm64': {
-                fileName: 'secure-dialer-arm64-v8a.apk',
-                size: '7.3 MB',
-                hash: 'Fetching SHA-256 signature...',
+                fileName: 'secure-dialer-v1.4.0-arm64-v8a.apk',
+                size: '6.3 MB',
+                hash: '542f7bb265c03009b458cfd60c1c9e613b1d2d252c0e4a683cb26d211092e1b9',
                 desc: 'For modern 64-bit phones (e.g., Pixel, Samsung S-series, newer devices).'
             },
             'arm32': {
-                fileName: 'secure-dialer-armeabi-v7a.apk',
-                size: '6.0 MB',
-                hash: 'Fetching SHA-256 signature...',
+                fileName: 'secure-dialer-v1.4.0-armeabi-v7a.apk',
+                size: '5.0 MB',
+                hash: '635146a90f27b9ad036e4716ab7b09c9391f47d74974029dc0413ea1a641696e',
                 desc: 'For older 32-bit Android phones and legacy devices.'
             },
             'x86_64': {
-                fileName: 'secure-dialer-x86_64.apk',
-                size: '7.7 MB',
-                hash: 'Fetching SHA-256 signature...',
+                fileName: 'secure-dialer-v1.4.0-x86_64.apk',
+                size: '6.7 MB',
+                hash: '508f1d3b51d303dddfdea8ca7390c77114d179d30a4cf44fadfe8c8566d3bbd3',
                 desc: 'For 64-bit Android emulators running on modern computer hardware.'
             },
             'x86': {
-                fileName: 'secure-dialer-x86.apk',
-                size: '7.2 MB',
-                hash: 'Fetching SHA-256 signature...',
+                fileName: 'secure-dialer-v1.4.0-x86.apk',
+                size: '6.2 MB',
+                hash: '62a122c4aa20af522512082e4602972e9058e846316c26e15220bd5a08bccda8',
                 desc: 'For older 32-bit computer-based Android emulators.'
             }
         };
@@ -1559,48 +1559,39 @@ free programs, and that you know you can do these things.</pre>
                     applyParsedChecksums(fromBody);
                 }
 
-                // Fetch checksums.txt asset or release attachment
-                let checksumAssetFound = false;
+                // Fetch checksums.txt asset directly via GitHub API asset endpoint
                 if (data.assets && Array.isArray(data.assets)) {
                     const checksumAsset = data.assets.find(a => {
                         const n = a.name.toLowerCase();
                         return n.includes('checksum') || n.includes('sha256') || n.endsWith('.txt') || n.endsWith('.sha256');
                     });
 
-                    if (checksumAsset && checksumAsset.browser_download_url) {
-                        checksumAssetFound = true;
-                        try {
-                            const csRes = await fetch(checksumAsset.browser_download_url);
-                            if (csRes.ok) {
-                                const csText = await csRes.text();
-                                const fromAsset = parseChecksumsText(csText);
-                                applyParsedChecksums(fromAsset);
+                    if (checksumAsset) {
+                        // Try GitHub API asset endpoint with octet-stream header (supports CORS)
+                        if (checksumAsset.url) {
+                            try {
+                                const csRes = await fetch(checksumAsset.url, {
+                                    headers: { 'Accept': 'application/octet-stream' }
+                                });
+                                if (csRes.ok) {
+                                    const csText = await csRes.text();
+                                    const fromAsset = parseChecksumsText(csText);
+                                    applyParsedChecksums(fromAsset);
+                                }
+                            } catch (csErr) {
+                                console.log('GitHub API asset fetch error:', csErr);
                             }
-                        } catch (csErr) {
-                            console.log('Direct checksum asset fetch failed, attempting fallback URL...', csErr);
                         }
-                    }
-                }
-
-                // Fallback attempt: fetch checksums.txt directly from release URL
-                if (!checksumAssetFound || Object.values(apkDetails).some(d => d.hash.startsWith('Fetching'))) {
-                    const fallbackUrls = [
-                        'https://github.com/Secure-Phone-apps/Secure-Dialer/releases/download/' + latestTag + '/checksums.txt',
-                        'https://raw.githubusercontent.com/Secure-Phone-apps/Secure-Dialer/' + latestTag + '/checksums.txt',
-                        'https://raw.githubusercontent.com/Secure-Phone-apps/Secure-Dialer/main/checksums.txt'
-                    ];
-
-                    for (const url of fallbackUrls) {
-                        try {
-                            const fbRes = await fetch(url);
-                            if (fbRes.ok) {
-                                const fbText = await fbRes.text();
-                                const fromFb = parseChecksumsText(fbText);
-                                applyParsedChecksums(fromFb);
-                                break;
-                            }
-                        } catch (e) {
-                            // continue trying fallbacks
+                        // Secondary attempt using browser_download_url
+                        if (checksumAsset.browser_download_url) {
+                            try {
+                                const csRes = await fetch(checksumAsset.browser_download_url);
+                                if (csRes.ok) {
+                                    const csText = await csRes.text();
+                                    const fromAsset = parseChecksumsText(csText);
+                                    applyParsedChecksums(fromAsset);
+                                }
+                            } catch (e) {}
                         }
                     }
                 }
@@ -1610,12 +1601,6 @@ free programs, and that you know you can do these things.</pre>
                 }
             } catch (err) {
                 console.log('GitHub Release sync info:', err);
-                // Ensure placeholder is replaced if fetch fails
-                Object.values(apkDetails).forEach(detail => {
-                    if (detail.hash.startsWith('Fetching')) {
-                        detail.hash = 'Available on GitHub Release (' + latestTag + ')';
-                    }
-                });
                 if (typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
                     selectApkType(activeApkType);
                 }
@@ -1855,7 +1840,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">Compatible with all physical devices and emulators. (Larger file)</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-universal" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~16.7 MB</span>
+                                <span id="card-size-universal" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~15.7 MB</span>
                             </div>
                         </div>
 
@@ -1869,7 +1854,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For modern 64-bit phones (Pixel, Galaxy, modern devices).</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-arm64" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.3 MB</span>
+                                <span id="card-size-arm64" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~6.3 MB</span>
                             </div>
                         </div>
 
@@ -1883,7 +1868,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For older 32-bit Android phones and legacy devices.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-arm32" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~6.0 MB</span>
+                                <span id="card-size-arm32" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~5.0 MB</span>
                             </div>
                         </div>
 
@@ -1897,7 +1882,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For 64-bit Android Virtual Devices (AVD) running on computers.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-x86_64" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.7 MB</span>
+                                <span id="card-size-x86_64" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~6.7 MB</span>
                             </div>
                         </div>
 
@@ -1911,7 +1896,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For legacy 32-bit computer-based emulator environments.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-x86" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.2 MB</span>
+                                <span id="card-size-x86" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~6.2 MB</span>
                             </div>
                         </div>
                     </div>
@@ -1927,11 +1912,11 @@ free programs, and that you know you can do these things.</pre>
                             <div class="flex items-start justify-between gap-4">
                                 <div class="space-y-0.5">
                                     <p class="text-xs text-slate-400">Selected Package File</p>
-                                    <p id="active-download-name" class="font-display font-bold text-base text-slate-900 dark:text-white">secure-dialer-universal.apk</p>
+                                    <p id="active-download-name" class="font-display font-bold text-base text-slate-900 dark:text-white">secure-dialer-v1.4.0-universal.apk</p>
                                 </div>
                                 <div class="text-right space-y-0.5">
                                     <p class="text-xs text-slate-400">Size</p>
-                                    <p id="active-download-size" class="font-mono font-bold text-base text-brand-500">~16.7 MB</p>
+                                    <p id="active-download-size" class="font-mono font-bold text-base text-brand-500">15.7 MB</p>
                                 </div>
                             </div>
                             
@@ -1946,7 +1931,7 @@ free programs, and that you know you can do these things.</pre>
                                         <span class="text-[11px] text-slate-500">Copy</span>
                                     </button>
                                 </div>
-                                <p id="active-download-hash" class="font-mono text-[10px] break-all select-all text-slate-400 dark:text-slate-400 leading-snug bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-xl border border-gray-200/40 dark:border-slate-800/40">Fetching SHA-256 signature from latest release...</p>
+                                <p id="active-download-hash" class="font-mono text-[10px] break-all select-all text-slate-400 dark:text-slate-400 leading-snug bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-xl border border-gray-200/40 dark:border-slate-800/40">ef4aed489f02c21bb47984fdb38e0e33715170396913a4017e6ab9e89e5b10ae</p>
                             </div>
                         </div>
 
