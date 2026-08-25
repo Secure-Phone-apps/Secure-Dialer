@@ -1630,11 +1630,6 @@ free programs, and that you know you can do these things.</pre>
             }, 10);
 
             selectApkType(activeApkType || 'universal');
-
-            // Trigger fresh sync if checksums are pending
-            if (Object.values(apkDetails).some(d => d.hash.startsWith('Fetching'))) {
-                fetchLatestRelease();
-            }
         }
 
         function closeDownloadModal() {
