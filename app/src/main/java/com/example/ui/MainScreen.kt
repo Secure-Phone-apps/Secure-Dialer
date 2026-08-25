@@ -680,6 +680,62 @@ fun MainScreen(
             }
 
             MainScreenContactDialogs(viewModel = viewModel)
+
+            val pendingRecNote = viewModel.pendingPostCallRecordingNote.value
+            if (pendingRecNote != null) {
+                var noteInput by remember(pendingRecNote.id) { mutableStateOf("") }
+                AlertDialog(
+                    onDismissRequest = { viewModel.dismissPostCallRecordingNote() },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.Mic,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    title = { Text(stringResource(R.string.jot_call_note_title)) },
+                    text = {
+                        Column {
+                            Text(
+                                text = "${pendingRecNote.name.ifEmpty { pendingRecNote.number }} (${pendingRecNote.duration}s recording)",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(bottom = 12.dp)
+                            )
+                            OutlinedTextField(
+                                value = noteInput,
+                                onValueChange = { noteInput = it },
+                                placeholder = { Text(stringResource(R.string.note_placeholder)) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(110.dp),
+                                singleLine = false
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                viewModel.savePostCallRecordingNote(
+                                    pendingRecNote.id,
+                                    pendingRecNote.number,
+                                    noteInput.trim()
+                                )
+                                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Text(stringResource(R.string.btn_save_note))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { viewModel.dismissPostCallRecordingNote() }
+                        ) {
+                            Text(stringResource(R.string.btn_cancel))
+                        }
+                    }
+                )
+            }
         }
     }
 }

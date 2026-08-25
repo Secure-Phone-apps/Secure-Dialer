@@ -20,6 +20,7 @@ package com.example
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.telecom.Call
@@ -462,5 +463,40 @@ object CallManager {
 
     fun setBluetooth(bluetooth: Boolean) {
         inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_EARPIECE)
+    }
+
+    fun rejectCallWithMessage(context: Context, number: String, textMessage: String) {
+        val call = _currentCall.value
+        var rejectedViaTelecom = false
+        if (call != null && call.state == Call.STATE_RINGING) {
+            try {
+                call.reject(true, textMessage)
+                rejectedViaTelecom = true
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        if (!rejectedViaTelecom) {
+            if (call != null) {
+                try { call.disconnect() } catch (e: Exception) { e.printStackTrace() }
+            }
+            try {
+                val smsManager = context.getSystemService(android.telephony.SmsManager::class.java)
+                smsManager.sendTextMessage(number, null, textMessage, null, null)
+                android.widget.Toast.makeText(context, context.getString(R.string.sms_sent), android.widget.Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                try {
+                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number")).apply {
+                        putExtra("sms_body", textMessage)
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(intent)
+                } catch (ex: Exception) {
+                    android.widget.Toast.makeText(context, context.getString(R.string.sms_failed), android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            android.widget.Toast.makeText(context, context.getString(R.string.sms_sent), android.widget.Toast.LENGTH_SHORT).show()
+        }
     }
 }

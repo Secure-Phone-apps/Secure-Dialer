@@ -493,6 +493,7 @@ class DialerRepository(rawContext: Context) {
     }
 
     // --- Call Notes ---
+    suspend fun updateCallRecordingNote(id: Int, note: String) = dao.updateCallRecordingNote(id, note)
     suspend fun getCallNote(number: String): CallNote? = dao.getLatestCallNote(number)
     fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>> = dao.getCallNotesForNumberFlow(number)
     fun getAllCallNotes(): Flow<List<CallNote>> = dao.getAllCallNotesFlow()

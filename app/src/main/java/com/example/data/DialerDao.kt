@@ -168,7 +168,10 @@ interface DialerDao {
     fun getAllCallRecordingsFlow(): Flow<List<CallRecording>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCallRecording(recording: CallRecording)
+    suspend fun insertCallRecording(recording: CallRecording): Long
+
+    @Query("UPDATE call_recordings SET note = :note WHERE id = :id")
+    suspend fun updateCallRecordingNote(id: Int, note: String)
 
     @Query("DELETE FROM call_recordings WHERE id = :id")
     suspend fun deleteCallRecording(id: Int)

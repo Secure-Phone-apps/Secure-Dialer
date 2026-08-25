@@ -61,7 +61,7 @@ suspend fun DialerRepository.deleteCallNote(number: String) = dao.deleteCallNote
 suspend fun DialerRepository.deleteCallNoteById(id: Long) = dao.deleteCallNoteById(id)
 
 fun DialerRepository.getAllCallRecordings(): Flow<List<CallRecording>> = dao.getAllCallRecordingsFlow()
-suspend fun DialerRepository.saveCallRecording(recording: CallRecording) = dao.insertCallRecording(recording)
+suspend fun DialerRepository.saveCallRecording(recording: CallRecording): Long = dao.insertCallRecording(recording)
 suspend fun DialerRepository.deleteCallRecording(id: Int) = dao.deleteCallRecording(id)
 
 // Spam Number Delegates

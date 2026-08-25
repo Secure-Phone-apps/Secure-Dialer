@@ -58,12 +58,12 @@ fun DefaultStartupTabCard(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
-                val tabs = listOf(
-                    stringResource(R.string.tab_recents),
-                    stringResource(R.string.tab_contacts),
-                    stringResource(R.string.tab_dialpad)
+                val tabOptions = listOf(
+                    "RECENTS" to stringResource(R.string.tab_recents),
+                    "CONTACTS" to stringResource(R.string.tab_contacts),
+                    "DIALPAD" to stringResource(R.string.tab_dialpad)
                 )
-                val currentTabSelected = viewModel.defaultTab.intValue
+                val currentStartupKey = viewModel.defaultStartupTabKey.value
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -72,8 +72,8 @@ fun DefaultStartupTabCard(
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    tabs.forEachIndexed { idx, title ->
-                        val isSel = currentTabSelected == idx
+                    tabOptions.forEach { (key, title) ->
+                        val isSel = currentStartupKey == key
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -82,7 +82,7 @@ fun DefaultStartupTabCard(
                                     if (isSel) MaterialTheme.colorScheme.primary
                                     else Color.Transparent
                                 )
-                                .clickable { viewModel.updateDefaultTab(idx) }
+                                .clickable { viewModel.updateDefaultStartupTabKey(key) }
                                 .padding(vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {

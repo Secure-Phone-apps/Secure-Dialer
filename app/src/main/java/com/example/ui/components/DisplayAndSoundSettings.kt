@@ -184,7 +184,7 @@ fun DisplayAndSoundSettings(
                     title = stringResource(R.string.settings_dialpad_tones),
                     subtitle = stringResource(R.string.settings_dialpad_tones_sub),
                     checked = dialpadTonesEnabled,
-                    onCheckedChange = { viewModel.dialpadTonesEnabled.value = it },
+                    onCheckedChange = { viewModel.updateDialpadTonesEnabled(it) },
                     icon = Icons.AutoMirrored.Filled.VolumeUp,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.secondary
@@ -205,7 +205,7 @@ fun DisplayAndSoundSettings(
                     title = stringResource(R.string.settings_vibrate),
                     subtitle = stringResource(R.string.settings_vibrate_sub),
                     checked = vibrateOnClickEnabled,
-                    onCheckedChange = { viewModel.vibrateOnClickEnabled.value = it },
+                    onCheckedChange = { viewModel.updateVibrateOnClickEnabled(it) },
                     icon = Icons.Default.Vibration,
                     iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.tertiary

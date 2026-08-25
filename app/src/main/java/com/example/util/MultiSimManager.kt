@@ -94,4 +94,18 @@ object MultiSimManager {
 
         return simList
     }
+
+    @SuppressLint("MissingPermission")
+    fun getPhysicalSimCount(context: Context): Int {
+        try {
+            val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+            val activeSubs = subscriptionManager?.activeSubscriptionInfoList
+            if (activeSubs != null && activeSubs.isNotEmpty()) {
+                return activeSubs.size
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return 1
+    }
 }

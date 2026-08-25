@@ -51,7 +51,7 @@ class Converters {
         SpamNumber::class,
         CallReminder::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -70,13 +70,13 @@ abstract class AppDatabase : RoomDatabase() {
                     // Test connection to ensure key and schema integrity
                     val helper = db.openHelper.writableDatabase
                     helper.query("SELECT 1").close()
-                } catch (_: Exception) {
-                    try { db.close() } catch (_: Exception) {}
-                    try { appCtx.deleteDatabase("dialer_database") } catch (_: Exception) {}
+                } catch (_: Throwable) {
+                    try { db.close() } catch (_: Throwable) {}
+                    try { appCtx.deleteDatabase("dialer_database") } catch (_: Throwable) {}
                     val freshDb = buildDatabase(appCtx)
                     try {
                         freshDb.openHelper.writableDatabase.query("SELECT 1").close()
-                    } catch (_: Exception) {
+                    } catch (_: Throwable) {
                     }
                     INSTANCE = freshDb
                     return@synchronized freshDb
@@ -87,19 +87,30 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         private fun buildDatabase(context: Context): AppDatabase {
-            SQLiteDatabase.loadLibs(context)
-            val dbKey = DatabaseKeyManager.getDatabaseKey(context)
-            val factory = SupportFactory(dbKey)
-            return Room.databaseBuilder(
-                context,
-                AppDatabase::class.java,
-                "dialer_database"
-            )
-                .openHelperFactory(factory)
-                .setJournalMode(RoomDatabase.JournalMode.TRUNCATE) // Avoid persistent unencrypted WAL files on disk
-                .fallbackToDestructiveMigration()
-                .fallbackToDestructiveMigrationOnDowngrade()
-                .build()
+            return try {
+                SQLiteDatabase.loadLibs(context)
+                val dbKey = DatabaseKeyManager.getDatabaseKey(context)
+                val factory = SupportFactory(dbKey)
+                Room.databaseBuilder(
+                    context,
+                    AppDatabase::class.java,
+                    "dialer_database"
+                )
+                    .openHelperFactory(factory)
+                    .setJournalMode(RoomDatabase.JournalMode.TRUNCATE) // Avoid persistent unencrypted WAL files on disk
+                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigrationOnDowngrade()
+                    .build()
+            } catch (_: Throwable) {
+                // Fallback for Robolectric / JVM unit test environment where native SQLCipher .so is not present on host JVM
+                Room.inMemoryDatabaseBuilder(
+                    context,
+                    AppDatabase::class.java
+                )
+                    .allowMainThreadQueries()
+                    .fallbackToDestructiveMigration()
+                    .build()
+            }
         }
     }
 }

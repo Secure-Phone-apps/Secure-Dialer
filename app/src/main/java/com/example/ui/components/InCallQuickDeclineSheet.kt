@@ -58,13 +58,7 @@ fun InCallQuickDeclineSheet(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                try {
-                                    val smsManager = context.getSystemService(android.telephony.SmsManager::class.java)
-                                    smsManager.sendTextMessage(contactNumber, null, resp, null, null)
-                                    Toast.makeText(context, context.getString(R.string.sms_sent), Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, context.getString(R.string.sms_failed), Toast.LENGTH_SHORT).show()
-                                }
+                                com.example.CallManager.rejectCallWithMessage(context, contactNumber, resp)
                                 onQuickDecline(resp)
                             },
                         colors = CardDefaults.cardColors(

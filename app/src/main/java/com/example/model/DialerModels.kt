@@ -143,7 +143,8 @@ data class CallRecording(
     val name: String,
     val timestamp: String,
     val duration: Long, // in seconds
-    val filePath: String
+    val filePath: String,
+    val note: String = ""
 )
 
 @Entity(tableName = "blocked_numbers")

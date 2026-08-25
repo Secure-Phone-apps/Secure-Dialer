@@ -170,11 +170,19 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
     var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
     var isPocketProtectionEnabled = mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false))
-    var selectedTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
+    var defaultStartupTabKey = mutableStateOf(prefs.getString("default_startup_tab_key", "RECENTS") ?: "RECENTS")
+    var selectedTab = mutableIntStateOf(
+        listOf(
+            prefs.getString("tab_slot_left", "RECENTS") ?: "RECENTS",
+            prefs.getString("tab_slot_middle", "CONTACTS") ?: "CONTACTS",
+            prefs.getString("tab_slot_right", "DIALPAD") ?: "DIALPAD"
+        ).indexOf(prefs.getString("default_startup_tab_key", "RECENTS") ?: "RECENTS").coerceAtLeast(0)
+    )
     var flashAlertsEnabled = mutableStateOf(prefs.getBoolean("flash_alerts_enabled", false))
     var isCallbackRemindersEnabled = mutableStateOf(prefs.getBoolean("is_callback_reminders_enabled", true))
     var isCallNotesEnabled = mutableStateOf(prefs.getBoolean("is_call_notes_enabled", true))
     var isFakeCallSimulatorEnabled = mutableStateOf(prefs.getBoolean("is_fake_call_simulator_enabled", true))
+    var pendingPostCallRecordingNote = mutableStateOf<CallRecording?>(null)
 
     // Dashboard & Tab Layout & Swipe Preferences
     var dashboardMode = mutableStateOf(prefs.getString("dashboard_mode", "FULL") ?: "FULL")
@@ -192,8 +200,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var fakeCallerNumber = mutableStateOf("Unknown")
     var fakeCallState = mutableStateOf("RINGING")
     var fakeCallStartTimestamp = 0L
-    var dialpadTonesEnabled = mutableStateOf(true)
-    var vibrateOnClickEnabled = mutableStateOf(true)
+    var dialpadTonesEnabled = mutableStateOf(prefs.getBoolean("dialpad_tones_enabled", true))
+    var vibrateOnClickEnabled = mutableStateOf(prefs.getBoolean("vibrate_on_click_enabled", true))
     var preferredSim = mutableStateOf("SIM 1")
     var voicemailNumber = mutableStateOf("+1 (555) 011-9988")
     
@@ -293,8 +301,26 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun updateDefaultTab(tab: Int) {
-        defaultTab.intValue = tab
-        prefs.edit().putInt("default_tab", tab).apply()
+        val keys = listOf("RECENTS", "CONTACTS", "DIALPAD")
+        val key = keys.getOrElse(tab) { "RECENTS" }
+        updateDefaultStartupTabKey(key)
+    }
+
+    fun updateDefaultStartupTabKey(key: String) {
+        defaultStartupTabKey.value = key
+        prefs.edit().putString("default_startup_tab_key", key).apply()
+        val slots = listOf(tabSlotLeft.value, tabSlotMiddle.value, tabSlotRight.value)
+        selectedTab.intValue = slots.indexOf(key).coerceAtLeast(0)
+    }
+
+    fun updateDialpadTonesEnabled(enabled: Boolean) {
+        dialpadTonesEnabled.value = enabled
+        prefs.edit().putBoolean("dialpad_tones_enabled", enabled).apply()
+    }
+
+    fun updateVibrateOnClickEnabled(enabled: Boolean) {
+        vibrateOnClickEnabled.value = enabled
+        prefs.edit().putBoolean("vibrate_on_click_enabled", enabled).apply()
     }
 
     fun updateCallWaitingEnabled(enabled: Boolean) {
@@ -370,6 +396,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("tab_slot_middle", newMiddle)
             .putString("tab_slot_right", newRight)
             .apply()
+
+        val slots = listOf(screen, newMiddle, newRight)
+        selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
     }
 
     fun updateTabSlotMiddle(screen: String) {
@@ -395,6 +424,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("tab_slot_middle", screen)
             .putString("tab_slot_right", newRight)
             .apply()
+
+        val slots = listOf(newLeft, screen, newRight)
+        selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
     }
 
     fun updateTabSlotRight(screen: String) {
@@ -420,6 +452,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("tab_slot_middle", newMiddle)
             .putString("tab_slot_right", screen)
             .apply()
+
+        val slots = listOf(newLeft, newMiddle, screen)
+        selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
     }
 
     fun updateRowSwipeEnabled(enabled: Boolean) {
@@ -655,13 +690,38 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun saveCallRecording(recording: CallRecording) {
         viewModelScope.launch {
-            repository.saveCallRecording(recording)
+            val insertedId = repository.saveCallRecording(recording)
+            if (isCallNotesEnabled.value) {
+                pendingPostCallRecordingNote.value = recording.copy(id = insertedId.toInt())
+            }
+        }
+    }
+
+    fun dismissPostCallRecordingNote() {
+        pendingPostCallRecordingNote.value = null
+    }
+
+    fun savePostCallRecordingNote(id: Int, number: String, note: String) {
+        viewModelScope.launch {
+            if (id > 0) {
+                repository.updateCallRecordingNote(id, note)
+            }
+            if (note.isNotBlank() && number.isNotBlank()) {
+                repository.saveCallNote(number, note)
+            }
+            pendingPostCallRecordingNote.value = null
         }
     }
 
     fun deleteCallRecording(id: Int) {
         viewModelScope.launch {
             repository.deleteCallRecording(id)
+        }
+    }
+
+    fun updateCallRecordingNote(id: Int, note: String) {
+        viewModelScope.launch {
+            repository.updateCallRecordingNote(id, note)
         }
     }
 

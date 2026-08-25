@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import androidx.compose.ui.Alignment
@@ -46,6 +47,7 @@ import com.example.ui.theme.getReceivedCallColor
 
 @Composable
 fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
+    val context = LocalContext.current
     val (icon, color) = when (record.type) {
         CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
         CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
@@ -123,39 +125,42 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
                     // SIM Slot Indicator Chip
-                    val isSim1 = record.simSlot <= 1
-                    if (isSim1) {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            shadowElevation = 0.5.dp
-                        ) {
-                            Text(
-                                text = stringResource(R.string.sim_1),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 8.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                            )
-                        }
-                    } else {
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                            border = BorderStroke(
-                                1.dp,
-                                MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.sim_2),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 8.5.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                            )
+                    val physicalSimCount = remember(context) { com.example.util.MultiSimManager.getPhysicalSimCount(context) }
+                    if (physicalSimCount > 1) {
+                        val isSim1 = record.simSlot <= 1
+                        if (isSim1) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.primary,
+                                shadowElevation = 0.5.dp
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.sim_1),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                )
+                            }
+                        } else {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                                border = BorderStroke(
+                                    1.dp,
+                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.sim_2),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 8.5.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                )
+                            }
                         }
                     }
 

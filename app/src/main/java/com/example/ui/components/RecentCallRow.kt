@@ -31,7 +31,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import android.media.MediaPlayer
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.material.icons.automirrored.filled.CallMade
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -90,6 +94,18 @@ fun RecentCallRow(
     val context = LocalContext.current
     val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
 
+    val allRecordings by viewModel.recordingsFlow.collectAsState()
+    val matchingRecordings = remember(allRecordings, record.number) {
+        val digits = record.number.filter { it.isDigit() }
+        allRecordings.filter { rec ->
+            val recDigits = rec.number.filter { it.isDigit() }
+            (digits.isNotEmpty() && recDigits.isNotEmpty() && (digits.endsWith(recDigits) || recDigits.endsWith(digits))) ||
+            (rec.number == record.number) ||
+            (record.name.isNotEmpty() && record.name != "Unknown" && rec.name.equals(record.name, ignoreCase = true))
+        }
+    }
+    var showPlaybackDialog by remember { mutableStateOf(false) }
+
     val rowCardContent = @Composable {
         Card(
             modifier = Modifier
@@ -144,39 +160,42 @@ fun RecentCallRow(
                             )
 
                             // SIM Slot Indicator Chip
-                            val isSim1 = record.simSlot <= 1
-                            if (isSim1) {
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shadowElevation = 0.5.dp
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.sim_1),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp)
-                                    )
-                                }
-                            } else {
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                                    border = BorderStroke(
-                                        1.dp,
-                                        MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-                                    )
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.sim_2),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontSize = 8.5.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                                    )
+                            val physicalSimCount = remember(context) { com.example.util.MultiSimManager.getPhysicalSimCount(context) }
+                            if (physicalSimCount > 1) {
+                                val isSim1 = record.simSlot <= 1
+                                if (isSim1) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.primary,
+                                        shadowElevation = 0.5.dp
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.sim_1),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                } else {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
+                                        )
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.sim_2),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                        )
+                                    }
                                 }
                             }
 
@@ -225,6 +244,38 @@ fun RecentCallRow(
                                             fontWeight = FontWeight.SemiBold,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                        )
+                                    }
+                                }
+                            }
+                            
+                            // Call Recording Mic Badge
+                            if (matchingRecordings.isNotEmpty()) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = MaterialTheme.colorScheme.tertiaryContainer,
+                                    modifier = Modifier.clickable {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        showPlaybackDialog = true
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Mic,
+                                            contentDescription = "Recorded call",
+                                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                            modifier = Modifier.size(10.dp)
+                                        )
+                                        Text(
+                                            text = "Rec",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
                                         )
                                     }
                                 }
@@ -406,6 +457,18 @@ fun RecentCallRow(
                                 }
                             }
                         )
+
+                        // 5. Recordings Playback Action (if recorded)
+                        if (matchingRecordings.isNotEmpty()) {
+                            RecentActionItem(
+                                icon = Icons.Default.Mic,
+                                label = if (matchingRecordings.size == 1) "Recording" else "Records (${matchingRecordings.size})",
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                onClick = {
+                                    showPlaybackDialog = true
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -475,6 +538,14 @@ fun RecentCallRow(
     } else {
         rowCardContent()
     }
+
+    if (showPlaybackDialog && matchingRecordings.isNotEmpty()) {
+        DirectRecordingPlayerDialog(
+            recordings = matchingRecordings,
+            onDismiss = { showPlaybackDialog = false },
+            viewModel = viewModel
+        )
+    }
 }
 
 @Composable
@@ -505,4 +576,316 @@ fun RecentActionItem(
             color = tint
         )
     }
+}
+
+@Composable
+fun DirectRecordingPlayerDialog(
+    recordings: List<com.example.model.CallRecording>,
+    onDismiss: () -> Unit,
+    viewModel: com.example.ui.viewmodel.DialerViewModel
+) {
+    val context = LocalContext.current
+    var selectedIndex by remember { mutableIntStateOf(0) }
+    val currentRecording = recordings.getOrNull(selectedIndex) ?: recordings.firstOrNull()
+
+    if (currentRecording == null) {
+        onDismiss()
+        return
+    }
+
+    var isPlaying by remember { mutableStateOf(false) }
+    var currentPositionMs by remember { mutableIntStateOf(0) }
+    var totalDurationMs by remember { mutableIntStateOf((currentRecording.duration * 1000).toInt()) }
+    var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
+    var isEditingNote by remember { mutableStateOf(false) }
+    var noteInput by remember(currentRecording.id) { mutableStateOf(currentRecording.note) }
+
+    fun stopPlayer() {
+        try {
+            mediaPlayer?.stop()
+            mediaPlayer?.release()
+        } catch (_: Exception) {}
+        mediaPlayer = null
+        isPlaying = false
+        currentPositionMs = 0
+    }
+
+    fun startPlaying(rec: com.example.model.CallRecording) {
+        stopPlayer()
+        val file = File(rec.filePath)
+        if (!file.exists() || file.length() == 0L) {
+            Toast.makeText(context, "Audio file not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+        try {
+            val mp = MediaPlayer().apply {
+                setDataSource(file.absolutePath)
+                prepare()
+                totalDurationMs = duration.coerceAtLeast(1000)
+                setOnCompletionListener {
+                    isPlaying = false
+                    currentPositionMs = 0
+                }
+                start()
+            }
+            mediaPlayer = mp
+            isPlaying = true
+        } catch (e: Exception) {
+            Toast.makeText(context, "Cannot play recording: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    DisposableEffect(currentRecording.id) {
+        onDispose {
+            stopPlayer()
+        }
+    }
+
+    LaunchedEffect(isPlaying) {
+        while (isPlaying) {
+            kotlinx.coroutines.delay(100)
+            mediaPlayer?.let { mp ->
+                try {
+                    if (mp.isPlaying) {
+                        currentPositionMs = mp.currentPosition
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = {
+            stopPlayer()
+            onDismiss()
+        },
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Mic,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                text = stringResource(R.string.settings_recordings_title),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "${currentRecording.name.ifEmpty { currentRecording.number }} • ${currentRecording.timestamp}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                if (recordings.size > 1) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        recordings.forEachIndexed { idx, rec ->
+                            FilterChip(
+                                selected = selectedIndex == idx,
+                                onClick = {
+                                    stopPlayer()
+                                    selectedIndex = idx
+                                },
+                                label = { Text("#${idx + 1} (${rec.duration}s)") }
+                            )
+                        }
+                    }
+                }
+
+                // Audio Player Controls Box
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FilledIconButton(
+                                onClick = {
+                                    if (isPlaying) {
+                                        stopPlayer()
+                                    } else {
+                                        startPlaying(currentRecording)
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = if (isPlaying) "Pause" else "Play"
+                                )
+                            }
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                val progress = if (totalDurationMs > 0) currentPositionMs.toFloat() / totalDurationMs.toFloat() else 0f
+                                LinearProgressIndicator(
+                                    progress = { progress.coerceIn(0f, 1f) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    val currentSec = currentPositionMs / 1000
+                                    val totalSec = totalDurationMs / 1000
+                                    Text(
+                                        text = String.format("%02d:%02d", currentSec / 60, currentSec % 60),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Text(
+                                        text = String.format("%02d:%02d", totalSec / 60, totalSec % 60),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Note Preview / Edit
+                if (isEditingNote) {
+                    OutlinedTextField(
+                        value = noteInput,
+                        onValueChange = { noteInput = it },
+                        label = { Text(stringResource(R.string.jot_call_note_title)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        TextButton(onClick = { isEditingNote = false }) {
+                            Text(stringResource(R.string.btn_cancel))
+                        }
+                        Button(
+                            onClick = {
+                                viewModel.updateCallRecordingNote(currentRecording.id, noteInput.trim())
+                                if (noteInput.isNotBlank() && currentRecording.number.isNotBlank()) {
+                                    viewModel.saveCallNote(currentRecording.number, noteInput.trim())
+                                }
+                                isEditingNote = false
+                                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Text(stringResource(R.string.btn_save_note))
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                noteInput = currentRecording.note
+                                isEditingNote = true
+                            }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = if (currentRecording.note.isNotBlank()) "📝 ${currentRecording.note}" else "➕ Add note to recording",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (currentRecording.note.isNotBlank()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = {
+                            noteInput = currentRecording.note
+                            isEditingNote = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit Note",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                // Share & Delete Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    TextButton(
+                        onClick = {
+                            val file = File(currentRecording.filePath)
+                            if (file.exists()) {
+                                val uri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.provider",
+                                    file
+                                )
+                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                    type = "audio/*"
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                }
+                                context.startActivity(Intent.createChooser(shareIntent, "Share Call Recording"))
+                            } else {
+                                Toast.makeText(context, "Audio file not found", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    ) {
+                        Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.share_recording))
+                    }
+
+                    TextButton(
+                        onClick = {
+                            stopPlayer()
+                            viewModel.deleteCallRecording(currentRecording.id)
+                            try {
+                                val file = File(currentRecording.filePath)
+                                if (file.exists()) file.delete()
+                            } catch (_: Exception) {}
+                            Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        },
+                        colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    ) {
+                        Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(stringResource(R.string.delete_recording))
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    stopPlayer()
+                    onDismiss()
+                }
+            ) {
+                Text(stringResource(R.string.close))
+            }
+        }
+    )
 }

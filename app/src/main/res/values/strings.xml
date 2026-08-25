@@ -286,6 +286,8 @@
     <string name="recordings_privacy_notice">Recordings are stored securely inside the app\'s sandboxed private database and not shared with external servers.</string>
     <string name="no_recordings_title">No Recordings Found</string>
     <string name="no_recordings_desc">Enable Call Recording and tap the record button during any active call.</string>
+    <string name="share_recording">Share</string>
+    <string name="delete_recording">Delete</string>
     <string name="theme_accent_color">Theme Accent Color</string>
     <string name="about_mission_title">Our Mission</string>
     <string name="about_mission_desc">To provide a simple, reliable, and secure dialer experience without compromising user privacy.</string>
