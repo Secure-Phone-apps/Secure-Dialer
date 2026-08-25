@@ -1425,47 +1425,97 @@ free programs, and that you know you can do these things.</pre>
             }, 300);
         }
 
-        let latestTag = '';
+        let latestTag = 'v1.4.0';
 
         const apkDetails = {
             'universal': {
                 fileName: 'secure-dialer-universal.apk',
                 size: '16.7 MB',
-                hash: '55f82d22ec8c9463fc1835c78e2837d8a25c7e5ff38f1712825aef249278f99c',
+                hash: 'Fetching SHA-256 signature...',
                 desc: 'Includes all CPU architectures. Works on any device.'
             },
             'arm64': {
                 fileName: 'secure-dialer-arm64-v8a.apk',
                 size: '7.3 MB',
-                hash: '6c66659804d59a6a13dac2803919fd4e8ea74c836678b527d08d6bbd7dd65553',
+                hash: 'Fetching SHA-256 signature...',
                 desc: 'For modern 64-bit phones (e.g., Pixel, Samsung S-series, newer devices).'
             },
             'arm32': {
                 fileName: 'secure-dialer-armeabi-v7a.apk',
                 size: '6.0 MB',
-                hash: '644da73b5f80ff7cf33625e71135895ba5ea21bea754c153aaf7438cf8f0b519',
+                hash: 'Fetching SHA-256 signature...',
                 desc: 'For older 32-bit Android phones and legacy devices.'
             },
             'x86_64': {
                 fileName: 'secure-dialer-x86_64.apk',
                 size: '7.7 MB',
-                hash: '751b9ddcaab333d798695d5ca0bb1a7c094f13d6f6f384b883b2e815d1c76e11',
+                hash: 'Fetching SHA-256 signature...',
                 desc: 'For 64-bit Android emulators running on modern computer hardware.'
             },
             'x86': {
                 fileName: 'secure-dialer-x86.apk',
                 size: '7.2 MB',
-                hash: 'a09ab6b853e64ac7ea62550218991587eeb2470f84fe4a8c22d728b3547533d5',
+                hash: 'Fetching SHA-256 signature...',
                 desc: 'For older 32-bit computer-based Android emulators.'
             }
         };
 
+        function parseChecksumsText(text) {
+            if (!text || typeof text !== 'string') return {};
+            const result = {};
+            const lines = text.split(/\r?\n/);
+            
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                // Match 64-character SHA-256 hex string anywhere on the line
+                const hashMatch = trimmed.match(/\b([a-fA-F0-9]{64})\b/);
+                if (!hashMatch) continue;
+                const hash = hashMatch[1].toLowerCase();
+                const lowerLine = trimmed.toLowerCase();
+
+                // Map to corresponding build architecture
+                if (lowerLine.includes('universal')) {
+                    result['universal'] = hash;
+                } else if (lowerLine.includes('arm64-v8a') || lowerLine.includes('arm64') || lowerLine.includes('v8a')) {
+                    result['arm64'] = hash;
+                } else if (lowerLine.includes('armeabi-v7a') || lowerLine.includes('armeabi') || lowerLine.includes('arm32') || lowerLine.includes('v7a')) {
+                    result['arm32'] = hash;
+                } else if (lowerLine.includes('x86_64') || lowerLine.includes('x86-64')) {
+                    result['x86_64'] = hash;
+                } else if (lowerLine.includes('x86') && !lowerLine.includes('x86_64') && !lowerLine.includes('x86-64')) {
+                    result['x86'] = hash;
+                }
+            }
+            return result;
+        }
+
+        function applyParsedChecksums(extracted) {
+            if (!extracted || typeof extracted !== 'object') return;
+            let updated = false;
+            for (const [k, hashVal] of Object.entries(extracted)) {
+                if (apkDetails[k] && hashVal) {
+                    apkDetails[k].hash = hashVal;
+                    updated = true;
+                }
+            }
+            if (updated && typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
+                selectApkType(activeApkType);
+            }
+        }
+
+        let isFetchingRelease = false;
+
         async function fetchLatestRelease() {
+            if (isFetchingRelease) return;
+            isFetchingRelease = true;
+
             try {
                 const res = await fetch('https://api.github.com/repos/Secure-Phone-apps/Secure-Dialer/releases/latest');
-                if (!res.ok) return;
+                if (!res.ok) throw new Error('GitHub API response not ok: ' + res.status);
                 const data = await res.json();
-                if (!data || !data.tag_name) return;
+                if (!data || !data.tag_name) throw new Error('No release tag found');
 
                 latestTag = data.tag_name;
                 const cleanVer = latestTag.replace(/^v/, '');
@@ -1477,6 +1527,7 @@ free programs, and that you know you can do these things.</pre>
                     el.innerText = cleanVer;
                 });
 
+                // Match APK assets to architectures
                 if (data.assets && Array.isArray(data.assets)) {
                     data.assets.forEach(asset => {
                         const name = asset.name.toLowerCase();
@@ -1493,15 +1544,83 @@ free programs, and that you know you can do these things.</pre>
                             apkDetails[typeKey].downloadUrl = asset.browser_download_url;
                             if (asset.size) {
                                 apkDetails[typeKey].size = (asset.size / (1024 * 1024)).toFixed(1) + ' MB';
+                                const cardSizeEl = document.getElementById('card-size-' + typeKey);
+                                if (cardSizeEl) {
+                                    cardSizeEl.innerText = '~' + apkDetails[typeKey].size;
+                                }
                             }
                         }
                     });
                 }
+
+                // Check release notes body for checksums
+                if (data.body) {
+                    const fromBody = parseChecksumsText(data.body);
+                    applyParsedChecksums(fromBody);
+                }
+
+                // Fetch checksums.txt asset or release attachment
+                let checksumAssetFound = false;
+                if (data.assets && Array.isArray(data.assets)) {
+                    const checksumAsset = data.assets.find(a => {
+                        const n = a.name.toLowerCase();
+                        return n.includes('checksum') || n.includes('sha256') || n.endsWith('.txt') || n.endsWith('.sha256');
+                    });
+
+                    if (checksumAsset && checksumAsset.browser_download_url) {
+                        checksumAssetFound = true;
+                        try {
+                            const csRes = await fetch(checksumAsset.browser_download_url);
+                            if (csRes.ok) {
+                                const csText = await csRes.text();
+                                const fromAsset = parseChecksumsText(csText);
+                                applyParsedChecksums(fromAsset);
+                            }
+                        } catch (csErr) {
+                            console.log('Direct checksum asset fetch failed, attempting fallback URL...', csErr);
+                        }
+                    }
+                }
+
+                // Fallback attempt: fetch checksums.txt directly from release URL
+                if (!checksumAssetFound || Object.values(apkDetails).some(d => d.hash.startsWith('Fetching'))) {
+                    const fallbackUrls = [
+                        'https://github.com/Secure-Phone-apps/Secure-Dialer/releases/download/' + latestTag + '/checksums.txt',
+                        'https://raw.githubusercontent.com/Secure-Phone-apps/Secure-Dialer/' + latestTag + '/checksums.txt',
+                        'https://raw.githubusercontent.com/Secure-Phone-apps/Secure-Dialer/main/checksums.txt'
+                    ];
+
+                    for (const url of fallbackUrls) {
+                        try {
+                            const fbRes = await fetch(url);
+                            if (fbRes.ok) {
+                                const fbText = await fbRes.text();
+                                const fromFb = parseChecksumsText(fbText);
+                                applyParsedChecksums(fromFb);
+                                break;
+                            }
+                        } catch (e) {
+                            // continue trying fallbacks
+                        }
+                    }
+                }
+
                 if (typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
                     selectApkType(activeApkType);
                 }
             } catch (err) {
-                console.log('GitHub Release sync fallback active:', err);
+                console.log('GitHub Release sync info:', err);
+                // Ensure placeholder is replaced if fetch fails
+                Object.values(apkDetails).forEach(detail => {
+                    if (detail.hash.startsWith('Fetching')) {
+                        detail.hash = 'Available on GitHub Release (' + latestTag + ')';
+                    }
+                });
+                if (typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
+                    selectApkType(activeApkType);
+                }
+            } finally {
+                isFetchingRelease = false;
             }
         }
 
@@ -1525,7 +1644,12 @@ free programs, and that you know you can do these things.</pre>
                 content.classList.add('scale-100');
             }, 10);
 
-            selectApkType('universal');
+            selectApkType(activeApkType || 'universal');
+
+            // Trigger fresh sync if checksums are pending
+            if (Object.values(apkDetails).some(d => d.hash.startsWith('Fetching'))) {
+                fetchLatestRelease();
+            }
         }
 
         function closeDownloadModal() {
@@ -1548,10 +1672,15 @@ free programs, and that you know you can do these things.</pre>
             if (!detail) return;
 
             // Update details block in modal
-            document.getElementById('active-download-name').innerText = detail.fileName;
-            document.getElementById('active-download-size').innerText = detail.size;
-            document.getElementById('active-download-hash').innerText = detail.hash;
-            document.getElementById('active-download-filename-step').innerText = detail.fileName;
+            const nameEl = document.getElementById('active-download-name');
+            const sizeEl = document.getElementById('active-download-size');
+            const hashEl = document.getElementById('active-download-hash');
+            const stepEl = document.getElementById('active-download-filename-step');
+
+            if (nameEl) nameEl.innerText = detail.fileName;
+            if (sizeEl) sizeEl.innerText = detail.size;
+            if (hashEl) hashEl.innerText = detail.hash;
+            if (stepEl) stepEl.innerText = detail.fileName;
 
             // Highlight chosen card in selection list
             document.querySelectorAll('.apk-card').forEach(card => {
@@ -1726,7 +1855,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">Compatible with all physical devices and emulators. (Larger file)</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~16.7 MB</span>
+                                <span id="card-size-universal" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~16.7 MB</span>
                             </div>
                         </div>
 
@@ -1740,7 +1869,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For modern 64-bit phones (Pixel, Galaxy, modern devices).</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.3 MB</span>
+                                <span id="card-size-arm64" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.3 MB</span>
                             </div>
                         </div>
 
@@ -1754,7 +1883,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For older 32-bit Android phones and legacy devices.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~6.0 MB</span>
+                                <span id="card-size-arm32" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~6.0 MB</span>
                             </div>
                         </div>
 
@@ -1768,7 +1897,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For 64-bit Android Virtual Devices (AVD) running on computers.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.7 MB</span>
+                                <span id="card-size-x86_64" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.7 MB</span>
                             </div>
                         </div>
 
@@ -1782,7 +1911,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-500 leading-snug">For legacy 32-bit computer-based emulator environments.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.2 MB</span>
+                                <span id="card-size-x86" class="font-mono text-xs font-bold text-slate-700 dark:text-slate-300">~7.2 MB</span>
                             </div>
                         </div>
                     </div>
@@ -1802,7 +1931,7 @@ free programs, and that you know you can do these things.</pre>
                                 </div>
                                 <div class="text-right space-y-0.5">
                                     <p class="text-xs text-slate-400">Size</p>
-                                    <p id="active-download-size" class="font-mono font-bold text-base text-brand-500">34 MB</p>
+                                    <p id="active-download-size" class="font-mono font-bold text-base text-brand-500">~16.7 MB</p>
                                 </div>
                             </div>
                             
@@ -1817,7 +1946,7 @@ free programs, and that you know you can do these things.</pre>
                                         <span class="text-[11px] text-slate-500">Copy</span>
                                     </button>
                                 </div>
-                                <p id="active-download-hash" class="font-mono text-[10px] break-all select-all text-slate-400 dark:text-slate-400 leading-snug bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-xl border border-gray-200/40 dark:border-slate-800/40">8ea6309f485179ca9351b86a748a5baa020adec0ba36f81a2ee05c072ffcccbf</p>
+                                <p id="active-download-hash" class="font-mono text-[10px] break-all select-all text-slate-400 dark:text-slate-400 leading-snug bg-slate-100 dark:bg-slate-900 px-3 py-2 rounded-xl border border-gray-200/40 dark:border-slate-800/40">Fetching SHA-256 signature from latest release...</p>
                             </div>
                         </div>
 
