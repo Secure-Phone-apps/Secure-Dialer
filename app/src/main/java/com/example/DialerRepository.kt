@@ -247,6 +247,26 @@ class DialerRepository(rawContext: Context) {
         accountName: String = "",
         accountType: String = ""
     ) {
+        val numbers = if (number.isNotBlank()) listOf(LabeledNumber(number, label.ifBlank { "Mobile" }, true)) else emptyList()
+        val emails = if (email.isNotBlank()) listOf(LabeledEmail(email, "Home")) else emptyList()
+        addContactWithDetails(
+            name = name,
+            numbers = numbers,
+            emails = emails,
+            addresses = emptyList(),
+            accountName = accountName,
+            accountType = accountType
+        )
+    }
+
+    suspend fun addContactWithDetails(
+        name: String,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail> = emptyList(),
+        addresses: List<LabeledAddress> = emptyList(),
+        accountName: String = "",
+        accountType: String = ""
+    ) {
         val ops = arrayListOf<ContentProviderOperation>()
         val rawInsert = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
         if (accountName.isNotBlank() && accountType.isNotBlank() && accountName != "Phone") {
@@ -263,28 +283,62 @@ class DialerRepository(rawContext: Context) {
             .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
             .build())
         
-        val phoneType = when (label.lowercase()) {
-            "work" -> Phone.TYPE_WORK
-            "home" -> Phone.TYPE_HOME
-            else -> Phone.TYPE_MOBILE
+        for (numItem in numbers) {
+            if (numItem.number.isBlank()) continue
+            val phoneType = when (numItem.label.lowercase()) {
+                "work" -> Phone.TYPE_WORK
+                "home" -> Phone.TYPE_HOME
+                "other" -> Phone.TYPE_OTHER
+                "main" -> Phone.TYPE_MAIN
+                "mobile" -> Phone.TYPE_MOBILE
+                else -> Phone.TYPE_CUSTOM
+            }
+            val builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                .withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
+                .withValue(Phone.NUMBER, numItem.number)
+                .withValue(Phone.TYPE, phoneType)
+            if (phoneType == Phone.TYPE_CUSTOM) {
+                builder.withValue(Phone.LABEL, numItem.label)
+            }
+            if (numItem.isPrimary) {
+                builder.withValue(Phone.IS_PRIMARY, 1)
+            }
+            ops.add(builder.build())
         }
-        ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-            .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
-            .withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
-            .withValue(Phone.NUMBER, number)
-            .withValue(Phone.TYPE, phoneType)
-            .build())
-        
-        if (email.isNotEmpty()) {
-            ops.add(ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+
+        for (emailItem in emails) {
+            if (emailItem.email.isBlank()) continue
+            val emailType = when (emailItem.label.lowercase()) {
+                "work" -> ContactsContract.CommonDataKinds.Email.TYPE_WORK
+                "other" -> ContactsContract.CommonDataKinds.Email.TYPE_OTHER
+                else -> ContactsContract.CommonDataKinds.Email.TYPE_HOME
+            }
+            val builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                 .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
                 .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
-                .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, email)
-                .withValue(ContactsContract.CommonDataKinds.Email.TYPE, ContactsContract.CommonDataKinds.Email.TYPE_HOME)
-                .build())
+                .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, emailItem.email)
+                .withValue(ContactsContract.CommonDataKinds.Email.TYPE, emailType)
+            ops.add(builder.build())
         }
+
+        for (addrItem in addresses) {
+            if (addrItem.address.isBlank()) continue
+            val addrType = when (addrItem.label.lowercase()) {
+                "work" -> ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK
+                "other" -> ContactsContract.CommonDataKinds.StructuredPostal.TYPE_OTHER
+                else -> ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME
+            }
+            val builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS, addrItem.address)
+                .withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, addrType)
+            ops.add(builder.build())
+        }
+
         try { context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops) } catch (e: Exception) { e.printStackTrace() }
-        syncContacts() // Update local cache
+        syncContacts(true) // Update local cache
     }
 
     suspend fun deleteContact(contact: Contact) {

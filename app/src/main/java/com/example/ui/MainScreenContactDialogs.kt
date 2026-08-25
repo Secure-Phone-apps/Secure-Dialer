@@ -44,8 +44,8 @@ fun MainScreenContactDialogs(
             selectedAccountFilter = viewModel.selectedAccountFilter.value,
             defaultAccountName = viewModel.defaultContactAccountName.value,
             onDismiss = { isAddContactDialogVisible = false },
-            onConfirm = { name, number, label, email, accountName, accountType ->
-                viewModel.addContact(name, number, label, email, accountName, accountType)
+            onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
+                viewModel.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
                 isAddContactDialogVisible = false
             }
         )
@@ -59,12 +59,15 @@ fun MainScreenContactDialogs(
                 initialNumber = currentOldContact.number,
                 initialLabel = currentOldContact.label,
                 initialEmail = currentOldContact.email,
+                initialNumbers = currentOldContact.getAllNumbers(),
+                initialEmails = currentOldContact.getAllEmails(),
+                initialAddresses = currentOldContact.getAllAddresses(),
                 availableAccounts = viewModel.availableAccounts,
                 selectedAccountFilter = currentOldContact.accountName,
                 onDismiss = { isEditContactDialogVisible = false },
-                onConfirm = { name, number, label, email, accountName, accountType ->
+                onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
                     viewModel.deleteContact(currentOldContact)
-                    viewModel.addContact(name, number, label, email, accountName, accountType)
+                    viewModel.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
                     isEditContactDialogVisible = false
                 }
             )

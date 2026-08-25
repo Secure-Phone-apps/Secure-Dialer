@@ -36,6 +36,110 @@ class Converters {
             CallType.INCOMING
         }
     }
+
+    @TypeConverter
+    fun fromLabeledNumberList(list: List<LabeledNumber>?): String {
+        if (list.isNullOrEmpty()) return ""
+        val jsonArray = org.json.JSONArray()
+        list.forEach { item ->
+            val obj = org.json.JSONObject()
+            obj.put("num", item.number)
+            obj.put("lbl", item.label)
+            obj.put("pri", item.isPrimary)
+            jsonArray.put(obj)
+        }
+        return jsonArray.toString()
+    }
+
+    @TypeConverter
+    fun toLabeledNumberList(value: String?): List<LabeledNumber> {
+        if (value.isNullOrBlank()) return emptyList()
+        val list = mutableListOf<LabeledNumber>()
+        try {
+            val jsonArray = org.json.JSONArray(value)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                list.add(
+                    LabeledNumber(
+                        number = obj.optString("num", ""),
+                        label = obj.optString("lbl", "Mobile"),
+                        isPrimary = obj.optBoolean("pri", false)
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
+
+    @TypeConverter
+    fun fromLabeledEmailList(list: List<LabeledEmail>?): String {
+        if (list.isNullOrEmpty()) return ""
+        val jsonArray = org.json.JSONArray()
+        list.forEach { item ->
+            val obj = org.json.JSONObject()
+            obj.put("eml", item.email)
+            obj.put("lbl", item.label)
+            jsonArray.put(obj)
+        }
+        return jsonArray.toString()
+    }
+
+    @TypeConverter
+    fun toLabeledEmailList(value: String?): List<LabeledEmail> {
+        if (value.isNullOrBlank()) return emptyList()
+        val list = mutableListOf<LabeledEmail>()
+        try {
+            val jsonArray = org.json.JSONArray(value)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                list.add(
+                    LabeledEmail(
+                        email = obj.optString("eml", ""),
+                        label = obj.optString("lbl", "Home")
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
+
+    @TypeConverter
+    fun fromLabeledAddressList(list: List<LabeledAddress>?): String {
+        if (list.isNullOrEmpty()) return ""
+        val jsonArray = org.json.JSONArray()
+        list.forEach { item ->
+            val obj = org.json.JSONObject()
+            obj.put("adr", item.address)
+            obj.put("lbl", item.label)
+            jsonArray.put(obj)
+        }
+        return jsonArray.toString()
+    }
+
+    @TypeConverter
+    fun toLabeledAddressList(value: String?): List<LabeledAddress> {
+        if (value.isNullOrBlank()) return emptyList()
+        val list = mutableListOf<LabeledAddress>()
+        try {
+            val jsonArray = org.json.JSONArray(value)
+            for (i in 0 until jsonArray.length()) {
+                val obj = jsonArray.getJSONObject(i)
+                list.add(
+                    LabeledAddress(
+                        address = obj.optString("adr", ""),
+                        label = obj.optString("lbl", "Home")
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return list
+    }
 }
 
 @Database(
@@ -51,7 +155,7 @@ class Converters {
         SpamNumber::class,
         CallReminder::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -47,13 +47,16 @@ object ContactCache {
         val s7Map = HashMap<String, com.example.model.Contact>()
 
         for (contact in contacts) {
-            val clean = contact.number.filter { it.isDigit() }
-            if (clean.isEmpty()) continue
-            fMap[clean] = contact
-            val len = clean.length
-            if (len >= 10) s10Map[clean.takeLast(10)] = contact
-            if (len >= 8) s8Map[clean.takeLast(8)] = contact
-            if (len >= 7) s7Map[clean.takeLast(7)] = contact
+            val allNums = contact.getAllNumbers()
+            for (labeledNum in allNums) {
+                val clean = labeledNum.number.filter { it.isDigit() }
+                if (clean.isEmpty()) continue
+                fMap[clean] = contact
+                val len = clean.length
+                if (len >= 10) s10Map[clean.takeLast(10)] = contact
+                if (len >= 8) s8Map[clean.takeLast(8)] = contact
+                if (len >= 7) s7Map[clean.takeLast(7)] = contact
+            }
         }
 
         fullNumMap = fMap

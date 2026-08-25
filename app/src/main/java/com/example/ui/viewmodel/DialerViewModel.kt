@@ -639,6 +639,20 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun addContactWithDetails(
+        name: String,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail> = emptyList(),
+        addresses: List<LabeledAddress> = emptyList(),
+        accountName: String = "",
+        accountType: String = ""
+    ) {
+        viewModelScope.launch {
+            repository.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
+            refreshAvailableAccounts()
+        }
+    }
+
     fun saveCallNote(number: String, note: String) {
         if (note.isBlank()) return
         viewModelScope.launch {

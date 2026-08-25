@@ -26,6 +26,9 @@ import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.ContactAccount
+import com.example.model.LabeledAddress
+import com.example.model.LabeledEmail
+import com.example.model.LabeledNumber
 import com.example.model.getInitials
 import com.example.ui.theme.AvatarBlue
 import com.example.ui.theme.AvatarBlueText
@@ -73,21 +76,82 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
     val contactMap = LinkedHashMap<String, Contact>()
     val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
 
-    val emailMap = mutableMapOf<String, String>()
+    val emailMap = mutableMapOf<String, MutableList<LabeledEmail>>()
     try {
         context.contentResolver.query(
             ContactsContract.CommonDataKinds.Email.CONTENT_URI,
-            arrayOf(ContactsContract.CommonDataKinds.Email.CONTACT_ID, ContactsContract.CommonDataKinds.Email.ADDRESS),
+            arrayOf(
+                ContactsContract.CommonDataKinds.Email.CONTACT_ID,
+                ContactsContract.CommonDataKinds.Email.ADDRESS,
+                ContactsContract.CommonDataKinds.Email.TYPE,
+                ContactsContract.CommonDataKinds.Email.LABEL
+            ),
             null, null, null
         )?.use { cursor ->
             val idIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.CONTACT_ID)
             val addrIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.ADDRESS)
+            val typeIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.TYPE)
+            val labelIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Email.LABEL)
             while (cursor.moveToNext()) {
                 if (idIdx != -1 && addrIdx != -1) {
                     val cid = cursor.getString(idIdx) ?: ""
                     val email = cursor.getString(addrIdx) ?: ""
+                    val type = if (typeIdx != -1) cursor.getInt(typeIdx) else ContactsContract.CommonDataKinds.Email.TYPE_HOME
+                    val label = if (type == ContactsContract.CommonDataKinds.Email.TYPE_CUSTOM && labelIdx != -1) {
+                        cursor.getString(labelIdx) ?: "Custom"
+                    } else when (type) {
+                        ContactsContract.CommonDataKinds.Email.TYPE_HOME -> "Home"
+                        ContactsContract.CommonDataKinds.Email.TYPE_WORK -> "Work"
+                        ContactsContract.CommonDataKinds.Email.TYPE_OTHER -> "Other"
+                        else -> "Home"
+                    }
                     if (cid.isNotEmpty() && email.isNotEmpty()) {
-                        emailMap[cid] = email
+                        val list = emailMap.getOrPut(cid) { mutableListOf() }
+                        if (list.none { it.email.equals(email, ignoreCase = true) }) {
+                            list.add(LabeledEmail(email = email, label = label))
+                        }
+                    }
+                }
+            }
+        }
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+
+    val addressMap = mutableMapOf<String, MutableList<LabeledAddress>>()
+    try {
+        context.contentResolver.query(
+            ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_URI,
+            arrayOf(
+                ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID,
+                ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS,
+                ContactsContract.CommonDataKinds.StructuredPostal.TYPE,
+                ContactsContract.CommonDataKinds.StructuredPostal.LABEL
+            ),
+            null, null, null
+        )?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.CONTACT_ID)
+            val addrIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS)
+            val typeIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.TYPE)
+            val labelIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.StructuredPostal.LABEL)
+            while (cursor.moveToNext()) {
+                if (idIdx != -1 && addrIdx != -1) {
+                    val cid = cursor.getString(idIdx) ?: ""
+                    val addr = cursor.getString(addrIdx) ?: ""
+                    val type = if (typeIdx != -1) cursor.getInt(typeIdx) else ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME
+                    val label = if (type == ContactsContract.CommonDataKinds.StructuredPostal.TYPE_CUSTOM && labelIdx != -1) {
+                        cursor.getString(labelIdx) ?: "Custom"
+                    } else when (type) {
+                        ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME -> "Home"
+                        ContactsContract.CommonDataKinds.StructuredPostal.TYPE_WORK -> "Work"
+                        ContactsContract.CommonDataKinds.StructuredPostal.TYPE_OTHER -> "Other"
+                        else -> "Home"
+                    }
+                    if (cid.isNotEmpty() && addr.isNotEmpty()) {
+                        val list = addressMap.getOrPut(cid) { mutableListOf() }
+                        if (list.none { it.address.equals(addr, ignoreCase = true) }) {
+                            list.add(LabeledAddress(address = addr, label = label))
+                        }
                     }
                 }
             }
@@ -137,7 +201,8 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
                 val fav = cursor.getInt(favIdx) == 1
                 val photoUri = if (photoIdx != -1) cursor.getString(photoIdx) ?: "" else ""
                 val contactIdStr = if (cidIdx != -1) cursor.getString(cidIdx) ?: "" else ""
-                val email = emailMap[contactIdStr] ?: ""
+                val emailsForContact = emailMap[contactIdStr] ?: emptyList()
+                val addressesForContact = addressMap[contactIdStr] ?: emptyList()
                 val accName = if (accNameIdx != -1) cursor.getString(accNameIdx) ?: "" else ""
                 val accType = if (accTypeIdx != -1) cursor.getString(accTypeIdx) ?: "" else ""
                 val phoneType = if (typeIdx != -1) cursor.getInt(typeIdx) else Phone.TYPE_MOBILE
@@ -152,43 +217,58 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
                 }
 
                 val pair = colors[Math.abs(name.hashCode()) % colors.size]
-                val uniqueId = if (idVal != 0L) idVal else (contactMap.size + 1).toLong()
-                
-                val newContact = Contact(
-                    id = uniqueId,
-                    rawContactId = rawIdVal,
-                    contactId = contactIdVal,
-                    number = num,
-                    name = name,
-                    label = phoneLabel,
-                    favorite = fav,
-                    avatarText = getInitials(name),
-                    avatarBgValue = pair.first.value.toLong(),
-                    avatarTextColorValue = pair.second.value.toLong(),
-                    t9Mapping = nameToT9(name),
-                    email = email,
-                    photoUri = photoUri,
-                    accountName = accName,
-                    accountType = accType
-                )
+                val uniqueId = if (contactIdVal != 0L) contactIdVal else if (idVal != 0L) idVal else (contactMap.size + 1).toLong()
 
-                val normKey = getNormalizedPhoneNumberKey(num)
-                val personKey = if (contactIdVal != 0L) "$contactIdVal-$normKey" else "${name.lowercase().trim()}-$normKey"
+                val personKey = if (contactIdVal != 0L) "c-$contactIdVal" else if (rawIdVal != 0L) "r-$rawIdVal" else "n-${name.lowercase().trim()}"
+                val labeledNum = LabeledNumber(number = num, label = phoneLabel, isPrimary = true)
 
                 val existing = contactMap[personKey]
                 if (existing == null) {
-                    contactMap[personKey] = newContact
+                    contactMap[personKey] = Contact(
+                        id = uniqueId,
+                        rawContactId = rawIdVal,
+                        contactId = contactIdVal,
+                        number = num,
+                        name = name,
+                        label = phoneLabel,
+                        favorite = fav,
+                        avatarText = getInitials(name),
+                        avatarBgValue = pair.first.value.toLong(),
+                        avatarTextColorValue = pair.second.value.toLong(),
+                        t9Mapping = nameToT9(name),
+                        email = emailsForContact.firstOrNull()?.email ?: "",
+                        photoUri = photoUri,
+                        accountName = accName,
+                        accountType = accType,
+                        numbers = if (num.isNotBlank()) listOf(labeledNum) else emptyList(),
+                        emails = emailsForContact,
+                        addresses = addressesForContact
+                    )
                 } else {
-                    val existingScore = getPhoneNumberQualityScore(existing.number)
-                    val newScore = getPhoneNumberQualityScore(newContact.number)
+                    val existingNumbers = existing.numbers.toMutableList()
+                    val numDigits = num.filter { it.isDigit() }
+                    val alreadyExists = existingNumbers.any { it.number.filter { c -> c.isDigit() } == numDigits }
 
-                    val preferredContact = if (newScore > existingScore) newContact else existing
-                    val mergedContact = preferredContact.copy(
-                        favorite = preferredContact.favorite || existing.favorite,
-                        photoUri = preferredContact.photoUri.ifEmpty { existing.photoUri },
-                        email = preferredContact.email.ifEmpty { existing.email },
-                        accountName = preferredContact.accountName.ifEmpty { existing.accountName },
-                        accountType = preferredContact.accountType.ifEmpty { existing.accountType }
+                    if (!alreadyExists && num.isNotBlank()) {
+                        existingNumbers.add(LabeledNumber(number = num, label = phoneLabel, isPrimary = false))
+                    }
+
+                    val existingScore = getPhoneNumberQualityScore(existing.number)
+                    val newScore = getPhoneNumberQualityScore(num)
+                    val preferredNum = if (newScore > existingScore && num.isNotBlank()) num else existing.number
+                    val preferredLabel = if (newScore > existingScore && num.isNotBlank()) phoneLabel else existing.label
+
+                    val mergedContact = existing.copy(
+                        number = preferredNum,
+                        label = preferredLabel,
+                        favorite = existing.favorite || fav,
+                        photoUri = existing.photoUri.ifEmpty { photoUri },
+                        email = existing.email.ifEmpty { emailsForContact.firstOrNull()?.email ?: "" },
+                        accountName = existing.accountName.ifEmpty { accName },
+                        accountType = existing.accountType.ifEmpty { accType },
+                        numbers = existingNumbers,
+                        emails = if (existing.emails.isNotEmpty()) existing.emails else emailsForContact,
+                        addresses = if (existing.addresses.isNotEmpty()) existing.addresses else addressesForContact
                     )
                     contactMap[personKey] = mergedContact
                 }
@@ -287,13 +367,15 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
     val suffix7Map = HashMap<String, Contact>()
 
     for (contact in allContacts) {
-        val clean = contact.number.filter { it.isDigit() }
-        if (clean.isEmpty()) continue
-        fullNumMap[clean] = contact
-        val len = clean.length
-        if (len >= 10) suffix10Map[clean.takeLast(10)] = contact
-        if (len >= 8) suffix8Map[clean.takeLast(8)] = contact
-        if (len >= 7) suffix7Map[clean.takeLast(7)] = contact
+        for (labeledNum in contact.getAllNumbers()) {
+            val clean = labeledNum.number.filter { it.isDigit() }
+            if (clean.isEmpty()) continue
+            fullNumMap[clean] = contact
+            val len = clean.length
+            if (len >= 10) suffix10Map[clean.takeLast(10)] = contact
+            if (len >= 8) suffix8Map[clean.takeLast(8)] = contact
+            if (len >= 7) suffix7Map[clean.takeLast(7)] = contact
+        }
     }
 
     val cnapIndex = HashMap<String, String>()

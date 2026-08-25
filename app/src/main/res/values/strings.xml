@@ -536,4 +536,17 @@
     <string name="search_results_count">Search results (%1$d)</string>
     <string name="no_matching_settings">No matching settings</string>
     <string name="no_matching_settings_desc">Try searching for terms like Dark mode, SIM, Blocking, or Recording.</string>
+    <string name="label_add_number">+ Add Phone Number</string>
+    <string name="label_add_email">+ Add Email Address</string>
+    <string name="label_address">Address</string>
+    <string name="label_notes">Notes</string>
+    <string name="contact_multiple_numbers">%1$d numbers</string>
+    <string name="saved_in_account">Saved in %1$s</string>
+    <string name="action_copy_number">Copy number</string>
+    <string name="toast_number_copied">Number copied to clipboard</string>
+    <string name="action_open_map">Open in Maps</string>
+    <string name="action_send_email">Send Email</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">Phone</string>
+    <string name="contact_storage_badge_sim">SIM</string>
 </resources>

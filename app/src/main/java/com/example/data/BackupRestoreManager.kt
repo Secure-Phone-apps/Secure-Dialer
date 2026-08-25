@@ -289,9 +289,30 @@ object BackupRestoreManager {
                 sb.append("BEGIN:VCARD\r\n")
                 sb.append("VERSION:3.0\r\n")
                 sb.append("FN:${contact.name}\r\n")
-                sb.append("TEL;TYPE=CELL:${contact.number}\r\n")
-                if (contact.email.isNotEmpty()) {
-                    sb.append("EMAIL;TYPE=HOME:${contact.email}\r\n")
+                val allNumbers = contact.getAllNumbers()
+                for (num in allNumbers) {
+                    val type = when (num.label.lowercase()) {
+                        "work" -> "WORK"
+                        "home" -> "HOME"
+                        "mobile" -> "CELL"
+                        else -> "VOICE"
+                    }
+                    sb.append("TEL;TYPE=$type:${num.number}\r\n")
+                }
+                val allEmails = contact.getAllEmails()
+                for (eml in allEmails) {
+                    val type = when (eml.label.lowercase()) {
+                        "work" -> "WORK"
+                        else -> "HOME"
+                    }
+                    sb.append("EMAIL;TYPE=$type:${eml.email}\r\n")
+                }
+                for (adr in contact.getAllAddresses()) {
+                    val type = when (adr.label.lowercase()) {
+                        "work" -> "WORK"
+                        else -> "HOME"
+                    }
+                    sb.append("ADR;TYPE=$type:;;${adr.address.replace(";", " ")};;;;\r\n")
                 }
                 sb.append("END:VCARD\r\n")
             }
@@ -306,10 +327,9 @@ object BackupRestoreManager {
         try {
             val lines = vcfContent.split(Regex("\\r?\\n"))
             var currentName = ""
-            var currentNum = ""
-            var currentEmail = ""
-            val db = AppDatabase.getDatabase(context)
-            val dao = db.dialerDao()
+            val currentNumbers = mutableListOf<LabeledNumber>()
+            val currentEmails = mutableListOf<LabeledEmail>()
+            val currentAddresses = mutableListOf<LabeledAddress>()
             val repo = DialerRepository(context)
             var count = 0
             
@@ -318,8 +338,9 @@ object BackupRestoreManager {
                 when {
                     trimmed.startsWith("BEGIN:VCARD", ignoreCase = true) -> {
                         currentName = ""
-                        currentNum = ""
-                        currentEmail = ""
+                        currentNumbers.clear()
+                        currentEmails.clear()
+                        currentAddresses.clear()
                     }
                     trimmed.startsWith("FN;", ignoreCase = true) -> {
                         val index = trimmed.indexOf(":")
@@ -340,28 +361,55 @@ object BackupRestoreManager {
                             }
                         }
                     }
-                    trimmed.startsWith("TEL;", ignoreCase = true) -> {
+                    trimmed.startsWith("TEL", ignoreCase = true) -> {
                         val index = trimmed.indexOf(":")
                         if (index != -1) {
-                            currentNum = cleanVcfValue(trimmed.substring(index + 1))
+                            val rawVal = cleanVcfValue(trimmed.substring(index + 1))
+                            val tag = trimmed.substring(0, index).uppercase()
+                            val label = when {
+                                tag.contains("WORK") -> "Work"
+                                tag.contains("HOME") -> "Home"
+                                tag.contains("CELL") || tag.contains("MOBILE") -> "Mobile"
+                                else -> "Mobile"
+                            }
+                            if (rawVal.isNotBlank()) {
+                                val isFirst = currentNumbers.isEmpty()
+                                currentNumbers.add(LabeledNumber(number = rawVal, label = label, isPrimary = isFirst))
+                            }
                         }
                     }
-                    trimmed.startsWith("TEL:", ignoreCase = true) -> {
-                        currentNum = cleanVcfValue(trimmed.substring(4))
-                    }
-                    trimmed.startsWith("EMAIL;", ignoreCase = true) -> {
+                    trimmed.startsWith("EMAIL", ignoreCase = true) -> {
                         val index = trimmed.indexOf(":")
                         if (index != -1) {
-                            currentEmail = cleanVcfValue(trimmed.substring(index + 1))
+                            val rawVal = cleanVcfValue(trimmed.substring(index + 1))
+                            val tag = trimmed.substring(0, index).uppercase()
+                            val label = if (tag.contains("WORK")) "Work" else "Home"
+                            if (rawVal.isNotBlank()) {
+                                currentEmails.add(LabeledEmail(email = rawVal, label = label))
+                            }
                         }
                     }
-                    trimmed.startsWith("EMAIL:", ignoreCase = true) -> {
-                        currentEmail = cleanVcfValue(trimmed.substring(6))
+                    trimmed.startsWith("ADR", ignoreCase = true) -> {
+                        val index = trimmed.indexOf(":")
+                        if (index != -1) {
+                            val rawVal = cleanVcfValue(trimmed.substring(index + 1))
+                            val cleanedAddr = rawVal.split(";").filter { it.isNotBlank() }.joinToString(", ")
+                            val tag = trimmed.substring(0, index).uppercase()
+                            val label = if (tag.contains("WORK")) "Work" else "Home"
+                            if (cleanedAddr.isNotBlank()) {
+                                currentAddresses.add(LabeledAddress(address = cleanedAddr, label = label))
+                            }
+                        }
                     }
                     trimmed.startsWith("END:VCARD", ignoreCase = true) -> {
-                        if (currentNum.isNotBlank()) {
-                            if (currentName.isBlank()) currentName = currentNum
-                            repo.addContact(currentName, currentNum, "Mobile", currentEmail)
+                        if (currentNumbers.isNotEmpty()) {
+                            if (currentName.isBlank()) currentName = currentNumbers.first().number
+                            repo.addContactWithDetails(
+                                name = currentName,
+                                numbers = currentNumbers.toList(),
+                                emails = currentEmails.toList(),
+                                addresses = currentAddresses.toList()
+                            )
                             count++
                         }
                     }

@@ -27,12 +27,15 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -66,6 +69,7 @@ fun ContactRow(
     onDeleteContact: (Contact) -> Unit,
     viewModel: DialerViewModel
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -79,6 +83,22 @@ fun ContactRow(
         searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
     } else {
         searchBarColor
+    }
+
+    val allNumbers = remember(contact) { contact.getAllNumbers() }
+    val allEmails = remember(contact) { contact.getAllEmails() }
+    val allAddresses = remember(contact) { contact.getAllAddresses() }
+
+    val accountBadgeText = remember(contact.accountName, contact.accountType) {
+        when {
+            contact.accountType.equals("com.google", ignoreCase = true) -> {
+                if (contact.accountName.isNotBlank()) "Google • ${contact.accountName}" else "Google"
+            }
+            contact.accountType.contains("sim", ignoreCase = true) -> "SIM"
+            contact.accountName.isNotBlank() && contact.accountName != "Phone" -> contact.accountName
+            contact.accountType.isNotBlank() && !contact.accountType.contains("local") -> contact.accountType.substringAfterLast('.')
+            else -> ""
+        }
     }
 
     Card(
@@ -98,19 +118,46 @@ fun ContactRow(
                 headlineContent = {
                     Column(
                         modifier = Modifier.offset(x = (-8).dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         Text(
                             text = contact.name,
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
+                            fontWeight = FontWeight.SemiBold,
                             lineHeight = 18.sp
                         )
-                        Text(
-                            text = "${localizeContactLabel(contact.label)} • ${contact.number}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "${localizeContactLabel(contact.label)} • ${contact.number}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            if (allNumbers.size > 1) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
+                                ) {
+                                    Text(
+                                        text = "${allNumbers.size} numbers",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        if (accountBadgeText.isNotBlank()) {
+                            Text(
+                                text = accountBadgeText,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.85f),
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 },
                 supportingContent = null,
@@ -119,7 +166,7 @@ fun ContactRow(
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
-                            .size(40.dp),
+                            .size(42.dp),
                         shape = avatarShape,
                         color = contact.avatarBg
                     ) {
@@ -176,54 +223,233 @@ fun ContactRow(
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                         thickness = 0.5.dp,
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
 
+                    // Phone numbers section
+                    allNumbers.forEach { labeledNum ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = labeledNum.label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = labeledNum.number,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    IconButton(
+                                        onClick = {
+                                            onCallClick(contact.copy(number = labeledNum.number, label = labeledNum.label))
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Call,
+                                            contentDescription = "Call ${labeledNum.number}",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                    data = Uri.parse("smsto:${labeledNum.number}")
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Email,
+                                            contentDescription = "SMS ${labeledNum.number}",
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            try {
+                                                val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager
+                                                val clip = android.content.ClipData.newPlainText("Phone Number", labeledNum.number)
+                                                clipboard?.setPrimaryClip(clip)
+                                                Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = androidx.compose.material.icons.Icons.Default.Share,
+                                            contentDescription = "Copy number",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Emails section
+                    allEmails.forEach { emailItem ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${emailItem.label} Email",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.tertiary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = emailItem.email,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Normal
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                data = Uri.parse("mailto:${emailItem.email}")
+                                            }
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Could not open email app", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Email,
+                                        contentDescription = "Email ${emailItem.email}",
+                                        tint = MaterialTheme.colorScheme.tertiary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Physical Addresses section
+                    allAddresses.forEach { addrItem ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "${addrItem.label} Address",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = addrItem.address,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Normal
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        try {
+                                            val uri = Uri.parse("geo:0,0?q=${Uri.encode(addrItem.address)}")
+                                            val intent = Intent(Intent.ACTION_VIEW, uri)
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Could not open Maps", Toast.LENGTH_SHORT).show()
+                                        }
+                                    },
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.LocationOn,
+                                        contentDescription = "Map ${addrItem.address}",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Action buttons (Edit & Delete)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val context = LocalContext.current
-                        ContactActionItem(
-                            icon = Icons.Default.Call,
-                            label = stringResource(R.string.action_call),
-                            onClick = { onCallClick(contact) },
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        ContactActionItem(
-                            icon = Icons.Default.Email,
-                            label = stringResource(R.string.action_message),
-                            onClick = {
-                                try {
-                                    val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                        data = Uri.parse("smsto:${contact.number}")
-                                    }
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
-                                }
-                            },
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                        ContactActionItem(
-                            icon = Icons.Default.Edit,
-                            label = stringResource(R.string.btn_edit),
+                        TextButton(
                             onClick = { onEditContact(contact) },
-                            tint = MaterialTheme.colorScheme.tertiary
-                        )
-                        ContactActionItem(
-                            icon = Icons.Default.Delete,
-                            label = stringResource(R.string.btn_delete),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.btn_edit))
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(
                             onClick = { onDeleteContact(contact) },
-                            tint = MaterialTheme.colorScheme.error
-                        )
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.btn_delete))
+                        }
                     }
                 }
             }

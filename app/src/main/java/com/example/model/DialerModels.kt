@@ -81,6 +81,22 @@ data class ContactAccount(
     val displayName: String
 )
 
+data class LabeledNumber(
+    val number: String,
+    val label: String = "Mobile",
+    val isPrimary: Boolean = false
+)
+
+data class LabeledEmail(
+    val email: String,
+    val label: String = "Home"
+)
+
+data class LabeledAddress(
+    val address: String,
+    val label: String = "Home"
+)
+
 @Entity(
     tableName = "contacts",
     indices = [
@@ -88,7 +104,8 @@ data class ContactAccount(
         Index(value = ["name"]),
         Index(value = ["t9Mapping"]),
         Index(value = ["accountName"]),
-        Index(value = ["rawContactId"])
+        Index(value = ["rawContactId"]),
+        Index(value = ["contactId"])
     ]
 )
 data class Contact(
@@ -106,10 +123,34 @@ data class Contact(
     val email: String = "",
     val photoUri: String = "",
     val accountName: String = "",
-    val accountType: String = ""
+    val accountType: String = "",
+    val numbers: List<LabeledNumber> = emptyList(),
+    val emails: List<LabeledEmail> = emptyList(),
+    val addresses: List<LabeledAddress> = emptyList(),
+    val note: String = ""
 ) {
     @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
     @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
+
+    fun getAllNumbers(): List<LabeledNumber> {
+        if (numbers.isNotEmpty()) return numbers
+        if (number.isNotBlank()) {
+            return listOf(LabeledNumber(number = number, label = label.ifBlank { "Mobile" }, isPrimary = true))
+        }
+        return emptyList()
+    }
+
+    fun getAllEmails(): List<LabeledEmail> {
+        if (emails.isNotEmpty()) return emails
+        if (email.isNotBlank()) {
+            return listOf(LabeledEmail(email = email, label = "Home"))
+        }
+        return emptyList()
+    }
+
+    fun getAllAddresses(): List<LabeledAddress> {
+        return addresses
+    }
 }
 
 @Entity(tableName = "call_notes")
