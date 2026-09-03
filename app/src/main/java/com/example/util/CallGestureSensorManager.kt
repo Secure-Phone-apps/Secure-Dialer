@@ -43,9 +43,16 @@ class CallGestureSensorManager(
 
     private var isListening = false
     private var lastShakeTime = 0L
+    private val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+    private var wasFaceUp = false
+    private var faceDownStartTime = 0L
+    private var hasFlippedThisCall = false
 
     fun startListening() {
         if (isListening || sensorManager == null) return
+        wasFaceUp = false
+        faceDownStartTime = 0L
+        hasFlippedThisCall = false
 
         proximitySensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
@@ -77,9 +84,25 @@ class CallGestureSensorManager(
                 val y = event.values.getOrNull(1) ?: 0f
                 val z = event.values.getOrNull(2) ?: 0f
 
-                // 1. Check Flip Face Down (Z axis strongly negative, X & Y near zero)
-                if (z < -8.5f && kotlin.math.abs(x) < 3.0f && kotlin.math.abs(y) < 3.0f) {
-                    onFlipFaceDown()
+                // 1. Check Flip Face Down (requires phone was face-up first, then turned face-down and held for 500ms)
+                val isFlipEnabled = prefs.getBoolean("flip_to_silence_enabled", false)
+                if (isFlipEnabled && !hasFlippedThisCall) {
+                    if (z > 3.0f) {
+                        // Phone is upright or face-up
+                        wasFaceUp = true
+                        faceDownStartTime = 0L
+                    } else if (wasFaceUp && z < -7.5f && kotlin.math.abs(x) < 4.0f && kotlin.math.abs(y) < 4.0f) {
+                        val now = System.currentTimeMillis()
+                        if (faceDownStartTime == 0L) {
+                            faceDownStartTime = now
+                        } else if (now - faceDownStartTime >= 500L) {
+                            hasFlippedThisCall = true
+                            faceDownStartTime = 0L
+                            onFlipFaceDown()
+                        }
+                    } else {
+                        faceDownStartTime = 0L
+                    }
                 }
 
                 // 2. Check Shake

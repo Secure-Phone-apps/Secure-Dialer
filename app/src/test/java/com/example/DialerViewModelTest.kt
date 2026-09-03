@@ -50,9 +50,50 @@ class DialerViewModelTest {
     }
 
     @Test
-    fun `dialpad input updates correctly`() {
-        viewModel.dialpadInput.value = "123"
-        assertEquals("123", viewModel.dialpadInput.value)
+    fun `dialpad tones and vibrate on click settings persist across ViewModel recreation`() {
+        viewModel.updateDialpadTonesEnabled(false)
+        viewModel.updateVibrateOnClickEnabled(false)
+        viewModel.updateFlipToSilenceEnabled(true)
+        viewModel.updateCallWaitingEnabled(false)
+        viewModel.updateRecordingEnabled(true)
+        viewModel.updateFlashAlertsEnabled(true)
+        viewModel.updateBiometricLockEnabled(true)
+        viewModel.updatePocketProtectionEnabled(true)
+        viewModel.updateCallbackRemindersEnabled(false)
+        viewModel.updateCallNotesEnabled(false)
+        viewModel.updateFakeCallSimulatorEnabled(false)
+        viewModel.onAccountFilterChange("Google:test@gmail.com")
+        viewModel.updateDefaultContactAccount("Google:test@gmail.com", "com.google")
+
+        assertFalse(viewModel.dialpadTonesEnabled.value)
+        assertFalse(viewModel.vibrateOnClickEnabled.value)
+        assertTrue(viewModel.flipToSilenceEnabled.value)
+        assertFalse(viewModel.callWaitingEnabled.value)
+        assertTrue(viewModel.recordingEnabled.value)
+        assertTrue(viewModel.flashAlertsEnabled.value)
+        assertTrue(viewModel.isBiometricLockEnabled.value)
+        assertTrue(viewModel.isPocketProtectionEnabled.value)
+        assertFalse(viewModel.isCallbackRemindersEnabled.value)
+        assertFalse(viewModel.isCallNotesEnabled.value)
+        assertFalse(viewModel.isFakeCallSimulatorEnabled.value)
+        assertEquals("Google:test@gmail.com", viewModel.selectedAccountFilter.value)
+        assertEquals("Google:test@gmail.com", viewModel.defaultContactAccountName.value)
+
+        // Recreate ViewModel simulating app restart
+        val newViewModel = DialerViewModel(context)
+        assertFalse(newViewModel.dialpadTonesEnabled.value)
+        assertFalse(newViewModel.vibrateOnClickEnabled.value)
+        assertTrue(newViewModel.flipToSilenceEnabled.value)
+        assertFalse(newViewModel.callWaitingEnabled.value)
+        assertTrue(newViewModel.recordingEnabled.value)
+        assertTrue(newViewModel.flashAlertsEnabled.value)
+        assertTrue(newViewModel.isBiometricLockEnabled.value)
+        assertTrue(newViewModel.isPocketProtectionEnabled.value)
+        assertFalse(newViewModel.isCallbackRemindersEnabled.value)
+        assertFalse(newViewModel.isCallNotesEnabled.value)
+        assertFalse(newViewModel.isFakeCallSimulatorEnabled.value)
+        assertEquals("Google:test@gmail.com", newViewModel.selectedAccountFilter.value)
+        assertEquals("Google:test@gmail.com", newViewModel.defaultContactAccountName.value)
     }
 
     @Test

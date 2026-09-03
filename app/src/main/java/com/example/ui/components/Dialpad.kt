@@ -348,7 +348,9 @@ fun DialpadTabContent(
             val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
             Surface(
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     try {
                         val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
                         val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
@@ -381,7 +383,9 @@ fun DialpadTabContent(
             // Central primary call button matching DialButton shape and size perfectly
             Surface(
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     if (inputValue.isEmpty()) {
                         val lastNumber = viewModel?.getLastOutgoingNumber() ?: ""
                         if (lastNumber.isNotBlank()) {
@@ -442,11 +446,15 @@ fun DialpadTabContent(
                                 interactionSource = backspaceInteractionSource,
                                 indication = ripple(),
                                 onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
                                     onValueChange(inputValue.dropLast(1))
                                 },
                                 onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
                                     onValueChange("")
                                 }
                             )

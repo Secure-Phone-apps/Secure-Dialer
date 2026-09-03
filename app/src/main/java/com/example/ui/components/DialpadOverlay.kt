@@ -179,11 +179,15 @@ fun DialpadOverlay(
                             .clip(androidx.compose.foundation.shape.CircleShape)
                             .combinedClickable(
                                 onClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
                                     onValueChange(inputValue.dropLast(1))
                                 },
                                 onLongClick = {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
                                     onValueChange("")
                                 }
                             ),
@@ -235,7 +239,9 @@ fun DialpadOverlay(
 
             Surface(
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     onCallClick(inputValue)
                 },
                 shape = overlayCallShape,
@@ -303,11 +309,15 @@ fun DialButton(
                 interactionSource = interactionSource,
                 indication = ripple(),
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     onValueChange(inputValue + key.first)
                 },
                 onLongClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
                     if (key.first == "1") {
                         if (voicemailNumber.isNotBlank()) {
                             Toast.makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT).show()

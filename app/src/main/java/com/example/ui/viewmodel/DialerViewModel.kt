@@ -62,7 +62,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun onAccountFilterChange(accountName: String) {
         selectedAccountFilter.value = accountName
         _selectedAccountFilterFlow.value = accountName
-        prefs.edit().putString("selected_account_filter", accountName).apply()
+        prefs.edit().putString("selected_account_filter", accountName).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("selected_account_filter", accountName))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateDefaultContactAccount(accountName: String, accountType: String) {
@@ -71,7 +78,15 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit()
             .putString("default_contact_account_name", accountName)
             .putString("default_contact_account_type", accountType)
-            .apply()
+            .commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("default_contact_account_name", accountName))
+                repository.dao.insertSetting(AppSetting("default_contact_account_type", accountType))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun onDialpadInputChange(newInput: String) {
@@ -202,6 +217,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var fakeCallStartTimestamp = 0L
     var dialpadTonesEnabled = mutableStateOf(prefs.getBoolean("dialpad_tones_enabled", true))
     var vibrateOnClickEnabled = mutableStateOf(prefs.getBoolean("vibrate_on_click_enabled", true))
+    var flipToSilenceEnabled = mutableStateOf(prefs.getBoolean("flip_to_silence_enabled", false))
     var preferredSim = mutableStateOf("SIM 1")
     var voicemailNumber = mutableStateOf("+1 (555) 011-9988")
     
@@ -216,6 +232,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     var isCallActive = mutableStateOf(false)
     var isCallMinimized = mutableStateOf(false)
+    var isLaunchedForCall = mutableStateOf(false)
     var callingContactName = mutableStateOf("")
     var callingContactNumber = mutableStateOf("")
     var isDefaultDialer = mutableStateOf(false)
@@ -247,6 +264,77 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             preferredSim.value = repository.getPreferredSim()
             voicemailNumber.value = repository.getVoicemailNumber()
             
+            try {
+                val settings = repository.dao.getAllSettingsList().associate { it.key to it.value }
+                settings["dialpad_tones_enabled"]?.toBooleanStrictOrNull()?.let {
+                    dialpadTonesEnabled.value = it
+                    prefs.edit().putBoolean("dialpad_tones_enabled", it).commit()
+                }
+                settings["vibrate_on_click_enabled"]?.toBooleanStrictOrNull()?.let {
+                    vibrateOnClickEnabled.value = it
+                    prefs.edit().putBoolean("vibrate_on_click_enabled", it).commit()
+                }
+                settings["flip_to_silence_enabled"]?.toBooleanStrictOrNull()?.let {
+                    flipToSilenceEnabled.value = it
+                    prefs.edit().putBoolean("flip_to_silence_enabled", it).commit()
+                }
+                settings["call_waiting_enabled"]?.toBooleanStrictOrNull()?.let {
+                    callWaitingEnabled.value = it
+                    prefs.edit().putBoolean("call_waiting_enabled", it).commit()
+                }
+                settings["recording_enabled"]?.toBooleanStrictOrNull()?.let {
+                    recordingEnabled.value = it
+                    prefs.edit().putBoolean("recording_enabled", it).commit()
+                }
+                settings["is_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isBiometricLockEnabled.value = it
+                    prefs.edit().putBoolean("is_biometric_lock_enabled", it).commit()
+                }
+                settings["is_pocket_protection_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isPocketProtectionEnabled.value = it
+                    prefs.edit().putBoolean("is_pocket_protection_enabled", it).commit()
+                }
+                settings["is_callback_reminders_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isCallbackRemindersEnabled.value = it
+                    prefs.edit().putBoolean("is_callback_reminders_enabled", it).commit()
+                }
+                settings["is_call_notes_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isCallNotesEnabled.value = it
+                    prefs.edit().putBoolean("is_call_notes_enabled", it).commit()
+                }
+                settings["is_fake_call_simulator_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isFakeCallSimulatorEnabled.value = it
+                    prefs.edit().putBoolean("is_fake_call_simulator_enabled", it).commit()
+                }
+                settings["flash_alerts_enabled"]?.toBooleanStrictOrNull()?.let {
+                    flashAlertsEnabled.value = it
+                    prefs.edit().putBoolean("flash_alerts_enabled", it).commit()
+                }
+                settings["is_call_log_dashboard_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isCallLogDashboardEnabled.value = it
+                    prefs.edit().putBoolean("is_call_log_dashboard_enabled", it).commit()
+                }
+                settings["is_call_log_filters_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isCallLogFiltersEnabled.value = it
+                    prefs.edit().putBoolean("is_call_log_filters_enabled", it).commit()
+                }
+                settings["is_row_swipe_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isRowSwipeEnabled.value = it
+                    prefs.edit().putBoolean("is_row_swipe_enabled", it).commit()
+                }
+                settings["selected_account_filter"]?.let {
+                    selectedAccountFilter.value = it
+                    _selectedAccountFilterFlow.value = it
+                    prefs.edit().putString("selected_account_filter", it).commit()
+                }
+                settings["default_contact_account_name"]?.let {
+                    defaultContactAccountName.value = it
+                    prefs.edit().putString("default_contact_account_name", it).commit()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             // Add default quick responses if empty
             val currentResponses = repository.getQuickResponses().first()
             if (currentResponses.isEmpty()) {
@@ -267,37 +355,37 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateDarkTheme(dark: Boolean) {
         isDarkTheme.value = dark
-        prefs.edit().putBoolean("is_dark_theme", dark).apply()
+        prefs.edit().putBoolean("is_dark_theme", dark).commit()
     }
 
     fun updateAmoledMode(amoled: Boolean) {
         isAmoledMode.value = amoled
-        prefs.edit().putBoolean("is_amoled_mode", amoled).apply()
+        prefs.edit().putBoolean("is_amoled_mode", amoled).commit()
     }
 
     fun updateCustomColorHex(hex: String) {
         customColorHex.value = hex
-        prefs.edit().putString("custom_color_hex", hex).apply()
+        prefs.edit().putString("custom_color_hex", hex).commit()
     }
 
     fun updateM3Expressive(expressive: Boolean) {
         isM3Expressive.value = expressive
-        prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
+        prefs.edit().putBoolean("is_m3_expressive", expressive).commit()
     }
 
     fun updateAvatarShapeType(shapeType: String) {
         avatarShapeType.value = shapeType
-        prefs.edit().putString("avatar_shape_type", shapeType).apply()
+        prefs.edit().putString("avatar_shape_type", shapeType).commit()
     }
 
     fun updateUseDynamicColor(dynamic: Boolean) {
         useDynamicColor.value = dynamic
-        prefs.edit().putBoolean("use_dynamic_color", dynamic).apply()
+        prefs.edit().putBoolean("use_dynamic_color", dynamic).commit()
     }
 
     fun updateThemeColor(color: String) {
         themeColor.value = color
-        prefs.edit().putString("theme_color", color).apply()
+        prefs.edit().putString("theme_color", color).commit()
     }
 
     fun updateDefaultTab(tab: Int) {
@@ -308,69 +396,173 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateDefaultStartupTabKey(key: String) {
         defaultStartupTabKey.value = key
-        prefs.edit().putString("default_startup_tab_key", key).apply()
+        prefs.edit().putString("default_startup_tab_key", key).commit()
         val slots = listOf(tabSlotLeft.value, tabSlotMiddle.value, tabSlotRight.value)
         selectedTab.intValue = slots.indexOf(key).coerceAtLeast(0)
     }
 
+    fun selectTabBySlotKey(key: String) {
+        val slots = listOf(tabSlotLeft.value, tabSlotMiddle.value, tabSlotRight.value)
+        val index = slots.indexOf(key)
+        if (index != -1) {
+            selectedTab.intValue = index
+        }
+    }
+
     fun updateDialpadTonesEnabled(enabled: Boolean) {
         dialpadTonesEnabled.value = enabled
-        prefs.edit().putBoolean("dialpad_tones_enabled", enabled).apply()
+        prefs.edit().putBoolean("dialpad_tones_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("dialpad_tones_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateVibrateOnClickEnabled(enabled: Boolean) {
         vibrateOnClickEnabled.value = enabled
-        prefs.edit().putBoolean("vibrate_on_click_enabled", enabled).apply()
+        prefs.edit().putBoolean("vibrate_on_click_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("vibrate_on_click_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateFlipToSilenceEnabled(enabled: Boolean) {
+        flipToSilenceEnabled.value = enabled
+        prefs.edit().putBoolean("flip_to_silence_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("flip_to_silence_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateCallWaitingEnabled(enabled: Boolean) {
         callWaitingEnabled.value = enabled
-        prefs.edit().putBoolean("call_waiting_enabled", enabled).apply()
+        prefs.edit().putBoolean("call_waiting_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("call_waiting_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateRecordingEnabled(enabled: Boolean) {
         recordingEnabled.value = enabled
-        prefs.edit().putBoolean("recording_enabled", enabled).apply()
+        prefs.edit().putBoolean("recording_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("recording_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateBiometricLockEnabled(enabled: Boolean) {
         isBiometricLockEnabled.value = enabled
-        prefs.edit().putBoolean("is_biometric_lock_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_biometric_lock_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_biometric_lock_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updatePocketProtectionEnabled(enabled: Boolean) {
         isPocketProtectionEnabled.value = enabled
-        prefs.edit().putBoolean("is_pocket_protection_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_pocket_protection_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_pocket_protection_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateCallbackRemindersEnabled(enabled: Boolean) {
         isCallbackRemindersEnabled.value = enabled
-        prefs.edit().putBoolean("is_callback_reminders_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_callback_reminders_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_callback_reminders_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateCallNotesEnabled(enabled: Boolean) {
         isCallNotesEnabled.value = enabled
-        prefs.edit().putBoolean("is_call_notes_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_call_notes_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_call_notes_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateFakeCallSimulatorEnabled(enabled: Boolean) {
         isFakeCallSimulatorEnabled.value = enabled
-        prefs.edit().putBoolean("is_fake_call_simulator_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_fake_call_simulator_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_fake_call_simulator_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateDashboardMode(mode: String) {
         dashboardMode.value = mode
-        prefs.edit().putString("dashboard_mode", mode).apply()
+        prefs.edit().putString("dashboard_mode", mode).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("dashboard_mode", mode))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateCallLogDashboardEnabled(enabled: Boolean) {
         isCallLogDashboardEnabled.value = enabled
-        prefs.edit().putBoolean("is_call_log_dashboard_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_call_log_dashboard_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_call_log_dashboard_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateCallLogFiltersEnabled(enabled: Boolean) {
         isCallLogFiltersEnabled.value = enabled
-        prefs.edit().putBoolean("is_call_log_filters_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_call_log_filters_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_call_log_filters_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun updateTabSlotLeft(screen: String) {
@@ -395,7 +587,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("tab_slot_left", screen)
             .putString("tab_slot_middle", newMiddle)
             .putString("tab_slot_right", newRight)
-            .apply()
+            .commit()
 
         val slots = listOf(screen, newMiddle, newRight)
         selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
@@ -423,7 +615,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("tab_slot_left", newLeft)
             .putString("tab_slot_middle", screen)
             .putString("tab_slot_right", newRight)
-            .apply()
+            .commit()
 
         val slots = listOf(newLeft, screen, newRight)
         selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
@@ -451,7 +643,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .putString("tab_slot_left", newLeft)
             .putString("tab_slot_middle", newMiddle)
             .putString("tab_slot_right", screen)
-            .apply()
+            .commit()
 
         val slots = listOf(newLeft, newMiddle, screen)
         selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
@@ -459,13 +651,13 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateRowSwipeEnabled(enabled: Boolean) {
         isRowSwipeEnabled.value = enabled
-        prefs.edit().putBoolean("is_row_swipe_enabled", enabled).apply()
+        prefs.edit().putBoolean("is_row_swipe_enabled", enabled).commit()
     }
 
     fun saveLastOutgoingNumber(number: String) {
         if (number.isNotBlank()) {
             lastDialedNumber.value = number
-            prefs.edit().putString("last_dialed_number", number).apply()
+            prefs.edit().putString("last_dialed_number", number).commit()
         }
     }
 
@@ -772,7 +964,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     // New Custom Features Support
     fun updateFlashAlertsEnabled(enabled: Boolean) {
         flashAlertsEnabled.value = enabled
-        prefs.edit().putBoolean("flash_alerts_enabled", enabled).apply()
+        prefs.edit().putBoolean("flash_alerts_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("flash_alerts_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun addSpamNumber(number: String, label: String = "Spam") {

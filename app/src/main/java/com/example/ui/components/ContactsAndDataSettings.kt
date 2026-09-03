@@ -324,7 +324,7 @@ fun ContactsAndDataSettings(
                         RadioButton(
                             selected = viewModel.selectedAccountFilter.value.isBlank(),
                             onClick = {
-                                viewModel.selectedAccountFilter.value = ""
+                                viewModel.onAccountFilterChange("")
                                 showContactsToDisplayDialog = false
                             }
                         )
@@ -341,7 +341,7 @@ fun ContactsAndDataSettings(
                             RadioButton(
                                 selected = viewModel.selectedAccountFilter.value == acc.name,
                                 onClick = {
-                                    viewModel.selectedAccountFilter.value = acc.name
+                                    viewModel.onAccountFilterChange(acc.name)
                                     showContactsToDisplayDialog = false
                                 }
                             )
@@ -366,6 +366,22 @@ fun ContactsAndDataSettings(
             text = {
                 Column {
                     val accounts = viewModel.availableAccounts
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = viewModel.defaultContactAccountName.value.isBlank(),
+                            onClick = {
+                                viewModel.updateDefaultContactAccount("", "")
+                                showDefaultAccountDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Default / Same as Filter")
+                    }
                     accounts.forEach { acc ->
                         Row(
                             modifier = Modifier
@@ -376,7 +392,7 @@ fun ContactsAndDataSettings(
                             RadioButton(
                                 selected = viewModel.defaultContactAccountName.value == acc.name,
                                 onClick = {
-                                    viewModel.defaultContactAccountName.value = acc.name
+                                    viewModel.updateDefaultContactAccount(acc.name, acc.type)
                                     showDefaultAccountDialog = false
                                 }
                             )

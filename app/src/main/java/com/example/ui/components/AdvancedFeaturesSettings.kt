@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PhoneCallback
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,7 +73,7 @@ fun AdvancedFeaturesSettings(
                 badgeText = if (recordings.isNotEmpty()) "${recordings.size} files" else null,
                 hasSwitch = true,
                 isSwitchChecked = isRecordingEnabled,
-                onSwitchChange = { viewModel.recordingEnabled.value = it },
+                onSwitchChange = { viewModel.updateRecordingEnabled(it) },
                 initiallyExpanded = isMatchTitle("Call Recording", highlightedTitle) || isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle)
             ) {
                 CallRecordingsSettings(viewModel = viewModel, cardBgColor = cardBgColor)
@@ -137,7 +138,7 @@ fun AdvancedFeaturesSettings(
             ExpandableSettingsCard(
                 title = stringResource(R.string.settings_fake_call_sim),
                 subtitle = stringResource(R.string.settings_fake_call_sim_sub),
-                icon = Icons.Default.PhoneCallback,
+                icon = Icons.AutoMirrored.Filled.PhoneCallback,
                 iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                 iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
                 cardBgColor = Color.Transparent,

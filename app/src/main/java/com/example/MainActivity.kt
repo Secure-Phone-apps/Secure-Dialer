@@ -39,6 +39,9 @@ import com.example.ui.MainScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
 import android.app.KeyguardManager
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
@@ -54,8 +57,35 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: DialerViewModel by viewModels()
     private val isAppAuthenticated = mutableStateOf(false)
+    private val authLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        isAuthenticating = false
+        if (result.resultCode == RESULT_OK) {
+            isAppAuthenticated.value = true
+        } else {
+            isAppAuthenticated.value = false
+        }
+    }
     private var isAuthenticating = false
     private var isAppStopped = false
+    private var isLaunchedForCall = false
+
+    private fun dismissCallUiAndExit() {
+        setLockScreenVisibility(false)
+        if (isLaunchedForCall) {
+            isLaunchedForCall = false
+            viewModel.isLaunchedForCall.value = false
+            if (viewModel.isBiometricLockEnabled.value) {
+                isAppAuthenticated.value = false
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                finishAndRemoveTask()
+            } else {
+                finish()
+            }
+        }
+    }
 
     companion object {
         private const val REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL = 4224
@@ -99,20 +129,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        @Suppress("DEPRECATION")
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL) {
-            isAuthenticating = false
-            if (resultCode == RESULT_OK) {
-                isAppAuthenticated.value = true
-            } else {
-                isAppAuthenticated.value = false
-            }
-        }
-    }
-
     private fun triggerDeviceAuthentication() {
         if (isAuthenticating) return
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager ?: return
@@ -123,7 +139,7 @@ class MainActivity : ComponentActivity() {
             )
             if (intent != null) {
                 isAuthenticating = true
-                startActivityForResult(intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL)
+                authLauncher.launch(intent)
             } else {
                 isAppAuthenticated.value = true
             }
@@ -170,6 +186,9 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(isCallActive) {
                 try {
                     setLockScreenVisibility(isCallActive)
+                    if (!isCallActive && isLaunchedForCall) {
+                        dismissCallUiAndExit()
+                    }
                 } catch (_: Exception) {
                 }
             }
@@ -396,13 +415,15 @@ class MainActivity : ComponentActivity() {
         }
 
         if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false) || CallManager.currentCall.value != null) {
+            isLaunchedForCall = true
+            viewModel.isLaunchedForCall.value = true
             viewModel.isCallMinimized.value = false
             isAppAuthenticated.value = true
             setLockScreenVisibility(true)
         }
 
-        if (intent.getBooleanExtra("SHOW_CALL_LOG", false)) {
-            viewModel.selectedTab.value = 1
+        if (intent.getBooleanExtra("SHOW_CALL_LOG", false) || intent.getBooleanExtra("MISSED_CALL", false) || intent.action == "com.example.dialer.ACTION_MISSED_CALLS") {
+            viewModel.selectTabBySlotKey("RECENTS")
         }
 
         val action = intent.action
@@ -416,7 +437,7 @@ class MainActivity : ComponentActivity() {
                         CallManager.placeCall(this, number)
                     } else {
                         viewModel.dialpadInput.value = number
-                        viewModel.selectedTab.value = 2
+                        viewModel.selectTabBySlotKey("DIALPAD")
                     }
                 }
             }

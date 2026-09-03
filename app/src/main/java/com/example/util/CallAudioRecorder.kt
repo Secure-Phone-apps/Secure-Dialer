@@ -52,6 +52,8 @@ object CallAudioRecorder {
     private var currentOutputFile: File? = null
     private var timerJob: Job? = null
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.Main)
+    private var audioManager: AudioManager? = null
+    private val focusChangeListener = AudioManager.OnAudioFocusChangeListener { }
 
     fun startRecording(context: Context, phoneNumber: String): Boolean {
         if (_isRecording.value) return false
@@ -65,6 +67,16 @@ object CallAudioRecorder {
             val cleanNum = phoneNumber.filter { it.isDigit() }.ifEmpty { "Unknown" }
             val fileName = "REC_${cleanNum}_$timestamp.m4a"
             val outputFile = File(recordDir, fileName)
+
+            // Request Audio Focus gracefully to pause background audio/music
+            val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            audioManager = am
+            @Suppress("DEPRECATION")
+            am?.requestAudioFocus(
+                focusChangeListener,
+                AudioManager.STREAM_VOICE_CALL,
+                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
+            )
 
             var recorder: MediaRecorder? = null
             var success = false
@@ -151,6 +163,11 @@ object CallAudioRecorder {
             }
         } catch (_: Exception) {
         } finally {
+            try {
+                @Suppress("DEPRECATION")
+                audioManager?.abandonAudioFocus(focusChangeListener)
+            } catch (_: Exception) {}
+            audioManager = null
             mediaRecorder = null
             _isRecording.value = false
             _recordingDuration.value = 0

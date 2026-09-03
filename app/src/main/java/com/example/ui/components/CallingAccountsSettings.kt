@@ -130,7 +130,7 @@ fun CallingAccountsSettings(
                     title = stringResource(R.string.settings_call_waiting),
                     subtitle = stringResource(R.string.settings_call_waiting_sub),
                     checked = callWaitingEnabled,
-                    onCheckedChange = { viewModel.callWaitingEnabled.value = it },
+                    onCheckedChange = { viewModel.updateCallWaitingEnabled(it) },
                     icon = Icons.Default.PhonePaused,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.secondary
@@ -170,7 +170,7 @@ fun CallingAccountsSettings(
                         title = stringResource(R.string.settings_flash_alerts),
                         subtitle = stringResource(R.string.settings_flash_alerts_sub),
                         checked = flashAlertsEnabled,
-                        onCheckedChange = { viewModel.flashAlertsEnabled.value = it },
+                        onCheckedChange = { viewModel.updateFlashAlertsEnabled(it) },
                         icon = Icons.Default.FlashlightOn,
                         iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                         iconTint = MaterialTheme.colorScheme.primary

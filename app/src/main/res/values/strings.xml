@@ -72,6 +72,7 @@
     <string name="call_status_connecting">Connecting...</string>
     <string name="call_status_conference">Conference call</string>
     <string name="call_status_ongoing">Ongoing call</string>
+    <string name="call_status_ended">Call ended</string>
     <string name="on_hold_prefix">On Hold:</string>
     <string name="btn_swap">Swap</string>
     <string name="call_waiting_title">Call Waiting</string>
@@ -182,6 +183,8 @@
     <string name="settings_dialpad_tones_sub">Play sounds when dialing keys</string>
     <string name="settings_vibrate">Vibrate on Click</string>
     <string name="settings_vibrate_sub">Haptic response on dialpad interactions</string>
+    <string name="settings_flip_to_silence">Flip to Silence</string>
+    <string name="settings_flip_to_silence_sub">Silence incoming call ringer by turning phone face down</string>
     <string name="settings_calls_blocking">Calls &amp; Blocking</string>
     <string name="settings_speed_dial">Speed Dial</string>
     <string name="settings_speed_dial_sub">Assign fast call keys 1-9</string>

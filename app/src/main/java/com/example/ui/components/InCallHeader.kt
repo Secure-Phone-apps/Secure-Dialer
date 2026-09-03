@@ -56,6 +56,7 @@ fun InCallHeader(
         }
 
         val displayHeader = when {
+            callState == android.telecom.Call.STATE_DISCONNECTED -> stringResource(R.string.call_status_ended)
             isOnHold || callState == android.telecom.Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
             callState == android.telecom.Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
             callState == android.telecom.Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)

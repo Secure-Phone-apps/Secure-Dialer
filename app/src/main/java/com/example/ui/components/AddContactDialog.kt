@@ -18,64 +18,37 @@
 package com.example.ui.components
 
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.ContactAccount
 import com.example.ui.theme.LocalM3Expressive
 
-data class Country(val code: String, val name: String, val prefix: String, val flag: String)
-
-val COUNTRIES = listOf(
-    Country("IN", "India", "+91", "🇮🇳"),
-    Country("US", "United States", "+1", "🇺🇸"),
-    Country("GB", "United Kingdom", "+44", "🇬🇧"),
-    Country("CA", "Canada", "+1", "🇨🇦"),
-    Country("AU", "Australia", "+61", "🇦🇺"),
-    Country("DE", "Germany", "+49", "🇩🇪"),
-    Country("FR", "France", "+33", "🇫🇷"),
-    Country("IT", "Italy", "+39", "🇮🇹"),
-    Country("ES", "Spain", "+34", "🇪🇸"),
-    Country("JP", "Japan", "+81", "🇯🇵"),
-    Country("CN", "China", "+86", "🇨🇳"),
-    Country("BR", "Brazil", "+55", "🇧🇷"),
-    Country("RU", "Russia", "+7", "🇷🇺"),
-    Country("ZA", "South Africa", "+27", "🇿🇦"),
-    Country("SG", "Singapore", "+65", "🇸🇬"),
-    Country("MY", "Malaysia", "+60", "🇲🇾"),
-    Country("ID", "Indonesia", "+62", "🇮🇩"),
-    Country("AE", "United Arab Emirates", "+971", "🇦🇪"),
-    Country("SA", "Saudi Arabia", "+966", "🇸🇦"),
-    Country("PK", "Pakistan", "+92", "🇵🇰"),
-    Country("BD", "Bangladesh", "+880", "🇧🇩"),
-    Country("LK", "Sri Lanka", "+94", "🇱🇰"),
-    Country("NP", "Nepal", "+977", "🇳🇵"),
-    Country("MX", "Mexico", "+52", "🇲🇽"),
-    Country("NZ", "New Zealand", "+64", "🇳🇿"),
-    Country("NL", "Netherlands", "+31", "🇳🇱"),
-    Country("CH", "Switzerland", "+41", "🇨🇭"),
-    Country("SE", "Sweden", "+46", "🇸🇪"),
-    Country("NO", "Norway", "+47", "🇳🇴")
-)
-
 data class PhoneInputState(
     val id: String = java.util.UUID.randomUUID().toString(),
-    var country: Country? = null,
     var rawNumber: String = "",
     var label: String = "Mobile",
     var isPrimary: Boolean = false
@@ -103,11 +76,13 @@ fun AddContactDialog(
     onConfirm: (name: String, number: String, label: String, email: String, accountName: String, accountType: String) -> Unit = { _, _, _, _, _, _ -> },
     onConfirmWithDetails: ((name: String, numbers: List<com.example.model.LabeledNumber>, emails: List<com.example.model.LabeledEmail>, addresses: List<com.example.model.LabeledAddress>, accountName: String, accountType: String) -> Unit)? = null
 ) {
-    val context = LocalContext.current
-    val dialogShape = RoundedCornerShape(20.dp)
-    val fieldShape = RoundedCornerShape(14.dp)
-    val buttonShape = RoundedCornerShape(12.dp)
-    val isExpressive = LocalM3Expressive.current
+    val fieldShape = RoundedCornerShape(18.dp)
+    val buttonShape = RoundedCornerShape(20.dp)
+    var showMoreDetails by remember { mutableStateOf(initialAddresses.isNotEmpty()) }
+
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var addressInput by remember { mutableStateOf(initialAddresses.firstOrNull()?.address ?: "") }
 
     val defaultSaveAccount = remember(availableAccounts, defaultAccountName, selectedAccountFilter) {
         val specificAccounts = availableAccounts.filter { it.name.isNotBlank() }
@@ -128,42 +103,19 @@ fun AddContactDialog(
     var selectedAccount by remember(defaultSaveAccount) { mutableStateOf<ContactAccount?>(defaultSaveAccount) }
     var accountMenuExpanded by remember { mutableStateOf(false) }
 
-    val countryIso = remember {
-        try {
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? android.telephony.TelephonyManager
-            tm?.networkCountryIso?.uppercase() ?: tm?.simCountryIso?.uppercase() ?: java.util.Locale.getDefault().country.uppercase()
-        } catch (e: Exception) {
-            java.util.Locale.getDefault().country.uppercase()
-        }
-    }
-    
-    val defaultCountry = remember(countryIso) {
-        COUNTRIES.firstOrNull { it.code == countryIso } ?: COUNTRIES.first { it.code == "IN" }
-    }
-
-    var firstName by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var addressInput by remember { mutableStateOf(initialAddresses.firstOrNull()?.address ?: "") }
+    var showEmailField by remember { mutableStateOf(initialEmails.isNotEmpty() || initialEmail.isNotBlank()) }
+    var showAddressField by remember { mutableStateOf(initialAddresses.isNotEmpty() || addressInput.isNotBlank()) }
 
     val phoneInputs = remember {
         mutableStateListOf<PhoneInputState>().apply {
             if (initialNumbers.isNotEmpty()) {
                 initialNumbers.forEach { item ->
-                    val num = item.number
-                    val matchedCountry = if (num.startsWith("+")) {
-                        COUNTRIES.filter { num.startsWith(it.prefix) }.maxByOrNull { it.prefix.length } ?: defaultCountry
-                    } else defaultCountry
-                    val raw = if (num.startsWith("+") && matchedCountry != null) num.substring(matchedCountry.prefix.length) else num
-                    add(PhoneInputState(country = matchedCountry, rawNumber = raw, label = item.label, isPrimary = item.isPrimary))
+                    add(PhoneInputState(rawNumber = item.number, label = item.label, isPrimary = item.isPrimary))
                 }
             } else if (initialNumber.isNotBlank()) {
-                val matchedCountry = if (initialNumber.startsWith("+")) {
-                    COUNTRIES.filter { initialNumber.startsWith(it.prefix) }.maxByOrNull { it.prefix.length } ?: defaultCountry
-                } else defaultCountry
-                val raw = if (initialNumber.startsWith("+") && matchedCountry != null) initialNumber.substring(matchedCountry.prefix.length) else initialNumber
-                add(PhoneInputState(country = matchedCountry, rawNumber = raw, label = initialLabel.ifBlank { "Mobile" }, isPrimary = true))
+                add(PhoneInputState(rawNumber = initialNumber, label = initialLabel.ifBlank { "Mobile" }, isPrimary = true))
             } else {
-                add(PhoneInputState(country = defaultCountry, rawNumber = "", label = "Mobile", isPrimary = true))
+                add(PhoneInputState(rawNumber = "", label = "Mobile", isPrimary = true))
             }
         }
     }
@@ -193,55 +145,74 @@ fun AddContactDialog(
         }
     }
 
+    val expressiveFieldColors = TextFieldDefaults.colors(
+        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+        disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+        unfocusedIndicatorColor = Color.Transparent,
+        disabledIndicatorColor = Color.Transparent
+    )
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        shape = dialogShape,
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = if (isExpressive) 6.dp else 3.dp,
+        shape = RoundedCornerShape(28.dp),
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         title = {
             Text(
                 text = if (initialName.isEmpty() && initialNumber.isEmpty()) stringResource(R.string.add_contact_dialog_title) else stringResource(R.string.edit_contact_dialog_title),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             androidx.compose.foundation.lazy.LazyColumn(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Full-width Account Banner displaying full email address
                 val accountsToPick = availableAccounts.filter { it.name.isNotBlank() }
                 if (accountsToPick.isNotEmpty()) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth()) {
-                            OutlinedCard(
+                            Surface(
                                 onClick = { accountMenuExpanded = true },
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = fieldShape,
-                                colors = CardDefaults.outlinedCardColors(
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-                                )
+                                color = MaterialTheme.colorScheme.surfaceContainerHigh
                             ) {
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.contact_source_label),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            fontWeight = FontWeight.SemiBold
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.AccountCircle,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(22.dp)
                                         )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = selectedAccount?.displayName ?: stringResource(R.string.contact_source_phone),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
-                                        )
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.contact_source_label),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = selectedAccount?.displayName ?: stringResource(R.string.contact_source_phone),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Medium,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
                                     }
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
@@ -253,8 +224,7 @@ fun AddContactDialog(
 
                             DropdownMenu(
                                 expanded = accountMenuExpanded,
-                                onDismissRequest = { accountMenuExpanded = false },
-                                modifier = Modifier.fillMaxWidth(0.85f)
+                                onDismissRequest = { accountMenuExpanded = false }
                             ) {
                                 accountsToPick.forEach { account ->
                                     DropdownMenuItem(
@@ -275,220 +245,276 @@ fun AddContactDialog(
                     }
                 }
 
+                // First & Last Name
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        OutlinedTextField(
+                        TextField(
                             value = firstName,
                             onValueChange = { firstName = it },
                             label = { Text(stringResource(R.string.label_first_name)) },
                             singleLine = true,
                             modifier = Modifier.weight(1f).testTag("dialog_first_name_input"),
-                            shape = fieldShape
+                            shape = fieldShape,
+                            colors = expressiveFieldColors
                         )
-                        OutlinedTextField(
+                        TextField(
                             value = lastName,
                             onValueChange = { lastName = it },
                             label = { Text(stringResource(R.string.label_last_name)) },
                             singleLine = true,
                             modifier = Modifier.weight(1f).testTag("dialog_last_name_input"),
-                            shape = fieldShape
+                            shape = fieldShape,
+                            colors = expressiveFieldColors
                         )
                     }
                 }
 
-                item {
-                    Text(
-                        text = stringResource(R.string.label_phone_number),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
+                // Phone Numbers (Label selector at beginning, delete button ALWAYS on far right)
+                items(phoneInputs.size) { index ->
+                    val phoneItem = phoneInputs[index]
+                    var labelMenuExpanded by remember { mutableStateOf(false) }
+
+                    TextField(
+                        value = phoneItem.rawNumber,
+                        onValueChange = { phoneInputs[index] = phoneItem.copy(rawNumber = it) },
+                        label = { Text(stringResource(R.string.label_phone_number)) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        colors = expressiveFieldColors,
+                        shape = fieldShape,
+                        modifier = Modifier.fillMaxWidth().testTag("dialog_phone_input_$index"),
+                        leadingIcon = {
+                            Box {
+                                TextButton(
+                                    onClick = { labelMenuExpanded = true },
+                                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                                ) {
+                                    Text(phoneItem.label, style = MaterialTheme.typography.labelSmall)
+                                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
+                                }
+                                DropdownMenu(
+                                    expanded = labelMenuExpanded,
+                                    onDismissRequest = { labelMenuExpanded = false }
+                                ) {
+                                    listOf("Mobile", "Work", "Home", "Main", "Other").forEach { lbl ->
+                                        DropdownMenuItem(
+                                            text = { Text(lbl) },
+                                            onClick = {
+                                                phoneInputs[index] = phoneItem.copy(label = lbl)
+                                                labelMenuExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    if (phoneInputs.size > 1) {
+                                        phoneInputs.removeAt(index)
+                                    } else {
+                                        phoneInputs[0] = phoneItem.copy(rawNumber = "")
+                                    }
+                                },
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = "Remove number",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
                     )
                 }
 
-                items(phoneInputs.size) { index ->
-                    val phoneItem = phoneInputs[index]
-                    var expandedCountryMenu by remember { mutableStateOf(false) }
-                    var expandedLabelMenu by remember { mutableStateOf(false) }
-
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = fieldShape,
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
-                        )
+                item {
+                    FilledTonalButton(
+                        onClick = {
+                            phoneInputs.add(PhoneInputState(rawNumber = "", label = "Mobile", isPrimary = false))
+                        },
+                        shape = buttonShape,
+                        colors = ButtonDefaults.filledTonalButtonColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                     ) {
-                        Column(modifier = Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Add phone number", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+
+                // Emails (On-demand, label at beginning, delete button ALWAYS on far right)
+                if (showEmailField) {
+                    items(emailInputs.size) { index ->
+                        val emailItem = emailInputs[index]
+                        var labelMenuExpanded by remember { mutableStateOf(false) }
+
+                        TextField(
+                            value = emailItem.email,
+                            onValueChange = { emailInputs[index] = emailItem.copy(email = it) },
+                            label = { Text(stringResource(R.string.label_email)) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            colors = expressiveFieldColors,
+                            shape = fieldShape,
+                            modifier = Modifier.fillMaxWidth().testTag("dialog_email_input_$index"),
+                            leadingIcon = {
                                 Box {
-                                    OutlinedButton(
-                                        onClick = { expandedCountryMenu = true },
-                                        modifier = Modifier.height(52.dp),
-                                        shape = fieldShape,
-                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                    TextButton(
+                                        onClick = { labelMenuExpanded = true },
+                                        contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
                                     ) {
-                                        Text(
-                                            text = "${phoneItem.country?.flag ?: "🌐"} ${phoneItem.country?.prefix ?: ""}",
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                        Icon(
-                                            imageVector = Icons.Default.ArrowDropDown,
-                                            contentDescription = "Select Country",
-                                            modifier = Modifier.size(16.dp)
-                                        )
+                                        Text(emailItem.label, style = MaterialTheme.typography.labelSmall)
+                                        Icon(Icons.Default.ArrowDropDown, contentDescription = null, modifier = Modifier.size(16.dp))
                                     }
-                                    
                                     DropdownMenu(
-                                        expanded = expandedCountryMenu,
-                                        onDismissRequest = { expandedCountryMenu = false },
-                                        modifier = Modifier.heightIn(max = 280.dp)
+                                        expanded = labelMenuExpanded,
+                                        onDismissRequest = { labelMenuExpanded = false }
                                     ) {
-                                        COUNTRIES.forEach { country ->
+                                        listOf("Home", "Work", "Other").forEach { lbl ->
                                             DropdownMenuItem(
-                                                text = {
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                                        verticalAlignment = Alignment.CenterVertically
-                                                    ) {
-                                                        Text(country.flag)
-                                                        Text(country.name)
-                                                        Spacer(modifier = Modifier.weight(1f))
-                                                        Text(country.prefix, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                                    }
-                                                },
+                                                text = { Text(lbl) },
                                                 onClick = {
-                                                    phoneInputs[index] = phoneItem.copy(country = country)
-                                                    expandedCountryMenu = false
+                                                    emailInputs[index] = emailItem.copy(label = lbl)
+                                                    labelMenuExpanded = false
                                                 }
                                             )
                                         }
                                     }
                                 }
-
-                                OutlinedTextField(
-                                    value = phoneItem.rawNumber,
-                                    onValueChange = { phoneInputs[index] = phoneItem.copy(rawNumber = it) },
-                                    placeholder = { Text("Phone number") },
-                                    singleLine = true,
-                                    modifier = Modifier.weight(1f).testTag("dialog_phone_input_$index"),
-                                    shape = fieldShape
-                                )
-
-                                if (phoneInputs.size > 1) {
-                                    IconButton(
-                                        onClick = { phoneInputs.removeAt(index) },
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = androidx.compose.material.icons.Icons.Default.Delete,
-                                            contentDescription = "Remove number",
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
-                                }
-                            }
-
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                listOf("Mobile", "Work", "Home", "Other").forEach { opt ->
-                                    FilterChip(
-                                        selected = phoneItem.label.equals(opt, ignoreCase = true),
-                                        onClick = { phoneInputs[index] = phoneItem.copy(label = opt) },
-                                        label = { Text(opt, style = MaterialTheme.typography.labelSmall) },
-                                        shape = fieldShape
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        if (emailInputs.size > 1) {
+                                            emailInputs.removeAt(index)
+                                        } else {
+                                            emailInputs.clear()
+                                            showEmailField = false
+                                        }
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Remove email",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
-                        }
+                        )
                     }
                 }
 
-                item {
-                    TextButton(
-                        onClick = {
-                            phoneInputs.add(PhoneInputState(country = defaultCountry, rawNumber = "", label = "Mobile", isPrimary = false))
-                        },
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    ) {
-                        Icon(androidx.compose.material.icons.Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.label_add_number))
+                // Address (On-demand)
+                if (showAddressField) {
+                    item {
+                        TextField(
+                            value = addressInput,
+                            onValueChange = { addressInput = it },
+                            label = { Text(stringResource(R.string.label_address)) },
+                            singleLine = false,
+                            maxLines = 2,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = fieldShape,
+                            colors = expressiveFieldColors,
+                            leadingIcon = {
+                                Text(
+                                    text = "Home",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(start = 10.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        addressInput = ""
+                                        showAddressField = false
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Remove address",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
 
+                // Symmetrical On-Demand Action Chips for Email and Address
                 item {
-                    Text(
-                        text = stringResource(R.string.label_email),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                items(emailInputs.size) { index ->
-                    val emailItem = emailInputs[index]
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
-                            value = emailItem.email,
-                            onValueChange = { emailInputs[index] = emailItem.copy(email = it) },
-                            placeholder = { Text("Email address") },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f).testTag("dialog_email_input_$index"),
-                            shape = fieldShape,
-                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") }
-                        )
-                        IconButton(
-                            onClick = { emailInputs.removeAt(index) },
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Icon(
-                                imageVector = androidx.compose.material.icons.Icons.Default.Delete,
-                                contentDescription = "Remove email",
-                                tint = MaterialTheme.colorScheme.error
-                            )
+                        if (!showEmailField || emailInputs.isEmpty()) {
+                            FilledTonalButton(
+                                onClick = {
+                                    if (emailInputs.isEmpty()) {
+                                        emailInputs.add(EmailInputState(email = "", label = "Home"))
+                                    }
+                                    showEmailField = true
+                                },
+                                shape = buttonShape,
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                ),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Email", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            }
+                        } else {
+                            FilledTonalButton(
+                                onClick = {
+                                    emailInputs.add(EmailInputState(email = "", label = "Home"))
+                                },
+                                shape = buttonShape,
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                ),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Add email", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+
+                        if (!showAddressField) {
+                            FilledTonalButton(
+                                onClick = { showAddressField = true },
+                                shape = buttonShape,
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                ),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Address", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
-                }
-
-                item {
-                    TextButton(
-                        onClick = {
-                            emailInputs.add(EmailInputState(email = "", label = "Home"))
-                        },
-                        modifier = Modifier.padding(vertical = 2.dp)
-                    ) {
-                        Icon(androidx.compose.material.icons.Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.label_add_email))
-                    }
-                }
-
-                item {
-                    OutlinedTextField(
-                        value = addressInput,
-                        onValueChange = { addressInput = it },
-                        label = { Text(stringResource(R.string.label_address)) },
-                        singleLine = false,
-                        maxLines = 2,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = fieldShape,
-                        leadingIcon = { Icon(androidx.compose.material.icons.Icons.Default.LocationOn, contentDescription = "Address") }
-                    )
                 }
             }
         },
@@ -498,10 +524,8 @@ fun AddContactDialog(
                 onClick = {
                     val finalName = "${firstName.trim()} ${lastName.trim()}".trim()
                     val numbersList = phoneInputs.filter { it.rawNumber.trim().isNotEmpty() }.mapIndexed { idx, p ->
-                        val pfx = p.country?.prefix ?: ""
-                        val formattedNum = if (p.rawNumber.startsWith("+")) p.rawNumber.trim() else "$pfx${p.rawNumber.trim()}"
                         com.example.model.LabeledNumber(
-                            number = formattedNum,
+                            number = p.rawNumber.trim(),
                             label = p.label.ifBlank { "Mobile" },
                             isPrimary = idx == 0
                         )
@@ -525,7 +549,7 @@ fun AddContactDialog(
                         onConfirm(finalName, primaryNum, primaryLabel, primaryEmail, accName, accType)
                     }
                 },
-                enabled = firstName.trim().isNotEmpty() && hasValidNumber,
+                enabled = (firstName.trim().isNotEmpty() || lastName.trim().isNotEmpty()) && hasValidNumber,
                 shape = buttonShape
             ) {
                 Text(stringResource(R.string.btn_save))

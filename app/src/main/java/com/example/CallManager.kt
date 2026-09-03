@@ -349,6 +349,15 @@ object CallManager {
         inCallService?.setMuted(muted)
     }
 
+    fun silenceRinger(context: Context) {
+        try {
+            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
+            telecomManager?.silenceRinger()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     fun setSpeaker(speaker: Boolean) {
         inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else CallAudioState.ROUTE_EARPIECE)
     }

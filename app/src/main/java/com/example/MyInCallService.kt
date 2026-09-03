@@ -180,36 +180,38 @@ class MyInCallService : InCallService() {
             }
         })
 
-        // Start the MainActivity to display the incoming/outgoing call screen
-        try {
-            val intent = Intent(this, MainActivity::class.java).apply {
-                setPackage(packageName)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                putExtra("SHOW_CALL_SCREEN", true)
+        // Start MainActivity to display the call screen for outgoing calls.
+        // For incoming ringing calls, rely on showIncomingCallNotification's fullScreenIntent
+        // so Android displays a compact heads-up banner if the phone is actively in use (unlocked).
+        if (call.state != Call.STATE_RINGING) {
+            try {
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    setPackage(packageName)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    putExtra("SHOW_CALL_SCREEN", true)
+                }
+                startActivity(intent)
+            } catch (_: Exception) {
             }
-            startActivity(intent)
-        } catch (_: Exception) {
         }
     }
 
     private fun showIncomingCallNotification(call: Call) {
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "incoming_call_channel"
+        val channelId = "incoming_call_channel_v2"
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            try {
+                nm.deleteNotificationChannel("incoming_call_channel")
+            } catch (_: Exception) {}
+
             val channel = NotificationChannel(channelId, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Full screen and heads-up notifications for incoming phone calls"
                 importance = NotificationManager.IMPORTANCE_HIGH
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                 setBypassDnd(true)
-                enableVibration(true)
-                setSound(
-                    RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
-                    AudioAttributes.Builder()
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                        .build()
-                )
+                enableVibration(false)
+                setSound(null, null)
             }
             nm.createNotificationChannel(channel)
         }
@@ -275,6 +277,8 @@ class MyInCallService : InCallService() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
+            .setSound(null)
+            .setVibrate(null)
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .setContentIntent(fullScreenPendingIntent)
             .addAction(

@@ -39,6 +39,7 @@ fun SoundAndGesturesSettings(
 ) {
     val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
     val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
+    val flipToSilenceEnabled by viewModel.flipToSilenceEnabled
     val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
 
     LazyColumn(
@@ -90,6 +91,28 @@ fun SoundAndGesturesSettings(
                     icon = Icons.Default.Vibration,
                     iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.tertiary
+                )
+            }
+        }
+
+        // Flip to Silence Card
+        item {
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Flip to Silence", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_flip_to_silence),
+                    subtitle = stringResource(R.string.settings_flip_to_silence_sub),
+                    checked = flipToSilenceEnabled,
+                    onCheckedChange = { viewModel.updateFlipToSilenceEnabled(it) },
+                    icon = Icons.Default.ScreenRotation,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
                 )
             }
         }

@@ -212,6 +212,11 @@ fun MainScreen(
         
         hasContactsPermission = contactsGranted
         hasCallLogPermission = callLogGranted
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            hasNotificationPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        } else {
+            hasNotificationPermission = true
+        }
         isLoadingPermissions = false
         
         if (contactsGranted || callLogGranted) {
@@ -239,6 +244,9 @@ fun MainScreen(
                 }
             }
         } else {
+            if (isCallActive) {
+                kotlinx.coroutines.delay(650)
+            }
             isCallActive = false
         }
     }
@@ -408,6 +416,19 @@ fun MainScreen(
                     }
                 }
 
+                LaunchedEffect(selectedTab) {
+                    val currentTab = pagerState.currentPage % tabSlots.size
+                    if (currentTab != selectedTab) {
+                        val tabDiff = selectedTab - currentTab
+                        val shortestDiff = when (tabDiff) {
+                            2 -> -1
+                            -2 -> 1
+                            else -> tabDiff
+                        }
+                        pagerState.animateScrollToPage(pagerState.currentPage + shortestDiff)
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                     val currentVirtualSlot = tabSlots.getOrElse(pagerState.currentPage % tabSlots.size) { "RECENTS" }
                     HorizontalPager(
@@ -459,10 +480,9 @@ fun MainScreen(
                                     onValueChange = {
                                         if (it.length > dialpadInput.length) {
                                             if (dialpadTonesEnabled) playDtmf(it.last().toString())
-                                            if (vibrateOnClickEnabled) haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         }
                                         viewModel.onDialpadInputChange(it)
-                                    } ,
+                                    },
                                     onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); viewModel.onDialpadInputChange("") } },
                                     onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
                                     voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
@@ -588,9 +608,6 @@ fun MainScreen(
                             }
 
                             CallManager.disconnect()
-                            if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
-                                isCallActive = false
-                            }
                         }
                     },
                     onAnswer = { CallManager.answer() },
@@ -619,9 +636,6 @@ fun MainScreen(
                             }
 
                             CallManager.disconnect()
-                            if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
-                                isCallActive = false
-                            }
                         }
                     },
                     isIncoming = if (isFakeCallActive) (fakeCallState == "RINGING") else (systemCallState == android.telecom.Call.STATE_RINGING),

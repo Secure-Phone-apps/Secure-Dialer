@@ -246,9 +246,8 @@ fun ActiveCallScreen(
             context = context,
             onProximityChanged = { near -> isNear = near },
             onFlipFaceDown = {
-                if (callState == android.telecom.Call.STATE_RINGING && !isMuted) {
-                    isMuted = true
-                    CallManager.setMuted(true)
+                if (callState == android.telecom.Call.STATE_RINGING) {
+                    CallManager.silenceRinger(context)
                 }
             }
         )
