@@ -74,38 +74,10 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
     </noscript>
 
-    <!-- High-Performance Tailwind CSS Engine -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Compiled Static Tailwind Stylesheet (Zero Runtime Render Blocking) -->
+    <link rel="stylesheet" href="assets/styles.min.css">
     
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            200: '#bbf7d0',
-                            500: '#10b981',
-                            600: '#059669',
-                            700: '#047857',
-                            900: '#064e3b',
-                        },
-                        darkbg: {
-                            900: '#090d16',
-                            800: '#0f172a',
-                            700: '#1e293b',
-                        }
-                    }
-                }
-            }
-        };
-
         // Initialize visual theme immediately before rendering to eliminate flash
         (function() {
             try {
@@ -236,7 +208,7 @@
 
                 <!-- Action CTAs -->
                 <div class="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-4">
-                    <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/releases" onclick="event.preventDefault(); showDownloadGuide();" class="w-full sm:w-auto px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-center font-display font-bold tracking-wide shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-3">
+                    <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/releases" onclick="event.preventDefault(); showDownloadGuide();" class="w-full sm:w-auto px-8 py-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl text-center font-display font-bold tracking-wide shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
@@ -352,7 +324,7 @@
                 <div class="lg:col-span-5 flex flex-col items-center gap-8">
                     <!-- Navigation Tabs -->
                     <div class="grid grid-cols-3 sm:grid-cols-6 gap-1.5 p-1.5 bg-gray-200 dark:bg-slate-800 rounded-2xl w-full max-w-lg justify-between border border-gray-300 dark:border-slate-700">
-                        <button onclick="switchScreenshot('dialpad')" id="btn-ss-dialpad" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all bg-emerald-600 text-white shadow-sm">
+                        <button onclick="switchScreenshot('dialpad')" id="btn-ss-dialpad" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all bg-emerald-700 text-white shadow-sm">
                             Dialpad
                         </button>
                         <button onclick="switchScreenshot('recents')" id="btn-ss-recents" class="py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white">
@@ -1131,7 +1103,7 @@ cd Secure-Dialer
                 const btn = document.getElementById(btnMap[key]);
                 if (btn) {
                     if (key === tabName) {
-                        btn.className = "py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all bg-emerald-600 dark:bg-emerald-600 text-white shadow-sm";
+                        btn.className = "py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all bg-emerald-700 text-white shadow-sm";
                     } else {
                         btn.className = "py-2 rounded-xl font-display font-bold text-[10px] sm:text-xs tracking-wide transition-all text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white";
                     }
@@ -1924,7 +1896,7 @@ free programs, and that you know you can do these things.</pre>
                         </div>
 
                         <!-- Main Big Download Button -->
-                        <button id="main-download-btn" onclick="startDirectDownload()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-display font-bold tracking-wide shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-3 focus:outline-none select-none">
+                        <button id="main-download-btn" onclick="startDirectDownload()" class="w-full py-4 bg-emerald-700 hover:bg-emerald-800 text-white rounded-2xl font-display font-bold tracking-wide shadow-lg shadow-emerald-700/20 transition-all flex items-center justify-center gap-3 focus:outline-none select-none">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                             </svg>
