@@ -63,12 +63,23 @@
     <meta property="twitter:description" content="A 100% offline, privacy-first open-source Android dialer with built-in spam blocking, AES-256 call notes, and fake call simulators. Zero internet permissions.">
     <meta property="twitter:image" content="assets/secure_dialer_hero.jpg">
 
-    <!-- Precompiled Tailwind CSS Fallback + Tailwind JIT Engine -->
+    <!-- Preload critical Hero Image for immediate LCP paint -->
+    <link rel="preload" as="image" href="assets/secure_dialer_hero.jpg" fetchpriority="high">
+
+    <!-- Precompiled Tailwind CSS Fallback (Core layout and utility coverage) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJ4PA3UdaYhYLdzdcbcQsWhAC59mVhUM4twkgRX05hnh8g4e5251k3s45WKQEgJnSilBKgZIBQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Non-render-blocking Tailwind JIT Engine -->
+    <script src="https://cdn.tailwindcss.com" defer></script>
+    
+    <!-- Non-render-blocking Google Fonts with preconnect and print/onload swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+    </noscript>
     
     <script>
         tailwind.config = {
@@ -148,7 +159,7 @@
     <!-- Navigation Header -->
     <header class="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-darkbg-900/80 border-b border-gray-100 dark:border-slate-800 transition-colors duration-300">
         <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <a href="#" class="flex items-center gap-3">
+            <a href="#top" aria-label="Secure Dialer Home" class="flex items-center gap-3">
                 <div class="p-2 bg-gradient-to-br from-[#166534] to-[#0E4723] text-white rounded-xl shadow-md flex items-center justify-center">
                     <!-- Secure Phone Dialer SVG Icon -->
                     <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -191,6 +202,8 @@
             </div>
         </div>
     </header>
+
+    <main id="top">
 
     <!-- Hero Section -->
     <section class="relative py-12 sm:py-16 md:py-20 lg:py-24 overflow-hidden">
@@ -248,7 +261,7 @@
                 <div class="absolute -inset-4 bg-gradient-to-r from-emerald-500/10 to-brand-500/10 rounded-full filter blur-3xl opacity-50 dark:opacity-30"></div>
                 
                 <div class="w-full max-w-[480px] rounded-3xl overflow-hidden shadow-2xl border border-gray-150 dark:border-slate-800/80 transform hover:scale-[1.01] transition-transform duration-300 bg-white dark:bg-slate-950">
-                    <img src="assets/secure_dialer_hero.jpg" alt="Secure Dialer Application Interface - Branded application hero banner with dynamic Material 3 custom interface" class="w-full h-auto object-cover">
+                    <img src="assets/secure_dialer_hero.jpg" alt="Secure Dialer Application Interface - Branded application hero banner with dynamic Material 3 custom interface" width="1584" height="672" fetchpriority="high" decoding="async" class="w-full h-auto object-cover">
                 </div>
             </div>
 
@@ -352,7 +365,7 @@
 
                     <!-- Showcase Frame: Clean Rounded Screenshot Container -->
                     <div class="w-full max-w-[280px] sm:max-w-[310px] rounded-2xl overflow-hidden shadow-xl border border-gray-200 dark:border-slate-800 transition-all duration-300 bg-slate-100 dark:bg-slate-850 aspect-[9/19]">
-                        <img id="screenshot-display" src="assets/screenshots/dialpad.jpg" alt="Secure Dialer Feature Mockup" class="w-full h-full object-cover transition-opacity duration-300 opacity-100">
+                        <img id="screenshot-display" src="assets/screenshots/dialpad.jpg" alt="Secure Dialer Feature Mockup" width="1290" height="2796" loading="lazy" decoding="async" class="w-full h-full object-cover transition-opacity duration-300 opacity-100">
                     </div>
                 </div>
 
@@ -532,7 +545,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 rounded-lg font-bold">READ_CONTACTS</span>
                     </div>
-                    <h4 class="font-display font-bold text-md text-slate-900 dark:text-white">Populate Address Book</h4>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Populate Address Book</h3>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         <span class="font-bold text-slate-800 dark:text-slate-300">Why:</span> To look up names, display avatars, and allow search. <br>
                         <span class="font-bold text-brand-600 dark:text-brand-400">Security Guarantee:</span> Read completely in local process memory. Never synchronized or written to outside services.
@@ -544,7 +557,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 rounded-lg font-bold">WRITE_CONTACTS</span>
                     </div>
-                    <h4 class="font-display font-bold text-md text-slate-900 dark:text-white">Create & Edit Contacts</h4>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Create & Edit Contacts</h3>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         <span class="font-bold text-slate-800 dark:text-slate-300">Why:</span> Allows adding names, numbers, emails, and notes to your storage directly inside the dialer. <br>
                         <span class="font-bold text-brand-600 dark:text-brand-400">Security Guarantee:</span> Operates only via on-device system contacts provider.
@@ -556,7 +569,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 rounded-lg font-bold">CALL_PHONE</span>
                     </div>
-                    <h4 class="font-display font-bold text-md text-slate-900 dark:text-white">Trigger System Calls</h4>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Trigger System Calls</h3>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         <span class="font-bold text-slate-800 dark:text-slate-300">Why:</span> Placed in call triggers when clicking numbers or tapping dial icons. <br>
                         <span class="font-bold text-brand-600 dark:text-brand-400">Security Guarantee:</span> Only sends commands directly to Android's Telecom subsystem.
@@ -568,7 +581,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 rounded-lg font-bold">READ_CALL_LOG</span>
                     </div>
-                    <h4 class="font-display font-bold text-md text-slate-900 dark:text-white">Display Recent Entries</h4>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Display Recent Entries</h3>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         <span class="font-bold text-slate-800 dark:text-slate-300">Why:</span> Populates the "Recents" list, detailing missed, received, or dialed connections. <br>
                         <span class="font-bold text-brand-600 dark:text-brand-400">Security Guarantee:</span> Local read. No background scrapers or reporting routines.
@@ -580,7 +593,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 rounded-lg font-bold">SEND_SMS</span>
                     </div>
-                    <h4 class="font-display font-bold text-md text-slate-900 dark:text-white">Send SMS Templates</h4>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Send SMS Templates</h3>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         <span class="font-bold text-slate-800 dark:text-slate-300">Why:</span> Sends standard decline templates (e.g., "Sorry, I am driving") directly on call rejection. <br>
                         <span class="font-bold text-brand-600 dark:text-brand-400">Security Guarantee:</span> Initiates purely when manually confirmed by you during an inbound call.
@@ -592,7 +605,7 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-brand-100 dark:bg-brand-950/40 text-brand-700 dark:text-brand-400 rounded-lg font-bold">RECORD_AUDIO</span>
                     </div>
-                    <h4 class="font-display font-bold text-md text-slate-900 dark:text-white">Active Recording Storage</h4>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Active Recording Storage</h3>
                     <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                         <span class="font-bold text-slate-800 dark:text-slate-300">Why:</span> Allows voice tracking during calls if you tap the Record button. <br>
                         <span class="font-bold text-brand-600 dark:text-brand-400">Security Guarantee:</span> Isolated local sandboxed storage. No background passive ear-dropping or wiretaps.
@@ -815,6 +828,7 @@ cd Secure-Dialer
             </div>
         </div>
     </section>
+    </main>
 
     <!-- Professional Footer -->
     <footer class="bg-slate-950 text-slate-400 py-12 md:py-16 border-t border-slate-900">
@@ -836,7 +850,7 @@ cd Secure-Dialer
 
             <!-- Links Column 1 -->
             <div class="md:col-span-3 space-y-4">
-                <h5 class="text-white font-display font-bold text-sm uppercase tracking-wider">Repository Specs</h5>
+                <h3 class="text-white font-display font-bold text-sm uppercase tracking-wider">Repository Specs</h3>
                 <ul class="text-sm space-y-2.5">
                     <li><button onclick="openDocModal('license')" class="text-left text-slate-400 hover:text-white transition-colors focus:outline-none">GPLv3 License</button></li>
                     <li><button onclick="openDocModal('security')" class="text-left text-slate-400 hover:text-white transition-colors focus:outline-none">Security Disclosures</button></li>
@@ -847,7 +861,7 @@ cd Secure-Dialer
 
             <!-- Links Column 2 -->
             <div class="md:col-span-4 space-y-4">
-                <h5 class="text-white font-display font-bold text-sm uppercase tracking-wider">Verification</h5>
+                <h3 class="text-white font-display font-bold text-sm uppercase tracking-wider">Verification</h3>
                 <p class="text-xs text-slate-500 leading-relaxed">
                     All builds are compiled securely from pure source code following strict determinism pipelines. No binary modifications or cloud payloads are ever added post-compilation.
                 </p>
