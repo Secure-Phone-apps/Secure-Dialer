@@ -193,7 +193,7 @@ class MainActivity : ComponentActivity() {
             LaunchedEffect(isCallActive) {
                 try {
                     setLockScreenVisibility(isCallActive)
-                    if (!isCallActive && isLaunchedForCall) {
+                    if (!isCallActive && isLaunchedForCall && CallManager.calls.value.isEmpty() && !viewModel.isFakeCallActive.value) {
                         dismissCallUiAndExit()
                     }
                 } catch (_: Exception) {
