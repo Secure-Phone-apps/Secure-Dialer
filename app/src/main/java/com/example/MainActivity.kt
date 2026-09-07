@@ -98,11 +98,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        CallManager.isAppInForeground = false
         isAppStopped = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        CallManager.isAppInForeground = true
     }
 
     override fun onStart() {
         super.onStart()
+        CallManager.isAppInForeground = true
         val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
                                      CallManager.calls.value.isNotEmpty() ||
                                      viewModel.isFakeCallActive.value ||
@@ -412,6 +419,15 @@ class MainActivity : ComponentActivity() {
                 isAppAuthenticated.value = true
                 setLockScreenVisibility(true)
             }
+        }
+
+        if (intent.getBooleanExtra("ANSWER_ON_LAUNCH", false) || intent.action == MyInCallService.ACTION_ANSWER) {
+            CallManager.answer()
+            isLaunchedForCall = true
+            viewModel.isLaunchedForCall.value = true
+            viewModel.isCallMinimized.value = false
+            isAppAuthenticated.value = true
+            setLockScreenVisibility(true)
         }
 
         if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false) || CallManager.currentCall.value != null) {

@@ -38,6 +38,9 @@ import kotlinx.coroutines.launch
 object CallManager {
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
 
+    @Volatile
+    var isAppInForeground: Boolean = false
+
     private val _currentCall = MutableStateFlow<Call?>(null)
     val currentCall: StateFlow<Call?> = _currentCall
 

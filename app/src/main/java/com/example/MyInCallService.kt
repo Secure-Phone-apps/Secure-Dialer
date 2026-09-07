@@ -17,6 +17,7 @@
 
 package com.example
 
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -131,10 +132,32 @@ class MyInCallService : InCallService() {
             }
         }
         
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val isLocked = keyguardManager?.isKeyguardLocked == true || powerManager?.isInteractive == false
+        val isAppInForeground = CallManager.isAppInForeground
+        val isUserInAnotherApp = !isLocked && !isAppInForeground
+
         if (call.state == Call.STATE_RINGING) {
             acquireWakeLock()
             showIncomingCallNotification(call)
             com.example.util.FlashLightManager.startFlashing(this)
+            
+            // If device is locked, screen is off, or dialer itself is open in foreground:
+            // directly launch MainActivity to display the calling screen!
+            if (!isUserInAnotherApp) {
+                try {
+                    val intent = Intent(this, MainActivity::class.java).apply {
+                        setPackage(packageName)
+                        action = "com.example.INCOMING_CALL"
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                        putExtra("SHOW_CALL_SCREEN", true)
+                    }
+                    startActivity(intent)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         } else if (call.state == Call.STATE_ACTIVE || call.state == Call.STATE_DIALING || call.state == Call.STATE_CONNECTING || call.state == Call.STATE_HOLDING) {
             releaseWakeLock()
             showActiveCallNotification(call)
@@ -180,13 +203,12 @@ class MyInCallService : InCallService() {
             }
         })
 
-        // Start MainActivity to display the call screen for outgoing calls.
-        // For incoming ringing calls, rely on showIncomingCallNotification's fullScreenIntent
-        // so Android displays a compact heads-up banner if the phone is actively in use (unlocked).
+        // Start MainActivity to display the call screen for outgoing/active calls.
         if (call.state != Call.STATE_RINGING) {
             try {
                 val intent = Intent(this, MainActivity::class.java).apply {
                     setPackage(packageName)
+                    action = "com.example.ACTIVE_CALL"
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     putExtra("SHOW_CALL_SCREEN", true)
                 }
@@ -257,11 +279,15 @@ class MyInCallService : InCallService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val answerIntent = Intent(this, MyInCallService::class.java).apply {
+        // Answer action launches MainActivity directly to answer and show the calling screen immediately
+        val answerIntent = Intent(this, MainActivity::class.java).apply {
             setPackage(packageName)
             action = ACTION_ANSWER
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            putExtra("SHOW_CALL_SCREEN", true)
+            putExtra("ANSWER_ON_LAUNCH", true)
         }
-        val answerPendingIntent = PendingIntent.getService(
+        val answerPendingIntent = PendingIntent.getActivity(
             this,
             103,
             answerIntent,
