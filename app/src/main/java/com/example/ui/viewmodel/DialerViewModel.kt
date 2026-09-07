@@ -285,6 +285,11 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings["recording_enabled"]?.toBooleanStrictOrNull()?.let {
                     recordingEnabled.value = it
                     prefs.edit().putBoolean("recording_enabled", it).commit()
+                } ?: run {
+                    val currentVal = prefs.getBoolean("recording_enabled", false)
+                    try {
+                        repository.dao.insertSetting(AppSetting("recording_enabled", currentVal.toString()))
+                    } catch (_: Exception) {}
                 }
                 settings["is_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
                     isBiometricLockEnabled.value = it

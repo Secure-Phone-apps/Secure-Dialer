@@ -66,20 +66,13 @@
     <!-- Preload critical Hero Image for immediate LCP paint -->
     <link rel="preload" as="image" href="assets/secure_dialer_hero.jpg" fetchpriority="high">
 
-    <!-- Precompiled Tailwind CSS Fallback (Core layout and utility coverage) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" integrity="sha512-wnea99uKIC3TJ4PA3UdaYhYLdzdcbcQsWhAC59mVhUM4twkgRX05hnh8g4e5251k3s45WKQEgJnSilBKgZIBQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- High-Performance Tailwind CSS Engine -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Non-render-blocking Tailwind JIT Engine -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    
-    <!-- Non-render-blocking Google Fonts with preconnect and print/onload swap -->
+    <!-- Google Fonts with preconnect and display swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'">
-    <noscript>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
-    </noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     
     <script>
         tailwind.config = {
@@ -227,7 +220,7 @@
 
                 <!-- Action CTAs -->
                 <div class="flex flex-col sm:flex-row justify-center lg:justify-start items-center gap-4">
-                    <a href="javascript:void(0)" onclick="showDownloadGuide()" class="w-full sm:w-auto px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl text-center font-display font-bold tracking-wide shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-3">
+                    <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/releases" onclick="event.preventDefault(); showDownloadGuide();" class="w-full sm:w-auto px-8 py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-2xl text-center font-display font-bold tracking-wide shadow-lg shadow-brand-500/20 transition-all flex items-center justify-center gap-3">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
@@ -1581,7 +1574,7 @@ free programs, and that you know you can do these things.</pre>
                     });
 
                     if (checksumAsset) {
-                        // Try GitHub API asset endpoint with octet-stream header (supports CORS)
+                        // Try GitHub API asset endpoint with octet-stream header
                         if (checksumAsset.url) {
                             try {
                                 const csRes = await fetch(checksumAsset.url, {
@@ -1592,9 +1585,7 @@ free programs, and that you know you can do these things.</pre>
                                     const fromAsset = parseChecksumsText(csText);
                                     applyParsedChecksums(fromAsset);
                                 }
-                            } catch (csErr) {
-                                console.log('GitHub API asset fetch error:', csErr);
-                            }
+                            } catch (csErr) {}
                         }
                         // Secondary attempt using browser_download_url
                         if (checksumAsset.browser_download_url) {
@@ -1614,7 +1605,6 @@ free programs, and that you know you can do these things.</pre>
                     selectApkType(activeApkType);
                 }
             } catch (err) {
-                console.log('GitHub Release sync info:', err);
                 if (typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
                     selectApkType(activeApkType);
                 }

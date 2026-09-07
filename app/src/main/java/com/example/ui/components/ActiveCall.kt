@@ -18,6 +18,9 @@
 package com.example.ui.components
 
 import android.content.Context
+import android.os.Build
+import android.os.PowerManager
+import androidx.compose.ui.input.pointer.pointerInput
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.ui.layout.ContentScale
@@ -241,6 +244,47 @@ fun ActiveCallScreen(
 
     var isNear by remember { mutableStateOf(false) }
 
+    // Proximity Screen-Off WakeLock: Turns off physical screen & digitizer when held to ear
+    val powerManager = remember(context) { context.getSystemService(Context.POWER_SERVICE) as? PowerManager }
+    val isProximitySupported = remember(powerManager) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            powerManager?.isWakeLockLevelSupported(PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK) == true
+        } else {
+            false
+        }
+    }
+
+    // Proximity screen-off should be active during calls when NOT on Speaker or Bluetooth
+    val shouldActivateProximity = !isSpeakerOn && !isBluetoothOn &&
+        (currentCallState == android.telecom.Call.STATE_ACTIVE ||
+         currentCallState == android.telecom.Call.STATE_DIALING ||
+         currentCallState == android.telecom.Call.STATE_CONNECTING ||
+         currentCallState == android.telecom.Call.STATE_RINGING)
+
+    DisposableEffect(shouldActivateProximity, powerManager) {
+        var wakeLock: PowerManager.WakeLock? = null
+        if (shouldActivateProximity && isProximitySupported && powerManager != null) {
+            try {
+                wakeLock = powerManager.newWakeLock(
+                    PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
+                    "com.example:InCallProximity"
+                )
+                wakeLock.acquire()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        onDispose {
+            try {
+                if (wakeLock != null && wakeLock.isHeld) {
+                    wakeLock.release()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     DisposableEffect(context) {
         val gestureManager = com.example.util.CallGestureSensorManager(
             context = context,
@@ -255,30 +299,6 @@ fun ActiveCallScreen(
 
         onDispose {
             gestureManager.stopListening()
-        }
-    }
-
-    val activity = context as? android.app.Activity
-    LaunchedEffect(isNear) {
-        activity?.window?.let { window ->
-            val params = window.attributes
-            if (isNear) {
-                params.screenBrightness = 0.01f
-            } else {
-                params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-            }
-            window.attributes = params
-        }
-    }
-
-    // Ensure screen brightness resets to default when the active call screen is exited
-    DisposableEffect(Unit) {
-        onDispose {
-            activity?.window?.let { window ->
-                val params = window.attributes
-                params.screenBrightness = android.view.WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-                window.attributes = params
-            }
         }
     }
 
@@ -473,41 +493,46 @@ fun ActiveCallScreen(
             }
         }
 
-        if (isNear && isPocketProtectionEnabled) {
+        if (isNear && shouldActivateProximity) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black)
-                    .clickable(
-                        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                        indication = null,
-                        onClick = { /* Consume clicks to prevent accidental touch */ }
-                    ),
+                    .pointerInput(Unit) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent()
+                                event.changes.forEach { it.consume() }
+                            }
+                        }
+                    },
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
-                        contentDescription = stringResource(R.string.pocket_lock_active),
-                        tint = Color.White.copy(alpha = 0.6f),
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.pocket_lock_active),
-                        color = Color.White.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.pocket_lock_desc),
-                        color = Color.White.copy(alpha = 0.5f),
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                if (isPocketProtectionEnabled) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = stringResource(R.string.pocket_lock_active),
+                            tint = Color.White.copy(alpha = 0.6f),
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = stringResource(R.string.pocket_lock_active),
+                            color = Color.White.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(R.string.pocket_lock_desc),
+                            color = Color.White.copy(alpha = 0.5f),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
