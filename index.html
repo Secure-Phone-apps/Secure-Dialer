@@ -66,13 +66,16 @@
     <!-- Preload critical Hero Image for immediate LCP paint -->
     <link rel="preload" as="image" href="assets/secure_dialer_hero.jpg" fetchpriority="high">
 
-    <!-- High-Performance Tailwind CSS Engine -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts with preconnect and display swap -->
+    <!-- Optimized Google Fonts with preconnect and display swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap">
+    </noscript>
+
+    <!-- High-Performance Tailwind CSS Engine -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
     <script>
         tailwind.config = {
@@ -1585,41 +1588,6 @@ free programs, and that you know you can do these things.</pre>
                 if (data.body) {
                     const fromBody = parseChecksumsText(data.body);
                     applyParsedChecksums(fromBody);
-                }
-
-                // Fetch checksums.txt asset directly via GitHub API asset endpoint
-                if (data.assets && Array.isArray(data.assets)) {
-                    const checksumAsset = data.assets.find(a => {
-                        const n = a.name.toLowerCase();
-                        return n.includes('checksum') || n.includes('sha256') || n.endsWith('.txt') || n.endsWith('.sha256');
-                    });
-
-                    if (checksumAsset) {
-                        // Try GitHub API asset endpoint with octet-stream header
-                        if (checksumAsset.url) {
-                            try {
-                                const csRes = await fetch(checksumAsset.url, {
-                                    headers: { 'Accept': 'application/octet-stream' }
-                                });
-                                if (csRes.ok) {
-                                    const csText = await csRes.text();
-                                    const fromAsset = parseChecksumsText(csText);
-                                    applyParsedChecksums(fromAsset);
-                                }
-                            } catch (csErr) {}
-                        }
-                        // Secondary attempt using browser_download_url
-                        if (checksumAsset.browser_download_url) {
-                            try {
-                                const csRes = await fetch(checksumAsset.browser_download_url);
-                                if (csRes.ok) {
-                                    const csText = await csRes.text();
-                                    const fromAsset = parseChecksumsText(csText);
-                                    applyParsedChecksums(fromAsset);
-                                }
-                            } catch (e) {}
-                        }
-                    }
                 }
 
                 if (typeof activeApkType !== 'undefined' && apkDetails[activeApkType]) {
