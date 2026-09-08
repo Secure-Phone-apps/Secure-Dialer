@@ -133,6 +133,31 @@
         .glow-emerald {
             box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.2);
         }
+
+        /* Standalone fallback for bg-emerald-700 which was omitted in CSS aggregation */
+        .bg-emerald-700 {
+            background-color: #047857 !important;
+        }
+
+        /* Direct mappings for custom brand classes to highly accessible Emerald hues */
+        .bg-brand-50 { background-color: #f0fdf4 !important; }
+        .text-brand-500 { color: #10b981 !important; }
+        .bg-brand-100 { background-color: #d1fae5 !important; }
+        .text-brand-700 { color: #047857 !important; }
+        .bg-brand-500 { background-color: #10b981 !important; }
+        .text-brand-600 { color: #059669 !important; }
+        .border-brand-500 { border-color: #10b981 !important; }
+        
+        .bg-brand-500\/10 { background-color: rgba(16, 185, 129, 0.1) !important; }
+        .bg-brand-500\/25 { background-color: rgba(16, 185, 129, 0.25) !important; }
+        .bg-brand-50\/15 { background-color: rgba(240, 253, 244, 0.15) !important; }
+        .border-brand-500\/20 { border-color: rgba(16, 185, 129, 0.2) !important; }
+        .border-brand-500\/25 { border-color: rgba(16, 185, 129, 0.25) !important; }
+
+        /* Dark mode context mappings for brand classes */
+        .dark .dark\:bg-brand-950\/20 { background-color: rgba(6, 78, 59, 0.2) !important; }
+        .dark .dark\:bg-brand-950 { background-color: #064e3b !important; }
+        .dark .dark\:text-brand-400 { color: #34d399 !important; }
     </style>
 </head>
 <body class="bg-gray-50 text-slate-800 dark:bg-darkbg-900 dark:text-slate-100 transition-colors duration-300 antialiased">
