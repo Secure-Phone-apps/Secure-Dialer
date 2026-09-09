@@ -184,7 +184,7 @@
     <string name="checking_mirrors">جاري فحص الخوادم الآمنة...</string>
     <string name="app_up_to_date_desc">أنت تستخدم أحدث إصدار مشفر رسمي من Secure Dialer.</string>
     <string name="check_for_updates_now">التحقق من التحديثات الآن</string>
-    <string name="up_to_date_result">Secure Dialer محدث!\nالإصدار v1.4.0</string>
+    <string name="up_to_date_result">Secure Dialer محدث!\nالإصدار v1.5.0</string>
     <string name="secure_local_recordings">التسجيلات المحلية الآمنة</string>
     <string name="recordings_privacy_notice">يتم تخزين التسجيلات في قاعدة بيانات التطبيق الخاصة والآمنة ولا يتم مشاركتها.</string>
     <string name="no_recordings_title">لم يتم العثور على تسجيلات</string>
@@ -248,7 +248,7 @@
     <string name="action_call">اتصال</string>
     <string name="action_message">رسالة</string>
     <string name="action_add_contact">إضافة جهة اتصال</string>
-    <string name="app_version_name">الإصدار 1.4.0</string>
+    <string name="app_version_name">الإصدار 1.5.0</string>
     <string name="unknown">غير معروف</string>
     <string name="send_sms">إرسال رسالة قصيرة</string>
     <string name="block">حظر</string>

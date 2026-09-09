@@ -2,6 +2,24 @@
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
 
+## [1.5.0] - 2026-09-09
+
+### Localization & Multi-Language Parity
+- **100% Multi-Language Coverage**: Full 1:1 translation synchronization across all 8 supported languages (English, Polish, German, Spanish, French, Hindi, Japanese, Portuguese, Arabic).
+- **String Format Specifier Precision**: Standardized all positional tokens (`%1$s`, `%1$d`) across all locales for rock-solid runtime stability.
+
+### Contacts & Detail Improvements
+- **Storage Account Badges**: Visual indicators on contact cards displaying account origin (Google Account, Phone Local, or SIM card).
+- **Contact Actions**: Quick copy phone number to clipboard, open address in Maps, and one-tap direct email actions.
+- **Multiple Phone Numbers**: Contact summaries now display multi-number counts and labels clearly.
+
+### Call Experience & Reliability
+- **Call Ended Notification & Status**: Clear status indicators when remote parties disconnect.
+- **Call Notes Counter**: Dynamic count badges on contacts with saved call notes.
+- **Flip to Silence**: Improved proximity sensor handling and call silencing stability.
+
+---
+
 ## [1.4.0] - 2026-08-24
 
 ### Settings, Features & UI Improvements

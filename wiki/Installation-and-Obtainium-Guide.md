@@ -33,10 +33,10 @@ You can also download signed APK files directly from our **[GitHub Releases Page
 
 | APK File Name | Which Phones Is It For? |
 | :--- | :--- |
-| **`secure-dialer-v1.3.0-arm64-v8a.apk`** | **Most modern Android phones** (Google Pixel, Samsung Galaxy, OnePlus, Xiaomi, Motorola from the last 6+ years). **Download this one if you are unsure!** |
-| **`secure-dialer-v1.3.0-armeabi-v7a.apk`** | **Older 32-bit Android phones** and entry-level budget phones. |
-| **`secure-dialer-v1.3.0-x86_64.apk`** | **64-bit Emulators**, ChromeOS, or Android-x86 PC setups. |
-| **`secure-dialer-v1.3.0-universal.apk`** | **Universal build** that runs on all Android devices. |
+| **`secure-dialer-v1.5.0-arm64-v8a.apk`** | **Most modern Android phones** (Google Pixel, Samsung Galaxy, OnePlus, Xiaomi, Motorola from the last 6+ years). **Download this one if you are unsure!** |
+| **`secure-dialer-v1.5.0-armeabi-v7a.apk`** | **Older 32-bit Android phones** and entry-level budget phones. |
+| **`secure-dialer-v1.5.0-x86_64.apk`** | **64-bit Emulators**, ChromeOS, or Android-x86 PC setups. |
+| **`secure-dialer-v1.5.0-universal.apk`** | **Universal build** that runs on all Android devices. |
 
 ---
 
@@ -46,11 +46,11 @@ If you want to verify that your downloaded APK is genuine and untampered, you ca
 
 * **Linux / Mac Terminal:**
   ```bash
-  sha256sum secure-dialer-v1.3.0-arm64-v8a.apk
+  sha256sum secure-dialer-v1.5.0-arm64-v8a.apk
   ```
 * **Windows PowerShell:**
   ```powershell
-  Get-FileHash .\secure-dialer-v1.3.0-arm64-v8a.apk -Algorithm SHA256
+  Get-FileHash .\secure-dialer-v1.5.0-arm64-v8a.apk -Algorithm SHA256
   ```
 
 ---

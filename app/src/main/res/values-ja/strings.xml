@@ -184,7 +184,7 @@
     <string name="checking_mirrors">安全なミラーを確認中...</string>
     <string name="app_up_to_date_desc">暗号化された最新の公式ビルドを使用しています。</string>
     <string name="check_for_updates_now">今すぐアップデートを確認</string>
-    <string name="up_to_date_result">Secure Dialerは最新です！\nバージョン v1.4.0</string>
+    <string name="up_to_date_result">Secure Dialerは最新です！\nバージョン v1.5.0</string>
     <string name="secure_local_recordings">ローカル保護済み録音</string>
     <string name="recordings_privacy_notice">録音データは外部サーバーに送信されず、アプリ内のプライベートDBに安全に保存されます。</string>
     <string name="no_recordings_title">録音はありません</string>
@@ -248,7 +248,7 @@
     <string name="action_call">発信</string>
     <string name="action_message">メッセージ</string>
     <string name="action_add_contact">連絡先を追加</string>
-    <string name="app_version_name">バージョン 1.4.0</string>
+    <string name="app_version_name">バージョン 1.5.0</string>
     <string name="unknown">不明</string>
     <string name="send_sms">SMSを送信</string>
     <string name="block">ブロック</string>

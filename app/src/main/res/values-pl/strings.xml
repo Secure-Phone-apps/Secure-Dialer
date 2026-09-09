@@ -284,8 +284,7 @@
     <string name="checking_mirrors">Sprawdzanie bezpiecznych serwerów zwierciadlanych...</string>
     <string name="app_up_to_date_desc">Używasz najnowszej oficjalnej kompilacji Secure Dialer z podpisem kryptograficznym.</string>
     <string name="check_for_updates_now">Sprawdź aktualizacje teraz</string>
-    <string name="up_to_date_result">Aplikacja Secure Dialer jest aktualna!
-Wersja v1.4.0 (Wydanie stabilne)</string>
+    <string name="up_to_date_result">Aplikacja Secure Dialer jest aktualna!\nWersja v1.5.0 (Wydanie stabilne)</string>
     <string name="secure_local_recordings">BEZPIECZNE NAGRANIA LOKALNE</string>
     <string name="recordings_privacy_notice">Nagrania są bezpiecznie przechowywane w prywatnej bazie danych aplikacji (sandbox) i nie są udostępniane serwerom zewnętrznym.</string>
     <string name="no_recordings_title">Nie znaleziono nagrań</string>
@@ -354,7 +353,7 @@ Wersja v1.4.0 (Wydanie stabilne)</string>
     <string name="action_call">Zadzwoń</string>
     <string name="action_message">Wiadomość</string>
     <string name="action_add_contact">Dodaj kontakt</string>
-    <string name="app_version_name">Wersja 1.4.0</string>
+    <string name="app_version_name">Wersja 1.5.0</string>
 
     
     <string name="unknown">Nieznany</string>

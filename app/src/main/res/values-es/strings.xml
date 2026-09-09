@@ -184,7 +184,7 @@
     <string name="checking_mirrors">Comprobando espejos seguros...</string>
     <string name="app_up_to_date_desc">Está utilizando la última versión oficial criptográfica de Secure Dialer.</string>
     <string name="check_for_updates_now">Buscar actualizaciones ahora</string>
-    <string name="up_to_date_result">¡Secure Dialer está actualizado!\nVersión v1.4.0 (Versión estable)</string>
+    <string name="up_to_date_result">¡Secure Dialer está actualizado!\nVersión v1.5.0 (Versión estable)</string>
     <string name="secure_local_recordings">GRABACIONES LOCALES SEGURAS</string>
     <string name="recordings_privacy_notice">Las grabaciones se almacenan de forma segura en la base de datos privada de la aplicación y no se comparten con servidores externos.</string>
     <string name="no_recordings_title">No se encontraron grabaciones</string>
@@ -248,7 +248,7 @@
     <string name="action_call">Llamar</string>
     <string name="action_message">Mensaje</string>
     <string name="action_add_contact">Añadir contacto</string>
-    <string name="app_version_name">Versión 1.4.0</string>
+    <string name="app_version_name">Versión 1.5.0</string>
     <string name="unknown">Desconocido</string>
     <string name="send_sms">Enviar SMS</string>
     <string name="block">Bloquear</string>

@@ -184,7 +184,7 @@
     <string name="checking_mirrors">सुरक्षित सर्वर जांच रहे हैं...</string>
     <string name="app_up_to_date_desc">आप Secure Dialer के नवीनतम आधिकारिक बिल्ड का उपयोग कर रहे हैं।</string>
     <string name="check_for_updates_now">अब अपडेट की जांच करें</string>
-    <string name="up_to_date_result">Secure Dialer अद्यतित है!\nसंस्करण v1.4.0</string>
+    <string name="up_to_date_result">Secure Dialer अद्यतित है!\nसंस्करण v1.5.0</string>
     <string name="secure_local_recordings">सुरक्षित स्थानीय रिकॉर्डिंग</string>
     <string name="recordings_privacy_notice">रिकॉर्डिंग ऐप के निजी डेटाबेस में सुरक्षित रूप से संग्रहीत की जाती हैं।</string>
     <string name="no_recordings_title">कोई रिकॉर्डिंग नहीं मिली</string>
@@ -248,7 +248,7 @@
     <string name="action_call">कॉल करें</string>
     <string name="action_message">संदेश</string>
     <string name="action_add_contact">संपर्क जोड़ें</string>
-    <string name="app_version_name">संस्करण 1.4.0</string>
+    <string name="app_version_name">संस्करण 1.5.0</string>
     <string name="unknown">अज्ञात</string>
     <string name="send_sms">एसएमएस भेजें</string>
     <string name="block">ब्लॉक करें</string>
