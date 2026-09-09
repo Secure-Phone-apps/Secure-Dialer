@@ -488,4 +488,23 @@
     <string name="search_results_count">Suchergebnisse (%1$d)</string>
     <string name="no_matching_settings">Keine passenden Einstellungen</string>
     <string name="no_matching_settings_desc">Suchen Sie nach Begriffen wie Dunkelmodus, SIM, Sperre oder Aufzeichnung.</string>
+
+    <string name="action_copy_number">Nummer kopieren</string>
+    <string name="toast_number_copied">Nummer in die Zwischenablage kopiert</string>
+    <string name="action_open_map">In Maps öffnen</string>
+    <string name="action_send_email">E-Mail senden</string>
+    <string name="call_status_ended">Anruf beendet</string>
+    <string name="contact_multiple_numbers">%1$d Nummern</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">Telefon</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="delete_recording">Löschen</string>
+    <string name="share_recording">Teilen</string>
+    <string name="label_add_email">+ E-Mail-Adresse hinzufügen</string>
+    <string name="label_add_number">+ Telefonnummer hinzufügen</string>
+    <string name="label_address">Adresse</string>
+    <string name="label_notes">Notizen</string>
+    <string name="saved_in_account">Gespeichert in %1$s</string>
+    <string name="settings_flip_to_silence">Umdrehen zum Stummschalten</string>
+    <string name="settings_flip_to_silence_sub">Klingelton bei eingehenden Anrufen durch Umdrehen des Telefons stummschalten</string>
 </resources>

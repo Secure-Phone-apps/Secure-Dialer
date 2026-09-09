@@ -488,4 +488,23 @@
     <string name="search_results_count">نتائج البحث (%1$d)</string>
     <string name="no_matching_settings">لا توجد إعدادات مطابقة</string>
     <string name="no_matching_settings_desc">جرب البحث عن مصطلحات مثل الوضع الداكن، SIM، الحظر، أو التسجيل.</string>
+
+    <string name="action_copy_number">نسخ الرقم</string>
+    <string name="toast_number_copied">تم نسخ الرقم إلى الحافظة</string>
+    <string name="action_open_map">فتح في الخرائط</string>
+    <string name="action_send_email">إرسال بريد إلكتروني</string>
+    <string name="call_status_ended">انتهت المكالمة</string>
+    <string name="contact_multiple_numbers">%1$d أرقام</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">الهاتف</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="delete_recording">حذف</string>
+    <string name="share_recording">مشاركة</string>
+    <string name="label_add_email">+ إضافة بريد إلكتروني</string>
+    <string name="label_add_number">+ إضافة رقم هاتف</string>
+    <string name="label_address">العنوان</string>
+    <string name="label_notes">ملاحظات</string>
+    <string name="saved_in_account">محفوظ في %1$s</string>
+    <string name="settings_flip_to_silence">القلب لكتم الصوت</string>
+    <string name="settings_flip_to_silence_sub">كتم رنين المكالمة الواردة عن طريق قلب الهاتف وجهه لأسفل</string>
 </resources>

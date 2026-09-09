@@ -488,4 +488,23 @@
     <string name="search_results_count">Resultados da pesquisa (%1$d)</string>
     <string name="no_matching_settings">Nenhuma configuração correspondente</string>
     <string name="no_matching_settings_desc">Tente pesquisar termos como Modo escuro, SIM, Bloqueio ou Gravação.</string>
+
+    <string name="action_copy_number">Copiar número</string>
+    <string name="toast_number_copied">Número copiado para a área de transferência</string>
+    <string name="action_open_map">Abrir no Maps</string>
+    <string name="action_send_email">Enviar e-mail</string>
+    <string name="call_status_ended">Chamada encerrada</string>
+    <string name="contact_multiple_numbers">%1$d números</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">Telefone</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="delete_recording">Excluir</string>
+    <string name="share_recording">Compartilhar</string>
+    <string name="label_add_email">+ Adicionar endereço de e-mail</string>
+    <string name="label_add_number">+ Adicionar número de telefone</string>
+    <string name="label_address">Endereço</string>
+    <string name="label_notes">Notas</string>
+    <string name="saved_in_account">Salvo em %1$s</string>
+    <string name="settings_flip_to_silence">Virar para silenciar</string>
+    <string name="settings_flip_to_silence_sub">Silencie o toque de chamada virando o telefone com a tela para baixo</string>
 </resources>

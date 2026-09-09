@@ -488,4 +488,23 @@
     <string name="search_results_count">Résultats de recherche (%1$d)</string>
     <string name="no_matching_settings">Aucun paramètre correspondant</string>
     <string name="no_matching_settings_desc">Essayez de rechercher des termes comme Mode sombre, SIM, Blocage ou Enregistrement.</string>
+
+    <string name="action_copy_number">Copier le numéro</string>
+    <string name="toast_number_copied">Numéro copié dans le presse-papiers</string>
+    <string name="action_open_map">Ouvrir dans Maps</string>
+    <string name="action_send_email">Envoyer un e-mail</string>
+    <string name="call_status_ended">Appel terminé</string>
+    <string name="contact_multiple_numbers">%1$d numéros</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">Téléphone</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="delete_recording">Supprimer</string>
+    <string name="share_recording">Partager</string>
+    <string name="label_add_email">+ Ajouter une adresse e-mail</string>
+    <string name="label_add_number">+ Ajouter un numéro de téléphone</string>
+    <string name="label_address">Adresse</string>
+    <string name="label_notes">Notes</string>
+    <string name="saved_in_account">Enregistré dans %1$s</string>
+    <string name="settings_flip_to_silence">Retourner pour couper le son</string>
+    <string name="settings_flip_to_silence_sub">Couper la sonnerie d’un appel entrant en posant le téléphone écran vers le bas</string>
 </resources>

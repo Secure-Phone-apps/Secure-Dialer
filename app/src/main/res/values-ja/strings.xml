@@ -488,4 +488,23 @@
     <string name="search_results_count">検索結果 (%1$d)</string>
     <string name="no_matching_settings">一致する設定が見つかりません</string>
     <string name="no_matching_settings_desc">「ダークモード」、「SIM」、「拒否」、「録音」などのキーワードで検索してください。</string>
+
+    <string name="action_copy_number">番号をコピー</string>
+    <string name="toast_number_copied">クリップボードに番号をコピーしました</string>
+    <string name="action_open_map">マップで開く</string>
+    <string name="action_send_email">メールを送信</string>
+    <string name="call_status_ended">通話終了</string>
+    <string name="contact_multiple_numbers">%1$d件の電話番号</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">端末本体</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="delete_recording">削除</string>
+    <string name="share_recording">共有</string>
+    <string name="label_add_email">+ メールアドレスを追加</string>
+    <string name="label_add_number">+ 電話番号を追加</string>
+    <string name="label_address">住所</string>
+    <string name="label_notes">メモ</string>
+    <string name="saved_in_account">%1$s に保存済み</string>
+    <string name="settings_flip_to_silence">伏せて消音</string>
+    <string name="settings_flip_to_silence_sub">電話画面を下に伏せることで着信音を消音します</string>
 </resources>

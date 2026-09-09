@@ -488,4 +488,23 @@
     <string name="search_results_count">खोज परिणाम (%1$d)</string>
     <string name="no_matching_settings">कोई मेल खाती सेटिंग्स नहीं</string>
     <string name="no_matching_settings_desc">डार्क मोड, सिम, ब्लॉक, या रिकॉर्ड जैसे शब्दों की खोज का प्रयास करें।</string>
+
+    <string name="action_copy_number">नंबर कॉपी करें</string>
+    <string name="toast_number_copied">नंबर क्लिपबोर्ड पर कॉपी किया गया</string>
+    <string name="action_open_map">मैप्स में खोलें</string>
+    <string name="action_send_email">ईमेल भेजें</string>
+    <string name="call_status_ended">कॉल समाप्त</string>
+    <string name="contact_multiple_numbers">%1$d नंबर</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_storage_badge_phone">फ़ोन</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="delete_recording">हटाएं</string>
+    <string name="share_recording">शेयर करें</string>
+    <string name="label_add_email">+ ईमेल पता जोड़ें</string>
+    <string name="label_add_number">+ फ़ोन नंबर जोड़ें</string>
+    <string name="label_address">पता</string>
+    <string name="label_notes">नोट्स</string>
+    <string name="saved_in_account">%1$s में सहेजा गया</string>
+    <string name="settings_flip_to_silence">म्यूट करने के लिए पलटें</string>
+    <string name="settings_flip_to_silence_sub">फ़ोन को नीचे की ओर पलटकर इनकमिंग कॉल की घंटी म्यूट करें</string>
 </resources>
