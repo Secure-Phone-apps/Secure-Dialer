@@ -507,4 +507,6 @@
     <string name="saved_in_account">محفوظ في %1$s</string>
     <string name="settings_flip_to_silence">القلب لكتم الصوت</string>
     <string name="settings_flip_to_silence_sub">كتم رنين المكالمة الواردة عن طريق قلب الهاتف وجهه لأسفل</string>
+    <string name="clear_call_log_confirm_title">مسح سجل المكالمات؟</string>
+    <string name="clear_call_log_confirm_desc">سيؤدي هذا إلى حذف جميع سجلات المكالمات نهائيًا من هذا الجهاز والمكالمات الأخرى. لا يمكن التراجع عن هذا الإجراء.</string>
 </resources>

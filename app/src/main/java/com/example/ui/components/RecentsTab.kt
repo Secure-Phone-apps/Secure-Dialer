@@ -177,8 +177,36 @@ fun RecentsTabContent(
                     )
                 }
 
-                // 2. Borderless Color-Adapting Call Log Filter Chips (Squircle / Rounded Pill)
+                // 2. Borderless Color-Adapting Call Log Filter Chips (Squircle / Rounded Pill) + Clear History Button
                 if (isFiltersEnabled) {
+                    var showClearConfirmDialog by remember { mutableStateOf(false) }
+
+                    if (showClearConfirmDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showClearConfirmDialog = false },
+                            title = { Text(stringResource(R.string.clear_call_log_confirm_title)) },
+                            text = { Text(stringResource(R.string.clear_call_log_confirm_desc)) },
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        showClearConfirmDialog = false
+                                        viewModel.clearAllCallLogs()
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    Text(stringResource(R.string.btn_clear_all))
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showClearConfirmDialog = false }) {
+                                    Text(stringResource(R.string.btn_cancel))
+                                }
+                            }
+                        )
+                    }
+
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -186,70 +214,91 @@ fun RecentsTabContent(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        data class RecentsFilterItem(
-                            val label: String,
-                            val filter: RecentsFilter,
-                            val icon: androidx.compose.ui.graphics.vector.ImageVector,
-                            val iconColor: Color
-                        )
-
-                        val filterOptions = listOf(
-                            RecentsFilterItem(stringResource(R.string.filter_all), RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
-                            RecentsFilterItem(stringResource(R.string.filter_missed), RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
-                            RecentsFilterItem(stringResource(R.string.filter_dialed), RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, getDialedCallColor()),
-                            RecentsFilterItem(stringResource(R.string.filter_received), RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
-                        )
-
-                        filterOptions.forEach { item ->
-                            val isSelected = currentFilter == item.filter
-
-                            val containerColor by androidx.compose.animation.animateColorAsState(
-                                targetValue = if (isSelected) {
-                                    MaterialTheme.colorScheme.primaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                                },
-                                animationSpec = androidx.compose.animation.core.tween(150),
-                                label = "filterChipBg"
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            data class RecentsFilterItem(
+                                val label: String,
+                                val filter: RecentsFilter,
+                                val icon: androidx.compose.ui.graphics.vector.ImageVector,
+                                val iconColor: Color
                             )
 
-                            val contentColor by androidx.compose.animation.animateColorAsState(
-                                targetValue = if (isSelected) {
-                                    MaterialTheme.colorScheme.onPrimaryContainer
-                                } else {
-                                    MaterialTheme.colorScheme.onSurface
-                                },
-                                animationSpec = androidx.compose.animation.core.tween(150),
-                                label = "filterChipText"
+                            val filterOptions = listOf(
+                                RecentsFilterItem(stringResource(R.string.filter_all), RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
+                                RecentsFilterItem(stringResource(R.string.filter_missed), RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
+                                RecentsFilterItem(stringResource(R.string.filter_dialed), RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, getDialedCallColor()),
+                                RecentsFilterItem(stringResource(R.string.filter_received), RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
                             )
 
-                            val iconTint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else item.iconColor
+                            filterOptions.forEach { item ->
+                                val isSelected = currentFilter == item.filter
 
-                            Row(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(20.dp))
-                                    .background(containerColor)
-                                    .clickable { currentFilter = item.filter }
-                                    .padding(horizontal = 4.dp, vertical = 7.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = item.icon,
-                                    contentDescription = item.label,
-                                    tint = iconTint,
-                                    modifier = Modifier.size(13.dp)
+                                val containerColor by androidx.compose.animation.animateColorAsState(
+                                    targetValue = if (isSelected) {
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                                    },
+                                    animationSpec = androidx.compose.animation.core.tween(150),
+                                    label = "filterChipBg"
                                 )
-                                Spacer(modifier = Modifier.width(3.dp))
-                                Text(
-                                    text = item.label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = contentColor,
-                                    maxLines = 1
+
+                                val contentColor by androidx.compose.animation.animateColorAsState(
+                                    targetValue = if (isSelected) {
+                                        MaterialTheme.colorScheme.onPrimaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurface
+                                    },
+                                    animationSpec = androidx.compose.animation.core.tween(150),
+                                    label = "filterChipText"
                                 )
+
+                                val iconTint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else item.iconColor
+
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(containerColor)
+                                        .clickable { currentFilter = item.filter }
+                                        .padding(horizontal = 4.dp, vertical = 7.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = item.icon,
+                                        contentDescription = item.label,
+                                        tint = iconTint,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = item.label,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = contentColor,
+                                        maxLines = 1
+                                    )
+                                }
                             }
+                        }
+
+                        IconButton(
+                            onClick = { showClearConfirmDialog = true },
+                            modifier = Modifier.size(36.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = stringResource(R.string.btn_clear_all),
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                     }
                 }
@@ -315,6 +364,7 @@ fun RecentsTabContent(
 }
 }
 
+@Immutable
 data class CallGroup(
     val primary: CallRecord,
     val calls: List<CallRecord>

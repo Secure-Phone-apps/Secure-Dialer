@@ -507,4 +507,6 @@
     <string name="saved_in_account">Guardado en %1$s</string>
     <string name="settings_flip_to_silence">Girar para silenciar</string>
     <string name="settings_flip_to_silence_sub">Silenciar el tono de llamada entrante colocando el teléfono boca abajo</string>
+    <string name="clear_call_log_confirm_title">¿Borrar historial de llamadas?</string>
+    <string name="clear_call_log_confirm_desc">Esto eliminará permanentemente todos los registros de llamadas de este dispositivo y de otros marcadores. Esta acción no se puede deshacer.</string>
 </resources>

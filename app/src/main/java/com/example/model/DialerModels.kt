@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Immutable
 import androidx.room.*
 
 fun getAvatarShape(shapeType: String): Shape {
@@ -46,6 +47,7 @@ fun getInitials(name: String): String {
     }
 }
 
+@Immutable
 @Entity(
     tableName = "call_history",
     indices = [Index(value = ["number"]), Index(value = ["timestamp"])]
@@ -97,6 +99,7 @@ data class LabeledAddress(
     val label: String = "Home"
 )
 
+@Immutable
 @Entity(
     tableName = "contacts",
     indices = [
@@ -212,6 +215,7 @@ data class AppSetting(
     val value: String
 )
 
+@Immutable
 data class DialpadMatch(
     val number: String,
     val name: String,

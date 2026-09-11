@@ -63,6 +63,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
+import com.example.util.RichHapticEngine
 
 val DIALPAD_KEYS = listOf(
     Triple("1", "", 1),
@@ -96,7 +98,10 @@ fun DialpadTabContent(
     val haptic = LocalHapticFeedback.current
 
     val isExpressive = LocalM3Expressive.current
-    val dialKeyColor = if (isExpressive) {
+    val isAmoled = LocalAmoledMode.current
+    val dialKeyColor = if (isAmoled) {
+        Color(0xFF141414)
+    } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
@@ -199,7 +204,9 @@ fun DialpadTabContent(
                                     trailingContent = {
                                         IconButton(
                                             onClick = {
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                                }
                                                 onCallClick(match.number)
                                             }
                                         ) {
@@ -236,8 +243,8 @@ fun DialpadTabContent(
             shape = actionButtonShape,
             color = Color.Transparent,
             border = androidx.compose.foundation.BorderStroke(
-                width = 6.dp,
-                color = dialKeyColor
+                width = if (isAmoled) 1.5.dp else 6.dp,
+                color = if (isAmoled) Color(0xFF242424) else dialKeyColor
             ),
             onClick = {
                 expandedClipboardMenu = true
@@ -346,10 +353,21 @@ fun DialpadTabContent(
         ) {
             // Symmetrical Paste button on the left to keep call button perfectly centered
             val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
+            val pasteInteractionSource = remember { MutableInteractionSource() }
+            val isPastePressed by pasteInteractionSource.collectIsPressedAsState()
+            val pasteScale by animateFloatAsState(
+                targetValue = if (isPastePressed) 0.92f else 1.0f,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessHigh,
+                    dampingRatio = Spring.DampingRatioMediumBouncy
+                ),
+                label = "paste_button_scale"
+            )
+
             Surface(
                 onClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                     }
                     try {
                         val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
@@ -365,11 +383,13 @@ fun DialpadTabContent(
                     }
                 },
                 shape = actionButtonShape,
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                color = if (isAmoled) Color(0xFF161616) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
                 contentColor = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                interactionSource = pasteInteractionSource,
                 modifier = Modifier
                     .weight(1f)
                     .height(60.dp)
+                    .scale(pasteScale)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
@@ -381,10 +401,21 @@ fun DialpadTabContent(
             }
 
             // Central primary call button matching DialButton shape and size perfectly
+            val callInteractionSource = remember { MutableInteractionSource() }
+            val isCallPressed by callInteractionSource.collectIsPressedAsState()
+            val callScale by animateFloatAsState(
+                targetValue = if (isCallPressed) 0.92f else 1.0f,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessHigh,
+                    dampingRatio = Spring.DampingRatioMediumBouncy
+                ),
+                label = "dialpad_tab_call_button_scale"
+            )
+
             Surface(
                 onClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                     }
                     if (inputValue.isEmpty()) {
                         val lastNumber = viewModel?.getLastOutgoingNumber() ?: ""
@@ -401,9 +432,11 @@ fun DialpadTabContent(
                 shape = actionButtonShape,
                 color = com.example.ui.theme.getCallGreenColor(),
                 contentColor = com.example.ui.theme.getOnCallGreenColor(),
+                interactionSource = callInteractionSource,
                 modifier = Modifier
                     .weight(1f)
                     .height(60.dp)
+                    .scale(callScale)
                     .testTag("dialpad_call_button")
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -436,7 +469,7 @@ fun DialpadTabContent(
 
                     Surface(
                         shape = actionButtonShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
+                        color = if (isAmoled) Color(0xFF161616) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
                         contentColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .fillMaxSize()
@@ -447,13 +480,13 @@ fun DialpadTabContent(
                                 indication = ripple(),
                                 onClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     }
                                     onValueChange(inputValue.dropLast(1))
                                 },
                                 onLongClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                     }
                                     onValueChange("")
                                 }

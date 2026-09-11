@@ -507,4 +507,6 @@
     <string name="saved_in_account">Salvo em %1$s</string>
     <string name="settings_flip_to_silence">Virar para silenciar</string>
     <string name="settings_flip_to_silence_sub">Silencie o toque de chamada virando o telefone com a tela para baixo</string>
+    <string name="clear_call_log_confirm_title">Limpar histórico de chamadas?</string>
+    <string name="clear_call_log_confirm_desc">Isso excluirá permanentemente todos os registros de chamadas deste dispositivo e de outros discadores. Esta ação não pode ser desfeita.</string>
 </resources>

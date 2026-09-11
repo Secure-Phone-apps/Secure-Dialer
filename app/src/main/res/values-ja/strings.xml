@@ -507,4 +507,6 @@
     <string name="saved_in_account">%1$s に保存済み</string>
     <string name="settings_flip_to_silence">伏せて消音</string>
     <string name="settings_flip_to_silence_sub">電話画面を下に伏せることで着信音を消音します</string>
+    <string name="clear_call_log_confirm_title">通話履歴を消去しますか？</string>
+    <string name="clear_call_log_confirm_desc">これにより、このデバイスおよび他のダイヤラーからすべての通話記録が完全に削除されます。この操作は取り消せません।</string>
 </resources>

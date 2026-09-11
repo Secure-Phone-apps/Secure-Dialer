@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,7 +50,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
 import com.example.model.*
+import com.example.util.RichHapticEngine
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -65,6 +68,7 @@ fun DialpadOverlay(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val isAmoled = LocalAmoledMode.current
 
 
     Surface(
@@ -76,8 +80,9 @@ fun DialpadOverlay(
                     topEnd = if (LocalM3Expressive.current) 40.dp else 28.dp
                 )
             ),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp
+        color = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
+        border = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222222)) else null,
+        tonalElevation = if (isAmoled) 0.dp else 8.dp
     ) {
         Column(
             modifier = Modifier
@@ -94,7 +99,7 @@ fun DialpadOverlay(
                     .background(MaterialTheme.colorScheme.outlineVariant)
                     .padding(vertical = 12.dp)
                     .clickable {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                         onClose()
                     }
             )
@@ -180,13 +185,13 @@ fun DialpadOverlay(
                             .combinedClickable(
                                 onClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     }
                                     onValueChange(inputValue.dropLast(1))
                                 },
                                 onLongClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                     }
                                     onValueChange("")
                                 }
@@ -236,20 +241,32 @@ fun DialpadOverlay(
 
             // Call Action Button - Geometrically identical to the other buttons
             val overlayCallShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
+            val callInteractionSource = remember { MutableInteractionSource() }
+            val isCallPressed by callInteractionSource.collectIsPressedAsState()
+            val callScale by animateFloatAsState(
+                targetValue = if (isCallPressed) 0.92f else 1.0f,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessHigh,
+                    dampingRatio = Spring.DampingRatioMediumBouncy
+                ),
+                label = "overlay_call_button_scale"
+            )
 
             Surface(
                 onClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                     }
                     onCallClick(inputValue)
                 },
                 shape = overlayCallShape,
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
+                interactionSource = callInteractionSource,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(64.dp)
+                    .scale(callScale)
                     .testTag("dialpad_call_button")
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -281,8 +298,11 @@ fun DialButton(
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
+    val isAmoled = LocalAmoledMode.current
     val buttonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
-    val buttonColor = if (isExpressive) {
+    val buttonColor = if (isAmoled) {
+        Color(0xFF141414)
+    } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
@@ -310,13 +330,13 @@ fun DialButton(
                 indication = ripple(),
                 onClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                     }
                     onValueChange(inputValue + key.first)
                 },
                 onLongClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
                     }
                     if (key.first == "1") {
                         if (voicemailNumber.isNotBlank()) {

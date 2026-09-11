@@ -507,4 +507,6 @@
     <string name="saved_in_account">%1$s में सहेजा गया</string>
     <string name="settings_flip_to_silence">म्यूट करने के लिए पलटें</string>
     <string name="settings_flip_to_silence_sub">फ़ोन को नीचे की ओर पलटकर इनकमिंग कॉल की घंटी म्यूट करें</string>
+    <string name="clear_call_log_confirm_title">कॉल इतिहास साफ़ करें?</string>
+    <string name="clear_call_log_confirm_desc">यह इस डिवाइस और अन्य डायलर से सभी कॉल रिकॉर्ड को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।</string>
 </resources>

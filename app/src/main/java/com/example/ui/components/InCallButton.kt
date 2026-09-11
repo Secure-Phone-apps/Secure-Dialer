@@ -41,9 +41,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
+import com.example.util.RichHapticEngine
 
 @Composable
 fun InCallButton(
@@ -54,11 +58,15 @@ fun InCallButton(
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.medium
 ) {
+    val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
+    val isAmoled = LocalAmoledMode.current
     val btnColor = if (isActive) {
         MaterialTheme.colorScheme.primaryContainer
     } else {
-        if (isExpressive) {
+        if (isAmoled) {
+            Color(0xFF141414)
+        } else if (isExpressive) {
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
         } else {
             MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
@@ -67,7 +75,9 @@ fun InCallButton(
     val contentColor = if (isActive) {
         MaterialTheme.colorScheme.onPrimaryContainer
     } else {
-        if (isExpressive) {
+        if (isAmoled) {
+            Color(0xFFE0E0E0)
+        } else if (isExpressive) {
             MaterialTheme.colorScheme.primary
         } else {
             MaterialTheme.colorScheme.onSurfaceVariant
@@ -88,7 +98,10 @@ fun InCallButton(
     val finalModifier = if (modifier == Modifier) Modifier.size(64.dp) else modifier
 
     Surface(
-        onClick = onClick,
+        onClick = {
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+            onClick()
+        },
         interactionSource = interactionSource,
         modifier = finalModifier
             .scale(scale),

@@ -956,6 +956,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun clearAllCallLogs() {
+        viewModelScope.launch {
+            repository.clearAllCallLogs()
+        }
+    }
+
     fun toggleFavorite(number: String, isFavorite: Boolean) {
         viewModelScope.launch {
             repository.toggleFavorite(number, isFavorite)

@@ -552,4 +552,6 @@
     <string name="contact_storage_badge_google">Google</string>
     <string name="contact_storage_badge_phone">Phone</string>
     <string name="contact_storage_badge_sim">SIM</string>
+    <string name="clear_call_log_confirm_title">Clear call history?</string>
+    <string name="clear_call_log_confirm_desc">This will permanently delete all call records from this device and other dialers. This action cannot be undone.</string>
 </resources>

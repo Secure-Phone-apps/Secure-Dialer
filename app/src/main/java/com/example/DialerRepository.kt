@@ -403,6 +403,22 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
+    suspend fun clearAllCallLogs() {
+        dao.clearCallLogs()
+        try {
+            // Delete all calls from system CallLog
+            context.contentResolver.delete(
+                CallLog.Calls.CONTENT_URI,
+                null,
+                null
+            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     suspend fun getCallHistoryByNumber(number: String): List<CallRecord> {
         return dao.getCallHistoryByNumber(number)
     }

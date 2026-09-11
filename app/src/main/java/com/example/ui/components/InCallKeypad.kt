@@ -28,6 +28,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -35,7 +36,10 @@ import com.example.R
 import com.example.CallManager
 import com.example.model.getAvatarShape
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
 import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.ui.platform.LocalContext
+import com.example.util.RichHapticEngine
 
 @Composable
 fun InCallKeypad(
@@ -43,14 +47,16 @@ fun InCallKeypad(
     avatarShapeType: String = "circular"
 ) {
     var inCallDialpadInput by remember { mutableStateOf("") }
+    val isAmoled = LocalAmoledMode.current
 
-    ElevatedCard(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         shape = MaterialTheme.shapes.large,
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+        border = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222222)) else null,
+        colors = CardDefaults.cardColors(
+            containerColor = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
         )
     ) {
         Column(
@@ -116,7 +122,7 @@ fun InCallKeypadButton(
     avatarShapeType: String,
     modifier: Modifier = Modifier
 ) {
-    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
     val buttonShape = getAvatarShape(avatarShapeType)
     
@@ -131,7 +137,10 @@ fun InCallKeypadButton(
         label = "keypad_button_scale"
     )
 
-    val buttonColor = if (isExpressive) {
+    val isAmoled = LocalAmoledMode.current
+    val buttonColor = if (isAmoled) {
+        Color(0xFF141414)
+    } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
@@ -141,7 +150,7 @@ fun InCallKeypadButton(
 
     Surface(
         onClick = {
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
             onClick()
         },
         interactionSource = interactionSource,

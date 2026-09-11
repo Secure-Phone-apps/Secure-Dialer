@@ -81,7 +81,7 @@ fun AppearanceSettings(
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 4.dp),
                     cardBgColor = cardBgColor,
-                    isHighlighted = isMatchTitle("Pure Black", highlightedTitle),
+                    isHighlighted = isMatchTitle("Pure Black", highlightedTitle) || isMatchTitle("True Black", highlightedTitle) || isMatchTitle("OLED", highlightedTitle),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     SettingsRowToggle(

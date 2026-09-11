@@ -112,4 +112,13 @@ class DialerViewModelTest {
             }
         }
     }
+
+    @Test
+    fun `clearAllCallLogs clears the local and flow records`() {
+        kotlinx.coroutines.runBlocking {
+            viewModel.clearAllCallLogs()
+            val callHistory = viewModel.allCallHistoryFlow.value
+            assertTrue(callHistory.isEmpty())
+        }
+    }
 }

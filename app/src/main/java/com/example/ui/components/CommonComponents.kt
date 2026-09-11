@@ -57,6 +57,7 @@ import com.example.ui.viewmodel.DialerViewModel
 import androidx.compose.ui.res.stringResource
 
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
 import androidx.compose.ui.draw.shadow
 
 @Composable
@@ -67,7 +68,10 @@ fun HeaderSearchBar(
 ) {
     val searchShape = RoundedCornerShape(16.dp)
     val isExpressive = LocalM3Expressive.current
-    val containerColor = if (isExpressive) {
+    val isAmoled = LocalAmoledMode.current
+    val containerColor = if (isAmoled) {
+        Color(0xFF0D0D0D)
+    } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
@@ -79,7 +83,8 @@ fun HeaderSearchBar(
             .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
         shape = searchShape,
         color = containerColor,
-        tonalElevation = if (isExpressive) 6.dp else 3.dp
+        border = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E1E1E)) else null,
+        tonalElevation = if (isAmoled) 0.dp else if (isExpressive) 6.dp else 3.dp
     ) {
         Row(
             modifier = Modifier
@@ -138,11 +143,12 @@ fun BottomNavBar(
     tabSlots: List<String> = listOf("RECENTS", "CONTACTS", "DIALPAD")
 ) {
     val haptic = LocalHapticFeedback.current
+    val isAmoled = LocalAmoledMode.current
 
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 3.dp
+        containerColor = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
+        tonalElevation = if (isAmoled) 0.dp else 3.dp
     ) {
         val items = tabSlots.mapIndexed { index, slotKey ->
             val (labelRes, icon) = when (slotKey) {

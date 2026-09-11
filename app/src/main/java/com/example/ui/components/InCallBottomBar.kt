@@ -35,12 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.getAvatarShape
+import com.example.util.RichHapticEngine
 
 @Composable
 fun InCallBottomBar(
@@ -50,6 +52,7 @@ fun InCallBottomBar(
     onToggleQuickDeclineMenu: () -> Unit,
     avatarShapeType: String = "circular"
 ) {
+    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val buttonShape = getAvatarShape(avatarShapeType)
 
@@ -94,7 +97,7 @@ fun InCallBottomBar(
 
                 Surface(
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                         onAnswer()
                     },
                     interactionSource = answerInteractionSource,
@@ -141,7 +144,7 @@ fun InCallBottomBar(
 
                 Surface(
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                         onHangUp()
                     },
                     interactionSource = hangUpInteractionSource,
@@ -188,7 +191,7 @@ fun InCallBottomBar(
 
                 Surface(
                     onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                         onHangUp()
                     },
                     interactionSource = hangUpInteractionSource,

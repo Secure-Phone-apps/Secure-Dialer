@@ -243,7 +243,7 @@
     <string name="no_notes_desc">Notatki dodane podczas rozmów pojawią się tutaj</string>
     <string name="search_notes_placeholder">Szukaj notatek lub numerów...</string>
     <string name="edit_note_title">Edytuj notatkę z rozmowy</string>
-    <string name="delete_note_confirm">Usunąć notatkę z rozmowy dla %1?</string>
+    <string name="delete_note_confirm">Usunąć notatkę z rozmowy dla %1$s?</string>
     <string name="note_deleted_toast">Notatka z rozmowy została usunięta</string>
     <string name="call_note_card_title">Notatka z rozmowy</string>
     <string name="add_call_note_btn">Dodaj notatkę z rozmowy</string>
@@ -260,12 +260,12 @@
     <string name="no_blocked_numbers_desc">Zablokowane przez Ciebie numery pojawią się tutaj. Ich właściciele nie będą mogli się do Ciebie dodzwonić.</string>
     <string name="unblock">Odblokuj</string>
     <string name="speed_dial_desc">Przytrzymaj klawisze 1-9 na klawiaturze numerycznej, aby szybko zadzwonić pod przypisane numery.</string>
-    <string name="assign_speed_dial_key">Przypisz klawisz szybkiego wybierania %1</string>
+    <string name="assign_speed_dial_key">Przypisz klawisz szybkiego wybierania %1$d</string>
     <string name="assign_key">Przypisz klawisz</string>
     <string name="unassigned_key">Nieprzypisany klawisz</string>
-    <string name="press_and_hold_dialpad">Naciśnij i przytrzymaj %1 na klawiaturze</string>
-    <string name="edit_key">Edytuj klawisz %1</string>
-    <string name="delete_key">Usuń klawisz %1</string>
+    <string name="press_and_hold_dialpad">Naciśnij i przytrzymaj %1$d na klawiaturze</string>
+    <string name="edit_key">Edytuj klawisz %1$d</string>
+    <string name="delete_key">Usuń klawisz %1$d</string>
     <string name="create_custom_reply">Utwórz własną odpowiedź</string>
     <string name="add_message_template">Dodaj szablon wiadomości</string>
     <string name="quick_decline_messages">SZYBKIE WIADOMOŚCI ODRZUCANIA</string>
@@ -278,7 +278,7 @@
     <string name="dedup_desc">System skanuje lokalną bazę danych w poszukiwaniu powtarzających się wpisów o tym samym numerze telefonu, umożliwiając ich natychmiastowe scalenie.</string>
     <string name="no_duplicates_title">Nie znaleziono duplikatów</string>
     <string name="no_duplicates_desc">Twoja lista kontaktów jest całkowicie czysta! Nie wykryto powtarzających się numerów.</string>
-    <string name="merge_all_duplicates">Scal wszystkie wykryte duplikaty (%1 grup)</string>
+    <string name="merge_all_duplicates">Scal wszystkie wykryte duplikaty (%1$d grup)</string>
     <string name="merge_group">Scal grupę</string>
     <string name="check_updates_desc">Sprawdzaj i aktualizuj Secure Dialer bezpośrednio z oficjalnego repozytorium F-Droid lub stabilnych serwerów zwierciadlanych.</string>
     <string name="checking_mirrors">Sprawdzanie bezpiecznych serwerów zwierciadlanych...</string>
@@ -308,7 +308,7 @@
     <string name="filter_all_contacts">Wszystkie kontakty</string>
     <string name="filter_dialed">Wybierane</string>
     <string name="filter_received">Odebrane</string>
-    <string name="no_matching_calls_for">Brak pasujących połączeń dla „%1”</string>
+    <string name="no_matching_calls_for">Brak pasujących połączeń dla „%1$s”</string>
     <string name="showing_last_5_calls">Wyświetlanie 5 ostatnich połączeń</string>
     <string name="delete_all_call_history">Usuń całą historię połączeń</string>
     <string name="call_type_missed">Połączenie nieodebrane</string>
@@ -320,7 +320,7 @@
     <string name="sim_2">SIM 2</string>
     <string name="caller_verified">Zweryfikowany</string>
     <string name="toast_merged_all_duplicates">Pomyślnie scalono wszystkie duplikaty</string>
-    <string name="toast_merged_duplicates_for">Scalono duplikaty dla: %1</string>
+    <string name="toast_merged_duplicates_for">Scalono duplikaty dla: %1$s</string>
     <string name="toast_deleted_recording">Usunięto nagranie</string>
     <string name="label_first_name">Imię</string>
     <string name="label_last_name">Nazwisko</string>
@@ -367,17 +367,17 @@
     <string name="unblock_number">Odblokuj numer</string>
     <string name="block_number">Zablokuj numer</string>
     <string name="history_timeline">Oś czasu historii</string>
-    <string name="calls_count">%1 połączeń</string>
+    <string name="calls_count">%1$d połączeń</string>
     <string name="clear_history_with_number">Wyczyść historię z tym numerem</string>
     <string name="select_sim_card">Wybierz kartę SIM</string>
-    <string name="choose_sim_card">Wybierz kartę SIM, aby wykonać to połączenie do: %1</string>
+    <string name="choose_sim_card">Wybierz kartę SIM, aby wykonać to połączenie do: %1$s</string>
     <string name="no_answer">Brak odpowiedzi</string>
-    <string name="conference">Konferencja (%1)</string>
+    <string name="conference">Konferencja (%1$d)</string>
     
     
-    <string name="call_summary_prefix">Podsumowanie połączeń: %1</string>
+    <string name="call_summary_prefix">Podsumowanie połączeń: %1$s</string>
     <string name="today_call_summary">Dzisiejsze podsumowanie połączeń</string>
-    <string name="summary_missed_and_time">Nieodebrane: %1 • Czas: %2</string>
+    <string name="summary_missed_and_time">Nieodebrane: %1$d • Czas: %2$s</string>
     <string name="summary_range_today">Dzisiaj</string>
     <string name="summary_range_this_week">W tym tygodniu</string>
     <string name="summary_range_this_month">W tym miesiącu</string>
@@ -388,7 +388,7 @@
     <string name="summary_range_month_tab">Miesiąc</string>
     <string name="summary_range_year_tab">Rok</string>
     <string name="summary_range_all_tab">Wszystko</string>
-    <string name="recent_label_format">Ostatnie • %1</string>
+    <string name="recent_label_format">Ostatnie • %1$s</string>
 
     
     <string name="settings_dynamic_color_sub_fallback">Schemat kolorów tapety systemowej (Wymaga Androida 12+)</string>
@@ -405,7 +405,7 @@
     <string name="local_offline_protection">Lokalna ochrona offline</string>
     <string name="local_offline_protection_sub">Zero zapytań sieciowych. Całkowicie offline.</string>
     <string name="spam_entries_label">Wpisy spamu</string>
-    <string name="spam_numbers_blocked">Zablokowano %1 numerów</string>
+    <string name="spam_numbers_blocked">Zablokowano %1$d numerów</string>
     <string name="btn_csv_import">Import CSV</string>
     <string name="add_spam_manually_title">Dodaj numer spamu ręcznie</string>
     <string name="label_phone_number_hint">Numer telefonu</string>
@@ -433,8 +433,8 @@
     <string name="call_count_label">Liczba połączeń:</string>
     <string name="repeat_interval_label">Interwał powtarzania</string>
     <string name="multi_call_note">Uwaga: Interwał powtarzania ma zastosowanie, gdy liczba połączeń wynosi 2 lub więcej.</string>
-    <string name="schedule_sequential_calls">Zaplanuj %1 sekwencyjnych połączeń</string>
-    <string name="schedule_escape_call">Zaplanuj połączenie ratunkowe (%1 s)</string>
+    <string name="schedule_sequential_calls">Zaplanuj %1$d sekwencyjnych połączeń</string>
+    <string name="schedule_escape_call">Zaplanuj połączenie ratunkowe (%1$d s)</string>
     <string name="btn_cancel_scheduled_escape_calls">Anuluj zaplanowane połączenia ratunkowe</string>
     <string name="unit_sec">s</string>
     <string name="unit_min">min</string>
@@ -443,16 +443,16 @@
 
     
     <string name="callback_reminders_title">Przypomnienia o oddzwonieniu</string>
-    <string name="callback_reminders_stats">%1 aktywnych, %2 przetworzonych</string>
+    <string name="callback_reminders_stats">%1$d aktywnych, %2$d przetworzonych</string>
     <string name="active_reminders_title">Aktywne przypomnienia</string>
     <string name="no_active_reminders_title">Brak aktywnych przypomnień</string>
     <string name="no_active_reminders_desc">Podczas przeglądania szczegółów dowolnego połączenia z rejestru możesz ustawić własne przypomnienie o oddzwonieniu.</string>
     <string name="history_passed_title">Historia (Zakończone)</string>
-    <string name="scheduled_prefix">Zaplanowano: %1</string>
-    <string name="triggered_prefix">Uruchomiono: %1</string>
+    <string name="scheduled_prefix">Zaplanowano: %1$s</string>
+    <string name="triggered_prefix">Uruchomiono: %1$s</string>
     <string name="schedule_callback_reminder_title">Zaplanuj przypomnienie o oddzwonieniu</string>
     <string name="schedule_callback_reminder_sub">Otrzymaj powiadomienie z alarmem bezpośredniego połączenia</string>
-    <string name="remind_call_back_prompt">Przypomnij o oddzwonieniu do: %1 za:</string>
+    <string name="remind_call_back_prompt">Przypomnij o oddzwonieniu do: %1$s za:</string>
     <string name="optional_note_label">Opcjonalna notatka</string>
 
     
@@ -552,4 +552,6 @@
     <string name="contact_storage_badge_google">Google</string>
     <string name="contact_storage_badge_phone">Telefon</string>
     <string name="contact_storage_badge_sim">SIM</string>
+    <string name="clear_call_log_confirm_title">Wyczyścić historię połączeń?</string>
+    <string name="clear_call_log_confirm_desc">To spowoduje trwałe usunięcie wszystkich połączeń z tego urządzenia oraz innych dialerów. Tej akcji nie można cofnąć.</string>
 </resources>

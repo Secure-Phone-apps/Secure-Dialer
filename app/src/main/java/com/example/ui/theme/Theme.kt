@@ -765,6 +765,7 @@ fun getColorSchemeForTheme(
 }
 
 val LocalM3Expressive = staticCompositionLocalOf { true }
+val LocalAmoledMode = staticCompositionLocalOf { false }
 
 val ExpressiveShapes = Shapes(
     extraSmall = RoundedCornerShape(12.dp),
@@ -823,19 +824,33 @@ fun MyApplicationTheme(
       else -> getColorSchemeForTheme(themeColor, darkTheme, customColorHex)
     }
 
-  if (darkTheme && isAmoledMode) {
-      colorScheme = colorScheme.copy(
-          background = Color(0xFF000000),
-          surface = Color(0xFF000000)
-      )
-  }
-
   if (isM3Expressive) {
       colorScheme = getExpressiveColorScheme(colorScheme, darkTheme)
   }
 
+  val effectiveAmoled = darkTheme && isAmoledMode
+  if (effectiveAmoled) {
+      colorScheme = colorScheme.copy(
+          background = Color(0xFF000000),
+          surface = Color(0xFF000000),
+          surfaceVariant = Color(0xFF101010),
+          surfaceTint = Color.Transparent,
+          outline = Color(0xFF2E2E2E),
+          outlineVariant = Color(0xFF1C1C1C),
+          surfaceContainerLowest = Color(0xFF000000),
+          surfaceContainerLow = Color(0xFF060606),
+          surfaceContainer = Color(0xFF0A0A0A),
+          surfaceContainerHigh = Color(0xFF121212),
+          surfaceContainerHighest = Color(0xFF181818),
+          onBackground = Color(0xFFFFFFFF),
+          onSurface = Color(0xFFFFFFFF),
+          onSurfaceVariant = Color(0xFFC0C0C0)
+      )
+  }
+
   CompositionLocalProvider(
-      LocalM3Expressive provides isM3Expressive
+      LocalM3Expressive provides isM3Expressive,
+      LocalAmoledMode provides effectiveAmoled
   ) {
       MaterialTheme(
           colorScheme = colorScheme,

@@ -56,6 +56,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.fadeIn
@@ -88,7 +89,10 @@ fun SettingsPanel(
     }
 
     val isExpressive = LocalM3Expressive.current
-    val cardBgColor = if (isExpressive) {
+    val isAmoled = LocalAmoledMode.current
+    val cardBgColor = if (isAmoled) {
+        Color(0xFF0C0C0C)
+    } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
@@ -228,10 +232,13 @@ fun HighlightableCard(
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
+    val isAmoled = LocalAmoledMode.current
+    val cardBorder = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E1E1E)) else null
     if (onClick != null) {
         Card(
             modifier = modifier,
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            border = cardBorder,
             shape = shape,
             onClick = onClick,
             content = content
@@ -240,6 +247,7 @@ fun HighlightableCard(
         Card(
             modifier = modifier,
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
+            border = cardBorder,
             shape = shape,
             content = content
         )

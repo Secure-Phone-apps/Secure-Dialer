@@ -61,6 +61,7 @@ import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getReceivedCallColor
@@ -80,13 +81,16 @@ fun RecentCallRow(
     var isExpanded by remember { mutableStateOf(false) }
 
     val isExpressive = LocalM3Expressive.current
-    val searchBarColor = if (isExpressive) {
+    val isAmoled = LocalAmoledMode.current
+    val searchBarColor = if (isAmoled) {
+        Color(0xFF0C0C0C)
+    } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
     val containerColor = if (isExpanded) {
-        searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
+        if (isAmoled) Color(0xFF141414) else searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
     } else {
         searchBarColor
     }
@@ -117,6 +121,7 @@ fun RecentCallRow(
             colors = CardDefaults.cardColors(
                 containerColor = containerColor
             ),
+            border = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
             shape = MaterialTheme.shapes.medium
         ) {
         Column {

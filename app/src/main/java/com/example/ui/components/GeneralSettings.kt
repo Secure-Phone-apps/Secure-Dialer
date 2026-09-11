@@ -145,6 +145,13 @@ fun GeneralSettings(
                 icon = Icons.Default.DarkMode
             ),
             SettingsSearchItem(
+                title = "True Black OLED Mode",
+                description = "Pure pitch-black #000000 theme to maximize battery savings on AMOLED displays",
+                categoryName = "Appearance",
+                categoryTab = 1,
+                icon = Icons.Default.Contrast
+            ),
+            SettingsSearchItem(
                 title = "Expressive Material 3 Layout",
                 description = "Enable fluid Material 3 Expressive shapes, rounded cards & container layouts",
                 categoryName = "Appearance",

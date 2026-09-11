@@ -61,10 +61,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.CallManager
 import com.example.model.*
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.LocalAmoledMode
 import kotlinx.coroutines.delay
 
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import com.example.util.RichHapticEngine
 
 @Composable
 fun ActiveCallScreen(
@@ -179,7 +181,8 @@ fun ActiveCallScreen(
     }
 
     // Dynamic Surface Color based on state
-    val surfaceColor = MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+    val isAmoled = LocalAmoledMode.current
+    val surfaceColor = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
     val audioState by CallManager.audioState.collectAsStateWithLifecycle()
     val waitingCall by CallManager.waitingCall.collectAsStateWithLifecycle()
     val allCalls by CallManager.calls.collectAsStateWithLifecycle()
@@ -389,43 +392,43 @@ fun ActiveCallScreen(
             InCallControlGrid(
                 isInCallDialpadOpen = isInCallDialpadOpen,
                 onToggleDialpad = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                     isInCallDialpadOpen = !isInCallDialpadOpen
                 },
                 isMuted = isMuted,
                 onToggleMute = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, if (!isMuted) RichHapticEngine.HapticStyle.WARNING else RichHapticEngine.HapticStyle.CLICK)
                     isMuted = !isMuted
                     CallManager.setMuted(isMuted)
                 },
                 isSpeakerOn = isSpeakerOn,
                 onToggleSpeaker = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                     isSpeakerOn = !isSpeakerOn
                     CallManager.setSpeaker(isSpeakerOn)
                 },
                 isOnHold = isOnHold,
                 onToggleHold = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, if (!isOnHold) RichHapticEngine.HapticStyle.WARNING else RichHapticEngine.HapticStyle.CLICK)
                     isOnHold = !isOnHold
                     CallManager.setHold(isOnHold)
                 },
                 isBluetoothOn = isBluetoothOn,
                 onToggleBluetooth = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                     isBluetoothOn = !isBluetoothOn
                     CallManager.setBluetooth(isBluetoothOn)
                 },
                 isAddCallDialogOpen = isAddCallDialogOpen,
                 onOpenAddCallDialog = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                     isAddCallDialogOpen = true
                 },
                 recordingEnabled = recordingEnabled,
                 callNotesEnabled = callNotesEnabled,
                 isRecording = isRecording,
                 onToggleRecording = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
                     if (isRecording || com.example.util.CallAudioRecorder.isRecording.value) {
                         val result = com.example.util.CallAudioRecorder.stopRecording()
                         val file = result.file
@@ -450,7 +453,7 @@ fun ActiveCallScreen(
                 },
                 isNoteDialogOpen = isNoteDialogOpen,
                 onOpenNoteDialog = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                     isNoteDialogOpen = true
                 },
                 avatarShapeType = avatarShapeType
@@ -476,7 +479,7 @@ fun ActiveCallScreen(
         if (onMinimize != null) {
             IconButton(
                 onClick = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                     onMinimize()
                 },
                 modifier = Modifier

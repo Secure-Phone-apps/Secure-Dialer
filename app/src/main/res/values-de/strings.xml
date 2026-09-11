@@ -507,4 +507,6 @@
     <string name="saved_in_account">Gespeichert in %1$s</string>
     <string name="settings_flip_to_silence">Umdrehen zum Stummschalten</string>
     <string name="settings_flip_to_silence_sub">Klingelton bei eingehenden Anrufen durch Umdrehen des Telefons stummschalten</string>
+    <string name="clear_call_log_confirm_title">Anrufliste löschen?</string>
+    <string name="clear_call_log_confirm_desc">Dadurch werden alle Anrufaufzeichnungen dauerhaft von diesem Gerät und anderen Telefon-Apps gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.</string>
 </resources>

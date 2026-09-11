@@ -40,6 +40,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -312,6 +313,22 @@ fun MainScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.safeDrawing
     ) { paddingValues ->
+        val tabSlotLeft by viewModel.tabSlotLeft
+        val tabSlotMiddle by viewModel.tabSlotMiddle
+        val tabSlotRight by viewModel.tabSlotRight
+        val tabSlots = remember(tabSlotLeft, tabSlotMiddle, tabSlotRight) {
+            listOf(tabSlotLeft, tabSlotMiddle, tabSlotRight)
+        }
+        val currentSlotKey = tabSlots.getOrElse(selectedTab) { "RECENTS" }
+
+        androidx.activity.compose.BackHandler(enabled = isDialpadVisible || isSettingsVisible) {
+            if (isDialpadVisible) {
+                isDialpadVisible = false
+            } else if (isSettingsVisible) {
+                isSettingsVisible = false
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -376,12 +393,7 @@ fun MainScreen(
                     DefaultDialerWarningCard(onShowRestrictedSettings = onShowRestrictedSettings)
                 }
 
-                val tabSlotLeft by viewModel.tabSlotLeft
-                val tabSlotMiddle by viewModel.tabSlotMiddle
-                val tabSlotRight by viewModel.tabSlotRight
                 val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
-                val tabSlots = listOf(tabSlotLeft, tabSlotMiddle, tabSlotRight)
-                val currentSlotKey = tabSlots.getOrElse(selectedTab) { "RECENTS" }
 
                 AnimatedVisibility(
                     visible = currentSlotKey != "DIALPAD" && !isCallHistoryDetailsOpen,
@@ -748,6 +760,77 @@ fun MainScreen(
                             Text(stringResource(R.string.btn_cancel))
                         }
                     }
+                )
+            }
+
+
+            // Slide Up Dialpad Overlay Backdrop
+            if (isDialpadVisible) {
+                // Dimmed backdrop with smooth animation
+                val backdropAlpha by animateFloatAsState(
+                    targetValue = 0.5f,
+                    animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+                    label = "backdrop_alpha"
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = backdropAlpha))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            isDialpadVisible = false
+                        }
+                )
+            }
+
+            AnimatedVisibility(
+                visible = isDialpadVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(150)),
+                exit = slideOutVertically(
+                    targetOffsetY = { it },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioNoBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeOut(animationSpec = tween(100)),
+                modifier = Modifier.align(Alignment.BottomCenter)
+            ) {
+                val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
+                val voicemailNumber by viewModel.voicemailNumber
+                val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+                val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
+
+                DialpadOverlay(
+                    inputValue = dialpadInput,
+                    onValueChange = {
+                        if (it.length > dialpadInput.length) {
+                            if (dialpadTonesEnabled) playDtmf(it.last().toString())
+                        }
+                        viewModel.onDialpadInputChange(it)
+                    },
+                    onClose = { isDialpadVisible = false },
+                    onCallClick = { num ->
+                        if (num.isNotEmpty()) {
+                            initiateCall("Unknown", num)
+                            viewModel.onDialpadInputChange("")
+                            isDialpadVisible = false
+                        }
+                    },
+                    onSpeedDialCall = { num ->
+                        initiateCall("Speed Dial", num)
+                        isDialpadVisible = false
+                    },
+                    speedDialMap = speedDialMap,
+                    voicemailNumber = voicemailNumber,
+                    viewModel = viewModel
                 )
             }
         }

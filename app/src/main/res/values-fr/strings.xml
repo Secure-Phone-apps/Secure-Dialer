@@ -507,4 +507,6 @@
     <string name="saved_in_account">Enregistré dans %1$s</string>
     <string name="settings_flip_to_silence">Retourner pour couper le son</string>
     <string name="settings_flip_to_silence_sub">Couper la sonnerie d’un appel entrant en posant le téléphone écran vers le bas</string>
+    <string name="clear_call_log_confirm_title">Effacer l\'historique?</string>
+    <string name="clear_call_log_confirm_desc">Cela supprimera définitivement tous les enregistrements d\'appels de cet appareil et d\'autres numéroteurs. Cette action est irréversible.</string>
 </resources>
