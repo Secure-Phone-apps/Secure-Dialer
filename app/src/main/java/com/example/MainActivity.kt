@@ -110,10 +110,11 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         CallManager.isAppInForeground = true
-        val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
-                                     CallManager.calls.value.isNotEmpty() ||
-                                     viewModel.isFakeCallActive.value ||
-                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+        val hasRealActiveCall = CallManager.currentCall.value != null || 
+                                CallManager.calls.value.isNotEmpty() ||
+                                viewModel.isFakeCallActive.value
+        val hasActiveOrIncomingCall = hasRealActiveCall || 
+                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealActiveCall)
         if (hasActiveOrIncomingCall) {
             isAppAuthenticated.value = true
             setLockScreenVisibility(true)
@@ -127,10 +128,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
-                                     CallManager.calls.value.isNotEmpty() ||
-                                     viewModel.isFakeCallActive.value ||
-                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+        val hasRealActiveCall = CallManager.currentCall.value != null || 
+                                CallManager.calls.value.isNotEmpty() ||
+                                viewModel.isFakeCallActive.value
+        val hasActiveOrIncomingCall = hasRealActiveCall || 
+                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealActiveCall)
         if (hasActiveOrIncomingCall) {
             setLockScreenVisibility(true)
         }
@@ -172,10 +174,11 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
-        val hasActiveOrIncomingCall = CallManager.currentCall.value != null || 
-                                     CallManager.calls.value.isNotEmpty() ||
-                                     viewModel.isFakeCallActive.value ||
-                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+        val hasRealActiveCall = CallManager.currentCall.value != null || 
+                                CallManager.calls.value.isNotEmpty() ||
+                                viewModel.isFakeCallActive.value
+        val hasActiveOrIncomingCall = hasRealActiveCall || 
+                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealActiveCall)
         if (hasActiveOrIncomingCall) {
             setLockScreenVisibility(true)
         }
@@ -206,10 +209,11 @@ class MainActivity : ComponentActivity() {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                         updateDefaultDialerStatus(context)
-                        val hasCall = CallManager.currentCall.value != null || 
-                                     CallManager.calls.value.isNotEmpty() ||
-                                     viewModel.isFakeCallActive.value ||
-                                     intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true
+                        val hasRealCall = CallManager.currentCall.value != null || 
+                                          CallManager.calls.value.isNotEmpty() ||
+                                          viewModel.isFakeCallActive.value
+                        val hasCall = hasRealCall || 
+                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealCall)
                         if (hasCall) {
                             isAppAuthenticated.value = true
                             setLockScreenVisibility(true)
@@ -430,7 +434,10 @@ class MainActivity : ComponentActivity() {
             setLockScreenVisibility(true)
         }
 
-        if (intent.getBooleanExtra("SHOW_CALL_SCREEN", false) || CallManager.currentCall.value != null) {
+        val hasGenuineActiveCall = CallManager.currentCall.value != null || 
+                                   CallManager.calls.value.isNotEmpty() ||
+                                   viewModel.isFakeCallActive.value
+        if (hasGenuineActiveCall) {
             isLaunchedForCall = true
             viewModel.isLaunchedForCall.value = true
             viewModel.isCallMinimized.value = false
@@ -449,12 +456,10 @@ class MainActivity : ComponentActivity() {
             if (scheme == "tel") {
                 val number = data?.schemeSpecificPart ?: ""
                 if (number.isNotEmpty()) {
-                    if (action == Intent.ACTION_CALL) {
-                        CallManager.placeCall(this, number)
-                    } else {
-                        viewModel.dialpadInput.value = number
-                        viewModel.selectTabBySlotKey("DIALPAD")
-                    }
+                    // SEC-02: Intercept Intent.ACTION_CALL to populate dialpad preview instead of dialing immediately,
+                    // preventing Confused Deputy exploits from untrusted external callers.
+                    viewModel.dialpadInput.value = number
+                    viewModel.selectTabBySlotKey("DIALPAD")
                 }
             }
         }

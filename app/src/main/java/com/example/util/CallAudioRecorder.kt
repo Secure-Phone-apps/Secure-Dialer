@@ -59,7 +59,7 @@ object CallAudioRecorder {
         if (_isRecording.value) return false
 
         try {
-            val recordDir = File(context.getExternalFilesDir(null), "CallRecordings").apply {
+            val recordDir = File(context.filesDir, "CallRecordings").apply {
                 if (!exists()) mkdirs()
             }
 
@@ -183,7 +183,10 @@ object CallAudioRecorder {
     }
 
     fun getRecordedFiles(context: Context): List<File> {
-        val recordDir = File(context.getExternalFilesDir(null), "CallRecordings")
-        return recordDir.listFiles()?.filter { it.extension == "m4a" }?.sortedByDescending { it.lastModified() } ?: emptyList()
+        val internalDir = File(context.filesDir, "CallRecordings")
+        val internalFiles = internalDir.listFiles()?.filter { it.extension == "m4a" } ?: emptyList()
+        val externalDir = File(context.getExternalFilesDir(null), "CallRecordings")
+        val externalFiles = if (externalDir.exists()) externalDir.listFiles()?.filter { it.extension == "m4a" } ?: emptyList() else emptyList()
+        return (internalFiles + externalFiles).distinctBy { it.name }.sortedByDescending { it.lastModified() }
     }
 }

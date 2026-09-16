@@ -80,7 +80,7 @@ class DialerAudioRecorderTest {
     fun testAudioStorageFileRetrievalAndCleanup() {
         runBlocking {
             // Create the private call recordings folder to verify list matching
-            val recordDir = File(context.getExternalFilesDir(null), "CallRecordings").apply {
+            val recordDir = File(context.filesDir, "CallRecordings").apply {
                 if (!exists()) mkdirs()
             }
 

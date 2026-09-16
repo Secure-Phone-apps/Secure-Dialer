@@ -19,6 +19,7 @@ package com.example.util
 
 import android.content.Context
 import android.telephony.SubscriptionManager
+import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -28,6 +29,16 @@ import java.util.concurrent.ConcurrentHashMap
 object SimCallTracker {
     private const val PREFS_NAME = "dialer_sim_tracker_prefs"
     private val memoryCache = ConcurrentHashMap<String, Int>()
+
+    private fun hashNumber(number: String): String {
+        return try {
+            val digest = MessageDigest.getInstance("SHA-256")
+            val hashBytes = digest.digest(number.toByteArray(Charsets.UTF_8))
+            hashBytes.joinToString("") { "%02x".format(it) }
+        } catch (_: Exception) {
+            number.hashCode().toString()
+        }
+    }
 
     fun recordOutgoingCall(context: Context, number: String, simSlot: Int, timestampMs: Long = System.currentTimeMillis()) {
         val clean = number.filter { it.isDigit() }
@@ -41,7 +52,8 @@ object SimCallTracker {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val editor = prefs.edit()
             if (clean.isNotEmpty()) {
-                editor.putInt("sim_${clean}_${minuteBucket}", simSlot)
+                val hashed = hashNumber(clean)
+                editor.putInt("sim_${hashed}_${minuteBucket}", simSlot)
             }
             editor.putInt("sim_time_${timestampMs}", simSlot)
             editor.apply()
@@ -63,10 +75,17 @@ object SimCallTracker {
         try {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             if (clean.isNotEmpty()) {
-                val direct = prefs.getInt("sim_${clean}_${minuteBucket}", 0)
+                val hashed = hashNumber(clean)
+                val direct = prefs.getInt("sim_${hashed}_${minuteBucket}", 0)
                 if (direct in 1..2) {
                     memoryCache["${clean}_${minuteBucket}"] = direct
                     return direct
+                }
+                // Fallback for pre-migration entries
+                val legacyDirect = prefs.getInt("sim_${clean}_${minuteBucket}", 0)
+                if (legacyDirect in 1..2) {
+                    memoryCache["${clean}_${minuteBucket}"] = legacyDirect
+                    return legacyDirect
                 }
             }
             val timeDirect = prefs.getInt("sim_time_${timestampMs}", 0)

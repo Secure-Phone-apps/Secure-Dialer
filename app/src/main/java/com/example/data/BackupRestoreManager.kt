@@ -422,8 +422,7 @@ object BackupRestoreManager {
         }
     }
 
-    private fun deriveKey(password: String, salt: ByteArray): SecretKeySpec {
-        val iterations = 10000
+    private fun deriveKey(password: String, salt: ByteArray, iterations: Int = 250000): SecretKeySpec {
         val keyLength = 256
         val spec = PBEKeySpec(password.toCharArray(), salt, iterations, keyLength)
         val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
@@ -439,7 +438,7 @@ object BackupRestoreManager {
         val iv = ByteArray(12)
         random.nextBytes(iv)
 
-        val key = deriveKey(password, salt)
+        val key = deriveKey(password, salt, 250000)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         val spec = GCMParameterSpec(128, iv)
         cipher.init(Cipher.ENCRYPT_MODE, key, spec)
@@ -468,13 +467,22 @@ object BackupRestoreManager {
         System.arraycopy(combined, 16, iv, 0, 12)
         System.arraycopy(combined, 28, encryptedBytes, 0, encryptedBytes.size)
 
-        val key = deriveKey(password, salt)
-        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-        val spec = GCMParameterSpec(128, iv)
-        cipher.init(Cipher.DECRYPT_MODE, key, spec)
-
-        val decryptedBytes = cipher.doFinal(encryptedBytes)
-        return String(decryptedBytes, Charsets.UTF_8)
+        // Try 250,000 iterations first (hardened standard), fallback to 10,000 for legacy backups
+        return try {
+            val key = deriveKey(password, salt, 250000)
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            val spec = GCMParameterSpec(128, iv)
+            cipher.init(Cipher.DECRYPT_MODE, key, spec)
+            val decryptedBytes = cipher.doFinal(encryptedBytes)
+            String(decryptedBytes, Charsets.UTF_8)
+        } catch (_: Exception) {
+            val keyLegacy = deriveKey(password, salt, 10000)
+            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+            val spec = GCMParameterSpec(128, iv)
+            cipher.init(Cipher.DECRYPT_MODE, keyLegacy, spec)
+            val decryptedBytes = cipher.doFinal(encryptedBytes)
+            String(decryptedBytes, Charsets.UTF_8)
+        }
     }
 
     private fun cleanVcfValue(value: String): String {
