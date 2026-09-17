@@ -36,7 +36,9 @@ object RichHapticEngine {
         HEAVY_CLICK,      // Long press / key action
         SUCCESS,          // Positive action confirmation
         WARNING,          // Rejection / Call end
-        DOUBLE_TICK        // Notification or state change
+        DOUBLE_TICK,       // Notification or state change
+        RECORDING_START,  // Crisp, tactile confirmation pulse when recording begins
+        RECORDING_STOP    // Soft release tap when recording stops
     }
 
     fun performHaptic(context: Context, style: HapticStyle) {
@@ -52,6 +54,8 @@ object RichHapticEngine {
                     HapticStyle.SUCCESS -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
                     HapticStyle.WARNING -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
                     HapticStyle.DOUBLE_TICK -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
+                    HapticStyle.RECORDING_START -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_HEAVY_CLICK)
+                    HapticStyle.RECORDING_STOP -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
                 }
                 vibrator.vibrate(effect)
             } else {
@@ -63,6 +67,8 @@ object RichHapticEngine {
                     HapticStyle.SUCCESS -> 30L
                     HapticStyle.WARNING -> 60L
                     HapticStyle.DOUBLE_TICK -> 25L
+                    HapticStyle.RECORDING_START -> 35L
+                    HapticStyle.RECORDING_STOP -> 15L
                 }
                 @Suppress("DEPRECATION")
                 vibrator.vibrate(durationMs)

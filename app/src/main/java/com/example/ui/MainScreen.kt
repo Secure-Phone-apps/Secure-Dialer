@@ -658,6 +658,8 @@ fun MainScreen(
                         systemCallState
                     },
                     recordingEnabled = viewModel.recordingEnabled.value,
+                    autoTuneVolume = viewModel.autoTuneRecordingVolume.value,
+                    recordingChimeEnabled = viewModel.recordingChimeEnabled.value,
                     callNotesEnabled = viewModel.isCallNotesEnabled.value,
                     onSaveRecording = { duration, filePath ->
                         viewModel.saveCallRecording(

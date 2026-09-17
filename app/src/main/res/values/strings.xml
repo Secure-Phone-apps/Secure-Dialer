@@ -226,6 +226,17 @@
     <string name="settings_call_waiting_sub">Notify of incoming calls during an active call</string>
     <string name="settings_call_recording">Call Recording</string>
     <string name="settings_call_recording_sub">Enable in-call recording controls &amp; save locally</string>
+    <string name="settings_auto_tune_volume">Auto-tune speaker volume for recording</string>
+    <string name="settings_auto_tune_volume_sub">Automatically balances speaker volume at 55% during recording for clear two-way acoustic capture.</string>
+    <string name="settings_recording_chime">Recording audio chime &amp; haptics</string>
+    <string name="settings_recording_chime_sub">Play subtle audio tone and tactile feedback when call recording starts or stops</string>
+    <string name="share_recording_title">Share &amp; Export Recording</string>
+    <string name="share_via_apps">Share via Apps</string>
+    <string name="share_via_apps_sub">Send audio file to messaging, cloud, or external apps</string>
+    <string name="save_to_downloads">Save to Downloads</string>
+    <string name="save_to_downloads_sub">Export a copy directly into device Downloads directory</string>
+    <string name="recording_details">Recording Details</string>
+    <string name="headset_recording_warning">Headphones connected: Only your voice will be recorded unless switched to Speaker.</string>
     <string name="settings_view_saved_recordings">View Saved Recordings</string>
     <string name="settings_view_saved_recordings_sub">Listen to and manage your call recordings</string>
     
@@ -554,4 +565,9 @@
     <string name="contact_storage_badge_sim">SIM</string>
     <string name="clear_call_log_confirm_title">Clear call history?</string>
     <string name="clear_call_log_confirm_desc">This will permanently delete all call records from this device and other dialers. This action cannot be undone.</string>
+    <string name="settings_recordings_biometric_lock">Lock Recordings with Biometrics</string>
+    <string name="settings_recordings_biometric_lock_sub">Require fingerprint or device credential to view and play audio evidence</string>
+    <string name="vault_locked_title">Recording Vault Locked</string>
+    <string name="vault_locked_desc">Biometric authentication is required to access confidential call recordings.</string>
+    <string name="btn_unlock_vault">Unlock Vault</string>
 </resources>

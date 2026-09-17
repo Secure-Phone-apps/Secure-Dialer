@@ -60,7 +60,7 @@ fun AdvancedFeaturesSettings(
         HighlightableCard(
             modifier = Modifier.padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) || isMatchTitle("Advanced Tools Settings", highlightedTitle) || isMatchTitle("Call Recording", highlightedTitle),
+            isHighlighted = isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) || isMatchTitle("Advanced Tools Settings", highlightedTitle) || isMatchTitle("Call Recording", highlightedTitle) || isMatchTitle("Lock Recordings with Biometrics", highlightedTitle) || isMatchTitle("Recording Vault", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -74,7 +74,7 @@ fun AdvancedFeaturesSettings(
                 hasSwitch = true,
                 isSwitchChecked = isRecordingEnabled,
                 onSwitchChange = { viewModel.updateRecordingEnabled(it) },
-                initiallyExpanded = isMatchTitle("Call Recording", highlightedTitle) || isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle)
+                initiallyExpanded = isMatchTitle("Call Recording", highlightedTitle) || isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) || isMatchTitle("Lock Recordings with Biometrics", highlightedTitle) || isMatchTitle("Recording Vault", highlightedTitle)
             ) {
                 CallRecordingsSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }

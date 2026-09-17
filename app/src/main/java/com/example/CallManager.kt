@@ -189,6 +189,9 @@ object CallManager {
     fun autoStopRecordingIfNeeded() {
         if (com.example.util.CallAudioRecorder.isRecording.value) {
             val result = com.example.util.CallAudioRecorder.stopRecording()
+            inCallService?.let { ctx ->
+                com.example.util.CallAudioHelper.restoreAudioState(ctx, inCallService)
+            }
             val file = result.file
             if (file != null && file.exists() && file.length() > 0L) {
                 val durationSec = result.durationSeconds.coerceAtLeast(1L)
@@ -216,6 +219,10 @@ object CallManager {
                         }
                     }
                 }
+            }
+        } else {
+            inCallService?.let { ctx ->
+                com.example.util.CallAudioHelper.restoreAudioState(ctx, inCallService)
             }
         }
     }

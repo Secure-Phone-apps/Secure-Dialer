@@ -18,9 +18,7 @@
 package com.example.util
 
 import android.content.Context
-import android.media.AudioManager
 import android.media.MediaRecorder
-import android.media.ToneGenerator
 import android.os.Build
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,8 +50,6 @@ object CallAudioRecorder {
     private var currentOutputFile: File? = null
     private var timerJob: Job? = null
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.Main)
-    private var audioManager: AudioManager? = null
-    private val focusChangeListener = AudioManager.OnAudioFocusChangeListener { }
 
     fun startRecording(context: Context, phoneNumber: String): Boolean {
         if (_isRecording.value) return false
@@ -68,25 +64,21 @@ object CallAudioRecorder {
             val fileName = "REC_${cleanNum}_$timestamp.m4a"
             val outputFile = File(recordDir, fileName)
 
-            // Request Audio Focus gracefully to pause background audio/music
-            val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-            audioManager = am
-            @Suppress("DEPRECATION")
-            am?.requestAudioFocus(
-                focusChangeListener,
-                AudioManager.STREAM_VOICE_CALL,
-                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK
-            )
-
             var recorder: MediaRecorder? = null
             var success = false
-            val sources = listOf(
-                MediaRecorder.AudioSource.MIC,
-                MediaRecorder.AudioSource.VOICE_COMMUNICATION,
-                MediaRecorder.AudioSource.DEFAULT
+
+            // On Android 9+, VOICE_RECOGNITION avoids VoIP AEC filters that zero out audio during in-call playback.
+            // 16000 Hz is the native telephony AMR-WB voice sample rate, preventing HAL sample conversion drops.
+            val candidateConfigs = listOf(
+                Pair(MediaRecorder.AudioSource.VOICE_RECOGNITION, 16000),
+                Pair(MediaRecorder.AudioSource.VOICE_RECOGNITION, 44100),
+                Pair(MediaRecorder.AudioSource.MIC, 16000),
+                Pair(MediaRecorder.AudioSource.MIC, 44100),
+                Pair(MediaRecorder.AudioSource.VOICE_COMMUNICATION, 16000),
+                Pair(MediaRecorder.AudioSource.DEFAULT, 16000)
             )
 
-            for (src in sources) {
+            for ((src, sampleRate) in candidateConfigs) {
                 try {
                     @Suppress("DEPRECATION")
                     val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
@@ -99,8 +91,8 @@ object CallAudioRecorder {
                         setAudioSource(src)
                         setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                         setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                        setAudioSamplingRate(44100)
-                        setAudioEncodingBitRate(96000)
+                        setAudioSamplingRate(sampleRate)
+                        setAudioEncodingBitRate(if (sampleRate <= 16000) 48000 else 96000)
                         setOutputFile(outputFile.absolutePath)
                         prepare()
                         start()
@@ -118,12 +110,6 @@ object CallAudioRecorder {
                 try { if (outputFile.exists()) outputFile.delete() } catch (_: Exception) {}
                 return false
             }
-
-            // Play continuous disclosure / consent tone for wiretapping law compliance
-            try {
-                val toneGenerator = ToneGenerator(AudioManager.STREAM_VOICE_CALL, 80)
-                toneGenerator.startTone(ToneGenerator.TONE_SUP_PIP, 500)
-            } catch (_: Exception) {}
 
             mediaRecorder = recorder
             currentOutputFile = outputFile
@@ -163,18 +149,13 @@ object CallAudioRecorder {
             }
         } catch (_: Exception) {
         } finally {
-            try {
-                @Suppress("DEPRECATION")
-                audioManager?.abandonAudioFocus(focusChangeListener)
-            } catch (_: Exception) {}
-            audioManager = null
             mediaRecorder = null
             _isRecording.value = false
             _recordingDuration.value = 0
             currentOutputFile = null
         }
 
-        if (file != null && file.exists() && file.length() == 0L) {
+        if (file != null && file.exists() && file.length() <= 128L) {
             try { file.delete() } catch (_: Exception) {}
             return RecordingResult(null, 0L)
         }

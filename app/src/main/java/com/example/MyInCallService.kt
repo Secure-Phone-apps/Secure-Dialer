@@ -102,6 +102,19 @@ class MyInCallService : InCallService() {
                     } catch (_: Exception) {
                     }
                 }
+                ACTION_TOGGLE_MUTE -> {
+                    val isMuted = CallManager.audioState.value?.isMuted ?: false
+                    CallManager.setMuted(!isMuted)
+                    CallManager.currentCall.value?.let { showActiveCallNotification(it) }
+                }
+                ACTION_TOGGLE_SPEAKER -> {
+                    val isSpeaker = (CallManager.audioState.value?.route ?: CallAudioState.ROUTE_EARPIECE) == CallAudioState.ROUTE_SPEAKER
+                    CallManager.setSpeaker(!isSpeaker)
+                    CallManager.currentCall.value?.let { showActiveCallNotification(it) }
+                }
+                ACTION_TOGGLE_RECORD -> {
+                    toggleCallRecordingFromNotification()
+                }
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -396,6 +409,56 @@ class MyInCallService : InCallService() {
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         super.onCallAudioStateChanged(audioState)
         CallManager.updateAudioState(audioState)
+        CallManager.currentCall.value?.let { showActiveCallNotification(it) }
+    }
+
+    private fun toggleCallRecordingFromNotification() {
+        val isRec = com.example.util.CallAudioRecorder.isRecording.value
+        val prefs = getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        val chimeEnabled = prefs.getBoolean("recording_chime_enabled", false)
+        val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
+
+        if (isRec) {
+            com.example.util.RecordingFeedbackHelper.triggerRecordingStopFeedback(this, chimeEnabled)
+            val result = com.example.util.CallAudioRecorder.stopRecording()
+            if (autoTune) {
+                com.example.util.CallAudioHelper.restoreAudioState(this, this)
+            }
+            val file = result.file
+            if (file != null && file.exists() && file.length() > 0L) {
+                val durationSec = result.durationSeconds.coerceAtLeast(1L)
+                val number = CallManager.callerNumber.value.ifEmpty { "Unknown" }
+                val name = CallManager.callerName.value.ifEmpty { number }
+                val locale = com.example.ui.components.getCurrentLocale(this)
+                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", locale)
+                val timestamp = sdf.format(java.util.Date())
+
+                val recording = com.example.model.CallRecording(
+                    number = number,
+                    name = name,
+                    timestamp = timestamp,
+                    duration = durationSec,
+                    filePath = file.absolutePath
+                )
+
+                serviceScope.launch {
+                    try {
+                        val db = com.example.data.AppDatabase.getDatabase(this@MyInCallService)
+                        db.dialerDao().insertCallRecording(recording)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        } else {
+            com.example.util.RecordingFeedbackHelper.triggerRecordingStartFeedback(this, chimeEnabled)
+            if (autoTune) {
+                com.example.util.CallAudioHelper.prepareSpeakerForRecording(this, this, CallManager.audioState.value)
+            }
+            val number = CallManager.callerNumber.value.ifEmpty { "Unknown" }
+            com.example.util.CallAudioRecorder.startRecording(this, number)
+        }
+        CallManager.currentCall.value?.let { showActiveCallNotification(it) }
     }
 
     private fun showActiveCallNotification(call: Call) {
@@ -453,13 +516,57 @@ class MyInCallService : InCallService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val isMuted = CallManager.audioState.value?.isMuted ?: false
+        val isSpeaker = (CallManager.audioState.value?.route ?: CallAudioState.ROUTE_EARPIECE) == CallAudioState.ROUTE_SPEAKER
+        val isRecording = com.example.util.CallAudioRecorder.isRecording.value
+
+        val recordIntent = Intent(this, MyInCallService::class.java).apply {
+            setPackage(packageName)
+            action = ACTION_TOGGLE_RECORD
+        }
+        val recordPendingIntent = PendingIntent.getService(
+            this,
+            202,
+            recordIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val speakerIntent = Intent(this, MyInCallService::class.java).apply {
+            setPackage(packageName)
+            action = ACTION_TOGGLE_SPEAKER
+        }
+        val speakerPendingIntent = PendingIntent.getService(
+            this,
+            203,
+            speakerIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val muteIntent = Intent(this, MyInCallService::class.java).apply {
+            setPackage(packageName)
+            action = ACTION_TOGGLE_MUTE
+        }
+        val mutePendingIntent = PendingIntent.getService(
+            this,
+            204,
+            muteIntent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val recordTitle = if (isRecording) "■ Stop Rec" else "● Record"
+        val speakerTitle = if (isSpeaker) "Earpiece" else "Speaker"
+        val muteTitle = if (isMuted) "Unmute" else "Mute"
+
         val notification = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(android.R.drawable.sym_action_call)
-            .setContentTitle("Ongoing Call")
+            .setContentTitle(if (isRecording) "Ongoing Call • [REC]" else "Ongoing Call")
             .setContentText("Call with $displayName is active")
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(returnPendingIntent)
+            .addAction(android.R.drawable.ic_btn_speak_now, recordTitle, recordPendingIntent)
+            .addAction(android.R.drawable.stat_notify_call_mute, muteTitle, mutePendingIntent)
+            .addAction(android.R.drawable.stat_sys_speakerphone, speakerTitle, speakerPendingIntent)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Hang Up", hangUpPendingIntent)
             .build()
 
@@ -470,5 +577,8 @@ class MyInCallService : InCallService() {
         const val ACTION_HANG_UP = "com.example.ACTION_HANG_UP"
         const val ACTION_ANSWER = "com.example.ACTION_ANSWER"
         const val ACTION_DECLINE = "com.example.ACTION_DECLINE"
+        const val ACTION_TOGGLE_RECORD = "com.example.ACTION_TOGGLE_RECORD"
+        const val ACTION_TOGGLE_SPEAKER = "com.example.ACTION_TOGGLE_SPEAKER"
+        const val ACTION_TOGGLE_MUTE = "com.example.ACTION_TOGGLE_MUTE"
     }
 }

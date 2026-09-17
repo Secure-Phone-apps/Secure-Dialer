@@ -81,6 +81,8 @@ fun ActiveCallScreen(
     onAnswer: () -> Unit = {},
     callState: Int = android.telecom.Call.STATE_DISCONNECTED,
     recordingEnabled: Boolean = false,
+    autoTuneVolume: Boolean = true,
+    recordingChimeEnabled: Boolean = false,
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
     callNotesEnabled: Boolean = true,
     onSaveNote: (String) -> Unit = {},
@@ -121,11 +123,14 @@ fun ActiveCallScreen(
         onDispose {
             if (currentIsRecording || com.example.util.CallAudioRecorder.isRecording.value) {
                 val result = com.example.util.CallAudioRecorder.stopRecording()
+                com.example.util.CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
                 val file = result.file
                 if (file != null && file.exists() && file.length() > 0L) {
                     val duration = result.durationSeconds.coerceAtLeast(1L)
                     currentOnSaveRecording(duration, file.absolutePath)
                 }
+            } else {
+                com.example.util.CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
             }
         }
     }
@@ -335,7 +340,8 @@ fun ActiveCallScreen(
                         CallManager.mergeCalls()
                     }
                 },
-                isConference = isConference
+                isConference = isConference,
+                isRecording = isRecording
             )
 
             waitingCall?.let { call ->
@@ -428,9 +434,12 @@ fun ActiveCallScreen(
                 callNotesEnabled = callNotesEnabled,
                 isRecording = isRecording,
                 onToggleRecording = {
-                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
                     if (isRecording || com.example.util.CallAudioRecorder.isRecording.value) {
+                        com.example.util.RecordingFeedbackHelper.triggerRecordingStopFeedback(context, recordingChimeEnabled)
                         val result = com.example.util.CallAudioRecorder.stopRecording()
+                        if (autoTuneVolume) {
+                            com.example.util.CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
+                        }
                         val file = result.file
                         if (file != null && file.exists() && file.length() > 0L) {
                             val duration = result.durationSeconds.coerceAtLeast(1L)
@@ -441,12 +450,48 @@ fun ActiveCallScreen(
                         }
                         isRecording = false
                     } else {
+                        com.example.util.RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
+                        val currentRoute = audioState?.route ?: android.telecom.CallAudioState.ROUTE_EARPIECE
+                        val isHeadset = currentRoute == android.telecom.CallAudioState.ROUTE_BLUETOOTH || 
+                                        currentRoute == android.telecom.CallAudioState.ROUTE_WIRED_HEADSET
+
+                        // If auto-tune volume enabled and not wearing headset, prepare 55% sweet spot and route to speaker
+                        if (autoTuneVolume && !isHeadset) {
+                            com.example.util.CallAudioHelper.prepareSpeakerForRecording(
+                                context = context,
+                                inCallService = CallManager.inCallService,
+                                currentAudioState = audioState
+                            )
+                        }
                         val started = com.example.util.CallAudioRecorder.startRecording(context, contactNumber)
                         if (started) {
                             recordingStartTime = System.currentTimeMillis()
                             isRecording = true
-                            Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
+                            if (isHeadset) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.headset_recording_warning),
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else if (autoTuneVolume) {
+                                Toast.makeText(
+                                    context,
+                                    "⏺️ Recording started. Speaker tuned to 55% for balanced two-way audio.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else if (!isSpeakerOn) {
+                                Toast.makeText(
+                                    context,
+                                    "⏺️ Recording started. Tip: Turn ON Speakerphone to capture both sides clearly.",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            } else {
+                                Toast.makeText(context, context.getString(R.string.recording_started), Toast.LENGTH_SHORT).show()
+                            }
                         } else {
+                            if (autoTuneVolume && !isHeadset) {
+                                com.example.util.CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
+                            }
                             Toast.makeText(context, "Cannot start recording. Grant Microphone permission in app settings.", Toast.LENGTH_LONG).show()
                         }
                     }

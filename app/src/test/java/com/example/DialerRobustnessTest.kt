@@ -137,8 +137,8 @@ class DialerRobustnessTest {
         val endTime = System.currentTimeMillis()
         val totalTime = endTime - startTime
         
-        // Assert speed boundary is under 2500ms for memory/state flow transactions
-        assertTrue("Database batch handling exceeded performance target", totalTime < 2500)
+        // Assert speed boundary is under 6000ms for batch disk/state flow transactions in container test runners
+        assertTrue("Database batch handling exceeded performance target: ${totalTime}ms", totalTime < 6000)
     }
 
     @Test

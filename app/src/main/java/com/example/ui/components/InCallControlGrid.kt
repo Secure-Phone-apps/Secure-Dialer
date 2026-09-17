@@ -143,6 +143,7 @@ fun InCallControlGrid(
                         isActive = isRecording,
                         onClick = onToggleRecording,
                         shape = btnShape,
+                        isPulsingRecording = isRecording,
                         modifier = Modifier.weight(1f).height(64.dp)
                     )
 
@@ -175,6 +176,7 @@ fun InCallControlGrid(
                         isActive = isRecording,
                         onClick = onToggleRecording,
                         shape = btnShape,
+                        isPulsingRecording = isRecording,
                         modifier = Modifier.weight(1f).height(64.dp)
                     )
 

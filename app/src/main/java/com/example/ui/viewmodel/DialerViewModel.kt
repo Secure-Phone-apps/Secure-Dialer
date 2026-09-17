@@ -183,7 +183,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
     var callWaitingEnabled = mutableStateOf(prefs.getBoolean("call_waiting_enabled", true))
     var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
+    var autoTuneRecordingVolume = mutableStateOf(prefs.getBoolean("auto_tune_recording_volume", true))
+    var recordingChimeEnabled = mutableStateOf(prefs.getBoolean("recording_chime_enabled", false))
     var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
+    var isRecordingsBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_recordings_biometric_lock_enabled", false))
     var isPocketProtectionEnabled = mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false))
     var defaultStartupTabKey = mutableStateOf(prefs.getString("default_startup_tab_key", "RECENTS") ?: "RECENTS")
     var selectedTab = mutableIntStateOf(
@@ -291,9 +294,31 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                         repository.dao.insertSetting(AppSetting("recording_enabled", currentVal.toString()))
                     } catch (_: Exception) {}
                 }
+                settings["auto_tune_recording_volume"]?.toBooleanStrictOrNull()?.let {
+                    autoTuneRecordingVolume.value = it
+                    prefs.edit().putBoolean("auto_tune_recording_volume", it).commit()
+                } ?: run {
+                    val currentVal = prefs.getBoolean("auto_tune_recording_volume", true)
+                    try {
+                        repository.dao.insertSetting(AppSetting("auto_tune_recording_volume", currentVal.toString()))
+                    } catch (_: Exception) {}
+                }
+                settings["recording_chime_enabled"]?.toBooleanStrictOrNull()?.let {
+                    recordingChimeEnabled.value = it
+                    prefs.edit().putBoolean("recording_chime_enabled", it).commit()
+                } ?: run {
+                    val currentVal = prefs.getBoolean("recording_chime_enabled", false)
+                    try {
+                        repository.dao.insertSetting(AppSetting("recording_chime_enabled", currentVal.toString()))
+                    } catch (_: Exception) {}
+                }
                 settings["is_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
                     isBiometricLockEnabled.value = it
                     prefs.edit().putBoolean("is_biometric_lock_enabled", it).commit()
+                }
+                settings["is_recordings_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isRecordingsBiometricLockEnabled.value = it
+                    prefs.edit().putBoolean("is_recordings_biometric_lock_enabled", it).commit()
                 }
                 settings["is_pocket_protection_enabled"]?.toBooleanStrictOrNull()?.let {
                     isPocketProtectionEnabled.value = it
@@ -474,12 +499,48 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateAutoTuneRecordingVolume(enabled: Boolean) {
+        autoTuneRecordingVolume.value = enabled
+        prefs.edit().putBoolean("auto_tune_recording_volume", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("auto_tune_recording_volume", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateRecordingChimeEnabled(enabled: Boolean) {
+        recordingChimeEnabled.value = enabled
+        prefs.edit().putBoolean("recording_chime_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("recording_chime_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     fun updateBiometricLockEnabled(enabled: Boolean) {
         isBiometricLockEnabled.value = enabled
         prefs.edit().putBoolean("is_biometric_lock_enabled", enabled).commit()
         viewModelScope.launch {
             try {
                 repository.dao.insertSetting(AppSetting("is_biometric_lock_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateRecordingsBiometricLockEnabled(enabled: Boolean) {
+        isRecordingsBiometricLockEnabled.value = enabled
+        prefs.edit().putBoolean("is_recordings_biometric_lock_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_recordings_biometric_lock_enabled", enabled.toString()))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
