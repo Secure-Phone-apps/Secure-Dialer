@@ -29,25 +29,39 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.GroupAdd
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.MutableStateFlow
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.theme.LocalAmoledMode
@@ -68,8 +82,17 @@ fun DialpadOverlay(
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
 
+    val dialKeyColor = if (isAmoled) {
+        Color(0xFF141414)
+    } else if (isExpressive) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+    } else {
+        MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+    }
+    val actionButtonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
 
     Surface(
         modifier = Modifier
@@ -104,16 +127,125 @@ fun DialpadOverlay(
                     }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Input Display Screen
+            // Quick Action Chips for Unsaved Number (Material 3 Expressive)
+            val allContacts by (viewModel?.allContactsFlow ?: MutableStateFlow(emptyList())).collectAsState()
+            val isUnsavedNumber = remember(inputValue, allContacts) {
+                if (inputValue.isBlank()) false
+                else {
+                    val cleanInput = inputValue.filter { it.isDigit() || it == '+' }
+                    if (cleanInput.isEmpty()) false
+                    else {
+                        !allContacts.any { contact ->
+                            val cleanContactNum = contact.number.filter { it.isDigit() || it == '+' }
+                            cleanContactNum == cleanInput || contact.getAllNumbers().any { 
+                                it.number.filter { c -> c.isDigit() || c == '+' } == cleanInput 
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (isUnsavedNumber && inputValue.isNotBlank()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // [+ Create Contact] Symmetrical Button
+                    Surface(
+                        onClick = {
+                            if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            }
+                            viewModel?.openAddContactWithNumber(inputValue)
+                        },
+                        shape = actionButtonShape,
+                        color = dialKeyColor,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .testTag("overlay_create_contact_chip")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.PersonAdd,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = stringResource(R.string.dialpad_create_contact),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    // [Add to Existing] Symmetrical Button
+                    Surface(
+                        onClick = {
+                            if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                            }
+                            viewModel?.addToExistingPendingNumber?.value = inputValue
+                            viewModel?.isAddToExistingSheetVisible?.value = true
+                        },
+                        shape = actionButtonShape,
+                        color = dialKeyColor,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(46.dp)
+                            .testTag("overlay_add_to_existing_chip")
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.GroupAdd,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                            Text(
+                                text = stringResource(R.string.dialpad_add_to_existing),
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Input Display Screen with In-Line Cursor Editing & Selection
             var expandedOverlayClipboardMenu by remember { mutableStateOf(false) }
             val overlayClipboardManager = remember { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager }
+            val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
+            val keyboardController = LocalSoftwareKeyboardController.current
+            val focusManager = LocalFocusManager.current
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp)
+                    .height(56.dp)
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -121,18 +253,64 @@ fun DialpadOverlay(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
-                        .clickable { expandedOverlayClipboardMenu = true },
+                        .fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = inputValue.ifEmpty { "Enter Number" },
-                        style = MaterialTheme.typography.displaySmall,
-                        color = if (inputValue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                    CompositionLocalProvider(
+                        LocalTextInputService provides null
+                    ) {
+                        SelectionContainer {
+                            BasicTextField(
+                                value = currentTfv,
+                                onValueChange = { newTfv ->
+                                    if (viewModel != null) {
+                                        viewModel.onDialpadTextFieldValueChange(newTfv)
+                                    } else {
+                                        onValueChange(newTfv.text)
+                                    }
+                                },
+                                textStyle = if (currentTfv.text.isEmpty()) {
+                                    MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Normal,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        textAlign = TextAlign.Center
+                                    )
+                                } else {
+                                    MaterialTheme.typography.displaySmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center
+                                    )
+                                },
+                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { focusState ->
+                                        if (focusState.isFocused) {
+                                            keyboardController?.hide()
+                                        }
+                                    }
+                                    .testTag("dialpad_overlay_number_field"),
+                                decorationBox = { innerTextField ->
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (currentTfv.text.isEmpty()) {
+                                            Text(
+                                                text = stringResource(R.string.dialpad_enter_number),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                                textAlign = TextAlign.Center
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                }
+                            )
+                        }
+                    }
 
                     DropdownMenu(
                         expanded = expandedOverlayClipboardMenu,
@@ -146,7 +324,11 @@ fun DialpadOverlay(
                                 DropdownMenuItem(
                                     text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
                                     onClick = {
-                                        onValueChange(filteredDigits)
+                                        if (viewModel != null) {
+                                            viewModel.insertDialpadDigit(filteredDigits)
+                                        } else {
+                                            onValueChange(filteredDigits)
+                                        }
                                         expandedOverlayClipboardMenu = false
                                     }
                                 )
@@ -169,7 +351,11 @@ fun DialpadOverlay(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.dialpad_clear)) },
                                 onClick = {
-                                    onValueChange("")
+                                    if (viewModel != null) {
+                                        viewModel.clearDialpad()
+                                    } else {
+                                        onValueChange("")
+                                    }
                                     expandedOverlayClipboardMenu = false
                                 }
                             )
@@ -187,13 +373,21 @@ fun DialpadOverlay(
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     }
-                                    onValueChange(inputValue.dropLast(1))
+                                    if (viewModel != null) {
+                                        viewModel.backspaceDialpad()
+                                    } else {
+                                        onValueChange(inputValue.dropLast(1))
+                                    }
                                 },
                                 onLongClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                     }
-                                    onValueChange("")
+                                    if (viewModel != null) {
+                                        viewModel.clearDialpad()
+                                    } else {
+                                        onValueChange("")
+                                    }
                                 }
                             ),
                         contentAlignment = Alignment.Center
@@ -207,7 +401,7 @@ fun DialpadOverlay(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Dialer Grid
             Column(
@@ -332,7 +526,11 @@ fun DialButton(
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                     }
-                    onValueChange(inputValue + key.first)
+                    if (viewModel != null) {
+                        viewModel.insertDialpadDigit(key.first)
+                    } else {
+                        onValueChange(inputValue + key.first)
+                    }
                 },
                 onLongClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
@@ -346,7 +544,11 @@ fun DialButton(
                             Toast.makeText(context, "Voicemail number not set. Configure in Settings!", Toast.LENGTH_SHORT).show()
                         }
                     } else if (key.first == "0") {
-                        onValueChange(inputValue + "+")
+                        if (viewModel != null) {
+                            viewModel.insertDialpadDigit("+")
+                        } else {
+                            onValueChange(inputValue + "+")
+                        }
                     } else if (key.third != -1) {
                         val speedNum = speedDialMap[key.third]
                         if (speedNum != null) {

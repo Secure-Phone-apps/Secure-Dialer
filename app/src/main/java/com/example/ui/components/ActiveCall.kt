@@ -262,8 +262,14 @@ fun ActiveCallScreen(
         }
     }
 
-    // Proximity screen-off should be active during calls when NOT on Speaker or Bluetooth
-    val shouldActivateProximity = !isSpeakerOn && !isBluetoothOn &&
+    val isHeadsetOn = remember(audioState) {
+        audioState?.route == android.telecom.CallAudioState.ROUTE_WIRED_HEADSET
+    }
+    val isEarpieceActive = (audioState?.route == android.telecom.CallAudioState.ROUTE_EARPIECE) ||
+        (audioState == null && !isSpeakerOn && !isBluetoothOn && !isHeadsetOn)
+
+    // Proximity screen-off should be active during calls ONLY when callAudioState is ROUTE_EARPIECE (not speaker, bluetooth, or wired headset)
+    val shouldActivateProximity = isEarpieceActive && !isSpeakerOn && !isBluetoothOn && !isHeadsetOn &&
         (currentCallState == android.telecom.Call.STATE_ACTIVE ||
          currentCallState == android.telecom.Call.STATE_DIALING ||
          currentCallState == android.telecom.Call.STATE_CONNECTING ||
@@ -275,7 +281,7 @@ fun ActiveCallScreen(
             try {
                 wakeLock = powerManager.newWakeLock(
                     PowerManager.PROXIMITY_SCREEN_OFF_WAKE_LOCK,
-                    "com.example:InCallProximity"
+                    "SecureDialer:InCallProximityWakeLock"
                 )
                 wakeLock.acquire()
             } catch (e: Exception) {

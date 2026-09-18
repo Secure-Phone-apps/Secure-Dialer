@@ -22,6 +22,8 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.compose.runtime.*
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.*
 import androidx.paging.*
 import com.example.DialerRepository
@@ -50,6 +52,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     // Dialpad Input Flow
     private val _dialpadInputFlow = MutableStateFlow("")
+    var dialpadTextFieldValue = mutableStateOf(TextFieldValue(""))
 
     // Details Screen state (to hide global search bar)
     var isCallHistoryDetailsOpen = mutableStateOf(false)
@@ -89,9 +92,101 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun onDialpadTextFieldValueChange(newValue: TextFieldValue) {
+        dialpadTextFieldValue.value = newValue
+        dialpadInput.value = newValue.text
+        _dialpadInputFlow.value = newValue.text
+    }
+
     fun onDialpadInputChange(newInput: String) {
+        val currentTfv = dialpadTextFieldValue.value
+        if (currentTfv.text != newInput) {
+            val newSelection = TextRange(newInput.length)
+            dialpadTextFieldValue.value = TextFieldValue(text = newInput, selection = newSelection)
+        }
         dialpadInput.value = newInput
         _dialpadInputFlow.value = newInput
+    }
+
+    fun insertDialpadDigit(digit: String) {
+        val current = dialpadTextFieldValue.value
+        val text = current.text
+        val start = current.selection.min.coerceIn(0, text.length)
+        val end = current.selection.max.coerceIn(0, text.length)
+        val newText = text.replaceRange(start, end, digit)
+        val newCursorPos = start + digit.length
+        val newTfv = TextFieldValue(
+            text = newText,
+            selection = TextRange(newCursorPos)
+        )
+        onDialpadTextFieldValueChange(newTfv)
+    }
+
+    fun backspaceDialpad() {
+        val current = dialpadTextFieldValue.value
+        val text = current.text
+        if (text.isEmpty()) return
+
+        val start = current.selection.min.coerceIn(0, text.length)
+        val end = current.selection.max.coerceIn(0, text.length)
+
+        if (start != end) {
+            val newText = text.removeRange(start, end)
+            val newTfv = TextFieldValue(
+                text = newText,
+                selection = TextRange(start)
+            )
+            onDialpadTextFieldValueChange(newTfv)
+        } else if (start > 0) {
+            val newText = text.removeRange(start - 1, start)
+            val newTfv = TextFieldValue(
+                text = newText,
+                selection = TextRange(start - 1)
+            )
+            onDialpadTextFieldValueChange(newTfv)
+        }
+    }
+
+    fun clearDialpad() {
+        onDialpadTextFieldValueChange(TextFieldValue(""))
+    }
+
+    fun isNumberUnsaved(number: String): Boolean {
+        if (number.isBlank()) return false
+        val cleanInput = number.filter { it.isDigit() || it == '+' }
+        if (cleanInput.isEmpty()) return false
+        val contacts = allContactsFlow.value
+        return !contacts.any { contact ->
+            val cleanContactNum = contact.number.filter { it.isDigit() || it == '+' }
+            cleanContactNum == cleanInput || contact.getAllNumbers().any { 
+                it.number.filter { c -> c.isDigit() || c == '+' } == cleanInput 
+            }
+        }
+    }
+
+    fun openAddContactWithNumber(number: String) {
+        newContactName.value = ""
+        newContactNumber.value = number
+        newContactLabel.value = "Mobile"
+        newContactEmail.value = ""
+        isAddContactDialogVisible.value = true
+    }
+
+    fun openAddToExistingContactWithNumber(number: String, contact: Contact) {
+        val currentNumbers = contact.getAllNumbers().toMutableList()
+        val cleanNumber = number.filter { it.isDigit() || it == '+' }
+        if (!currentNumbers.any { it.number.filter { c -> c.isDigit() || c == '+' } == cleanNumber }) {
+            currentNumbers.add(com.example.model.LabeledNumber(number = number, label = "Mobile"))
+        }
+        val updatedContact = contact.copy(
+            numbers = currentNumbers
+        )
+        oldContactToEdit.value = updatedContact
+        editContactName.value = updatedContact.name
+        editContactNumber.value = updatedContact.number
+        editContactLabel.value = updatedContact.label
+        editContactEmail.value = updatedContact.email
+        isEditContactDialogVisible.value = true
     }
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
@@ -833,6 +928,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     // Helper Dialog State
     var isAddContactDialogVisible = mutableStateOf(false)
     var isEditContactDialogVisible = mutableStateOf(false)
+    var isAddToExistingSheetVisible = mutableStateOf(false)
+    var addToExistingPendingNumber = mutableStateOf("")
     var newContactName = mutableStateOf("")
     var newContactNumber = mutableStateOf("")
     var newContactLabel = mutableStateOf("Mobile")

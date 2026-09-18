@@ -121,4 +121,73 @@ class DialerViewModelTest {
             assertTrue(callHistory.isEmpty())
         }
     }
+
+    @Test
+    fun `cursor-based digit insertion in middle of string works correctly`() {
+        viewModel.onDialpadInputChange("1245")
+        // Position cursor between '2' and '4' (index 2)
+        viewModel.onDialpadTextFieldValueChange(
+            androidx.compose.ui.text.input.TextFieldValue(
+                text = "1245",
+                selection = androidx.compose.ui.text.TextRange(2)
+            )
+        )
+        // Insert '3'
+        viewModel.insertDialpadDigit("3")
+
+        assertEquals("12345", viewModel.dialpadInput.value)
+        assertEquals("12345", viewModel.dialpadTextFieldValue.value.text)
+        assertEquals(3, viewModel.dialpadTextFieldValue.value.selection.start)
+    }
+
+    @Test
+    fun `cursor-based backspace in middle of string works correctly`() {
+        viewModel.onDialpadInputChange("12345")
+        // Position cursor right after '3' (index 3)
+        viewModel.onDialpadTextFieldValueChange(
+            androidx.compose.ui.text.input.TextFieldValue(
+                text = "12345",
+                selection = androidx.compose.ui.text.TextRange(3)
+            )
+        )
+        // Backspace should remove '3'
+        viewModel.backspaceDialpad()
+
+        assertEquals("1245", viewModel.dialpadInput.value)
+        assertEquals(2, viewModel.dialpadTextFieldValue.value.selection.start)
+    }
+
+    @Test
+    fun `selection replacement and selection backspace works correctly`() {
+        viewModel.onDialpadInputChange("12995")
+        // Select "99" (from index 2 to 4)
+        viewModel.onDialpadTextFieldValueChange(
+            androidx.compose.ui.text.input.TextFieldValue(
+                text = "12995",
+                selection = androidx.compose.ui.text.TextRange(2, 4)
+            )
+        )
+        // Insert "34" over selection
+        viewModel.insertDialpadDigit("34")
+        assertEquals("12345", viewModel.dialpadInput.value)
+
+        // Select "34" and backspace
+        viewModel.onDialpadTextFieldValueChange(
+            androidx.compose.ui.text.input.TextFieldValue(
+                text = "12345",
+                selection = androidx.compose.ui.text.TextRange(2, 4)
+            )
+        )
+        viewModel.backspaceDialpad()
+        assertEquals("125", viewModel.dialpadInput.value)
+        assertEquals(2, viewModel.dialpadTextFieldValue.value.selection.start)
+    }
+
+    @Test
+    fun `openAddContactWithNumber pre-fills state properly`() {
+        viewModel.openAddContactWithNumber("+15551234567")
+        assertTrue(viewModel.isAddContactDialogVisible.value)
+        assertEquals("+15551234567", viewModel.newContactNumber.value)
+        assertEquals("", viewModel.newContactName.value)
+    }
 }

@@ -39,6 +39,7 @@ import com.example.ui.MainScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
 import android.app.KeyguardManager
+import android.media.AudioManager
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,11 +105,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        volumeControlStream = AudioManager.STREAM_VOICE_CALL
         CallManager.isAppInForeground = true
     }
 
     override fun onStart() {
         super.onStart()
+        volumeControlStream = AudioManager.STREAM_VOICE_CALL
         CallManager.isAppInForeground = true
         val hasRealActiveCall = CallManager.currentCall.value != null || 
                                 CallManager.calls.value.isNotEmpty() ||
@@ -159,6 +162,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        volumeControlStream = AudioManager.STREAM_VOICE_CALL
         // Obscure UI content visibility in release builds to prevent PII snapshot leaks without blocking emulator preview
         if (!BuildConfig.DEBUG) {
             window.setFlags(

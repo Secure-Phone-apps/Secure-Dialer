@@ -107,6 +107,12 @@
     <string name="recording_started">⏺️ Call Recording Started</string>
 
     
+    <string name="dialpad_create_contact">Create Contact</string>
+    <string name="dialpad_add_to_existing">Add to Existing</string>
+    <string name="dialpad_select_contact_title">Select Contact</string>
+    <string name="dialpad_search_contact_hint">Search contacts...</string>
+    <string name="dialpad_no_contacts_found">No contacts matching search</string>
+
     <string name="favorites_header">Favorites</string>
     <string name="no_favorites_title">No favorites yet</string>
     <string name="no_favorites_subtitle">Star contacts to find them easily</string>

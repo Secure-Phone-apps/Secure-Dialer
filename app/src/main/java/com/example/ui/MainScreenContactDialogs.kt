@@ -18,9 +18,11 @@
 package com.example.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import com.example.ui.components.AddContactDialog
+import com.example.ui.components.AddToExistingContactSheet
 import com.example.ui.viewmodel.DialerViewModel
 
 @Composable
@@ -29,10 +31,26 @@ fun MainScreenContactDialogs(
 ) {
     var isAddContactDialogVisible by viewModel.isAddContactDialogVisible
     var isEditContactDialogVisible by viewModel.isEditContactDialogVisible
+    var isAddToExistingSheetVisible by viewModel.isAddToExistingSheetVisible
+    val addToExistingPendingNumber by viewModel.addToExistingPendingNumber
+    val allContacts by viewModel.allContactsFlow.collectAsState()
     var oldContactToEdit by viewModel.oldContactToEdit
     val newContactName by viewModel.newContactName
     val newContactNumber by viewModel.newContactNumber
     val newContactLabel by viewModel.newContactLabel
+
+    if (isAddToExistingSheetVisible) {
+        AddToExistingContactSheet(
+            contacts = allContacts,
+            pendingNumber = addToExistingPendingNumber,
+            onContactSelected = { contact ->
+                isAddToExistingSheetVisible = false
+                viewModel.openAddToExistingContactWithNumber(addToExistingPendingNumber, contact)
+            },
+            onDismiss = { isAddToExistingSheetVisible = false },
+            viewModel = viewModel
+        )
+    }
 
     if (isAddContactDialogVisible) {
         AddContactDialog(
