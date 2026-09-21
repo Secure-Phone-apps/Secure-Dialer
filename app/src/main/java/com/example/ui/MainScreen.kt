@@ -172,22 +172,27 @@ fun MainScreen(
 
     fun playDtmf(key: String) {
         toneGenerator?.let { tg ->
-            val tone = when (key) {
-                "1" -> ToneGenerator.TONE_DTMF_1
-                "2" -> ToneGenerator.TONE_DTMF_2
-                "3" -> ToneGenerator.TONE_DTMF_3
-                "4" -> ToneGenerator.TONE_DTMF_4
-                "5" -> ToneGenerator.TONE_DTMF_5
-                "6" -> ToneGenerator.TONE_DTMF_6
-                "7" -> ToneGenerator.TONE_DTMF_7
-                "8" -> ToneGenerator.TONE_DTMF_8
-                "9" -> ToneGenerator.TONE_DTMF_9
-                "0" -> ToneGenerator.TONE_DTMF_0
-                "*" -> ToneGenerator.TONE_DTMF_S
-                "#" -> ToneGenerator.TONE_DTMF_P
-                else -> -1
+            try {
+                val tone = when (key) {
+                    "1" -> ToneGenerator.TONE_DTMF_1
+                    "2" -> ToneGenerator.TONE_DTMF_2
+                    "3" -> ToneGenerator.TONE_DTMF_3
+                    "4" -> ToneGenerator.TONE_DTMF_4
+                    "5" -> ToneGenerator.TONE_DTMF_5
+                    "6" -> ToneGenerator.TONE_DTMF_6
+                    "7" -> ToneGenerator.TONE_DTMF_7
+                    "8" -> ToneGenerator.TONE_DTMF_8
+                    "9" -> ToneGenerator.TONE_DTMF_9
+                    "0" -> ToneGenerator.TONE_DTMF_0
+                    "*" -> ToneGenerator.TONE_DTMF_S
+                    "#" -> ToneGenerator.TONE_DTMF_P
+                    else -> -1
+                }
+                if (tone != -1) tg.startTone(tone, 120)
+            } catch (e: Throwable) {
+                // Defensive guard against native AudioTrack / ToneGenerator exceptions on OEM audio HALs
+                e.printStackTrace()
             }
-            if (tone != -1) tg.startTone(tone, 120)
         }
     }
 

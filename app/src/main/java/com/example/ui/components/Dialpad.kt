@@ -32,6 +32,8 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -148,11 +150,11 @@ fun DialpadTabContent(
                         modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(
+                        itemsIndexed(
                             items = dialpadMatches,
-                            key = { it.number },
-                            contentType = { "dialpad_match" }
-                        ) { match ->
+                            key = { index, match -> if (match.number.isNotBlank()) "${match.number}_$index" else "match_$index" },
+                            contentType = { _, _ -> "dialpad_match" }
+                        ) { _, match ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -407,58 +409,56 @@ fun DialpadTabContent(
                 CompositionLocalProvider(
                     LocalTextInputService provides null
                 ) {
-                    SelectionContainer {
-                        BasicTextField(
-                            value = currentTfv,
-                            onValueChange = { newTfv ->
-                                if (viewModel != null) {
-                                    viewModel.onDialpadTextFieldValueChange(newTfv)
-                                } else {
-                                    onValueChange(newTfv.text)
-                                }
-                            },
-                            textStyle = if (currentTfv.text.isEmpty()) {
-                                MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Normal,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    textAlign = TextAlign.Center
-                                )
+                    BasicTextField(
+                        value = currentTfv,
+                        onValueChange = { newTfv ->
+                            if (viewModel != null) {
+                                viewModel.onDialpadTextFieldValueChange(newTfv)
                             } else {
-                                MaterialTheme.typography.headlineLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center
-                                )
-                            },
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
-                                        keyboardController?.hide()
-                                    }
-                                }
-                                .testTag("dialpad_number_field"),
-                            decorationBox = { innerTextField ->
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (currentTfv.text.isEmpty()) {
-                                        Text(
-                                            text = stringResource(R.string.dialpad_enter_number),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            fontWeight = FontWeight.Normal,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                            textAlign = TextAlign.Center
-                                        )
-                                    }
-                                    innerTextField()
+                                onValueChange(newTfv.text)
+                            }
+                        },
+                        textStyle = if (currentTfv.text.isEmpty()) {
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                textAlign = TextAlign.Center
+                            )
+                        } else {
+                            MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { focusState ->
+                                if (focusState.isFocused) {
+                                    keyboardController?.hide()
                                 }
                             }
-                        )
-                    }
+                            .testTag("dialpad_number_field"),
+                        decorationBox = { innerTextField ->
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (currentTfv.text.isEmpty()) {
+                                    Text(
+                                        text = stringResource(R.string.dialpad_enter_number),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Normal,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                innerTextField()
+                            }
+                        }
+                    )
                 }
 
                 DropdownMenu(

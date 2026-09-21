@@ -75,6 +75,8 @@ fun CallRecordingsSettings(
     val haptic = LocalHapticFeedback.current
     val recordings by viewModel.recordingsFlow.collectAsState()
     val isVaultLockEnabled by viewModel.isRecordingsBiometricLockEnabled
+    val isAutoExportEnabled by viewModel.isAutoExportRecordingsEnabled
+    val selectedProfile by viewModel.recordingCompressionProfile
     var isVaultUnlocked by remember { mutableStateOf(!isVaultLockEnabled) }
 
     var playingId by remember { mutableIntStateOf(-1) }
@@ -94,6 +96,7 @@ fun CallRecordingsSettings(
 
     // Automatically prompt when opening screen if biometric vault is enabled and locked
     LaunchedEffect(Unit) {
+        viewModel.syncRecordingsFromDisk(context)
         if (isVaultLockEnabled && !isVaultUnlocked && activity != null) {
             VaultBiometricAuthHelper.authenticate(
                 activity = activity,
@@ -313,7 +316,12 @@ fun CallRecordingsSettings(
                         .clickable {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             shareSheetRecording = null
-                            exportRecordingToDownloads(context, rec.filePath)
+                            val exported = viewModel.exportRecordingToDownloads(context, rec.filePath)
+                            if (exported) {
+                                Toast.makeText(context, "Saved to Downloads/SecureDialer/${File(rec.filePath).name}", Toast.LENGTH_LONG).show()
+                            } else {
+                                Toast.makeText(context, "Failed to export audio file", Toast.LENGTH_SHORT).show()
+                            }
                         }
                 ) {
                     Row(
@@ -585,6 +593,146 @@ fun CallRecordingsSettings(
             }
         }
 
+        // Auto-Export to Downloads Switch Card
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = cardBgColor,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_recordings_auto_export),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_recordings_auto_export_sub),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp
+                    )
+                }
+                Switch(
+                    checked = isAutoExportEnabled,
+                    onCheckedChange = { enabled ->
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.updateAutoExportRecordingsEnabled(enabled)
+                    }
+                )
+            }
+        }
+
+        // Audio Compression & Quality Profile Card
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = cardBgColor,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(14.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.secondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_recordings_compression_title),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = stringResource(R.string.settings_recordings_compression_sub),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    com.example.util.RecordingCompressionProfile.entries.forEach { profile ->
+                        val isSelected = profile == selectedProfile
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    viewModel.updateRecordingCompressionProfile(profile)
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                                    Text(
+                                        text = profile.title,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = profile.description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        viewModel.updateRecordingCompressionProfile(profile)
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (isVaultLockEnabled && !isVaultUnlocked) {
             // Locked Vault Guard View
             Surface(
@@ -657,15 +805,129 @@ fun CallRecordingsSettings(
                     }
                 }
             }
-        } else if (recordings.isEmpty()) {
-            SettingsEmptyState(
-                icon = Icons.Default.Mic,
-                title = stringResource(R.string.no_recordings_title),
-                description = stringResource(R.string.no_recordings_desc),
-                tintColor = MaterialTheme.colorScheme.primary
-            )
         } else {
-            recordings.forEach { rec ->
+            // Storage & Auto-Recovery Card
+            val totalDiskFiles = remember(recordings) {
+                com.example.util.CallAudioRecorder.getRecordedFiles(context).size
+            }
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = cardBgColor,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Folder,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Local Storage & Auto-Recovery",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "$totalDiskFiles recording file(s) on device storage • Exports to Downloads/SecureDialer",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                viewModel.syncRecordingsFromDisk(context) { recovered ->
+                                    Toast.makeText(
+                                        context,
+                                        if (recovered > 0) "Recovered $recovered new recording(s) from storage!" else "All storage recordings synchronized ($totalDiskFiles files found).",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Scan Storage", style = MaterialTheme.typography.labelMedium)
+                        }
+
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val count = viewModel.exportAllRecordingsToDownloads(context)
+                                if (count > 0) {
+                                    Toast.makeText(context, "Exported $count file(s) to Downloads/SecureDialer", Toast.LENGTH_LONG).show()
+                                } else {
+                                    Toast.makeText(context, "No recordings found to export", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Export All", style = MaterialTheme.typography.labelMedium)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            val cleaned = viewModel.cleanupCorruptOrEmptyRecordings(context)
+                            Toast.makeText(
+                                context,
+                                if (cleaned > 0) "Pruned $cleaned empty/corrupted recording stub(s)" else "Storage clean — no corrupted or empty audio files found",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.CleaningServices, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.settings_recordings_cleanup_empty), style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+
+            if (recordings.isEmpty()) {
+                SettingsEmptyState(
+                    icon = Icons.Default.Mic,
+                    title = stringResource(R.string.no_recordings_title),
+                    description = stringResource(R.string.no_recordings_desc),
+                    tintColor = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                recordings.forEach { rec ->
                 val isPlaying = playingId == rec.id
                 CompactRecordingRow(
                     recording = rec,
@@ -760,6 +1022,7 @@ fun CallRecordingsSettings(
             }
         }
     }
+}
 }
 
 @Composable

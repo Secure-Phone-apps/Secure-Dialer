@@ -210,10 +210,15 @@ object CallManager {
                 )
 
                 inCallService?.let { ctx ->
-                    scope.launch {
+                    scope.launch(Dispatchers.IO) {
                         try {
                             val db = com.example.data.AppDatabase.getDatabase(ctx)
                             db.dialerDao().insertCallRecording(recording)
+                            val autoExportSetting = db.dialerDao().getSetting("is_auto_export_recordings_enabled")
+                            val isAutoExport = autoExportSetting?.toBooleanStrictOrNull() ?: true
+                            if (isAutoExport) {
+                                com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
+                            }
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }

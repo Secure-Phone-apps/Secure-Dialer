@@ -38,6 +38,46 @@ import java.util.Locale
  * Records call audio locally to application private storage with 0% network tracking
  * and full offline encryption support.
  */
+enum class RecordingCompressionProfile(
+    val key: String,
+    val title: String,
+    val description: String,
+    val bitRate: Int,
+    val sampleRate: Int,
+    val estMbPerHour: Double
+) {
+    COMPACT(
+        key = "COMPACT",
+        title = "Compact Voice (High Compression)",
+        description = "24 kbps AAC • ~11 MB/hr • Maximum storage savings",
+        bitRate = 24000,
+        sampleRate = 16000,
+        estMbPerHour = 10.8
+    ),
+    BALANCED(
+        key = "BALANCED",
+        title = "Balanced Standard (Recommended)",
+        description = "48 kbps AAC • ~22 MB/hr • Crystal-clear voice clarity",
+        bitRate = 48000,
+        sampleRate = 16000,
+        estMbPerHour = 21.6
+    ),
+    HIGH_FIDELITY(
+        key = "HIGH_FIDELITY",
+        title = "High Fidelity (Studio)",
+        description = "96 kbps AAC @ 44.1 kHz • ~43 MB/hr • Rich acoustic fidelity",
+        bitRate = 96000,
+        sampleRate = 44100,
+        estMbPerHour = 43.2
+    );
+
+    companion object {
+        fun fromKey(key: String?): RecordingCompressionProfile {
+            return entries.firstOrNull { it.key.equals(key, ignoreCase = true) } ?: BALANCED
+        }
+    }
+}
+
 object CallAudioRecorder {
 
     private val _isRecording = MutableStateFlow(false)
@@ -51,7 +91,11 @@ object CallAudioRecorder {
     private var timerJob: Job? = null
     private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.Main)
 
-    fun startRecording(context: Context, phoneNumber: String): Boolean {
+    fun startRecording(
+        context: Context,
+        phoneNumber: String,
+        profile: RecordingCompressionProfile = getSelectedCompressionProfile(context)
+    ): Boolean {
         if (_isRecording.value) return false
 
         try {
@@ -67,14 +111,14 @@ object CallAudioRecorder {
             var recorder: MediaRecorder? = null
             var success = false
 
-            // On Android 9+, VOICE_RECOGNITION avoids VoIP AEC filters that zero out audio during in-call playback.
-            // 16000 Hz is the native telephony AMR-WB voice sample rate, preventing HAL sample conversion drops.
+            // Primary and fallback audio sources matching user's compression profile
+            val targetBitRate = profile.bitRate
+            val targetSampleRate = profile.sampleRate
+
             val candidateConfigs = listOf(
-                Pair(MediaRecorder.AudioSource.VOICE_RECOGNITION, 16000),
-                Pair(MediaRecorder.AudioSource.VOICE_RECOGNITION, 44100),
-                Pair(MediaRecorder.AudioSource.MIC, 16000),
-                Pair(MediaRecorder.AudioSource.MIC, 44100),
-                Pair(MediaRecorder.AudioSource.VOICE_COMMUNICATION, 16000),
+                Pair(MediaRecorder.AudioSource.VOICE_RECOGNITION, targetSampleRate),
+                Pair(MediaRecorder.AudioSource.MIC, targetSampleRate),
+                Pair(MediaRecorder.AudioSource.VOICE_COMMUNICATION, targetSampleRate),
                 Pair(MediaRecorder.AudioSource.DEFAULT, 16000)
             )
 
@@ -92,7 +136,7 @@ object CallAudioRecorder {
                         setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                         setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                         setAudioSamplingRate(sampleRate)
-                        setAudioEncodingBitRate(if (sampleRate <= 16000) 48000 else 96000)
+                        setAudioEncodingBitRate(targetBitRate)
                         setOutputFile(outputFile.absolutePath)
                         prepare()
                         start()
@@ -130,6 +174,30 @@ object CallAudioRecorder {
         }
     }
 
+    fun getSelectedCompressionProfile(context: Context): RecordingCompressionProfile {
+        val prefs = context.getSharedPreferences("secure_dialer_prefs", Context.MODE_PRIVATE)
+        val key = prefs.getString("recording_compression_profile", RecordingCompressionProfile.BALANCED.key)
+        return RecordingCompressionProfile.fromKey(key)
+    }
+
+    fun setCompressionProfile(context: Context, profile: RecordingCompressionProfile) {
+        val prefs = context.getSharedPreferences("secure_dialer_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("recording_compression_profile", profile.key).apply()
+    }
+
+    fun cleanupCorruptOrEmptyFiles(context: Context): Int {
+        val files = getRecordedFiles(context)
+        var cleanedCount = 0
+        for (file in files) {
+            if (file.exists() && file.length() <= 256L) {
+                try {
+                    if (file.delete()) cleanedCount++
+                } catch (_: Exception) {}
+            }
+        }
+        return cleanedCount
+    }
+
     data class RecordingResult(val file: File?, val durationSeconds: Long)
 
     fun stopRecording(): RecordingResult {
@@ -164,10 +232,146 @@ object CallAudioRecorder {
     }
 
     fun getRecordedFiles(context: Context): List<File> {
-        val internalDir = File(context.filesDir, "CallRecordings")
-        val internalFiles = internalDir.listFiles()?.filter { it.extension == "m4a" } ?: emptyList()
-        val externalDir = File(context.getExternalFilesDir(null), "CallRecordings")
-        val externalFiles = if (externalDir.exists()) externalDir.listFiles()?.filter { it.extension == "m4a" } ?: emptyList() else emptyList()
-        return (internalFiles + externalFiles).distinctBy { it.name }.sortedByDescending { it.lastModified() }
+        val dirs = listOfNotNull(
+            File(context.filesDir, "CallRecordings"),
+            File(context.getExternalFilesDir(null), "CallRecordings"),
+            File(context.getExternalFilesDir(android.os.Environment.DIRECTORY_MUSIC), "CallRecordings")
+        )
+        return dirs.filter { it.exists() }
+            .flatMap { it.listFiles()?.filter { f -> f.extension.equals("m4a", ignoreCase = true) || f.extension.equals("mp4", ignoreCase = true) }?.toList() ?: emptyList() }
+            .distinctBy { it.name }
+            .sortedByDescending { it.lastModified() }
+    }
+
+    /**
+     * Scans storage directories and recovers any call recordings on disk that might be unindexed.
+     */
+    fun recoverRecordingsFromDisk(context: Context): List<com.example.model.CallRecording> {
+        val files = getRecordedFiles(context)
+        val result = mutableListOf<com.example.model.CallRecording>()
+        val displayFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+        val nameParseFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
+
+        for (file in files) {
+            if (!file.exists() || file.length() <= 128L) continue
+
+            val name = file.nameWithoutExtension
+            var extractedNumber = "Unknown"
+            var timestampStr = displayFormat.format(Date(file.lastModified()))
+
+            // Expected formats: REC_0123456789_20260920_234500 or REC_20260920_234500
+            if (name.startsWith("REC_")) {
+                val parts = name.removePrefix("REC_").split("_")
+                if (parts.size >= 3) {
+                    extractedNumber = parts[0]
+                    val datePart = parts[1] + "_" + parts[2]
+                    try {
+                        val parsedDate = nameParseFormat.parse(datePart)
+                        if (parsedDate != null) {
+                            timestampStr = displayFormat.format(parsedDate)
+                        }
+                    } catch (_: Exception) {}
+                } else if (parts.size == 2) {
+                    val datePart = parts[0] + "_" + parts[1]
+                    try {
+                        val parsedDate = nameParseFormat.parse(datePart)
+                        if (parsedDate != null) {
+                            timestampStr = displayFormat.format(parsedDate)
+                        }
+                    } catch (_: Exception) {
+                        extractedNumber = parts[0]
+                    }
+                }
+            }
+
+            var durationSeconds = 1L
+            try {
+                val retriever = android.media.MediaMetadataRetriever()
+                retriever.setDataSource(file.absolutePath)
+                val durationStr = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)
+                retriever.release()
+                if (!durationStr.isNullOrEmpty()) {
+                    val durMs = durationStr.toLongOrNull() ?: 1000L
+                    durationSeconds = (durMs / 1000L).coerceAtLeast(1L)
+                }
+            } catch (_: Exception) {}
+
+            result.add(
+                com.example.model.CallRecording(
+                    number = extractedNumber,
+                    name = if (extractedNumber == "Unknown") "Call Recording" else extractedNumber,
+                    timestamp = timestampStr,
+                    duration = durationSeconds,
+                    filePath = file.absolutePath
+                )
+            )
+        }
+        return result
+    }
+
+    /**
+     * Exports a recording file to the device's public Downloads / SecureDialer directory.
+     * Uses MediaStore on Android 10+ (Q+) for zero-permission Scoped Storage compliance.
+     */
+    fun exportRecordingToPublicDownloads(context: Context, sourceFile: File): Boolean {
+        if (!sourceFile.exists()) return false
+        try {
+            val fileName = sourceFile.name
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val contentValues = android.content.ContentValues().apply {
+                    put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+                    put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "audio/mp4")
+                    put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "${android.os.Environment.DIRECTORY_DOWNLOADS}/SecureDialer")
+                    put(android.provider.MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+                val resolver = context.contentResolver
+                val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
+                resolver.openOutputStream(uri)?.use { out ->
+                    java.io.FileInputStream(sourceFile).use { input ->
+                        input.copyTo(out)
+                    }
+                }
+                contentValues.clear()
+                contentValues.put(android.provider.MediaStore.MediaColumns.IS_PENDING, 0)
+                resolver.update(uri, contentValues, null, null)
+                return true
+            } else {
+                @Suppress("DEPRECATION")
+                val publicDir = File(android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS), "SecureDialer").apply {
+                    if (!exists()) mkdirs()
+                }
+                val destFile = File(publicDir, fileName)
+                java.io.FileInputStream(sourceFile).use { input ->
+                    java.io.FileOutputStream(destFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+                android.media.MediaScannerConnection.scanFile(
+                    context,
+                    arrayOf(destFile.absolutePath),
+                    arrayOf("audio/mp4"),
+                    null
+                )
+                return true
+            }
+        } catch (_: Exception) {
+            return false
+        }
+    }
+
+    /**
+     * Batch exports all recorded files to device public Downloads.
+     */
+    fun exportAllRecordingsToDownloads(context: Context): Int {
+        val files = getRecordedFiles(context)
+        var count = 0
+        for (f in files) {
+            if (f.exists() && f.length() > 128L) {
+                if (exportRecordingToPublicDownloads(context, f)) {
+                    count++
+                }
+            }
+        }
+        return count
     }
 }

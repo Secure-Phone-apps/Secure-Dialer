@@ -190,4 +190,39 @@ class DialerViewModelTest {
         assertEquals("+15551234567", viewModel.newContactNumber.value)
         assertEquals("", viewModel.newContactName.value)
     }
+
+    @Test
+    fun `out-of-bounds selection in TextFieldValue is sanitized defensively without crash`() {
+        // Simulate corrupted cursor position exceeding text length
+        val tfvExceeding = androidx.compose.ui.text.input.TextFieldValue(
+            text = "123",
+            selection = androidx.compose.ui.text.TextRange(10, 20)
+        )
+        viewModel.onDialpadTextFieldValueChange(tfvExceeding)
+        assertEquals("123", viewModel.dialpadInput.value)
+        assertEquals(3, viewModel.dialpadTextFieldValue.value.selection.start)
+        assertEquals(3, viewModel.dialpadTextFieldValue.value.selection.end)
+
+        // Simulate selection beyond end of shortened text
+        val tfvBeyond = androidx.compose.ui.text.input.TextFieldValue(
+            text = "1",
+            selection = androidx.compose.ui.text.TextRange(5, 5)
+        )
+        viewModel.onDialpadTextFieldValueChange(tfvBeyond)
+        assertEquals(1, viewModel.dialpadTextFieldValue.value.selection.start)
+        assertEquals(1, viewModel.dialpadTextFieldValue.value.selection.end)
+    }
+
+    @Test
+    fun `rapid digit entry and backspaces never produce index errors`() {
+        for (i in 1..9) {
+            viewModel.insertDialpadDigit(i.toString())
+        }
+        assertEquals("123456789", viewModel.dialpadInput.value)
+        for (i in 1..12) {
+            viewModel.backspaceDialpad()
+        }
+        assertEquals("", viewModel.dialpadInput.value)
+        assertEquals(0, viewModel.dialpadTextFieldValue.value.selection.start)
+    }
 }

@@ -259,57 +259,55 @@ fun DialpadOverlay(
                     CompositionLocalProvider(
                         LocalTextInputService provides null
                     ) {
-                        SelectionContainer {
-                            BasicTextField(
-                                value = currentTfv,
-                                onValueChange = { newTfv ->
-                                    if (viewModel != null) {
-                                        viewModel.onDialpadTextFieldValueChange(newTfv)
-                                    } else {
-                                        onValueChange(newTfv.text)
-                                    }
-                                },
-                                textStyle = if (currentTfv.text.isEmpty()) {
-                                    MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Normal,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        textAlign = TextAlign.Center
-                                    )
+                        BasicTextField(
+                            value = currentTfv,
+                            onValueChange = { newTfv ->
+                                if (viewModel != null) {
+                                    viewModel.onDialpadTextFieldValueChange(newTfv)
                                 } else {
-                                    MaterialTheme.typography.displaySmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center
-                                    )
-                                },
-                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .onFocusChanged { focusState ->
-                                        if (focusState.isFocused) {
-                                            keyboardController?.hide()
-                                        }
-                                    }
-                                    .testTag("dialpad_overlay_number_field"),
-                                decorationBox = { innerTextField ->
-                                    Box(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (currentTfv.text.isEmpty()) {
-                                            Text(
-                                                text = stringResource(R.string.dialpad_enter_number),
-                                                style = MaterialTheme.typography.titleMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                                textAlign = TextAlign.Center
-                                            )
-                                        }
-                                        innerTextField()
+                                    onValueChange(newTfv.text)
+                                }
+                            },
+                            textStyle = if (currentTfv.text.isEmpty()) {
+                                MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Normal,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                    textAlign = TextAlign.Center
+                                )
+                            } else {
+                                MaterialTheme.typography.displaySmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    textAlign = TextAlign.Center
+                                )
+                            },
+                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                            singleLine = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .onFocusChanged { focusState ->
+                                    if (focusState.isFocused) {
+                                        keyboardController?.hide()
                                     }
                                 }
-                            )
-                        }
+                                .testTag("dialpad_overlay_number_field"),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (currentTfv.text.isEmpty()) {
+                                        Text(
+                                            text = stringResource(R.string.dialpad_enter_number),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                    innerTextField()
+                                }
+                            }
+                        )
                     }
 
                     DropdownMenu(

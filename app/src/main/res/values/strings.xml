@@ -573,6 +573,11 @@
     <string name="clear_call_log_confirm_desc">This will permanently delete all call records from this device and other dialers. This action cannot be undone.</string>
     <string name="settings_recordings_biometric_lock">Lock Recordings with Biometrics</string>
     <string name="settings_recordings_biometric_lock_sub">Require fingerprint or device credential to view and play audio evidence</string>
+    <string name="settings_recordings_auto_export">Auto-Export to Downloads</string>
+    <string name="settings_recordings_auto_export_sub">Automatically copy every completed call recording to Downloads/SecureDialer for immediate file manager access</string>
+    <string name="settings_recordings_compression_title">Audio Compression &amp; Quality</string>
+    <string name="settings_recordings_compression_sub">Optimize audio codec bitrate and sampling rate to balance fidelity with device storage footprint</string>
+    <string name="settings_recordings_cleanup_empty">Clean Empty/Silent Stubs</string>
     <string name="vault_locked_title">Recording Vault Locked</string>
     <string name="vault_locked_desc">Biometric authentication is required to access confidential call recordings.</string>
     <string name="btn_unlock_vault">Unlock Vault</string>

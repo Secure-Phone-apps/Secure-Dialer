@@ -93,9 +93,18 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun onDialpadTextFieldValueChange(newValue: TextFieldValue) {
-        dialpadTextFieldValue.value = newValue
-        dialpadInput.value = newValue.text
-        _dialpadInputFlow.value = newValue.text
+        // Guarantee cursor / selection bounds never exceed text length
+        val text = newValue.text
+        val safeStart = newValue.selection.min.coerceIn(0, text.length)
+        val safeEnd = newValue.selection.max.coerceIn(0, text.length)
+        val sanitizedValue = if (safeStart != newValue.selection.start || safeEnd != newValue.selection.end) {
+            newValue.copy(selection = TextRange(safeStart, safeEnd))
+        } else {
+            newValue
+        }
+        dialpadTextFieldValue.value = sanitizedValue
+        dialpadInput.value = text
+        _dialpadInputFlow.value = text
     }
 
     fun onDialpadInputChange(newInput: String) {
@@ -114,7 +123,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         val start = current.selection.min.coerceIn(0, text.length)
         val end = current.selection.max.coerceIn(0, text.length)
         val newText = text.replaceRange(start, end, digit)
-        val newCursorPos = start + digit.length
+        val newCursorPos = (start + digit.length).coerceIn(0, newText.length)
         val newTfv = TextFieldValue(
             text = newText,
             selection = TextRange(newCursorPos)
@@ -134,14 +143,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             val newText = text.removeRange(start, end)
             val newTfv = TextFieldValue(
                 text = newText,
-                selection = TextRange(start)
+                selection = TextRange(start.coerceIn(0, newText.length))
             )
             onDialpadTextFieldValueChange(newTfv)
         } else if (start > 0) {
             val newText = text.removeRange(start - 1, start)
             val newTfv = TextFieldValue(
                 text = newText,
-                selection = TextRange(start - 1)
+                selection = TextRange((start - 1).coerceIn(0, newText.length))
             )
             onDialpadTextFieldValueChange(newTfv)
         }
@@ -218,10 +227,13 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             emptyList()
         } else {
             val matchedContacts = contacts.asSequence().filter { contact ->
-                contact.name.contains(query, ignoreCase = true) ||
-                contact.number.contains(query, ignoreCase = true) ||
-                contact.t9Mapping.contains(query, ignoreCase = true)
-            }.map { contact ->
+                contact.number.isNotBlank() && (
+                    contact.name.contains(query, ignoreCase = true) ||
+                    contact.number.contains(query, ignoreCase = true) ||
+                    contact.t9Mapping.contains(query, ignoreCase = true)
+                )
+            }.distinctBy { it.number }
+            .map { contact ->
                 DialpadMatch(
                     number = contact.number,
                     name = contact.name,
@@ -240,6 +252,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             } else {
                 val contactNumbers = matchedContacts.map { it.number }.toSet()
                 val matchedRecents = recents.asSequence().filter { record ->
+                    record.number.isNotBlank() &&
                     record.number !in contactNumbers &&
                     (record.name.contains(query, ignoreCase = true) ||
                      record.number.contains(query, ignoreCase = true))
@@ -282,6 +295,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var recordingChimeEnabled = mutableStateOf(prefs.getBoolean("recording_chime_enabled", false))
     var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
     var isRecordingsBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_recordings_biometric_lock_enabled", false))
+    var isAutoExportRecordingsEnabled = mutableStateOf(prefs.getBoolean("is_auto_export_recordings_enabled", true))
+    var recordingCompressionProfile = mutableStateOf(
+        com.example.util.RecordingCompressionProfile.fromKey(
+            prefs.getString("recording_compression_profile", com.example.util.RecordingCompressionProfile.BALANCED.key)
+        )
+    )
     var isPocketProtectionEnabled = mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false))
     var defaultStartupTabKey = mutableStateOf(prefs.getString("default_startup_tab_key", "RECENTS") ?: "RECENTS")
     var selectedTab = mutableIntStateOf(
@@ -415,6 +434,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     isRecordingsBiometricLockEnabled.value = it
                     prefs.edit().putBoolean("is_recordings_biometric_lock_enabled", it).commit()
                 }
+                settings["is_auto_export_recordings_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isAutoExportRecordingsEnabled.value = it
+                    prefs.edit().putBoolean("is_auto_export_recordings_enabled", it).commit()
+                }
                 settings["is_pocket_protection_enabled"]?.toBooleanStrictOrNull()?.let {
                     isPocketProtectionEnabled.value = it
                     prefs.edit().putBoolean("is_pocket_protection_enabled", it).commit()
@@ -469,6 +492,13 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     "I'm driving. I'll get back to you shortly.",
                     "Sorry, I'm busy. Can I call you back?"
                 ).forEach { repository.addQuickResponse(it) }
+            }
+
+            // Automatic disk recovery: check for any unindexed call recording files on storage
+            try {
+                syncRecordingsFromDisk(repository.context)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -636,6 +666,30 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 repository.dao.insertSetting(AppSetting("is_recordings_biometric_lock_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateAutoExportRecordingsEnabled(enabled: Boolean) {
+        isAutoExportRecordingsEnabled.value = enabled
+        prefs.edit().putBoolean("is_auto_export_recordings_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_auto_export_recordings_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateRecordingCompressionProfile(profile: com.example.util.RecordingCompressionProfile) {
+        recordingCompressionProfile.value = profile
+        com.example.util.CallAudioRecorder.setCompressionProfile(repository.context, profile)
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("recording_compression_profile", profile.key))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -1060,6 +1114,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun saveCallRecording(recording: CallRecording) {
         viewModelScope.launch {
             val insertedId = repository.saveCallRecording(recording)
+            if (isAutoExportRecordingsEnabled.value) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    val f = java.io.File(recording.filePath)
+                    if (f.exists() && f.length() > 128L) {
+                        com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(repository.context, f)
+                    }
+                }
+            }
             if (isCallNotesEnabled.value) {
                 pendingPostCallRecordingNote.value = recording.copy(id = insertedId.toInt())
             }
@@ -1092,6 +1154,53 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             repository.updateCallRecordingNote(id, note)
         }
+    }
+
+    /**
+     * Self-healing disk scan: discovers any .m4a files present in app/external storage
+     * and indexes them into the Room database if missing.
+     */
+    fun syncRecordingsFromDisk(context: Context, onComplete: ((Int) -> Unit)? = null) {
+        viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val existing = repository.getAllCallRecordings().first()
+                val existingPaths = existing.map { it.filePath }.toSet()
+                val existingNames = existing.map { java.io.File(it.filePath).name }.toSet()
+                val recovered = com.example.util.CallAudioRecorder.recoverRecordingsFromDisk(context)
+                var newCount = 0
+                for (rec in recovered) {
+                    val f = java.io.File(rec.filePath)
+                    if (f.exists() && f.length() > 128L && !existingPaths.contains(rec.filePath) && !existingNames.contains(f.name)) {
+                        val contactName = getContactNameFromNumber(context, rec.number) ?: rec.name
+                        repository.saveCallRecording(rec.copy(name = contactName))
+                        newCount++
+                    }
+                }
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    onComplete?.invoke(newCount)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    onComplete?.invoke(0)
+                }
+            }
+        }
+    }
+
+    fun exportRecordingToDownloads(context: Context, filePath: String): Boolean {
+        val f = java.io.File(filePath)
+        return com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(context, f)
+    }
+
+    fun exportAllRecordingsToDownloads(context: Context): Int {
+        return com.example.util.CallAudioRecorder.exportAllRecordingsToDownloads(context)
+    }
+
+    fun cleanupCorruptOrEmptyRecordings(context: Context): Int {
+        val count = com.example.util.CallAudioRecorder.cleanupCorruptOrEmptyFiles(context)
+        syncRecordingsFromDisk(context)
+        return count
     }
 
     fun deleteContact(contact: Contact) {
