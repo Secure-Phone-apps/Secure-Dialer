@@ -571,6 +571,8 @@
     <string name="contact_storage_badge_sim">SIM</string>
     <string name="clear_call_log_confirm_title">Clear call history?</string>
     <string name="clear_call_log_confirm_desc">This will permanently delete all call records from this device and other dialers. This action cannot be undone.</string>
+    <string name="settings_recordings_always_on">Always Record Calls</string>
+    <string name="settings_recordings_always_on_sub">Automatically start recording every incoming and outgoing call as soon as it connects</string>
     <string name="settings_recordings_biometric_lock">Lock Recordings with Biometrics</string>
     <string name="settings_recordings_biometric_lock_sub">Require fingerprint or device credential to view and play audio evidence</string>
     <string name="settings_recordings_auto_export">Auto-Export to Downloads</string>
@@ -581,4 +583,14 @@
     <string name="vault_locked_title">Recording Vault Locked</string>
     <string name="vault_locked_desc">Biometric authentication is required to access confidential call recordings.</string>
     <string name="btn_unlock_vault">Unlock Vault</string>
+    <string name="settings_dynamic_island_title">Dynamic Island Call Capsule</string>
+    <string name="settings_dynamic_island_sub">Show a floating interactive call pill around the camera cutout for ongoing calls</string>
+    <string name="settings_dynamic_island_speaker_only">Show Only When On Speaker</string>
+    <string name="settings_dynamic_island_speaker_only_sub">Display the Dynamic Island exclusively when speakerphone mode is active</string>
+    <string name="settings_dynamic_island_floating_permission">Floating Overlay Permission</string>
+    <string name="settings_dynamic_island_floating_permission_sub">Allow floating capsule over other apps (OnePlus, Xiaomi, Vivo, Samsung support)</string>
+    <string name="dynamic_island_speaker_on">Speaker ON</string>
+    <string name="dynamic_island_muted">Muted</string>
+    <string name="dynamic_island_recording">REC</string>
+    <string name="dynamic_island_tap_to_expand">Tap to expand call controls</string>
 </resources>

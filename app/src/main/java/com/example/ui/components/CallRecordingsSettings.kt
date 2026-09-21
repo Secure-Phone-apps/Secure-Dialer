@@ -76,6 +76,7 @@ fun CallRecordingsSettings(
     val recordings by viewModel.recordingsFlow.collectAsState()
     val isVaultLockEnabled by viewModel.isRecordingsBiometricLockEnabled
     val isAutoExportEnabled by viewModel.isAutoExportRecordingsEnabled
+    val isAlwaysRecordEnabled by viewModel.isAutoRecordCallsEnabled
     val selectedProfile by viewModel.recordingCompressionProfile
     var isVaultUnlocked by remember { mutableStateOf(!isVaultLockEnabled) }
 
@@ -498,6 +499,46 @@ fun CallRecordingsSettings(
                 Switch(
                     checked = autoTuneVolume,
                     onCheckedChange = { viewModel.updateAutoTuneRecordingVolume(it) }
+                )
+            }
+        }
+
+        // Always ON / Auto Call Recording Switch Card
+        Surface(
+            shape = RoundedCornerShape(12.dp),
+            color = cardBgColor,
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 4.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_recordings_always_on),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_recordings_always_on_sub),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp
+                    )
+                }
+                Switch(
+                    checked = isAlwaysRecordEnabled,
+                    onCheckedChange = { enabled ->
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        viewModel.updateAutoRecordCallsEnabled(enabled)
+                    }
                 )
             }
         }

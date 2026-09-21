@@ -121,6 +121,7 @@ class MyInCallService : InCallService() {
     }
 
     override fun onDestroy() {
+        com.example.util.DynamicIslandOverlayManager.stopCallMonitoring()
         releaseWakeLock()
         serviceScope.cancel()
         super.onDestroy()
@@ -130,6 +131,7 @@ class MyInCallService : InCallService() {
         super.onCallAdded(call)
         CallManager.inCallService = this
         CallManager.addCall(call)
+        com.example.util.DynamicIslandOverlayManager.startCallMonitoring(this)
         
         val handle = call.details?.handle
         val number = handle?.schemeSpecificPart ?: ""

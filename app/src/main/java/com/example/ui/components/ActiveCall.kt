@@ -83,6 +83,7 @@ fun ActiveCallScreen(
     recordingEnabled: Boolean = false,
     autoTuneVolume: Boolean = true,
     recordingChimeEnabled: Boolean = false,
+    alwaysRecordEnabled: Boolean = false,
     onSaveRecording: (Long, String) -> Unit = { _, _ -> },
     callNotesEnabled: Boolean = true,
     onSaveNote: (String) -> Unit = {},
@@ -112,6 +113,19 @@ fun ActiveCallScreen(
 
     var isRecording by remember { mutableStateOf(false) }
     var recordingStartTime by remember { mutableLongStateOf(0L) }
+    val recorderIsActive by com.example.util.CallAudioRecorder.isRecording.collectAsStateWithLifecycle()
+
+    LaunchedEffect(recorderIsActive) {
+        if (recorderIsActive) {
+            isRecording = true
+            if (recordingStartTime == 0L) {
+                recordingStartTime = System.currentTimeMillis()
+            }
+        } else {
+            isRecording = false
+            recordingStartTime = 0L
+        }
+    }
 
     val currentIsRecording by rememberUpdatedState(isRecording)
     val currentRecordingStartTime by rememberUpdatedState(recordingStartTime)
@@ -145,6 +159,10 @@ fun ActiveCallScreen(
         if (isFake) {
             if (fakeState == "ACTIVE") {
                 fakeActiveStartTimestamp = System.currentTimeMillis()
+                if (alwaysRecordEnabled && !com.example.util.CallAudioRecorder.isRecording.value) {
+                    com.example.util.RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
+                    com.example.util.CallAudioRecorder.startRecording(context, contactNumber)
+                }
                 while (true) {
                     delay(1000)
                     tickTrigger++

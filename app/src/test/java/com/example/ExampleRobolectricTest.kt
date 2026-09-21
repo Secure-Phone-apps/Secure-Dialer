@@ -78,4 +78,29 @@ class ExampleRobolectricTest {
     assertEquals(1, cleaned)
     assertEquals(false, emptyFile.exists())
   }
+
+  @Test
+  fun `verify always on call recording setting persistence`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+    
+    prefs.edit().putBoolean("is_auto_record_calls_enabled", true).commit()
+    assertEquals(true, prefs.getBoolean("is_auto_record_calls_enabled", false))
+
+    prefs.edit().putBoolean("is_auto_record_calls_enabled", false).commit()
+    assertEquals(false, prefs.getBoolean("is_auto_record_calls_enabled", true))
+  }
+
+  @Test
+  fun `verify dynamic island setting persistence and defaults`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+
+    prefs.edit().putBoolean("is_dynamic_island_enabled", true).putBoolean("is_dynamic_island_speaker_only", true).commit()
+    assertEquals(true, prefs.getBoolean("is_dynamic_island_enabled", false))
+    assertEquals(true, prefs.getBoolean("is_dynamic_island_speaker_only", false))
+
+    prefs.edit().putBoolean("is_dynamic_island_speaker_only", false).commit()
+    assertEquals(false, prefs.getBoolean("is_dynamic_island_speaker_only", true))
+  }
 }

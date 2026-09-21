@@ -159,6 +159,7 @@ fun MainScreen(
     // Real-time Telecom Call observers
     val systemActiveCall by CallManager.currentCall.collectAsState()
     val systemCallState by CallManager.callState.collectAsState()
+    val systemAudioState by CallManager.audioState.collectAsState()
     val systemCallerNumber by CallManager.callerNumber.collectAsState()
     val systemCallerCnapName by CallManager.callerCnapName.collectAsState()
 
@@ -513,29 +514,60 @@ fun MainScreen(
                 }
 
                 if (isCallActive && isCallMinimized) {
-                    MinimizedCallBanner(
-                        contactName = callingContactName,
-                        contactNumber = callingContactNumber,
-                        callState = systemCallState,
-                        onExpand = { isCallMinimized = false },
-                        onHangUp = {
-                            val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
-                                (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
-                            } else {
-                                0L
-                            }
-                            val currentSlot = CallManager.currentSimSlot.value
-                            val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
-                            if (callingContactNumber.isNotEmpty()) {
-                                viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
-                            }
+                    val isDynamicIsland = viewModel.isDynamicIslandEnabled.value
+                    val speakerOnly = viewModel.isDynamicIslandSpeakerOnly.value
+                    val isSpeakerOn = systemAudioState?.route == android.telecom.CallAudioState.ROUTE_SPEAKER
 
-                            CallManager.disconnect()
-                            if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
-                                isCallActive = false
+                    if (isDynamicIsland && (!speakerOnly || isSpeakerOn)) {
+                        DynamicIslandPill(
+                            callerName = callingContactName,
+                            callerNumber = callingContactNumber,
+                            callState = systemCallState,
+                            audioState = systemAudioState,
+                            onExpandToFullScreen = { isCallMinimized = false },
+                            onHangUp = {
+                                val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
+                                    (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
+                                } else {
+                                    0L
+                                }
+                                val currentSlot = CallManager.currentSimSlot.value
+                                val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
+                                if (callingContactNumber.isNotEmpty()) {
+                                    viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
+                                }
+
+                                CallManager.disconnect()
+                                if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
+                                    isCallActive = false
+                                }
                             }
-                        }
-                    )
+                        )
+                    } else {
+                        MinimizedCallBanner(
+                            contactName = callingContactName,
+                            contactNumber = callingContactNumber,
+                            callState = systemCallState,
+                            onExpand = { isCallMinimized = false },
+                            onHangUp = {
+                                val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
+                                    (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
+                                } else {
+                                    0L
+                                }
+                                val currentSlot = CallManager.currentSimSlot.value
+                                val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
+                                if (callingContactNumber.isNotEmpty()) {
+                                    viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
+                                }
+
+                                CallManager.disconnect()
+                                if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
+                                    isCallActive = false
+                                }
+                            }
+                        )
+                    }
                 }
 
                 if (!WindowInsets.isImeVisible) {
@@ -665,6 +697,7 @@ fun MainScreen(
                     recordingEnabled = viewModel.recordingEnabled.value,
                     autoTuneVolume = viewModel.autoTuneRecordingVolume.value,
                     recordingChimeEnabled = viewModel.recordingChimeEnabled.value,
+                    alwaysRecordEnabled = viewModel.isAutoRecordCallsEnabled.value,
                     callNotesEnabled = viewModel.isCallNotesEnabled.value,
                     onSaveRecording = { duration, filePath ->
                         viewModel.saveCallRecording(

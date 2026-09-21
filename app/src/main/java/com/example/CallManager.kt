@@ -145,6 +145,7 @@ object CallManager {
                         val connectTime = call.details?.connectTimeMillis ?: 0L
                         _activeStartTimestamp.value = if (connectTime > 0L) connectTime else System.currentTimeMillis()
                     }
+                    autoStartRecordingIfNeeded()
                 }
             } else if (call == _waitingCall.value && state == Call.STATE_DISCONNECTED) {
                 updateWaitingCall(null)
@@ -183,6 +184,25 @@ object CallManager {
             updateWaitingCall(call)
         } else {
             autoSelectCurrentCall()
+        }
+    }
+
+    fun autoStartRecordingIfNeeded() {
+        if (!com.example.util.CallAudioRecorder.isRecording.value) {
+            inCallService?.let { ctx ->
+                val prefs = ctx.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                val isAlwaysOn = prefs.getBoolean("is_auto_record_calls_enabled", false)
+                if (isAlwaysOn) {
+                    val chimeEnabled = prefs.getBoolean("recording_chime_enabled", false)
+                    val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
+                    com.example.util.RecordingFeedbackHelper.triggerRecordingStartFeedback(ctx, chimeEnabled)
+                    if (autoTune) {
+                        com.example.util.CallAudioHelper.prepareSpeakerForRecording(ctx, inCallService, _audioState.value)
+                    }
+                    val number = _callerNumber.value.ifEmpty { "Unknown" }
+                    com.example.util.CallAudioRecorder.startRecording(ctx, number)
+                }
+            }
         }
     }
 

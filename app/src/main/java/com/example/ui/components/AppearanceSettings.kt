@@ -167,5 +167,101 @@ fun AppearanceSettings(
                 )
             }
         }
+
+        // [Header] DYNAMIC ISLAND & CALL CAPSULE
+        item {
+            PreferenceHeader(stringResource(R.string.settings_dynamic_island_title))
+        }
+
+        // Dynamic Island Master Card
+        item {
+            val isDynamicIslandEnabled by viewModel.isDynamicIslandEnabled
+            val isDynamicIslandSpeakerOnly by viewModel.isDynamicIslandSpeakerOnly
+            val context = androidx.compose.ui.platform.LocalContext.current
+
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Dynamic Island", highlightedTitle) || isMatchTitle("Dynamic Island Call Capsule", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    SettingsRowToggle(
+                        title = stringResource(R.string.settings_dynamic_island_title),
+                        subtitle = stringResource(R.string.settings_dynamic_island_sub),
+                        checked = isDynamicIslandEnabled,
+                        onCheckedChange = { viewModel.updateDynamicIslandEnabled(it) },
+                        icon = Icons.Default.CropPortrait,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        iconTint = MaterialTheme.colorScheme.primary
+                    )
+
+                    if (isDynamicIslandEnabled) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                        )
+
+                        SettingsRowToggle(
+                            title = stringResource(R.string.settings_dynamic_island_speaker_only),
+                            subtitle = stringResource(R.string.settings_dynamic_island_speaker_only_sub),
+                            checked = isDynamicIslandSpeakerOnly,
+                            onCheckedChange = { viewModel.updateDynamicIslandSpeakerOnly(it) },
+                            icon = Icons.Default.VolumeUp,
+                            iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                            iconTint = MaterialTheme.colorScheme.secondary
+                        )
+
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                            val canOverlay = android.provider.Settings.canDrawOverlays(context)
+                            if (!canOverlay) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = stringResource(R.string.settings_dynamic_island_floating_permission),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.settings_dynamic_island_floating_permission_sub),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    FilledTonalButton(
+                                        onClick = {
+                                            try {
+                                                val intent = android.content.Intent(
+                                                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                                    android.net.Uri.parse("package:${context.packageName}")
+                                                )
+                                                context.startActivity(intent)
+                                            } catch (e: Exception) {
+                                                e.printStackTrace()
+                                            }
+                                        }
+                                    ) {
+                                        Text("Grant")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

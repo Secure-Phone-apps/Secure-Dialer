@@ -293,6 +293,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var recordingEnabled = mutableStateOf(prefs.getBoolean("recording_enabled", false))
     var autoTuneRecordingVolume = mutableStateOf(prefs.getBoolean("auto_tune_recording_volume", true))
     var recordingChimeEnabled = mutableStateOf(prefs.getBoolean("recording_chime_enabled", false))
+    var isAutoRecordCallsEnabled = mutableStateOf(prefs.getBoolean("is_auto_record_calls_enabled", false))
+    var isDynamicIslandEnabled = mutableStateOf(prefs.getBoolean("is_dynamic_island_enabled", true))
+    var isDynamicIslandSpeakerOnly = mutableStateOf(prefs.getBoolean("is_dynamic_island_speaker_only", false))
     var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
     var isRecordingsBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_recordings_biometric_lock_enabled", false))
     var isAutoExportRecordingsEnabled = mutableStateOf(prefs.getBoolean("is_auto_export_recordings_enabled", true))
@@ -425,6 +428,18 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     try {
                         repository.dao.insertSetting(AppSetting("recording_chime_enabled", currentVal.toString()))
                     } catch (_: Exception) {}
+                }
+                settings["is_auto_record_calls_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isAutoRecordCallsEnabled.value = it
+                    prefs.edit().putBoolean("is_auto_record_calls_enabled", it).commit()
+                }
+                settings["is_dynamic_island_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isDynamicIslandEnabled.value = it
+                    prefs.edit().putBoolean("is_dynamic_island_enabled", it).commit()
+                }
+                settings["is_dynamic_island_speaker_only"]?.toBooleanStrictOrNull()?.let {
+                    isDynamicIslandSpeakerOnly.value = it
+                    prefs.edit().putBoolean("is_dynamic_island_speaker_only", it).commit()
                 }
                 settings["is_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
                     isBiometricLockEnabled.value = it
@@ -666,6 +681,42 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 repository.dao.insertSetting(AppSetting("is_recordings_biometric_lock_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateAutoRecordCallsEnabled(enabled: Boolean) {
+        isAutoRecordCallsEnabled.value = enabled
+        prefs.edit().putBoolean("is_auto_record_calls_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_auto_record_calls_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateDynamicIslandEnabled(enabled: Boolean) {
+        isDynamicIslandEnabled.value = enabled
+        prefs.edit().putBoolean("is_dynamic_island_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_dynamic_island_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateDynamicIslandSpeakerOnly(speakerOnly: Boolean) {
+        isDynamicIslandSpeakerOnly.value = speakerOnly
+        prefs.edit().putBoolean("is_dynamic_island_speaker_only", speakerOnly).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_dynamic_island_speaker_only", speakerOnly.toString()))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
