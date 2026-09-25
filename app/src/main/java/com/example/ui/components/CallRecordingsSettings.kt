@@ -97,7 +97,7 @@ fun CallRecordingsSettings(
 
     // Automatically prompt when opening screen if biometric vault is enabled and locked
     LaunchedEffect(Unit) {
-        viewModel.syncRecordingsFromDisk(context)
+        viewModel.recoverRecordingsFromDisk(context)
         if (isVaultLockEnabled && !isVaultUnlocked && activity != null) {
             VaultBiometricAuthHelper.authenticate(
                 activity = activity,

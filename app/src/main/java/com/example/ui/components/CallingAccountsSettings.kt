@@ -17,21 +17,25 @@
 
 package com.example.ui.components
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import android.telecom.TelecomManager
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
@@ -136,6 +140,17 @@ fun CallingAccountsSettings(
                     iconTint = MaterialTheme.colorScheme.secondary
                 )
             }
+        }
+
+        // [Header] OUTGOING CALLER ID & PRIVACY (CLIR)
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            PreferenceHeader(stringResource(R.string.header_caller_id_privacy))
+            CallerIdClirCard(
+                viewModel = viewModel,
+                cardBgColor = cardBgColor,
+                highlightedTitle = highlightedTitle
+            )
         }
 
         // [Header] CARRIER VOICEMAIL
@@ -261,5 +276,260 @@ private fun VoicemailCallingAccountsRow(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun CallerIdClirCard(
+    viewModel: DialerViewModel,
+    cardBgColor: Color,
+    highlightedTitle: String?
+) {
+    val context = LocalContext.current
+    val hideCallerIdEnabled by viewModel.isHideCallerIdEnabled
+    val clirPrefix by viewModel.clirPrefix
+    var showPrefixDialog by remember { mutableStateOf(false) }
+    var showCustomInputDialog by remember { mutableStateOf(false) }
+    var customPrefixInput by remember(clirPrefix) { mutableStateOf(clirPrefix) }
+
+    HighlightableCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        cardBgColor = cardBgColor,
+        isHighlighted = isMatchTitle("Hide Caller ID", highlightedTitle) ||
+                isMatchTitle("Caller ID", highlightedTitle) ||
+                isMatchTitle("CLIR", highlightedTitle),
+        shape = MaterialTheme.shapes.medium
+    ) {
+        Column {
+            SettingsRowToggle(
+                title = stringResource(R.string.settings_hide_caller_id),
+                subtitle = stringResource(R.string.settings_hide_caller_id_sub),
+                checked = hideCallerIdEnabled,
+                onCheckedChange = { viewModel.updateHideCallerIdEnabled(it) },
+                icon = if (hideCallerIdEnabled) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                iconTint = MaterialTheme.colorScheme.tertiary
+            )
+
+            if (hideCallerIdEnabled) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
+
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_clir_prefix),
+                    subtitle = stringResource(R.string.settings_clir_prefix_sub, clirPrefix),
+                    onClick = { showPrefixDialog = true },
+                    icon = Icons.Default.Pin,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
+
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.Top,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.WarningAmber,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .padding(top = 2.dp)
+                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.settings_clir_warning_title),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = stringResource(R.string.settings_clir_warning_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+            )
+
+            // Direct shortcut to Android System SIM Caller ID settings
+            SettingsRowNav(
+                title = stringResource(R.string.settings_system_sim_caller_id),
+                subtitle = stringResource(R.string.settings_system_sim_caller_id_sub),
+                onClick = { openSystemCallerIdSettings(context) },
+                icon = Icons.Default.SimCard,
+                iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                iconTint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+
+    if (showPrefixDialog) {
+        AlertDialog(
+            onDismissRequest = { showPrefixDialog = false },
+            title = { Text(stringResource(R.string.settings_clir_prefix_dialog_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    val presets = listOf(
+                        "#31#" to stringResource(R.string.settings_clir_prefix_gsm),
+                        "*67" to stringResource(R.string.settings_clir_prefix_us),
+                        "141" to stringResource(R.string.settings_clir_prefix_uk),
+                        "1831" to stringResource(R.string.settings_clir_prefix_japan)
+                    )
+                    presets.forEach { (code, label) ->
+                        val isSelected = clirPrefix == code
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.updateClirPrefix(code)
+                                    showPrefixDialog = false
+                                },
+                            shape = MaterialTheme.shapes.small,
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = {
+                                        viewModel.updateClirPrefix(code)
+                                        showPrefixDialog = false
+                                    }
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    val isCustom = clirPrefix !in listOf("#31#", "*67", "141", "1831")
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                showPrefixDialog = false
+                                showCustomInputDialog = true
+                            },
+                        shape = MaterialTheme.shapes.small,
+                        color = if (isCustom) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else Color.Transparent
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = isCustom,
+                                onClick = {
+                                    showPrefixDialog = false
+                                    showCustomInputDialog = true
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isCustom) "Custom: $clirPrefix" else stringResource(R.string.settings_clir_prefix_custom),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isCustom) FontWeight.SemiBold else FontWeight.Normal
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPrefixDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
+    if (showCustomInputDialog) {
+        AlertDialog(
+            onDismissRequest = { showCustomInputDialog = false },
+            title = { Text(stringResource(R.string.settings_clir_prefix_custom)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = stringResource(R.string.settings_clir_custom_label),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = customPrefixInput,
+                        onValueChange = { customPrefixInput = it },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text("#31#") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val sanitized = customPrefixInput.trim()
+                        if (sanitized.isNotEmpty()) {
+                            viewModel.updateClirPrefix(sanitized)
+                        }
+                        showCustomInputDialog = false
+                    }
+                ) {
+                    Text(stringResource(R.string.btn_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCustomInputDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+}
+
+fun openSystemCallerIdSettings(context: Context) {
+    val intents = listOf(
+        Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS),
+        Intent("android.telecom.action.SHOW_CALL_SETTINGS"),
+        Intent(Settings.ACTION_NETWORK_OPERATOR_SETTINGS),
+        Intent(Settings.ACTION_WIRELESS_SETTINGS),
+        Intent(Settings.ACTION_SETTINGS)
+    )
+    for (intent in intents) {
+        try {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            if (intent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(intent)
+                return
+            }
+        } catch (_: Exception) {}
+    }
+    try {
+        context.startActivity(Intent(Settings.ACTION_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
+    } catch (_: Exception) {
+        Toast.makeText(context, "Could not open system settings", Toast.LENGTH_SHORT).show()
     }
 }

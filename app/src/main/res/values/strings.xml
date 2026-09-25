@@ -146,6 +146,23 @@
     <string name="cat_privacy_security_about">Privacy &amp; About</string>
     <string name="cat_privacy_security_about_sub">App lock, safety &amp; app info</string>
 
+    <string name="header_caller_id_privacy">OUTGOING CALLER ID (CLIR)</string>
+    <string name="settings_hide_caller_id">Hide Caller ID (CLIR)</string>
+    <string name="settings_hide_caller_id_sub">Suppress your phone number so recipients see Private or Unknown Number</string>
+    <string name="settings_clir_prefix">Carrier CLIR Prefix</string>
+    <string name="settings_clir_prefix_sub">Dial prefix prepended to outgoing calls: %1$s</string>
+    <string name="settings_clir_prefix_dialog_title">Select CLIR Prefix</string>
+    <string name="settings_clir_prefix_gsm">#31# (GSM Global Standard)</string>
+    <string name="settings_clir_prefix_us">*67 (North America - US &amp; Canada)</string>
+    <string name="settings_clir_prefix_uk">141 (UK &amp; Ireland)</string>
+    <string name="settings_clir_prefix_japan">1831 (Japan)</string>
+    <string name="settings_clir_prefix_custom">Custom Carrier Prefix</string>
+    <string name="settings_clir_custom_label">Dial Prefix Code (e.g. #31# or *67)</string>
+    <string name="settings_clir_warning_title">Notice on Suppressed Caller ID</string>
+    <string name="settings_clir_warning_desc">Calls made with hidden Caller ID often appear as \'Private\' or \'Unknown\' and may be automatically declined or silenced by recipients. Emergency services (911/112) always receive your true number.</string>
+    <string name="settings_system_sim_caller_id">Carrier SIM Hardware Caller ID</string>
+    <string name="settings_system_sim_caller_id_sub">Open Android system settings to configure per-SIM carrier network default (Network Default, Hide, Show)</string>
+
     <!-- Headers inside Tier 2 -->
     <string name="header_theme_styling">THEME &amp; STYLING</string>
     <string name="header_sound_haptics">SOUND &amp; HAPTICS</string>
@@ -502,6 +519,7 @@
 
     <string name="settings_pure_black">Pure AMOLED Pitch Black</string>
     <string name="settings_pure_black_sub">Deep black surfaces for true OLED battery savings and high contrast</string>
+    <string name="settings_pure_black_sub_disabled_dark">True #000000 pitch black for maximum OLED battery savings (activates Dark Theme)</string>
     <string name="settings_dashboard_style">Call Log Dashboard Style</string>
     <string name="settings_dashboard_style_sub">Choose between full statistics dashboard or compact filter bar only</string>
     <string name="settings_call_log_dashboard">Call Log Summary Dashboard</string>

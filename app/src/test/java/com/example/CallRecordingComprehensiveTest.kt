@@ -318,4 +318,78 @@ class CallRecordingComprehensiveTest {
         // In Robolectric test environment with no hardware secure lock, fallback automatically invokes onSuccess
         assertTrue(successCalled)
     }
+
+    @Test
+    fun `testIdempotentDoubleStopRecordingReturnsCachedResult`() {
+        runBlocking {
+            val started = CallAudioRecorder.startRecording(context, "5557788")
+            assertTrue(started)
+
+            val recordDir = File(context.filesDir, "CallRecordings")
+            val files = recordDir.listFiles() ?: emptyArray()
+            val latestFile = files.maxByOrNull { it.lastModified() }
+            latestFile?.writeBytes(ByteArray(1024))
+
+            // First stop (simulating CallManager)
+            val firstResult = CallAudioRecorder.stopRecording()
+            assertNotNull(firstResult.file)
+            assertTrue(firstResult.file!!.exists())
+
+            // Second stop (simulating ActiveCall.onDispose)
+            val secondResult = CallAudioRecorder.stopRecording()
+            assertNotNull("Second call to stopRecording must return cached result", secondResult.file)
+            assertEquals("Cached file path must match", firstResult.file!!.absolutePath, secondResult.file!!.absolutePath)
+
+            firstResult.file?.delete()
+        }
+    }
+
+    @Test
+    fun `testDatabaseSaveDecoupledFromInCallService`() {
+        runBlocking {
+            CallManager.appContext = context
+            CallManager.inCallService = null // inCallService is null (simulating teardown)
+
+            val testFile = File(context.filesDir, "CallRecordings/REC_5554321_20260925_000000.m4a").apply {
+                parentFile?.mkdirs()
+                writeBytes(ByteArray(1024))
+            }
+
+            val started = CallAudioRecorder.startRecording(context, "5554321")
+            assertTrue(started)
+
+            // When autoStopRecordingIfNeeded executes with inCallService = null, appContext allows Room DB insert
+            CallManager.autoStopRecordingIfNeeded()
+
+            val dao = database.dialerDao()
+            val recordings = dao.getAllCallRecordingsFlow().first()
+            assertTrue("Recording should be saved into Room even when inCallService is null",
+                recordings.any { it.filePath.contains("5554321") || it.number.contains("5554321") })
+
+            testFile.delete()
+        }
+    }
+
+    @Test
+    fun `testSelfHealingDiskRecoveryInsertsOrphanedFiles`() {
+        runBlocking {
+            val recordDir = File(context.filesDir, "CallRecordings").apply { mkdirs() }
+            val orphanFile = File(recordDir, "REC_15559876543_20260925_120000.m4a").apply {
+                writeBytes(ByteArray(2048))
+            }
+
+            val viewModel = DialerViewModel(context)
+            viewModel.syncRecordingsFromDisk(context)
+
+            // Allow IO dispatcher to complete
+            kotlinx.coroutines.delay(200)
+
+            val dao = database.dialerDao()
+            val recordings = dao.getAllCallRecordingsFlow().first()
+            assertTrue("Orphaned disk file should be recovered into Room database",
+                recordings.any { it.filePath == orphanFile.absolutePath })
+
+            orphanFile.delete()
+        }
+    }
 }

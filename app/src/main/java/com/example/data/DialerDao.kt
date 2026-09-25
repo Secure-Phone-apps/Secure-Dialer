@@ -167,6 +167,12 @@ interface DialerDao {
     @Query("SELECT * FROM call_recordings ORDER BY id DESC")
     fun getAllCallRecordingsFlow(): Flow<List<CallRecording>>
 
+    @Query("SELECT * FROM call_recordings ORDER BY id DESC")
+    suspend fun getAllCallRecordingsList(): List<CallRecording>
+
+    @Query("SELECT * FROM call_recordings WHERE filePath = :path LIMIT 1")
+    suspend fun getCallRecordingByPath(path: String): CallRecording?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallRecording(recording: CallRecording): Long
 

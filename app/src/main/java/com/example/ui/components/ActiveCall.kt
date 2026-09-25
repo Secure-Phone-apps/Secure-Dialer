@@ -17,9 +17,14 @@
 
 package com.example.ui.components
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.PowerManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.input.pointer.pointerInput
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -132,6 +137,16 @@ fun ActiveCallScreen(
     val currentOnSaveRecording by rememberUpdatedState(onSaveRecording)
 
     var fakeActiveStartTimestamp by remember { mutableLongStateOf(0L) }
+
+    val recordAudioPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "Microphone permission granted. Tap Record to start.", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Microphone permission required for call recording", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -474,6 +489,17 @@ fun ActiveCallScreen(
                         }
                         isRecording = false
                     } else {
+                        val hasAudioPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.RECORD_AUDIO
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (!hasAudioPermission) {
+                            Toast.makeText(context, "Microphone permission required for call recording", Toast.LENGTH_SHORT).show()
+                            recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            return@InCallControlGrid
+                        }
+
                         com.example.util.RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
                         val currentRoute = audioState?.route ?: android.telecom.CallAudioState.ROUTE_EARPIECE
                         val isHeadset = currentRoute == android.telecom.CallAudioState.ROUTE_BLUETOOTH || 

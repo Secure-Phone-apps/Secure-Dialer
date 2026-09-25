@@ -58,6 +58,11 @@ class MainActivity : ComponentActivity() {
 
     private val viewModel: DialerViewModel by viewModels()
     private val isAppAuthenticated = mutableStateOf(false)
+    val recordAudioPermissionLauncher = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.hasRecordAudioPermission.value = isGranted
+    }
     private val authLauncher = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -107,6 +112,10 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
         CallManager.isAppInForeground = true
+        viewModel.hasRecordAudioPermission.value = androidx.core.content.ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
     }
 
     override fun onStart() {
@@ -162,6 +171,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        CallManager.appContext = applicationContext
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
         // Obscure UI content visibility in release builds to prevent PII snapshot leaks without blocking emulator preview
         if (!BuildConfig.DEBUG) {

@@ -167,10 +167,15 @@ object CallManager {
         }
     }
 
+    @Volatile
+    var appContext: Context? = null
+
     var inCallService: InCallService? = null
         set(value) {
             field = value
-            if (value == null) {
+            if (value != null) {
+                appContext = value.applicationContext
+            } else {
                 _audioState.value = null
             }
         }
@@ -189,7 +194,8 @@ object CallManager {
 
     fun autoStartRecordingIfNeeded() {
         if (!com.example.util.CallAudioRecorder.isRecording.value) {
-            inCallService?.let { ctx ->
+            val ctx = appContext ?: inCallService?.applicationContext
+            if (ctx != null) {
                 val prefs = ctx.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
                 val isAlwaysOn = prefs.getBoolean("is_auto_record_calls_enabled", false)
                 if (isAlwaysOn) {
@@ -206,48 +212,56 @@ object CallManager {
         }
     }
 
-    fun autoStopRecordingIfNeeded() {
-        if (com.example.util.CallAudioRecorder.isRecording.value) {
-            val result = com.example.util.CallAudioRecorder.stopRecording()
-            inCallService?.let { ctx ->
-                com.example.util.CallAudioHelper.restoreAudioState(ctx, inCallService)
+    fun autoStopRecordingIfNeeded(context: Context? = null) {
+        val ctx = context?.applicationContext ?: appContext ?: inCallService?.applicationContext
+        val result = com.example.util.CallAudioRecorder.stopRecording()
+        ctx?.let {
+            com.example.util.CallAudioHelper.restoreAudioState(it, inCallService)
+        }
+        val file = result.file
+        if (file != null && file.exists() && file.length() > 128L) {
+            val durationSec = result.durationSeconds.coerceAtLeast(1L)
+            val number = _callerNumber.value.ifEmpty {
+                file.nameWithoutExtension.removePrefix("REC_").split("_").firstOrNull()?.filter { it.isDigit() }?.ifEmpty { "Unknown" } ?: "Unknown"
             }
-            val file = result.file
-            if (file != null && file.exists() && file.length() > 0L) {
-                val durationSec = result.durationSeconds.coerceAtLeast(1L)
-                val number = _callerNumber.value.ifEmpty { "Unknown" }
-                val name = _callerName.value.ifEmpty { number }
-                val locale = inCallService?.let { com.example.ui.components.getCurrentLocale(it) } ?: java.util.Locale.getDefault()
-                val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", locale)
-                val timestamp = sdf.format(java.util.Date())
+            val name = _callerName.value.ifEmpty { number }
+            val locale = ctx?.let { com.example.ui.components.getCurrentLocale(it) } ?: java.util.Locale.getDefault()
+            val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", locale)
+            val timestamp = sdf.format(java.util.Date())
 
-                val recording = com.example.model.CallRecording(
-                    number = number,
-                    name = name,
-                    timestamp = timestamp,
-                    duration = durationSec,
-                    filePath = file.absolutePath
-                )
+            val recording = com.example.model.CallRecording(
+                number = number,
+                name = name,
+                timestamp = timestamp,
+                duration = durationSec,
+                filePath = file.absolutePath
+            )
 
-                inCallService?.let { ctx ->
+            if (ctx != null) {
+                try {
+                    val db = com.example.data.AppDatabase.getDatabase(ctx)
+                    kotlinx.coroutines.runBlocking(Dispatchers.IO) {
+                        val existing = db.dialerDao().getCallRecordingByPath(file.absolutePath)
+                        if (existing == null) {
+                            db.dialerDao().insertCallRecording(recording)
+                        }
+                        val autoExportSetting = db.dialerDao().getSetting("is_auto_export_recordings_enabled")
+                        val isAutoExport = autoExportSetting?.toBooleanStrictOrNull() ?: true
+                        if (isAutoExport) {
+                            com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
+                        }
+                    }
+                } catch (_: Exception) {
                     scope.launch(Dispatchers.IO) {
                         try {
                             val db = com.example.data.AppDatabase.getDatabase(ctx)
-                            db.dialerDao().insertCallRecording(recording)
-                            val autoExportSetting = db.dialerDao().getSetting("is_auto_export_recordings_enabled")
-                            val isAutoExport = autoExportSetting?.toBooleanStrictOrNull() ?: true
-                            if (isAutoExport) {
-                                com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
+                            val existing = db.dialerDao().getCallRecordingByPath(file.absolutePath)
+                            if (existing == null) {
+                                db.dialerDao().insertCallRecording(recording)
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        } catch (_: Exception) {}
                     }
                 }
-            }
-        } else {
-            inCallService?.let { ctx ->
-                com.example.util.CallAudioHelper.restoreAudioState(ctx, inCallService)
             }
         }
     }
@@ -405,8 +419,24 @@ object CallManager {
         }
     }
 
+    fun formatOutgoingNumberWithClir(number: String, isHideCallerId: Boolean, clirPrefix: String): String {
+        if (!isHideCallerId) return number
+        val trimmed = number.trim()
+        if (trimmed.isEmpty()) return number
+        val isEmergency = try {
+            android.telephony.PhoneNumberUtils.isEmergencyNumber(trimmed)
+        } catch (_: Exception) {
+            false
+        }
+        if (isEmergency) return trimmed
+        val effectivePrefix = clirPrefix.trim().ifBlank { "#31#" }
+        if (trimmed.startsWith(effectivePrefix)) return trimmed
+        return "$effectivePrefix$trimmed"
+    }
+
     @SuppressLint("MissingPermission")
     fun placeCall(context: Context, number: String, preferredSim: String = "Ask") {
+        appContext = context.applicationContext
         try {
             val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
             val activity = context as? Activity
@@ -435,7 +465,12 @@ object CallManager {
                     }
                 }
 
-                val uri = Uri.fromParts("tel", number, null)
+                val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                val isHideCallerId = prefs.getBoolean("is_hide_caller_id_enabled", false)
+                val clirPrefix = prefs.getString("clir_prefix", "#31#") ?: "#31#"
+                val targetNumberToDial = formatOutgoingNumberWithClir(number, isHideCallerId, clirPrefix)
+
+                val uri = Uri.fromParts("tel", targetNumberToDial, null)
                 val extras = Bundle()
                 
                 if (preferredSim != "Ask") {

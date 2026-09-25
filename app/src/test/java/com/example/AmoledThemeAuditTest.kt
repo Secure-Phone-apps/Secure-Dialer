@@ -38,6 +38,25 @@ class AmoledThemeAuditTest {
     }
 
     @Test
+    fun `verify enabling amoled mode auto-activates dark theme if disabled`() {
+        val app = ApplicationProvider.getApplicationContext<android.app.Application>()
+        val viewModel = DialerViewModel(app)
+
+        // Force dark theme to false
+        viewModel.updateDarkTheme(false)
+        assertFalse(viewModel.isDarkTheme.value)
+
+        // Enabling AMOLED mode must automatically engage dark theme
+        viewModel.updateAmoledMode(true)
+        assertTrue(viewModel.isAmoledMode.value)
+        assertTrue(viewModel.isDarkTheme.value)
+
+        val prefs = app.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        assertTrue(prefs.getBoolean("is_amoled_mode", false))
+        assertTrue(prefs.getBoolean("is_dark_theme", false))
+    }
+
+    @Test
     fun `verify true black oled color values conform to pure black specifications`() {
         val pureBlack = Color(0xFF000000)
         assertEquals(0f, pureBlack.red, 0.001f)

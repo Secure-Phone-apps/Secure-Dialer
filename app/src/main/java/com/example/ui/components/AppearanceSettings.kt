@@ -73,27 +73,31 @@ fun AppearanceSettings(
             }
         }
 
-        // Pure Black AMOLED Card
-        if (isDarkTheme) {
-            item {
-                HighlightableCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    cardBgColor = cardBgColor,
-                    isHighlighted = isMatchTitle("Pure Black", highlightedTitle) || isMatchTitle("True Black", highlightedTitle) || isMatchTitle("OLED", highlightedTitle),
-                    shape = MaterialTheme.shapes.medium
-                ) {
-                    SettingsRowToggle(
-                        title = stringResource(R.string.settings_pure_black),
-                        subtitle = stringResource(R.string.settings_pure_black_sub),
-                        checked = isAmoledMode,
-                        onCheckedChange = { viewModel.updateAmoledMode(it) },
-                        icon = Icons.Default.Contrast,
-                        iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                        iconTint = MaterialTheme.colorScheme.tertiary
-                    )
-                }
+        // Pure Black AMOLED Card (Permanently visible for direct OLED configuration)
+        item {
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Pure Black", highlightedTitle) || isMatchTitle("True Black", highlightedTitle) || isMatchTitle("OLED", highlightedTitle) || isMatchTitle("AMOLED", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_pure_black),
+                    subtitle = if (!isDarkTheme) {
+                        stringResource(R.string.settings_pure_black_sub_disabled_dark)
+                    } else {
+                        stringResource(R.string.settings_pure_black_sub)
+                    },
+                    checked = isAmoledMode && isDarkTheme,
+                    onCheckedChange = { checked ->
+                        viewModel.updateAmoledMode(checked)
+                    },
+                    icon = Icons.Default.Contrast,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.tertiary
+                )
             }
         }
 

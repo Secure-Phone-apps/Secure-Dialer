@@ -338,6 +338,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var dialpadTonesEnabled = mutableStateOf(prefs.getBoolean("dialpad_tones_enabled", true))
     var vibrateOnClickEnabled = mutableStateOf(prefs.getBoolean("vibrate_on_click_enabled", true))
     var flipToSilenceEnabled = mutableStateOf(prefs.getBoolean("flip_to_silence_enabled", false))
+    var isHideCallerIdEnabled = mutableStateOf(prefs.getBoolean("is_hide_caller_id_enabled", false))
+    var clirPrefix = mutableStateOf(prefs.getString("clir_prefix", "#31#") ?: "#31#")
     var preferredSim = mutableStateOf("SIM 1")
     var voicemailNumber = mutableStateOf("+1 (555) 011-9988")
     
@@ -348,6 +350,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var hasContactsPermission = mutableStateOf(false)
     var hasCallLogPermission = mutableStateOf(false)
     var hasNotificationPermission = mutableStateOf(false)
+    var hasRecordAudioPermission = mutableStateOf(false)
     var isLoadingPermissions = mutableStateOf(true)
 
     var isCallActive = mutableStateOf(false)
@@ -473,6 +476,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     flashAlertsEnabled.value = it
                     prefs.edit().putBoolean("flash_alerts_enabled", it).commit()
                 }
+                settings["is_hide_caller_id_enabled"]?.toBooleanStrictOrNull()?.let {
+                    isHideCallerIdEnabled.value = it
+                    prefs.edit().putBoolean("is_hide_caller_id_enabled", it).commit()
+                }
+                settings["clir_prefix"]?.let {
+                    clirPrefix.value = it
+                    prefs.edit().putString("clir_prefix", it).commit()
+                }
                 settings["is_call_log_dashboard_enabled"]?.toBooleanStrictOrNull()?.let {
                     isCallLogDashboardEnabled.value = it
                     prefs.edit().putBoolean("is_call_log_dashboard_enabled", it).commit()
@@ -530,7 +541,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateAmoledMode(amoled: Boolean) {
         isAmoledMode.value = amoled
-        prefs.edit().putBoolean("is_amoled_mode", amoled).commit()
+        val editor = prefs.edit().putBoolean("is_amoled_mode", amoled)
+        if (amoled && !isDarkTheme.value) {
+            isDarkTheme.value = true
+            editor.putBoolean("is_dark_theme", true)
+        }
+        editor.commit()
     }
 
     fun updateCustomColorHex(hex: String) {
@@ -621,6 +637,31 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             try {
                 repository.dao.insertSetting(AppSetting("call_waiting_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateHideCallerIdEnabled(enabled: Boolean) {
+        isHideCallerIdEnabled.value = enabled
+        prefs.edit().putBoolean("is_hide_caller_id_enabled", enabled).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("is_hide_caller_id_enabled", enabled.toString()))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun updateClirPrefix(prefix: String) {
+        val sanitized = prefix.trim().ifBlank { "#31#" }
+        clirPrefix.value = sanitized
+        prefs.edit().putString("clir_prefix", sanitized).commit()
+        viewModelScope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting("clir_prefix", sanitized))
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -1237,6 +1278,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
         }
+    }
+
+    fun recoverRecordingsFromDisk(context: Context, onComplete: ((Int) -> Unit)? = null) {
+        syncRecordingsFromDisk(context, onComplete)
     }
 
     fun exportRecordingToDownloads(context: Context, filePath: String): Boolean {

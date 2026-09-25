@@ -252,6 +252,27 @@ fun GeneralSettings(
                 categoryTab = 3,
                 icon = Icons.Default.Voicemail
             ),
+            SettingsSearchItem(
+                title = "Hide Caller ID (CLIR)",
+                description = "Suppress outgoing number so recipient sees Private or Unknown Caller",
+                categoryName = "SIM & Calling",
+                categoryTab = 3,
+                icon = Icons.Default.VisibilityOff
+            ),
+            SettingsSearchItem(
+                title = "Caller ID Prefix & Codes",
+                description = "Select carrier CLIR prefix: #31#, *67, 141, 1831 or custom dial code",
+                categoryName = "SIM & Calling",
+                categoryTab = 3,
+                icon = Icons.Default.Pin
+            ),
+            SettingsSearchItem(
+                title = "Carrier SIM Hardware Caller ID",
+                description = "Direct system shortcut to per-SIM network Caller ID settings",
+                categoryName = "SIM & Calling",
+                categoryTab = 3,
+                icon = Icons.Default.SimCard
+            ),
 
             // ================= 4. SPEED DIAL & QUICK REPLY =================
             SettingsSearchItem(

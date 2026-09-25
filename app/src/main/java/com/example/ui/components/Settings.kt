@@ -91,7 +91,7 @@ fun SettingsPanel(
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
     val cardBgColor = if (isAmoled) {
-        Color(0xFF0C0C0C)
+        Color(0xFF000000)
     } else if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
     } else {
