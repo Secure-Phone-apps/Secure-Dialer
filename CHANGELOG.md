@@ -2,6 +2,23 @@
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
 
+## [1.6.0] - 2026-09-28
+
+### Outgoing Caller ID (CLIR) Privacy
+- **Outgoing Number Masking (CLIR)**: Added a master toggle to withhold Caller ID on outgoing calls so recipients see Private/Unknown number.
+- **Carrier Standards & Custom Prefix**: Built-in support for global carrier prefixes including `#31#` (GSM standard), `*67` (US & Canada), `141` (UK), `1831` (Japan), and full custom prefix input.
+- **Hardware SIM Settings Direct Shortcut**: Added a direct launcher button to open Android's native SIM Calling Accounts screen for hardware-level carrier caller ID configuration.
+- **Emergency Number Safety Guarantee**: Automated bypass protocol ensures emergency service calls (`911`, `112`, `999`, etc.) are never prepended with carrier codes and always broadcast subscriber telemetry to first responders.
+
+### Call Recording Engine Hardening
+- **Idempotent Recording Lifecycle**: Implemented atomic state tracking (`AtomicBoolean`) preventing race condition crashes between UI disposal and telephony teardown.
+- **Decoupled Database Persistence**: Decoupled Room database insertion from `InCallService` lifecycle, ensuring finished recordings are 100% saved even after rapid call teardown.
+- **Safe Container Finalization**: Added graceful MediaRecorder buffer flushes before storage auto-deletion checks to prevent ghost or truncated recordings.
+- **Self-Healing Storage Recovery**: Opening Call Recordings settings automatically discovers and indexes any orphaned `.m4a` files on disk with zero data loss.
+- **Runtime Audio Permission Flow**: Explicit Android microphone permission orchestration with non-intrusive user prompts.
+
+---
+
 ## [1.5.0] - 2026-09-09
 
 ### Localization & Multi-Language Parity
