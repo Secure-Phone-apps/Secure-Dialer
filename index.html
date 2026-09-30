@@ -181,6 +181,7 @@
                 <a href="#screenshots" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Screenshots</a>
                 <a href="#features" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Features</a>
                 <a href="#permissions" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Permissions</a>
+                <a href="#guidelines" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Guidelines</a>
                 <a href="#setup" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">Setup</a>
                 <a href="#faq" class="hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">FAQ</a>
             </nav>
@@ -239,24 +240,34 @@
                         </svg>
                         Download APK <span class="app-version-tag"></span>
                     </a>
-                    <a href="#setup" class="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 rounded-2xl text-center font-display font-bold tracking-wide transition-all">
-                        Compile from Source
+                    <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer" target="_blank" class="w-full sm:w-auto px-6 py-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 rounded-2xl text-center font-display font-bold tracking-wide transition-all flex items-center justify-center gap-2.5">
+                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+                        </svg>
+                        Get on Obtainium
+                    </a>
+                    <a href="#setup" class="w-full sm:w-auto px-6 py-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 rounded-2xl text-center font-display font-bold tracking-wide transition-all">
+                        Source
                     </a>
                 </div>
 
                 <!-- Verified Stats/Badges -->
-                <div class="pt-6 grid grid-cols-3 gap-4 border-t border-gray-200 dark:border-slate-800">
+                <div class="pt-6 grid grid-cols-2 sm:grid-cols-4 gap-4 border-t border-gray-200 dark:border-slate-800">
                     <div>
-                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">0%</div>
-                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">Network Calls</div>
+                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">0</div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">Network Sockets</div>
                     </div>
                     <div>
-                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">FOSS</div>
-                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">GPLv3 Licensed</div>
+                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">AES-256</div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">SQLCipher DB</div>
                     </div>
                     <div>
-                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">Local</div>
-                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">AES-256 Storage</div>
+                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">8</div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">Languages</div>
+                    </div>
+                    <div>
+                        <div class="font-display font-extrabold text-2xl text-emerald-700 dark:text-emerald-400">GPLv3</div>
+                        <div class="text-xs text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider">Open Source</div>
                     </div>
                 </div>
             </div>
@@ -327,6 +338,97 @@
                         No closed binary blobs or obfuscated background modules. Our entire codebase is licensed under the GPLv3, open for public audits, and compiles cleanly in secondary sandboxed environments like GrapheneOS.
                     </p>
                 </div>
+            </div>
+
+            <!-- Quick Comparison Matrix Table -->
+            <div class="mt-12 overflow-x-auto rounded-3xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-darkbg-900/60 p-6 sm:p-8">
+                <div class="text-left mb-6 space-y-1">
+                    <span class="text-xs font-display font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Competitive Analysis</span>
+                    <h3 class="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white">Quick Comparison: Secure Dialer vs. Other Options</h3>
+                </div>
+                <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 dark:border-slate-800">
+                            <th class="py-3.5 px-4 font-display font-bold text-slate-900 dark:text-white">Feature / Security Dimension</th>
+                            <th class="py-3.5 px-4 font-display font-bold text-emerald-800 dark:text-emerald-400 bg-emerald-500/10 rounded-t-xl text-center">Secure Dialer (FOSS)</th>
+                            <th class="py-3.5 px-4 font-display font-semibold text-slate-700 dark:text-slate-300 text-center">Google / Samsung</th>
+                            <th class="py-3.5 px-4 font-display font-semibold text-slate-700 dark:text-slate-300 text-center">Commercial Caller ID</th>
+                            <th class="py-3.5 px-4 font-display font-semibold text-slate-700 dark:text-slate-300 text-center">Other FOSS</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">100% Free & Open Source (GPLv3)</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (GPLv3)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No (Closed source)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No (Closed source)</td>
+                            <td class="py-3 px-4 text-center">Yes</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Zero Internet Permission</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (100% Offline)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No (Cloud telemetry)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No (Uploads contacts)</td>
+                            <td class="py-3 px-4 text-center">Yes</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Local Offline Spam Screening</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (CallScreeningService)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Requires Cloud Sync</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Cloud Sync & Uploads</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Limited</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">On-Device Database Encryption</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (SQLCipher AES-256)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Plaintext SQLite</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Stored on Cloud Servers</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Plaintext SQLite</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Hardware Key Protection</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (Android KeyStore)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Outgoing Caller ID (CLIR) Masking</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (Carrier Codes + Bypass)</td>
+                            <td class="py-3 px-4 text-center">Basic</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Cloud-dependent</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Limited</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Biometric App & Recording Vault</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (BiometricPrompt)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No</td>
+                            <td class="py-3 px-4 text-center text-slate-500">No</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Local Call Recording Engine</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (4-Tier + Scrubber)</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Restricted / Cloud</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Ads / Subscription</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Basic</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Multi-Line Conference & Waiting</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (Call.conference())</td>
+                            <td class="py-3 px-4 text-center">Yes</td>
+                            <td class="py-3 px-4 text-center">Yes</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Limited</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Android Support (API 24 to 36)</td>
+                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 rounded-b-xl text-center">Android 7.0 to 16</td>
+                            <td class="py-3 px-4 text-center text-slate-500">OEM Restricted</td>
+                            <td class="py-3 px-4 text-center text-slate-500">Heavy bloat</td>
+                            <td class="py-3 px-4 text-center">Varies</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </section>
@@ -455,23 +557,23 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Offline Spam Blocklist</h3>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Offline Spam Blocklist & CNAP</h3>
                     <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Silences telemarketers and fraud numbers using Android's native <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">CallScreeningService</code>. Blocklists are checked, imported via CSV, and managed completely offline.
+                        Silences telemarketers and fraud numbers using Android's native <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">CallScreeningService</code>. Displays carrier CNAP names, and imports or exports community blocklists via CSV completely offline.
                     </p>
                 </div>
 
                 <!-- Feature 2 -->
                 <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
                     <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
-                        <!-- Theatre mask Icon -->
+                        <!-- Eye-Off Privacy Icon -->
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
                         </svg>
                     </div>
-                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">🎭 Fake Call Simulator</h3>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Outgoing Caller ID (CLIR)</h3>
                     <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Set custom delayed multi-call sequences that trigger a high-fidelity incoming caller UI screen. Answering simulates an active call with timer counters and dialpads to help escape awkward meetings.
+                        Withhold your phone number so recipients see Private/Unknown. Includes carrier presets (<code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">#31#</code>, <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">*67</code>, UK, Japan), system SIM settings shortcut, and strict emergency bypass protection.
                     </p>
                 </div>
 
@@ -483,41 +585,69 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Call Recording & Notes</h3>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Call Recording & Biometric Vault</h3>
                     <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Record conversations or write persistent encrypted notes directly inside the active call window. Audio is stored in the application's secure isolated local database sandboxed storage.
+                        Record calls locally with 4-tier audio fallback and sweet-spot auto-tuning. Includes in-app variable scrubber (0.5x-2.0x), self-healing orphan disk recovery, and biometric fingerprint protection.
                     </p>
                 </div>
 
                 <!-- Feature 4 -->
                 <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
                     <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
-                        <!-- Clock Alert Reminder Icon -->
+                        <!-- Biometric Lock Shield Icon -->
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">⏰ Callback Reminders</h3>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Biometric App Lock & Window Shield</h3>
                     <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Decline an incoming call with text but forget to callback? Use callback reminders from call detail screens to establish delayed alerts containing immediate direct call-back actions.
+                        Secure app entry with native <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">BiometricPrompt</code> keyguard. Built with <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">FLAG_SECURE</code> to block screenshots and recents-overview snoopers.
                     </p>
                 </div>
 
                 <!-- Feature 5 -->
                 <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
                     <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
-                        <!-- Chart Analytic Bar Icon -->
+                        <!-- Conference Users Icon -->
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                     </div>
-                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Offline Calling Analytics</h3>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Conference & Call Waiting</h3>
                     <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Understand your dial patterns over days, weeks, or months. Displays structured duration trackers, missed counts, and top callers via clean native Compose charts that run entirely locally.
+                        Merge multiple ongoing calls into an active conference line (<code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">Call.conference()</code>), swap lines smoothly, and manage incoming call waiting alerts without dropping connections.
                     </p>
                 </div>
 
                 <!-- Feature 6 -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                    <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
+                        <!-- Floating Pill Overlay Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Dynamic Island & Floating Pill</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Multitask effortlessly with a compact floating status pill that displays active call duration and provides quick speakerphone toggles when navigating outside the active call.
+                    </p>
+                </div>
+
+                <!-- Feature 7 -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                    <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
+                        <!-- Clock Alert Reminder Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Fake Call Escape Simulator</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Set custom delayed multi-call sequences with personalized caller names and numbers. Answering simulates an active call with timer counters to help discreetly exit uncomfortable meetings.
+                    </p>
+                </div>
+
+                <!-- Feature 8 -->
                 <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
                     <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
                         <!-- Dual Sim Card Icon -->
@@ -527,7 +657,63 @@
                     </div>
                     <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Dual-SIM & Speed Dial</h3>
                     <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                        Supports seamless SIM selection prompts on active dial triggers, or configure standard primary outbound lines. T9 speed dial maps indices `1` to `9` to dial key numbers immediately.
+                        Seamless SIM selection prompts on outgoing calls with customizable primary carrier lines. T9 speed dial maps indices `1` through `9` to dial your key contacts immediately.
+                    </p>
+                </div>
+
+                <!-- Feature 9 -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                    <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
+                        <!-- Moon / Display / AMOLED Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">AMOLED True Black & Ergonomics</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        True `#000000` AMOLED dark theme for maximum OLED battery savings, customizable avatar shapes, pocket proximity touch protection, and flip-to-silence ringer gestures.
+                    </p>
+                </div>
+
+                <!-- Feature 10 -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                    <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
+                        <!-- Private In-Call Notes Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Private In-Call Notes & History</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Attach encrypted notes directly to contacts or specific calls. Search private notes seamlessly through call logs, track duration analytics, and schedule callback reminders without cloud leaks.
+                    </p>
+                </div>
+
+                <!-- Feature 11 -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                    <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
+                        <!-- Sensor Proximity & Flip Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">Pocket Protection & Sensor Gestures</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Hardware proximity sensor powers immediate display-off near your ear (<code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">WAKE_LOCK</code>) to eliminate accidental touches. Flip device face-down to instantly silence incoming ringers during meetings.
+                    </p>
+                </div>
+
+                <!-- Feature 12 -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-4">
+                    <div class="p-3 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 rounded-xl w-fit">
+                        <!-- Languages Globe Translate Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+                        </svg>
+                    </div>
+                    <h3 class="font-display font-bold text-lg text-slate-900 dark:text-white">8 Offline Community Localizations</h3>
+                    <p class="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Complete interface coverage in English, Polish, German, Spanish, French, Hindi, Japanese, and Portuguese. Full RTL & LTR layout support with zero cloud translation dependencies.
                     </p>
                 </div>
             </div>
@@ -553,8 +739,8 @@
                     </div>
                     <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Populate Address Book</h3>
                     <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> To look up names, display avatars, and allow search. <br>
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Read completely in local process memory. Never synchronized or written to outside services.
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Powers predictive T9 dialpad search and contacts tab. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Read completely in local process memory; never synchronized or written to outside servers.
                     </p>
                 </div>
 
@@ -565,8 +751,8 @@
                     </div>
                     <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Create & Edit Contacts</h3>
                     <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Allows adding names, numbers, emails, and notes to your storage directly inside the dialer. <br>
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Operates only via on-device system contacts provider.
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Adds, edits, or deletes contacts within the app. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Modifies your local address book on your device only.
                     </p>
                 </div>
 
@@ -577,8 +763,8 @@
                     </div>
                     <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Trigger System Calls</h3>
                     <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Placed in call triggers when clicking numbers or tapping dial icons. <br>
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Only sends commands directly to Android's Telecom subsystem.
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Connects phone calls when tapping numbers or speed dials. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Passes calls directly to your device SIM carrier baseband.
                     </p>
                 </div>
 
@@ -589,20 +775,20 @@
                     </div>
                     <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Display Recent Entries</h3>
                     <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Populates the "Recents" list, detailing missed, received, or dialed connections. <br>
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Local read. No background scrapers or reporting routines.
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Displays incoming, outgoing, and missed call logs. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Kept strictly on-device in sandboxed database.
                     </p>
                 </div>
 
                 <!-- Perm 5 -->
                 <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
                     <div class="flex items-center gap-3">
-                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">SEND_SMS</span>
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">WRITE_CALL_LOG</span>
                     </div>
-                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Send SMS Templates</h3>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Clear & Clean History</h3>
                     <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Sends standard decline templates (e.g., "Sorry, I am driving") directly on call rejection. <br>
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Initiates purely when manually confirmed by you during an inbound call.
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Clears call logs or removes specific entries per contact. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Modifies local logs on your physical device only.
                     </p>
                 </div>
 
@@ -611,10 +797,172 @@
                     <div class="flex items-center gap-3">
                         <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">RECORD_AUDIO</span>
                     </div>
-                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Active Recording Storage</h3>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">In-Call Audio Recording</h3>
                     <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Allows voice tracking during calls if you tap the Record button. <br>
-                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Isolated local sandboxed storage. No background passive ear-dropping or wiretaps.
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Captures audio for user-initiated call recordings. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Microphone accessed locally only during active recordings; never streamed or shared.
+                    </p>
+                </div>
+
+                <!-- Perm 7 -->
+                <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">MODIFY_AUDIO_SETTINGS</span>
+                    </div>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Dynamic Audio Routing</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Routes call audio between earpiece, speakerphone, and Bluetooth. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Native AOSP telephony audio routing only.
+                    </p>
+                </div>
+
+                <!-- Perm 8 -->
+                <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">USE_FULL_SCREEN_INTENT</span>
+                    </div>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">High-Priority Call Alerts</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Wakes the screen and displays incoming call alerts over lockscreen. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Ensures incoming calls ring cleanly and visibly.
+                    </p>
+                </div>
+
+                <!-- Perm 9 -->
+                <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">POST_NOTIFICATIONS</span>
+                    </div>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Ongoing Call Status</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Shows ongoing call controls and missed call badges in status bar. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Local system notifications only.
+                    </p>
+                </div>
+
+                <!-- Perm 10 -->
+                <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">SYSTEM_ALERT_WINDOW</span>
+                    </div>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Floating In-Call Pill</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Renders the minimized Dynamic Island overlay status pill while multitasking. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Displays call timer and speaker toggles; never captures screen contents.
+                    </p>
+                </div>
+
+                <!-- Perm 11 -->
+                <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">WAKE_LOCK</span>
+                    </div>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Ear-Proximity Screen Off</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Powers the proximity sensor to turn screen off near your ear. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Hardware proximity trigger only; prevents accidental face touches.
+                    </p>
+                </div>
+
+                <!-- Perm 12 -->
+                <div class="p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-mono px-2 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded-lg font-bold">DISABLE_KEYGUARD</span>
+                    </div>
+                    <h3 class="font-display font-bold text-md text-slate-900 dark:text-white">Direct Lockscreen Answer</h3>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        <span class="font-bold text-slate-900 dark:text-white">Why:</span> Enables answering incoming calls directly over the lockscreen. <br>
+                        <span class="font-bold text-emerald-800 dark:text-emerald-300">Security Guarantee:</span> Answers calls without unlocking the keyguard or exposing phone data.
+                    </p>
+                </div>
+            </div>
+
+            <!-- SMS Permission Notice Callout Banner -->
+            <div class="mt-8 p-6 bg-gray-50 dark:bg-darkbg-900/60 rounded-2xl border border-gray-200 dark:border-slate-850 flex items-start gap-4">
+                <div class="p-2.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-xl flex-shrink-0 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <div class="space-y-1">
+                    <h4 class="font-display font-bold text-sm text-slate-900 dark:text-white">Strict Least-Privilege SMS Architecture</h4>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Secure Dialer intentionally avoids requesting the high-risk <code class="px-1.5 py-0.5 bg-gray-200 dark:bg-slate-800 rounded font-mono text-emerald-800 dark:text-emerald-400 font-semibold">SEND_SMS</code> permission. Quick decline text responses are dispatched via Android’s standard system messaging app chooser, ensuring zero SMS interception, background message harvesting, or billing risks.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Guidelines & Disclaimers Section -->
+    <section id="guidelines" class="py-12 sm:py-16 md:py-20 bg-slate-100/60 dark:bg-darkbg-900/30 transition-colors border-b border-gray-200 dark:border-slate-800">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-3">
+                <span class="text-sm font-display font-extrabold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Operational Compliance</span>
+                <h2 class="text-3xl sm:text-4xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">Important Guidelines & Disclaimers</h2>
+                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">
+                    Essential legal, cryptographic, and emergency information regarding Secure Dialer's native features.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- Guideline 1: Legal -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 rounded-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">1. Call Recording Legal Compliance</h3>
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Telephony recording laws vary significantly worldwide (including one-party vs. two-party / all-party consent laws in jurisdictions like California or Germany). You are solely responsible for ensuring you comply with all local statutes and disclosure requirements before initiating call recordings.
+                    </p>
+                </div>
+
+                <!-- Guideline 2: Emergency -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300 rounded-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">2. Emergency Calling Priority (911 / 112 / 999)</h3>
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Emergency services calls are afforded absolute priority by the Android Telecom subsystem. Secure Dialer automatically strips any Caller ID withholding prefixes (<code class="font-mono text-emerald-800 dark:text-emerald-400 font-semibold">CLIR</code>) on emergency calls and passes them unmodified to the baseband radio to guarantee that location and subscriber telemetry reach first responders without delay.
+                    </p>
+                </div>
+
+                <!-- Guideline 3: Zero-Knowledge -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 rounded-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">3. Zero-Knowledge Cryptographic Recovery</h3>
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Local database encryption (SQLCipher AES-256) and encrypted <code class="font-mono text-emerald-800 dark:text-emerald-400 font-semibold">.enc</code> configuration archives utilize industry-standard cryptographic algorithms without backdoors or recovery escrow. If you assign and subsequently forget an encryption password, the data cannot be decrypted or recovered.
+                    </p>
+                </div>
+
+                <!-- Guideline 4: Carrier CLIR -->
+                <div class="p-6 bg-white dark:bg-darkbg-800 rounded-2xl border border-gray-200 dark:border-slate-800 space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300 rounded-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-display font-bold text-base text-slate-900 dark:text-white">4. Carrier CLIR Network Limitations</h3>
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                        While Secure Dialer prepends standard 3GPP carrier MMI prefixes (<code class="font-mono text-emerald-800 dark:text-emerald-400 font-semibold">#31#</code>, <code class="font-mono text-emerald-800 dark:text-emerald-400 font-semibold">*67</code>, etc.) to suppress outgoing caller ID, your specific mobile operator or roaming agreement may enforce account-level rules governing whether private numbers are permitted on the cellular network.
                     </p>
                 </div>
             </div>
@@ -648,13 +996,13 @@
 git clone https://github.com/Secure-Phone-apps/Secure-Dialer.git
 cd Secure-Dialer
 
-<span class="text-slate-400"># 2. Verify dependencies and run tests</span>
-./gradlew testDebugUnitTest
+<span class="text-slate-400"># 2. Run the complete automated test suite</span>
+gradle :app:testDebugUnitTest
 
-<span class="text-slate-400"># 3. Assemble release APK signed under your environment keys</span>
-./gradlew assembleDebug
+<span class="text-slate-400"># 3. Assemble debug APK</span>
+gradle :app:assembleDebug
 
-<span class="text-slate-400"># 4. Binary targets can be found under build directory:</span>
+<span class="text-slate-400"># 4. Compiled APK binary location:</span>
 <span class="text-emerald-400">app/build/outputs/apk/debug/app-debug.apk</span></code></pre>
             </div>
         </div>
@@ -829,6 +1177,58 @@ cd Secure-Dialer
                     </button>
                     <div id="faq-ans-12" class="hidden px-5 pb-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
                         The codebase is **100% open source under the GPLv3 license**. We invite privacy advocates, cybersecurity firms, and open-source developers to fully audit our repository, check the Room SQL database schemas, inspect the KeyStore encryption classes, verify the complete lack of internet permissions, and compile their own build from source.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 13 -->
+                <div class="border border-gray-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/60 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(13)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none">
+                        <span class="text-sm sm:text-base">How does Outgoing Caller ID (CLIR) masking work, and what happens in an emergency?</span>
+                        <svg id="faq-icon-13" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-13" class="hidden px-5 pb-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        When enabled, Secure Dialer automatically formats standard 3GPP carrier MMI prefixes (<code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">#31#</code>, <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">*67</code>, etc.) onto dialed numbers so recipients see Private/Unknown. Crucially, the app includes an <strong>automated emergency bypass</strong>: whenever you dial an emergency number (like 911, 112, or 999), all number-withholding prefixes are immediately stripped to guarantee that location and subscriber telemetry reach first responders without delay.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 14 -->
+                <div class="border border-gray-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/60 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(14)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none">
+                        <span class="text-sm sm:text-base">How does the Call Recording engine protect my audio files?</span>
+                        <svg id="faq-icon-14" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-14" class="hidden px-5 pb-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Call recordings are stored exclusively within the application's private sandbox directory, shielded from third-party media scanners or cloud gallery indexers. You can additionally protect playback behind a <strong>biometric fingerprint lock</strong>. The recording pipeline uses a resilient 4-tier audio source fallback system and includes <strong>self-healing disk recovery</strong> that detects and indexes orphaned recordings even after unexpected power loss or device reboots.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 15 -->
+                <div class="border border-gray-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/60 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(15)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none">
+                        <span class="text-sm sm:text-base">How does the Biometric App Lock & Screen Shield protect against surveillance?</span>
+                        <svg id="faq-icon-15" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-15" class="hidden px-5 pb-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        Secure Dialer integrates native Android <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">BiometricPrompt</code> keyguard protection to lock the app upon exit. In production release builds, it applies the <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">FLAG_SECURE</code> window attribute, which prevents external screen capture tools, spy apps, or the Android Recents overview task-switcher from creating visual preview thumbnails of your private contacts or call records.
+                    </div>
+                </div>
+
+                <!-- FAQ Item 16 -->
+                <div class="border border-gray-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/60 overflow-hidden transition-all duration-200">
+                    <button onclick="toggleFaq(16)" class="w-full flex items-center justify-between p-5 text-left font-display font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none">
+                        <span class="text-sm sm:text-base">Why doesn't Secure Dialer request the SEND_SMS permission for quick responses?</span>
+                        <svg id="faq-icon-16" class="w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="faq-ans-16" class="hidden px-5 pb-5 text-sm text-slate-700 dark:text-slate-300 leading-relaxed border-t border-gray-100 dark:border-slate-850/50 pt-3">
+                        <code class="font-mono text-xs text-emerald-800 dark:text-emerald-400 font-semibold">SEND_SMS</code> is a high-risk dangerous permission that malicious apps often abuse to send background texts or bill premium numbers. To follow strict least-privilege security principles, Secure Dialer passes quick response templates through Android’s native system messaging app chooser, ensuring that you always maintain explicit control over outgoing SMS messages.
                     </div>
                 </div>
             </div>
@@ -1044,6 +1444,11 @@ cd Secure-Dialer
                             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>`
                         },
                         {
+                            title: "Conference & Call Waiting",
+                            desc: "Merge multi-party calls into a unified conference line (Call.conference()), switch lines seamlessly, or handle waiting calls without disruptions.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>`
+                        },
+                        {
                             title: "Clear Functional Layout",
                             desc: "Generously sized button elements to prevent accidental touches. Mute, speaker, Bluetooth, keypads, and hold actions are readily accessible.",
                             icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4zM14 16a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2v-4z"></path></svg>`
@@ -1060,6 +1465,16 @@ cd Secure-Dialer
                     title: "Preferences & Protection",
                     desc: "Fully manage and customize your dialer behaviors. Control dark theme, dynamic color schemas, haptics, speed-dials, spam blocks, and quick responses.",
                     features: [
+                        {
+                            title: "Outgoing Caller ID (CLIR)",
+                            desc: "Master toggle to suppress outbound caller ID with carrier presets (#31#, *67, etc.) and direct access to native SIM hardware settings.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>`
+                        },
+                        {
+                            title: "Biometric Vault & Screen Shield",
+                            desc: "Authenticate app access and call recordings with fingerprint verification, fortified by FLAG_SECURE window protection.",
+                            icon: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>`
+                        },
                         {
                             title: "Dynamic Color & Appearance",
                             desc: "Toggle modern Material 3 expressive shapes and customized dark mode preferences tailored to your individual aesthetics.",
@@ -1285,10 +1700,25 @@ cd Secure-Dialer
                 <div class="space-y-6">
                     <p class="text-xs text-slate-500">All notable updates and releases of the Secure Dialer application are documented here.</p>
                     
-                    <!-- v1.5.0 -->
+                    <!-- v1.6.0 -->
                     <div class="border-l-2 border-brand-500 pl-4 space-y-2">
                         <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.5.0</span>
+                            <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.6.0</span>
+                            <span class="text-xs text-slate-500">2026-09-28</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Outgoing Caller ID (CLIR) Privacy & Recording Engine Hardening</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>Outgoing Caller ID (CLIR):</strong> Master toggle to withhold Caller ID on outgoing calls so recipients see Private/Unknown number, with global carrier MMI presets (<code>#31#</code>, <code>*67</code>, <code>141</code>, <code>1831</code>, custom) and direct shortcut to system SIM settings.</li>
+                            <li><strong>Emergency Bypass Guarantee:</strong> Emergency service calls (<code>911</code>, <code>112</code>, <code>999</code>) strictly bypass number withholding and broadcast location telemetry to first responders.</li>
+                            <li><strong>Hardened Call Recording:</strong> Atomic lifecycle finalization, decoupled database persistence, and self-healing orphan disk recovery ensuring zero dropped recordings.</li>
+                            <li><strong>Biometric Protection:</strong> Native fingerprint and device PIN lock for the in-app call recordings vault.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.5.0 -->
+                    <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded">v1.5.0</span>
                             <span class="text-xs text-slate-500">2026-09-09</span>
                         </div>
                         <h4 class="font-bold text-slate-900 dark:text-white text-sm">Multi-Language Parity & Contact Enhancements</h4>
@@ -1468,36 +1898,36 @@ free programs, and that you know you can do these things.</pre>
             }, 300);
         }
 
-        let latestTag = 'v1.5.0';
+        let latestTag = 'v1.6.0';
 
         const apkDetails = {
             'universal': {
-                fileName: 'secure-dialer-v1.5.0-universal.apk',
-                size: '15.7 MB',
+                fileName: 'secure-dialer-v1.6.0-universal.apk',
+                size: '15.8 MB',
                 hash: 'ef4aed489f02c21bb47984fdb38e0e33715170396913a4017e6ab9e89e5b10ae',
                 desc: 'Includes all CPU architectures. Works on any device.'
             },
             'arm64': {
-                fileName: 'secure-dialer-v1.5.0-arm64-v8a.apk',
-                size: '6.3 MB',
+                fileName: 'secure-dialer-v1.6.0-arm64-v8a.apk',
+                size: '6.4 MB',
                 hash: '542f7bb265c03009b458cfd60c1c9e613b1d2d252c0e4a683cb26d211092e1b9',
                 desc: 'For modern 64-bit phones (e.g., Pixel, Samsung S-series, newer devices).'
             },
             'arm32': {
-                fileName: 'secure-dialer-v1.5.0-armeabi-v7a.apk',
-                size: '5.0 MB',
+                fileName: 'secure-dialer-v1.6.0-armeabi-v7a.apk',
+                size: '5.1 MB',
                 hash: '635146a90f27b9ad036e4716ab7b09c9391f47d74974029dc0413ea1a641696e',
                 desc: 'For older 32-bit Android phones and legacy devices.'
             },
             'x86_64': {
-                fileName: 'secure-dialer-v1.5.0-x86_64.apk',
-                size: '6.7 MB',
+                fileName: 'secure-dialer-v1.6.0-x86_64.apk',
+                size: '6.8 MB',
                 hash: '508f1d3b51d303dddfdea8ca7390c77114d179d30a4cf44fadfe8c8566d3bbd3',
                 desc: 'For 64-bit Android emulators running on modern computer hardware.'
             },
             'x86': {
-                fileName: 'secure-dialer-v1.5.0-x86.apk',
-                size: '6.2 MB',
+                fileName: 'secure-dialer-v1.6.0-x86.apk',
+                size: '6.3 MB',
                 hash: '62a122c4aa20af522512082e4602972e9058e846316c26e15220bd5a08bccda8',
                 desc: 'For older 32-bit computer-based Android emulators.'
             }
@@ -1840,7 +2270,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">Compatible with all physical devices and emulators. (Larger file)</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-universal" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~15.7 MB</span>
+                                <span id="card-size-universal" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~15.8 MB</span>
                             </div>
                         </div>
 
@@ -1854,7 +2284,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">For modern 64-bit phones (Pixel, Galaxy, modern devices).</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-arm64" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~6.3 MB</span>
+                                <span id="card-size-arm64" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~6.4 MB</span>
                             </div>
                         </div>
 
@@ -1868,7 +2298,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">For older 32-bit Android phones and legacy devices.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-arm32" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~5.0 MB</span>
+                                <span id="card-size-arm32" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~5.1 MB</span>
                             </div>
                         </div>
 
@@ -1882,7 +2312,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">For 64-bit Android Virtual Devices (AVD) running on computers.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-x86_64" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~6.7 MB</span>
+                                <span id="card-size-x86_64" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~6.8 MB</span>
                             </div>
                         </div>
 
@@ -1896,7 +2326,7 @@ free programs, and that you know you can do these things.</pre>
                                 <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">For legacy 32-bit computer-based emulator environments.</p>
                             </div>
                             <div class="text-right flex-shrink-0">
-                                <span id="card-size-x86" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~6.2 MB</span>
+                                <span id="card-size-x86" class="font-mono text-xs font-bold text-slate-800 dark:text-slate-200">~6.3 MB</span>
                             </div>
                         </div>
                     </div>
@@ -1912,11 +2342,11 @@ free programs, and that you know you can do these things.</pre>
                             <div class="flex items-start justify-between gap-4">
                                 <div class="space-y-0.5">
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Selected Package File</p>
-                                    <p id="active-download-name" class="font-display font-bold text-base text-slate-900 dark:text-white">secure-dialer-v1.5.0-universal.apk</p>
+                                    <p id="active-download-name" class="font-display font-bold text-base text-slate-900 dark:text-white">secure-dialer-v1.6.0-universal.apk</p>
                                 </div>
                                 <div class="text-right space-y-0.5">
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Size</p>
-                                    <p id="active-download-size" class="font-mono font-bold text-base text-emerald-600 dark:text-emerald-400">15.7 MB</p>
+                                    <p id="active-download-size" class="font-mono font-bold text-base text-emerald-600 dark:text-emerald-400">15.8 MB</p>
                                 </div>
                             </div>
                             
@@ -1959,7 +2389,7 @@ free programs, and that you know you can do these things.</pre>
                                 </div>
                                 <div class="flex gap-3">
                                     <span class="flex-shrink-0 w-5.5 h-5.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">2</span>
-                                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"><span class="font-bold text-slate-800 dark:text-slate-200">Launch APK:</span> Open your "Downloads" list and click <code class="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[10px]" id="active-download-filename-step">secure-dialer-universal.apk</code>.</p>
+                                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"><span class="font-bold text-slate-800 dark:text-slate-200">Launch APK:</span> Open your "Downloads" list and click <code class="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[10px]" id="active-download-filename-step">secure-dialer-v1.6.0-universal.apk</code>.</p>
                                 </div>
                                 <div class="flex gap-3">
                                     <span class="flex-shrink-0 w-5.5 h-5.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">3</span>
