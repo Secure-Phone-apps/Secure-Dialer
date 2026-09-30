@@ -22,6 +22,17 @@
   </a>
 </p>
 
+<p align="center">
+  <a href="#why-your-privacy-matters-to-me"><b>Manifesto</b></a> •
+  <a href="#core-capabilities--protection-matrix"><b>Protection Matrix</b></a> •
+  <a href="#android-permissions--operational-rationale"><b>Permissions</b></a> •
+  <a href="#important-guidelines--disclaimers"><b>Guidelines</b></a> •
+  <a href="#frequently-asked-questions-faq"><b>FAQ</b></a> •
+  <a href="#download--installation"><b>Download</b></a> •
+  <a href="#community-translations"><b>Translations</b></a> •
+  <a href="#building-from-source-for-developers"><b>Source</b></a>
+</p>
+
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
 
 <p align="center">
@@ -157,6 +168,34 @@ To operate as your phone's **Default Dialer & InCallService**, Android requires 
 
 ---
 
+## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/help/materialsymbolsoutlined/help_24px.svg" width="22" height="22" alt="" valign="middle" /> Frequently Asked Questions (FAQ)
+
+<details>
+<summary><b>Why does Android require Secure Dialer to be set as the Default Phone App?</b></summary>
+<br>
+Android’s telephony security model (<code>TelecomManager</code> and <code>InCallService</code>) restricts call audio streaming, in-call screen overlays, and call-state management exclusively to the user-selected Default Dialer. This is an intentional Android security architecture engineered to prevent background malware from covertly intercepting or eavesdropping on private phone calls.
+</details>
+
+<details>
+<summary><b>Why is Secure Dialer distributed via GitHub Releases and Obtainium rather than the Google Play Store?</b></summary>
+<br>
+Google Play Store developer agreements frequently require bundling proprietary Google Play Services dependencies and restrict apps requesting telephony permissions without mandatory cloud account linking. Distributing directly via GitHub Releases and Obtainium ensures that Secure Dialer remains 100% offline, tracker-free, air-gapped from commercial ad frameworks, and completely independent.
+</details>
+
+<details>
+<summary><b>Will Secure Dialer interfere with my existing Contacts or Cloud Sync?</b></summary>
+<br>
+No. Secure Dialer queries and updates your phone's native local <code>ContactsContract</code> provider. It reads your existing device and Google/Nextcloud contacts natively without modifying or disconnecting your account's cloud sync schedule. You can switch between dialers at any time with zero data lock-in.
+</details>
+
+<details>
+<summary><b>Why don't third-party music players or gallery apps see my call recordings?</b></summary>
+<br>
+This is intentional privacy-by-design. Audio recordings are stored in the application's private, encrypted sandbox directory (and can be additionally protected by your biometric fingerprint). This prevents rogue apps, cloud photo uploaders, or music indexers from scanning sensitive calls. If you wish to make recordings accessible to external apps, simply enable "Auto-Export to Downloads" in Call Recording Settings.
+</details>
+
+---
+
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/download/materialsymbolsoutlined/download_24px.svg" width="22" height="22" alt="" valign="middle" /> Download & Installation
 
 ### Option 1: Automatic Updates via Obtainium (Recommended)
@@ -191,6 +230,17 @@ Compare the resulting hash with the published `checksums.txt` file on the releas
 
 ---
 
+## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/translate/materialsymbolsoutlined/translate_24px.svg" width="22" height="22" alt="" valign="middle" /> Community Translations
+
+Secure Dialer currently supports 8 languages: **English, Polish, German, Spanish, French, Hindi, Japanese, and Portuguese**.
+
+We welcome community contributions to bring Secure Dialer to more languages and keep existing translations accurate!
+* No coding experience required.
+* All user-facing strings are stored cleanly in standard XML format under `app/src/main/res/values-<locale>/strings.xml`.
+* To contribute a new translation or refine an existing one, simply fork the repository and submit a Pull Request.
+
+---
+
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/terminal/materialsymbolsoutlined/terminal_24px.svg" width="22" height="22" alt="" valign="middle" /> Building from Source (For Developers)
 
 To audit the code, run automated tests, or compile your own signed APK:
@@ -219,6 +269,12 @@ Secure Dialer is actively maintained as an independent, community-backed project
 * **[GitHub Issues](https://github.com/Secure-Phone-apps/Secure-Dialer/issues):** Report bugs or edge cases with your device model and Android version.
 * **[Project Wiki](wiki/Home.md):** In-depth technical guides on encryption, permissions, and custom ROM setups (GrapheneOS, CalyxOS, LineageOS).
 * **[Sponsor on GitHub Sponsors](https://github.com/sponsors/Secure-Phone-apps):** Support development, maintenance, and test device acquisition.
+
+<p align="center">
+  <a href="https://star-history.com/#Secure-Phone-apps/Secure-Dialer&Date">
+    <img src="https://api.star-history.com/svg?repos=Secure-Phone-apps/Secure-Dialer&type=Date" alt="Star History Chart" width="100%" />
+  </a>
+</p>
 
 ---
 
