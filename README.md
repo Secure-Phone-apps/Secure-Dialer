@@ -23,14 +23,14 @@
 </p>
 
 <p align="center">
-  <a href="#why-your-privacy-matters-to-me"><b>Manifesto</b></a> •
-  <a href="#core-capabilities--protection-matrix"><b>Protection Matrix</b></a> •
-  <a href="#android-permissions--operational-rationale"><b>Permissions</b></a> •
-  <a href="#important-guidelines--disclaimers"><b>Guidelines</b></a> •
-  <a href="#frequently-asked-questions-faq"><b>FAQ</b></a> •
-  <a href="#download--installation"><b>Download</b></a> •
-  <a href="#community-translations"><b>Translations</b></a> •
-  <a href="#building-from-source-for-developers"><b>Source</b></a>
+  <a href="#manifesto"><b>Manifesto</b></a> •
+  <a href="#protection-matrix"><b>Protection Matrix</b></a> •
+  <a href="#permissions"><b>Permissions</b></a> •
+  <a href="#guidelines"><b>Guidelines</b></a> •
+  <a href="#faq"><b>FAQ</b></a> •
+  <a href="#download"><b>Download</b></a> •
+  <a href="#translations"><b>Translations</b></a> •
+  <a href="#source"><b>Source</b></a>
 </p>
 
 ![Secure Dialer Hero Banner](assets/secure_dialer_hero.jpg)
@@ -72,6 +72,7 @@
 
 ---
 
+<a id="manifesto"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/favorite/materialsymbolsoutlined/favorite_24px.svg" width="22" height="22" alt="" valign="middle" /> Why Your Privacy Matters to Me
 
 Your phone dialer is not just another app—it is the direct gateway to your life's most intimate, private moments. It connects you to your family, your doctor, confidential legal matters, work conversations, and late-night calls with loved ones.
@@ -105,6 +106,7 @@ I wanted an app that is:
 
 ---
 
+<a id="protection-matrix"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/layers/materialsymbolsoutlined/layers_24px.svg" width="22" height="22" alt="" valign="middle" /> Core Capabilities & Protection Matrix
 
 | Capability | How It Works Under the Hood | How It Protects You |
@@ -123,6 +125,7 @@ I wanted an app that is:
 
 ---
 
+<a id="permissions"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/verified_user/materialsymbolsoutlined/verified_user_24px.svg" width="22" height="22" alt="" valign="middle" /> Android Permissions & Operational Rationale
 
 To operate as your phone's **Default Dialer & InCallService**, Android requires standard telephony permissions. Because Secure Dialer has **zero internet permission**, your data physically cannot leave your phone:
@@ -148,6 +151,7 @@ To operate as your phone's **Default Dialer & InCallService**, Android requires 
 
 ---
 
+<a id="guidelines"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/gavel/materialsymbolsoutlined/gavel_24px.svg" width="22" height="22" alt="" valign="middle" /> Important Guidelines & Disclaimers
 
 > [!WARNING]
@@ -168,6 +172,7 @@ To operate as your phone's **Default Dialer & InCallService**, Android requires 
 
 ---
 
+<a id="faq"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/help/materialsymbolsoutlined/help_24px.svg" width="22" height="22" alt="" valign="middle" /> Frequently Asked Questions (FAQ)
 
 <details>
@@ -196,6 +201,7 @@ This is intentional privacy-by-design. Audio recordings are stored in the applic
 
 ---
 
+<a id="download"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/download/materialsymbolsoutlined/download_24px.svg" width="22" height="22" alt="" valign="middle" /> Download & Installation
 
 ### Option 1: Automatic Updates via Obtainium (Recommended)
@@ -230,6 +236,7 @@ Compare the resulting hash with the published `checksums.txt` file on the releas
 
 ---
 
+<a id="translations"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/translate/materialsymbolsoutlined/translate_24px.svg" width="22" height="22" alt="" valign="middle" /> Community Translations
 
 Secure Dialer currently supports 8 languages: **English, Polish, German, Spanish, French, Hindi, Japanese, and Portuguese**.
@@ -241,6 +248,7 @@ We welcome community contributions to bring Secure Dialer to more languages and 
 
 ---
 
+<a id="source"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/terminal/materialsymbolsoutlined/terminal_24px.svg" width="22" height="22" alt="" valign="middle" /> Building from Source (For Developers)
 
 To audit the code, run automated tests, or compile your own signed APK:
