@@ -11,13 +11,13 @@
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Permissions-0_Internet%20%7C%20100%25%20Offline-10B981?style=flat&logo=android&logoColor=white" alt="0 Internet Permissions" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Locales-8_Languages-6366F1?style=flat&logo=translate&logoColor=white" alt="8 Languages Supported" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-A3E635?style=flat&logo=opensourceinitiative&logoColor=white" alt="Open Source FOSS GPLv3" /></a>
-  <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FSecure-Phone-apps%2FSecure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/discussions"><img src="https://img.shields.io/badge/Community-Discussions-1F6FEB?style=flat&logo=github&logoColor=white" alt="GitHub Discussions" /></a>
   <a href="https://github.com/sponsors/Secure-Phone-apps"><img src="https://img.shields.io/badge/Sponsor-GitHub_Sponsors-EA4AAA?style=flat&logo=githubsponsors&logoColor=white" alt="Sponsor Project" /></a>
 </p>
 
 <p align="center">
-  <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer">
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FSecure-Phone-apps%2FSecure-Dialer">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="80" alt="Get it on Obtainium" />
   </a>
 </p>
@@ -208,7 +208,7 @@ This is intentional privacy-by-design. Audio recordings are stored in the applic
 If you use [Obtainium](https://github.com/ImranR98/Obtainium), you can receive automatic update notifications directly from our GitHub Releases:
 
 <p align="center">
-  <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer">
+  <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FSecure-Phone-apps%2FSecure-Dialer">
     <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="52" alt="Get it on Obtainium" />
   </a>
 </p>

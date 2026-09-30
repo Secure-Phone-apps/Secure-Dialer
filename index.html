@@ -240,9 +240,17 @@
                         </svg>
                         Download APK <span class="app-version-tag"></span>
                     </a>
-                    <a href="https://apps.obtainium.imranr.dev/redirect.html?r=obtainium://add/https://github.com/Secure-Phone-apps/Secure-Dialer" target="_blank" class="w-full sm:w-auto px-6 py-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 rounded-2xl text-center font-display font-bold tracking-wide transition-all flex items-center justify-center gap-2.5">
-                        <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
+                    <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FSecure-Phone-apps%2FSecure-Dialer" target="_blank" rel="noopener noreferrer" class="w-full sm:w-auto px-6 py-4 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 rounded-2xl text-center font-display font-bold tracking-wide transition-all flex items-center justify-center gap-2.5 shadow-sm group">
+                        <svg class="w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 142.13 142.13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Obtainium Logo">
+                            <defs>
+                                <linearGradient id="obtainiumHeroGrad" x1="76.75" y1="113.4" x2="110.64" y2="152.5" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#9b58dc" offset="0%"/>
+                                    <stop stop-color="#321c92" offset="100%"/>
+                                </linearGradient>
+                            </defs>
+                            <g transform="translate(-30.394373,-54.680428)">
+                                <path fill="url(#obtainiumHeroGrad)" d="m 109.8808,153.22596 c -0.73146,-0.38777 -5.00657,-2.75679 -25.032416,-13.87149 -5.57273,-3.09297 -10.93823,-6.06723 -11.92332,-6.60948 -2.23728,-1.23152 -2.58105,-1.53456 -2.58105,-2.27528 0,-0.3879 0.89293,-2.87231 2.98561,-8.30689 1.64209,-4.2644 3.09426,-8.0014 3.22705,-8.30444 0.3024,-0.69008 0.78972,-1.27621 1.26573,-1.52236 0.44558,-0.23042 11.58052,-4.29685 12.14814,-4.43644 0.61355,-0.1509 1.1428,0.13977 1.45487,0.79901 0.14976,0.31638 0.77213,1.94934 1.38303,3.6288 0.6109,1.67945 1.52036,4.16275 2.02104,5.51844 1.14709,3.10604 1.18992,3.54589 0.3912,4.01771 -0.2117,0.12505 -1.58874,0.66539 -3.06009,1.20075 -1.47136,0.53536 -2.87533,1.08982 -3.11993,1.23213 -0.56422,0.32826 -0.64913,0.83523 -0.20815,1.24273 0.17523,0.16193 3.00434,1.77571 6.28691,3.58618 9.174936,5.06035 8.665596,4.83136 9.277626,4.17097 0.29987,-0.32356 5.78141,-14.266 6.09596,-15.50521 0.1344,-0.5295 0.11969,-0.60308 -0.16695,-0.83519 -0.39165,-0.31714 -0.335,-0.33071 -3.93797,0.9431 -3.56937,1.26192 -3.90926,1.28864 -4.38744,0.34488 -0.25108,-0.49556 -4.095796,-11.05481 -4.334456,-11.90432 -0.15438,-0.5495 0.0344,-1.0717 0.49701,-1.37482 0.19228,-0.12598 2.990116,-1.19935 6.217406,-2.38526 4.78924,-1.75986 6.0081,-2.15842 6.63117,-2.16837 0.8037,-0.0128 0.90917,0.0424 15.64514,8.19599 1.02104,0.56495 1.56579,1.15961 1.56579,1.70925 0,0.21814 -3.6538,9.91011 -8.11957,21.53771 -6.2982,16.39877 -8.19916,21.21114 -8.4744,21.45338 -0.46789,0.41179 -0.8512,0.39392 -1.74794,-0.0815 z"/>
+                            </g>
                         </svg>
                         Get on Obtainium
                     </a>
@@ -341,94 +349,371 @@
             </div>
 
             <!-- Quick Comparison Matrix Table -->
-            <div class="mt-12 overflow-x-auto rounded-3xl border border-gray-200 dark:border-slate-800 bg-gray-50 dark:bg-darkbg-900/60 p-6 sm:p-8">
-                <div class="text-left mb-6 space-y-1">
-                    <span class="text-xs font-display font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Competitive Analysis</span>
-                    <h3 class="text-xl sm:text-2xl font-display font-bold text-slate-900 dark:text-white">Quick Comparison: Secure Dialer vs. Other Options</h3>
+            <div class="mt-16 overflow-hidden rounded-3xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-darkbg-900 shadow-xl transition-all">
+                <!-- Table Header Banner -->
+                <div class="p-6 sm:p-8 border-b border-gray-200 dark:border-slate-800 bg-gradient-to-b from-gray-50/80 to-white dark:from-darkbg-800/50 dark:to-darkbg-900">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/80 rounded-full text-xs font-display font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-widest mb-3">
+                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        Zero-Trust Security Benchmark
+                    </div>
+                    <h3 class="text-2xl sm:text-3xl font-display font-extrabold text-slate-900 dark:text-white tracking-tight">How Secure Dialer Compares</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                        A rigorous architectural comparison between Secure Dialer, proprietary stock dialers, and commercial caller ID applications.
+                    </p>
                 </div>
-                <table class="w-full text-left border-collapse text-xs sm:text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-200 dark:border-slate-800">
-                            <th class="py-3.5 px-4 font-display font-bold text-slate-900 dark:text-white">Feature / Security Dimension</th>
-                            <th class="py-3.5 px-4 font-display font-bold text-emerald-800 dark:text-emerald-400 bg-emerald-500/10 rounded-t-xl text-center">Secure Dialer (FOSS)</th>
-                            <th class="py-3.5 px-4 font-display font-semibold text-slate-700 dark:text-slate-300 text-center">Google / Samsung</th>
-                            <th class="py-3.5 px-4 font-display font-semibold text-slate-700 dark:text-slate-300 text-center">Commercial Caller ID</th>
-                            <th class="py-3.5 px-4 font-display font-semibold text-slate-700 dark:text-slate-300 text-center">Other FOSS</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300">
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">100% Free & Open Source (GPLv3)</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (GPLv3)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No (Closed source)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No (Closed source)</td>
-                            <td class="py-3 px-4 text-center">Yes</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Zero Internet Permission</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (100% Offline)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No (Cloud telemetry)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No (Uploads contacts)</td>
-                            <td class="py-3 px-4 text-center">Yes</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Local Offline Spam Screening</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (CallScreeningService)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Requires Cloud Sync</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Cloud Sync & Uploads</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Limited</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">On-Device Database Encryption</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (SQLCipher AES-256)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Plaintext SQLite</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Stored on Cloud Servers</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Plaintext SQLite</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Hardware Key Protection</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (Android KeyStore)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Outgoing Caller ID (CLIR) Masking</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (Carrier Codes + Bypass)</td>
-                            <td class="py-3 px-4 text-center">Basic</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Cloud-dependent</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Limited</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Biometric App & Recording Vault</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (BiometricPrompt)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No</td>
-                            <td class="py-3 px-4 text-center text-slate-500">No</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Local Call Recording Engine</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (4-Tier + Scrubber)</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Restricted / Cloud</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Ads / Subscription</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Basic</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Multi-Line Conference & Waiting</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 text-center">Yes (Call.conference())</td>
-                            <td class="py-3 px-4 text-center">Yes</td>
-                            <td class="py-3 px-4 text-center">Yes</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Limited</td>
-                        </tr>
-                        <tr>
-                            <td class="py-3 px-4 font-semibold text-slate-900 dark:text-white">Android Support (API 24 to 36)</td>
-                            <td class="py-3 px-4 font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 rounded-b-xl text-center">Android 7.0 to 16</td>
-                            <td class="py-3 px-4 text-center text-slate-500">OEM Restricted</td>
-                            <td class="py-3 px-4 text-center text-slate-500">Heavy bloat</td>
-                            <td class="py-3 px-4 text-center">Varies</td>
-                        </tr>
-                    </tbody>
-                </table>
+
+                <!-- Responsive Table Wrapper -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-slate-800 bg-gray-50/60 dark:bg-slate-950/40 text-xs uppercase tracking-wider font-display font-bold">
+                                <th class="py-4.5 px-6 text-slate-700 dark:text-slate-300 min-w-[230px]">Feature & Security Vector</th>
+                                <th class="py-4.5 px-6 text-center min-w-[210px] bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30">
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-700 text-white shadow-sm mb-1.5">
+                                        ★ Recommended
+                                    </div>
+                                    <div class="text-sm sm:text-base font-display font-extrabold text-slate-900 dark:text-white">Secure Dialer</div>
+                                    <div class="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 lowercase font-mono">100% offline foss</div>
+                                </th>
+                                <th class="py-4.5 px-5 text-center text-slate-600 dark:text-slate-400 min-w-[160px]">
+                                    <div class="font-display font-bold text-slate-900 dark:text-white text-sm">Google / Samsung</div>
+                                    <div class="text-[11px] text-slate-500 font-normal">Stock OEM Dialers</div>
+                                </th>
+                                <th class="py-4.5 px-5 text-center text-slate-600 dark:text-slate-400 min-w-[170px]">
+                                    <div class="font-display font-bold text-slate-900 dark:text-white text-sm">Commercial Caller ID</div>
+                                    <div class="text-[11px] text-slate-500 font-normal">Cloud Directory Apps</div>
+                                </th>
+                                <th class="py-4.5 px-5 text-center text-slate-600 dark:text-slate-400 min-w-[150px]">
+                                    <div class="font-display font-bold text-slate-900 dark:text-white text-sm">Other FOSS</div>
+                                    <div class="text-[11px] text-slate-500 font-normal">Community Dialers</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 dark:divide-slate-800/80 text-xs sm:text-sm">
+                            <!-- Row 1: License -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">100% Free & Open Source</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Verifiable, auditable, and reproducible code</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        GPLv3 License
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                        Closed Source
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+                                        Closed Source
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Yes
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 2: Zero Internet -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Zero Internet Permission</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">OS physically prevents opening any network sockets</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        100% Offline
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Cloud Telemetry
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Uploads Contacts
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Yes
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 3: Spam Screening -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Local Offline Spam Screening</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Evaluates numbers in &lt;5ms without contacting external servers</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        CallScreeningService
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Requires Cloud Sync
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Uploads & Crowdsourced
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        Basic List Only
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 4: Database Encryption -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">On-Device Database Encryption</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Protects contacts, logs, and private notes from forensic extraction</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        SQLCipher AES-256
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Plaintext SQLite
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Stored on Cloud
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Plaintext SQLite
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 5: Hardware KeyStore -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Hardware KeyStore Protection</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Master database key derived and held inside hardware security module</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        KeyStore StrongBox
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        No
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        No
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        No
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 6: CLIR Privacy -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Outgoing Caller ID (CLIR) Masking</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">One-tap withholding toggle with carrier presets & 911 emergency bypass</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Carrier Codes + 911 Safe
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        Deep SIM Menu Only
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Cloud-dependent
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        Limited
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 7: Biometric & Shield -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Biometric Vault & Screen Shield</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Fingerprint authentication and FLAG_SECURE recents screenshot blocker</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Biometric + Anti-Snoop
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        No
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        No
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        No
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 8: Call Recording -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Local Call Recording Engine</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">4-tier audio pipeline, sweet-spot tuning, and in-app variable scrubber</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        4-Tier Fallback + Scrubber
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Restricted / Locked
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Paid Subscriptions / Ads
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        Basic Single Source
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 9: Conference Calls -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Multi-Party Conference & Waiting</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Multi-line call merging, swapping, and discrete call waiting alerts</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Native Call.conference()
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Yes
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 text-xs font-semibold">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        Yes
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        Limited
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Row 10: Platform Support -->
+                            <tr class="hover:bg-slate-50/70 dark:hover:bg-slate-850/40 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-slate-900 dark:text-white">
+                                    <div class="font-display font-bold">Android Compatibility</div>
+                                    <div class="text-[11px] font-normal text-slate-500 dark:text-slate-400">Stock ROMs, de-Googled GrapheneOS, LineageOS, & OEM skins</div>
+                                </td>
+                                <td class="py-4 px-6 bg-emerald-500/10 dark:bg-emerald-950/40 border-x-2 border-emerald-500/30 text-center">
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shadow-sm">
+                                        <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                        API 24 to 36 (Android 7–16)
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        OEM Locked Only
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-rose-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                                        Heavy Resource Drain
+                                    </span>
+                                </td>
+                                <td class="py-4 px-5 text-center">
+                                    <span class="inline-flex items-center gap-1 text-slate-500 dark:text-slate-400 text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                        Varies by Build
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
@@ -2372,6 +2657,31 @@ free programs, and that you know you can do these things.</pre>
                             </svg>
                             Download Selected Package
                         </button>
+
+                        <!-- Obtainium Auto-Update Option in Modal -->
+                        <div class="flex items-center justify-between p-3.5 bg-purple-500/5 dark:bg-purple-950/20 border border-purple-500/20 rounded-2xl">
+                            <div class="flex items-center gap-2.5">
+                                <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 142.13 142.13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Obtainium Logo">
+                                    <defs>
+                                        <linearGradient id="obtainiumModalGrad" x1="76.75" y1="113.4" x2="110.64" y2="152.5" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#9b58dc" offset="0%"/>
+                                            <stop stop-color="#321c92" offset="100%"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <g transform="translate(-30.394373,-54.680428)">
+                                        <path fill="url(#obtainiumModalGrad)" d="m 109.8808,153.22596 c -0.73146,-0.38777 -5.00657,-2.75679 -25.032416,-13.87149 -5.57273,-3.09297 -10.93823,-6.06723 -11.92332,-6.60948 -2.23728,-1.23152 -2.58105,-1.53456 -2.58105,-2.27528 0,-0.3879 0.89293,-2.87231 2.98561,-8.30689 1.64209,-4.2644 3.09426,-8.0014 3.22705,-8.30444 0.3024,-0.69008 0.78972,-1.27621 1.26573,-1.52236 0.44558,-0.23042 11.58052,-4.29685 12.14814,-4.43644 0.61355,-0.1509 1.1428,0.13977 1.45487,0.79901 0.14976,0.31638 0.77213,1.94934 1.38303,3.6288 0.6109,1.67945 1.52036,4.16275 2.02104,5.51844 1.14709,3.10604 1.18992,3.54589 0.3912,4.01771 -0.2117,0.12505 -1.58874,0.66539 -3.06009,1.20075 -1.47136,0.53536 -2.87533,1.08982 -3.11993,1.23213 -0.56422,0.32826 -0.64913,0.83523 -0.20815,1.24273 0.17523,0.16193 3.00434,1.77571 6.28691,3.58618 9.174936,5.06035 8.665596,4.83136 9.277626,4.17097 0.29987,-0.32356 5.78141,-14.266 6.09596,-15.50521 0.1344,-0.5295 0.11969,-0.60308 -0.16695,-0.83519 -0.39165,-0.31714 -0.335,-0.33071 -3.93797,0.9431 -3.56937,1.26192 -3.90926,1.28864 -4.38744,0.34488 -0.25108,-0.49556 -4.095796,-11.05481 -4.334456,-11.90432 -0.15438,-0.5495 0.0344,-1.0717 0.49701,-1.37482 0.19228,-0.12598 2.990116,-1.19935 6.217406,-2.38526 4.78924,-1.75986 6.0081,-2.15842 6.63117,-2.16837 0.8037,-0.0128 0.90917,0.0424 15.64514,8.19599 1.02104,0.56495 1.56579,1.15961 1.56579,1.70925 0,0.21814 -3.6538,9.91011 -8.11957,21.53771 -6.2982,16.39877 -8.19916,21.21114 -8.4744,21.45338 -0.46789,0.41179 -0.8512,0.39392 -1.74794,-0.0815 z"/>
+                                    </g>
+                                </svg>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-800 dark:text-slate-100">Prefer auto-updates?</p>
+                                    <p class="text-[11px] text-slate-600 dark:text-slate-400">Install via Obtainium for seamless background release checks.</p>
+                                </div>
+                            </div>
+                            <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FSecure-Phone-apps%2FSecure-Dialer" target="_blank" rel="noopener noreferrer" class="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 flex-shrink-0">
+                                <span>Get on Obtainium</span>
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </a>
+                        </div>
 
                         <!-- Dynamic Trigger Feedback Banner -->
                         <div id="download-confirmation-banner" class="hidden opacity-0 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center text-xs text-emerald-600 dark:text-emerald-400 font-semibold transition-opacity duration-300">
