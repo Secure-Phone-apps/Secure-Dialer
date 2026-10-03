@@ -22,31 +22,30 @@ import androidx.room.*
 import com.example.model.*
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
+import org.json.JSONArray
+import org.json.JSONObject
 
 class Converters {
     @TypeConverter
     fun fromCallType(value: CallType?): String = (value ?: CallType.INCOMING).name
 
     @TypeConverter
-    fun toCallType(value: String?): CallType {
-        if (value.isNullOrBlank()) return CallType.INCOMING
-        return try {
-            CallType.valueOf(value)
-        } catch (e: Exception) {
-            CallType.INCOMING
-        }
+    fun toCallType(value: String?): CallType = try {
+        if (!value.isNullOrBlank()) CallType.valueOf(value) else CallType.INCOMING
+    } catch (_: Exception) {
+        CallType.INCOMING
     }
 
     @TypeConverter
     fun fromLabeledNumberList(list: List<LabeledNumber>?): String {
         if (list.isNullOrEmpty()) return ""
-        val jsonArray = org.json.JSONArray()
+        val jsonArray = JSONArray()
         list.forEach { item ->
-            val obj = org.json.JSONObject()
-            obj.put("num", item.number)
-            obj.put("lbl", item.label)
-            obj.put("pri", item.isPrimary)
-            jsonArray.put(obj)
+            jsonArray.put(JSONObject().apply {
+                put("num", item.number)
+                put("lbl", item.label)
+                put("pri", item.isPrimary)
+            })
         }
         return jsonArray.toString()
     }
@@ -56,7 +55,7 @@ class Converters {
         if (value.isNullOrBlank()) return emptyList()
         val list = mutableListOf<LabeledNumber>()
         try {
-            val jsonArray = org.json.JSONArray(value)
+            val jsonArray = JSONArray(value)
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 list.add(
@@ -67,21 +66,19 @@ class Converters {
                     )
                 )
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
         return list
     }
 
     @TypeConverter
     fun fromLabeledEmailList(list: List<LabeledEmail>?): String {
         if (list.isNullOrEmpty()) return ""
-        val jsonArray = org.json.JSONArray()
+        val jsonArray = JSONArray()
         list.forEach { item ->
-            val obj = org.json.JSONObject()
-            obj.put("eml", item.email)
-            obj.put("lbl", item.label)
-            jsonArray.put(obj)
+            jsonArray.put(JSONObject().apply {
+                put("eml", item.email)
+                put("lbl", item.label)
+            })
         }
         return jsonArray.toString()
     }
@@ -91,7 +88,7 @@ class Converters {
         if (value.isNullOrBlank()) return emptyList()
         val list = mutableListOf<LabeledEmail>()
         try {
-            val jsonArray = org.json.JSONArray(value)
+            val jsonArray = JSONArray(value)
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 list.add(
@@ -101,21 +98,19 @@ class Converters {
                     )
                 )
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
         return list
     }
 
     @TypeConverter
     fun fromLabeledAddressList(list: List<LabeledAddress>?): String {
         if (list.isNullOrEmpty()) return ""
-        val jsonArray = org.json.JSONArray()
+        val jsonArray = JSONArray()
         list.forEach { item ->
-            val obj = org.json.JSONObject()
-            obj.put("adr", item.address)
-            obj.put("lbl", item.label)
-            jsonArray.put(obj)
+            jsonArray.put(JSONObject().apply {
+                put("adr", item.address)
+                put("lbl", item.label)
+            })
         }
         return jsonArray.toString()
     }
@@ -125,7 +120,7 @@ class Converters {
         if (value.isNullOrBlank()) return emptyList()
         val list = mutableListOf<LabeledAddress>()
         try {
-            val jsonArray = org.json.JSONArray(value)
+            val jsonArray = JSONArray(value)
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 list.add(
@@ -135,9 +130,7 @@ class Converters {
                     )
                 )
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
         return list
     }
 }
@@ -163,56 +156,37 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dialerDao(): DialerDao
 
     companion object {
+        const val DATABASE_NAME = "dialer_database"
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val appCtx = context.applicationContext
-                val db = buildDatabase(appCtx)
-                try {
-                    // Test connection to ensure key and schema integrity
-                    val helper = db.openHelper.writableDatabase
-                    helper.query("SELECT 1").close()
-                } catch (_: Throwable) {
-                    try { db.close() } catch (_: Throwable) {}
-                    try { appCtx.deleteDatabase("dialer_database") } catch (_: Throwable) {}
-                    val freshDb = buildDatabase(appCtx)
-                    try {
-                        freshDb.openHelper.writableDatabase.query("SELECT 1").close()
-                    } catch (_: Throwable) {
-                    }
-                    INSTANCE = freshDb
-                    return@synchronized freshDb
-                }
-                INSTANCE = db
-                db
+                INSTANCE ?: buildDatabase(context.applicationContext).also { INSTANCE = it }
             }
         }
 
-        private fun buildDatabase(context: Context): AppDatabase {
+        private fun buildDatabase(appContext: Context): AppDatabase {
             return try {
-                SQLiteDatabase.loadLibs(context)
-                val dbKey = DatabaseKeyManager.getDatabaseKey(context)
+                SQLiteDatabase.loadLibs(appContext)
+                val dbKey = DatabaseKeyManager.getDatabaseKey(appContext)
                 val factory = SupportFactory(dbKey)
+
                 Room.databaseBuilder(
-                    context,
+                    appContext,
                     AppDatabase::class.java,
-                    "dialer_database"
+                    DATABASE_NAME
                 )
                     .openHelperFactory(factory)
-                    .setJournalMode(RoomDatabase.JournalMode.TRUNCATE) // Avoid persistent unencrypted WAL files on disk
-                    .fallbackToDestructiveMigration()
+                    // High-concurrency encrypted WAL mode: readers never block writers
+                    .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build()
-            } catch (_: Throwable) {
-                // Fallback for Robolectric / JVM unit test environment where native SQLCipher .so is not present on host JVM
-                Room.inMemoryDatabaseBuilder(
-                    context,
-                    AppDatabase::class.java
-                )
+            } catch (e: UnsatisfiedLinkError) {
+                // Host JVM Unit Test fallback (Robolectric without native SQLCipher .so)
+                Room.inMemoryDatabaseBuilder(appContext, AppDatabase::class.java)
                     .allowMainThreadQueries()
-                    .fallbackToDestructiveMigration()
                     .build()
             }
         }

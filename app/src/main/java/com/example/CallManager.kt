@@ -26,113 +26,88 @@ import android.os.Bundle
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.InCallService
+import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
 import android.telecom.VideoProfile
+import android.telephony.PhoneNumberUtils
+import android.telephony.SubscriptionManager
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import com.example.data.AppDatabase
+import com.example.model.AppSetting
+import com.example.model.CallRecording
+import com.example.ui.components.getCurrentLocale
+import com.example.util.CallAudioHelper
+import com.example.util.CallAudioRecorder
+import com.example.util.RecordingFeedbackHelper
+import com.example.util.SimCallTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 
 object CallManager {
-    private val scope = CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var dtmfJob: Job? = null
 
     @Volatile
     var isAppInForeground: Boolean = false
 
     private val _currentCall = MutableStateFlow<Call?>(null)
-    val currentCall: StateFlow<Call?> = _currentCall
+    val currentCall: StateFlow<Call?> = _currentCall.asStateFlow()
 
     private val _waitingCall = MutableStateFlow<Call?>(null)
-    val waitingCall: StateFlow<Call?> = _waitingCall
+    val waitingCall: StateFlow<Call?> = _waitingCall.asStateFlow()
 
     private val _calls = MutableStateFlow<List<Call>>(emptyList())
-    val calls: StateFlow<List<Call>> = _calls
+    val calls: StateFlow<List<Call>> = _calls.asStateFlow()
 
     private val _callState = MutableStateFlow(Call.STATE_DISCONNECTED)
-    val callState: StateFlow<Int> = _callState
+    val callState: StateFlow<Int> = _callState.asStateFlow()
 
     private val _audioState = MutableStateFlow<CallAudioState?>(null)
-    val audioState: StateFlow<CallAudioState?> = _audioState
+    val audioState: StateFlow<CallAudioState?> = _audioState.asStateFlow()
 
     private val _callerNumber = MutableStateFlow("")
-    val callerNumber: StateFlow<String> = _callerNumber
+    val callerNumber: StateFlow<String> = _callerNumber.asStateFlow()
 
     private val _callerName = MutableStateFlow("")
-    val callerName: StateFlow<String> = _callerName
+    val callerName: StateFlow<String> = _callerName.asStateFlow()
 
     private val _callerCnapName = MutableStateFlow("")
-    val callerCnapName: StateFlow<String> = _callerCnapName
+    val callerCnapName: StateFlow<String> = _callerCnapName.asStateFlow()
 
-    private val _activeStartTimestamp = MutableStateFlow<Long>(0L)
-    val activeStartTimestamp: StateFlow<Long> = _activeStartTimestamp
+    private val _activeStartTimestamp = MutableStateFlow(0L)
+    val activeStartTimestamp: StateFlow<Long> = _activeStartTimestamp.asStateFlow()
 
-    private val _currentSimSlot = MutableStateFlow<Int>(1)
-    val currentSimSlot: StateFlow<Int> = _currentSimSlot
+    private val _currentSimSlot = MutableStateFlow(1)
+    val currentSimSlot: StateFlow<Int> = _currentSimSlot.asStateFlow()
 
-    fun autoSelectCurrentCall() {
-        val allCallsList = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
-        
-        if (allCallsList.isEmpty()) {
-            updateCall(null)
-            return
-        }
+    @Volatile
+    var appContext: Context? = null
 
-        // 1. If there's an active conference call (has children), prefer it.
-        val conferenceCall = allCallsList.find { 
-            it.children.isNotEmpty() || 
-            it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true 
-        }
-        if (conferenceCall != null) {
-            if (_currentCall.value != conferenceCall) {
-                updateCall(conferenceCall)
+    var inCallService: InCallService? = null
+        set(value) {
+            field = value
+            if (value != null) {
+                appContext = value.applicationContext
+            } else {
+                _audioState.value = null
             }
-            return
         }
-
-        // 2. If there's an active call, prefer it.
-        val activeCall = allCallsList.find { it.state == Call.STATE_ACTIVE }
-        if (activeCall != null) {
-            if (_currentCall.value != activeCall) {
-                updateCall(activeCall)
-            }
-            return
-        }
-
-        // 3. If there's a dialing/connecting/ringing call, show it.
-        val progressCall = allCallsList.find { 
-            it.state == Call.STATE_DIALING || 
-            it.state == Call.STATE_CONNECTING || 
-            it.state == Call.STATE_RINGING 
-        }
-        if (progressCall != null) {
-            if (_currentCall.value != progressCall) {
-                updateCall(progressCall)
-            }
-            return
-        }
-
-        // 4. If there's a held call, pick it
-        val heldCall = allCallsList.find { it.state == Call.STATE_HOLDING }
-        if (heldCall != null) {
-            if (_currentCall.value != heldCall) {
-                updateCall(heldCall)
-            }
-            return
-        }
-
-        // 5. Fallback to any non-disconnected call
-        if (_currentCall.value == null || _currentCall.value?.state == Call.STATE_DISCONNECTED) {
-            updateCall(allCallsList.first())
-        }
-    }
 
     private val callCallback = object : Call.Callback() {
         override fun onStateChanged(call: Call, state: Int) {
             super.onStateChanged(call, state)
-            _calls.value = _calls.value // force emit
-            
+            notifyCallsChanged()
+
             if (state == Call.STATE_DISCONNECTED) {
                 removeCall(call)
                 return
@@ -150,35 +125,25 @@ object CallManager {
             } else if (call == _waitingCall.value && state == Call.STATE_DISCONNECTED) {
                 updateWaitingCall(null)
             }
-            
             autoSelectCurrentCall()
         }
 
         override fun onChildrenChanged(call: Call, children: List<Call>) {
             super.onChildrenChanged(call, children)
-            _calls.value = _calls.value // force emit to update conference UI
+            notifyCallsChanged()
             autoSelectCurrentCall()
         }
 
         override fun onDetailsChanged(call: Call, details: Call.Details) {
             super.onDetailsChanged(call, details)
-            _calls.value = _calls.value // force emit
+            notifyCallsChanged()
             autoSelectCurrentCall()
         }
     }
 
-    @Volatile
-    var appContext: Context? = null
-
-    var inCallService: InCallService? = null
-        set(value) {
-            field = value
-            if (value != null) {
-                appContext = value.applicationContext
-            } else {
-                _audioState.value = null
-            }
-        }
+    private fun notifyCallsChanged() {
+        _calls.value = ArrayList(_calls.value)
+    }
 
     fun addCall(call: Call) {
         if (call !in _calls.value) {
@@ -189,80 +154,6 @@ object CallManager {
             updateWaitingCall(call)
         } else {
             autoSelectCurrentCall()
-        }
-    }
-
-    fun autoStartRecordingIfNeeded() {
-        if (!com.example.util.CallAudioRecorder.isRecording.value) {
-            val ctx = appContext ?: inCallService?.applicationContext
-            if (ctx != null) {
-                val prefs = ctx.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                val isAlwaysOn = prefs.getBoolean("is_auto_record_calls_enabled", false)
-                if (isAlwaysOn) {
-                    val chimeEnabled = prefs.getBoolean("recording_chime_enabled", false)
-                    val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
-                    com.example.util.RecordingFeedbackHelper.triggerRecordingStartFeedback(ctx, chimeEnabled)
-                    if (autoTune) {
-                        com.example.util.CallAudioHelper.prepareSpeakerForRecording(ctx, inCallService, _audioState.value)
-                    }
-                    val number = _callerNumber.value.ifEmpty { "Unknown" }
-                    com.example.util.CallAudioRecorder.startRecording(ctx, number)
-                }
-            }
-        }
-    }
-
-    fun autoStopRecordingIfNeeded(context: Context? = null) {
-        val ctx = context?.applicationContext ?: appContext ?: inCallService?.applicationContext
-        val result = com.example.util.CallAudioRecorder.stopRecording()
-        ctx?.let {
-            com.example.util.CallAudioHelper.restoreAudioState(it, inCallService)
-        }
-        val file = result.file
-        if (file != null && file.exists() && file.length() > 128L) {
-            val durationSec = result.durationSeconds.coerceAtLeast(1L)
-            val number = _callerNumber.value.ifEmpty {
-                file.nameWithoutExtension.removePrefix("REC_").split("_").firstOrNull()?.filter { it.isDigit() }?.ifEmpty { "Unknown" } ?: "Unknown"
-            }
-            val name = _callerName.value.ifEmpty { number }
-            val locale = ctx?.let { com.example.ui.components.getCurrentLocale(it) } ?: java.util.Locale.getDefault()
-            val sdf = java.text.SimpleDateFormat("MMM d, HH:mm", locale)
-            val timestamp = sdf.format(java.util.Date())
-
-            val recording = com.example.model.CallRecording(
-                number = number,
-                name = name,
-                timestamp = timestamp,
-                duration = durationSec,
-                filePath = file.absolutePath
-            )
-
-            if (ctx != null) {
-                try {
-                    val db = com.example.data.AppDatabase.getDatabase(ctx)
-                    kotlinx.coroutines.runBlocking(Dispatchers.IO) {
-                        val existing = db.dialerDao().getCallRecordingByPath(file.absolutePath)
-                        if (existing == null) {
-                            db.dialerDao().insertCallRecording(recording)
-                        }
-                        val autoExportSetting = db.dialerDao().getSetting("is_auto_export_recordings_enabled")
-                        val isAutoExport = autoExportSetting?.toBooleanStrictOrNull() ?: true
-                        if (isAutoExport) {
-                            com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
-                        }
-                    }
-                } catch (_: Exception) {
-                    scope.launch(Dispatchers.IO) {
-                        try {
-                            val db = com.example.data.AppDatabase.getDatabase(ctx)
-                            val existing = db.dialerDao().getCallRecordingByPath(file.absolutePath)
-                            if (existing == null) {
-                                db.dialerDao().insertCallRecording(recording)
-                            }
-                        } catch (_: Exception) {}
-                    }
-                }
-            }
         }
     }
 
@@ -280,32 +171,23 @@ object CallManager {
         autoSelectCurrentCall()
     }
 
-    fun mergeCalls() {
-        val allCallsList = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
-        val activeCall = allCallsList.find { it.state == Call.STATE_ACTIVE }
-        val heldCall = allCallsList.find { it.state == Call.STATE_HOLDING }
-        
-        if (activeCall != null && heldCall != null) {
-            try {
-                activeCall.conference(heldCall)
-            } catch (e: Exception) {
-                try {
-                    heldCall.conference(activeCall)
-                } catch (ex: Exception) {
-                    ex.printStackTrace()
-                }
-            }
-        } else {
-            // Fallback: merge any other active call with another call if not strictly STATE_HOLDING yet
-            val current = _currentCall.value
-            val other = allCallsList.firstOrNull { it != current }
-            if (current != null && other != null) {
-                try {
-                    current.conference(other)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
+    fun autoSelectCurrentCall() {
+        val activeCalls = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        if (activeCalls.isEmpty()) {
+            updateCall(null)
+            return
+        }
+
+        val target = activeCalls.find {
+            it.children.isNotEmpty() || it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true
+        }
+            ?: activeCalls.find { it.state == Call.STATE_ACTIVE }
+            ?: activeCalls.find { it.state in listOf(Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_RINGING) }
+            ?: activeCalls.find { it.state == Call.STATE_HOLDING }
+            ?: activeCalls.firstOrNull()
+
+        if (_currentCall.value != target) {
+            updateCall(target)
         }
     }
 
@@ -315,58 +197,41 @@ object CallManager {
             _callState.value = call.state
             if (call.state == Call.STATE_ACTIVE) {
                 if (_activeStartTimestamp.value == 0L) {
-                    val connectTime = call.details?.connectTimeMillis ?: 0L
-                    _activeStartTimestamp.value = if (connectTime > 0L) connectTime else System.currentTimeMillis()
+                    val connect = call.details?.connectTimeMillis ?: 0L
+                    _activeStartTimestamp.value = if (connect > 0L) connect else System.currentTimeMillis()
                 }
             } else {
                 _activeStartTimestamp.value = 0L
             }
+
             if (call.state == Call.STATE_HOLDING) {
                 try {
                     call.unhold()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+                } catch (_: Exception) {}
             }
+
             val number = call.details?.handle?.schemeSpecificPart ?: ""
             _callerNumber.value = number
-            _callerName.value = "" 
+            _callerName.value = ""
             val cnap = call.details?.callerDisplayName ?: ""
-            
+
             if (cnap.isNotBlank() && number.isNotEmpty()) {
                 ContactCache.putCnapName(number, cnap)
                 _callerCnapName.value = cnap
-                inCallService?.let { context ->
-                    scope.launch {
-                        try {
-                            val db = com.example.data.AppDatabase.getDatabase(context)
-                            db.dialerDao().insertSetting(com.example.model.AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
+                persistCnap(number, cnap)
             } else if (number.isNotEmpty()) {
-                val savedCnap = ContactCache.getCnapName(number)
-                if (!savedCnap.isNullOrBlank()) {
-                    _callerCnapName.value = savedCnap
+                val cached = ContactCache.getCnapName(number)
+                if (!cached.isNullOrBlank()) {
+                    _callerCnapName.value = cached
                 } else {
-                    inCallService?.let { context ->
-                        scope.launch {
-                            val dbCnap = getSavedCnapName(context, number)
-                            if (!dbCnap.isNullOrBlank()) {
-                                _callerCnapName.value = dbCnap
-                            }
-                        }
-                    }
+                    resolveCnapAsync(number)
                 }
             } else {
                 _callerCnapName.value = ""
             }
         } else {
             autoStopRecordingIfNeeded()
-            dtmfJob?.cancel()
-            dtmfJob = null
+            stopDtmf()
             _callState.value = Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""
@@ -378,37 +243,148 @@ object CallManager {
         }
     }
 
+    private fun persistCnap(number: String, cnap: String) {
+        val ctx = appContext ?: inCallService?.applicationContext ?: return
+        scope.launch {
+            try {
+                AppDatabase.getDatabase(ctx)
+                    .dialerDao()
+                    .insertSetting(AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun resolveCnapAsync(number: String) {
+        val ctx = appContext ?: inCallService?.applicationContext ?: return
+        scope.launch {
+            val dbCnap = getSavedCnapName(ctx, number)
+            if (!dbCnap.isNullOrBlank()) {
+                _callerCnapName.value = dbCnap
+            }
+        }
+    }
+
+    fun autoStartRecordingIfNeeded() {
+        if (CallAudioRecorder.isRecording.value) return
+        val ctx = appContext ?: inCallService?.applicationContext ?: return
+        val prefs = ctx.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("is_auto_record_calls_enabled", false)) {
+            val chime = prefs.getBoolean("recording_chime_enabled", false)
+            val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
+            RecordingFeedbackHelper.triggerRecordingStartFeedback(ctx, chime)
+            if (autoTune) {
+                CallAudioHelper.prepareSpeakerForRecording(ctx, inCallService, _audioState.value)
+            }
+            val num = _callerNumber.value.ifEmpty { "Unknown" }
+            CallAudioRecorder.startRecording(ctx, num)
+        }
+    }
+
+    fun autoStopRecordingIfNeeded(context: Context? = null) {
+        val ctx = context?.applicationContext ?: appContext ?: inCallService?.applicationContext ?: return
+        val result = CallAudioRecorder.stopRecording()
+        CallAudioHelper.restoreAudioState(ctx, inCallService)
+
+        val file = result.file ?: return
+        if (!file.exists() || file.length() <= 128L) return
+
+        val durationSec = result.durationSeconds.coerceAtLeast(1L)
+        val number = _callerNumber.value.ifEmpty {
+            file.nameWithoutExtension
+                .removePrefix("REC_")
+                .split("_")
+                .firstOrNull()
+                ?.filter { it.isDigit() }
+                ?.ifEmpty { "Unknown" } ?: "Unknown"
+        }
+        val name = _callerName.value.ifEmpty { number }
+        val locale = getCurrentLocale(ctx)
+        val timestamp = SimpleDateFormat("MMM d, HH:mm", locale).format(Date())
+
+        val recording = CallRecording(
+            number = number,
+            name = name,
+            timestamp = timestamp,
+            duration = durationSec,
+            filePath = file.absolutePath
+        )
+
+        scope.launch {
+            try {
+                val db = AppDatabase.getDatabase(ctx)
+                if (db.dialerDao().getCallRecordingByPath(file.absolutePath) == null) {
+                    db.dialerDao().insertCallRecording(recording)
+                }
+                val autoExport = db.dialerDao().getSetting("is_auto_export_recordings_enabled")?.toBooleanStrictOrNull() ?: true
+                if (autoExport) {
+                    CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
+                }
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun mergeCalls() {
+        val all = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        val active = all.find { it.state == Call.STATE_ACTIVE }
+        val held = all.find { it.state == Call.STATE_HOLDING }
+
+        if (active != null && held != null) {
+            try {
+                active.conference(held)
+            } catch (_: Exception) {
+                try {
+                    held.conference(active)
+                } catch (_: Exception) {}
+            }
+        } else {
+            val current = _currentCall.value
+            val other = all.firstOrNull { it != current }
+            if (current != null && other != null) {
+                try {
+                    current.conference(other)
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
     fun updateWaitingCall(call: Call?) {
         _waitingCall.value = call
     }
 
-    fun updateAudioState(audioState: CallAudioState?) {
-        _audioState.value = audioState
+    fun updateAudioState(state: CallAudioState?) {
+        _audioState.value = state
     }
 
     fun answer() {
         try {
             _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
+    }
+
+    fun disconnect() {
+        try {
+            val call = _currentCall.value ?: return
+            if (call.state == Call.STATE_RINGING) {
+                call.reject(false, null)
+            } else {
+                call.disconnect()
+            }
+            if (_calls.value.none { it != call && it.state != Call.STATE_DISCONNECTED }) {
+                updateCall(null)
+            }
+        } catch (_: Exception) {}
     }
 
     fun setMuted(muted: Boolean) {
         inCallService?.setMuted(muted)
     }
 
-    fun silenceRinger(context: Context) {
-        try {
-            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
-            telecomManager?.silenceRinger()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     fun setSpeaker(speaker: Boolean) {
         inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else CallAudioState.ROUTE_EARPIECE)
+    }
+
+    fun setBluetooth(bluetooth: Boolean) {
+        inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_EARPIECE)
     }
 
     fun setHold(hold: Boolean) {
@@ -419,19 +395,46 @@ object CallManager {
         }
     }
 
-    fun formatOutgoingNumberWithClir(number: String, isHideCallerId: Boolean, clirPrefix: String): String {
-        if (!isHideCallerId) return number
-        val trimmed = number.trim()
-        if (trimmed.isEmpty()) return number
-        val isEmergency = try {
-            android.telephony.PhoneNumberUtils.isEmergencyNumber(trimmed)
+    fun silenceRinger(context: Context) {
+        try {
+            val tm = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+            tm?.silenceRinger()
+        } catch (_: Exception) {}
+    }
+
+    fun playDtmf(key: Char) {
+        val call = _currentCall.value ?: return
+        dtmfJob?.cancel()
+        try {
+            call.playDtmfTone(key)
+        } catch (_: Exception) {}
+        dtmfJob = scope.launch(Dispatchers.Default) {
+            delay(150)
+            try {
+                call.stopDtmfTone()
+            } catch (_: Exception) {}
+        }
+    }
+
+    fun stopDtmf() {
+        dtmfJob?.cancel()
+        try {
+            _currentCall.value?.stopDtmfTone()
+        } catch (_: Exception) {}
+    }
+
+    fun formatOutgoingNumberWithClir(number: String, isHide: Boolean, prefix: String): String {
+        if (!isHide || number.isBlank() || isEmergencyNumber(number)) return number
+        val clir = prefix.trim().ifBlank { "#31#" }
+        return if (number.startsWith(clir)) number else "$clir$number"
+    }
+
+    private fun isEmergencyNumber(number: String): Boolean {
+        return try {
+            PhoneNumberUtils.isEmergencyNumber(number.trim())
         } catch (_: Exception) {
             false
         }
-        if (isEmergency) return trimmed
-        val effectivePrefix = clirPrefix.trim().ifBlank { "#31#" }
-        if (trimmed.startsWith(effectivePrefix)) return trimmed
-        return "$effectivePrefix$trimmed"
     }
 
     @SuppressLint("MissingPermission")
@@ -444,138 +447,80 @@ object CallManager {
             if (imm != null && windowToken != null) {
                 imm.hideSoftInputFromWindow(windowToken, 0)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
 
+        val isEmergency = isEmergencyNumber(number)
         val targetSlot = if (preferredSim.contains("2")) 2 else 1
         _currentSimSlot.value = targetSlot
-        com.example.util.SimCallTracker.recordOutgoingCall(context, number, targetSlot)
+        SimCallTracker.recordOutgoingCall(context, number, targetSlot)
+
+        val tm = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager ?: return
+        try {
+            _currentCall.value?.takeIf { it.state == Call.STATE_ACTIVE }?.hold()
+        } catch (_: Exception) {}
+
+        val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        val hideId = prefs.getBoolean("is_hide_caller_id_enabled", false)
+        val clirPrefix = prefs.getString("clir_prefix", "#31#") ?: "#31#"
+        val dialedNumber = formatOutgoingNumberWithClir(number, hideId, clirPrefix)
+
+        val uri = Uri.fromParts("tel", dialedNumber, null)
+        val extras = Bundle()
+
+        // Critical safety rule: Emergency numbers must never be constrained to a single SIM
+        if (!isEmergency && preferredSim != "Ask") {
+            findPhoneAccountForSlot(context, tm, targetSlot)?.let {
+                extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, it)
+            }
+        }
 
         try {
-            val telecomManager = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
-            if (telecomManager != null) {
-                // Hold any active call first to avoid race conditions/collisions
-                val activeCall = _currentCall.value
-                if (activeCall != null && activeCall.state == Call.STATE_ACTIVE) {
-                    try {
-                        activeCall.hold()
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-
-                val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                val isHideCallerId = prefs.getBoolean("is_hide_caller_id_enabled", false)
-                val clirPrefix = prefs.getString("clir_prefix", "#31#") ?: "#31#"
-                val targetNumberToDial = formatOutgoingNumberWithClir(number, isHideCallerId, clirPrefix)
-
-                val uri = Uri.fromParts("tel", targetNumberToDial, null)
-                val extras = Bundle()
-                
-                if (preferredSim != "Ask") {
-                    val accounts = telecomManager.callCapablePhoneAccounts
-                    val index = if (preferredSim == "SIM 1") 0 else 1
-                    if (index < accounts.size) {
-                        extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, accounts[index])
-                    }
-                }
-                
-                telecomManager.placeCall(uri, extras)
-            }
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+            tm.placeCall(uri, extras)
+        } catch (_: Exception) {}
     }
 
-    fun disconnect() {
-        try {
-            val call = _currentCall.value
-            if (call != null) {
-                if (call.state == Call.STATE_RINGING) {
-                    call.reject(false, null)
-                } else {
-                    call.disconnect()
-                }
-                
-                val remainingCalls = _calls.value.filter { it != call && it.state != Call.STATE_DISCONNECTED }
-                if (remainingCalls.isEmpty()) {
-                    updateCall(null)
-                }
+    @SuppressLint("MissingPermission")
+    private fun findPhoneAccountForSlot(context: Context, tm: TelecomManager, slotIndex: Int): PhoneAccountHandle? {
+        return try {
+            val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+            val subInfoList = sm?.activeSubscriptionInfoList
+            val subInfo = subInfoList?.find { it.simSlotIndex == (slotIndex - 1) }
+
+            if (subInfo != null) {
+                tm.callCapablePhoneAccounts.find { handle ->
+                    handle.id.contains(subInfo.subscriptionId.toString()) || 
+                    (subInfo.iccId != null && handle.id.contains(subInfo.iccId))
+                } ?: tm.callCapablePhoneAccounts.getOrNull(slotIndex - 1)
+            } else {
+                tm.callCapablePhoneAccounts.getOrNull(slotIndex - 1)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
+            tm.callCapablePhoneAccounts.getOrNull(slotIndex - 1)
         }
-    }
-
-    private var dtmfJob: kotlinx.coroutines.Job? = null
-
-    fun playDtmf(key: Char) {
-        _currentCall.value?.let { call ->
-            dtmfJob?.cancel()
-            try {
-                call.playDtmfTone(key)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-            dtmfJob = scope.launch(Dispatchers.Default) {
-                kotlinx.coroutines.delay(150)
-                try {
-                    call.stopDtmfTone()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-            }
-        }
-    }
-
-    fun stopDtmf() {
-        dtmfJob?.cancel()
-        try {
-            _currentCall.value?.stopDtmfTone()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    fun setBluetooth(bluetooth: Boolean) {
-        inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_EARPIECE)
     }
 
     fun rejectCallWithMessage(context: Context, number: String, textMessage: String) {
         val call = _currentCall.value
-        var rejectedViaTelecom = false
         if (call != null && call.state == Call.STATE_RINGING) {
             try {
                 call.reject(true, textMessage)
-                rejectedViaTelecom = true
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+                Toast.makeText(context, context.getString(R.string.sms_sent), Toast.LENGTH_SHORT).show()
+                return
+            } catch (_: Exception) {}
         }
-        if (!rejectedViaTelecom) {
-            if (call != null) {
-                try { call.disconnect() } catch (e: Exception) { e.printStackTrace() }
+
+        try {
+            call?.disconnect()
+        } catch (_: Exception) {}
+
+        try {
+            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number")).apply {
+                putExtra("sms_body", textMessage)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
-            try {
-                val smsManager = context.getSystemService(android.telephony.SmsManager::class.java)
-                smsManager.sendTextMessage(number, null, textMessage, null, null)
-                android.widget.Toast.makeText(context, context.getString(R.string.sms_sent), android.widget.Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                try {
-                    val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number")).apply {
-                        putExtra("sms_body", textMessage)
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
-                    context.startActivity(intent)
-                } catch (ex: Exception) {
-                    android.widget.Toast.makeText(context, context.getString(R.string.sms_failed), android.widget.Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
-            android.widget.Toast.makeText(context, context.getString(R.string.sms_sent), android.widget.Toast.LENGTH_SHORT).show()
+            context.startActivity(intent)
+        } catch (_: Exception) {
+            Toast.makeText(context, context.getString(R.string.sms_failed), Toast.LENGTH_SHORT).show()
         }
     }
 }

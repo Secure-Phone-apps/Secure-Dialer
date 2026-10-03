@@ -19,9 +19,9 @@ package com.example.util
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Build
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
-import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 
 data class SimAccountInfo(
@@ -34,7 +34,7 @@ data class SimAccountInfo(
 )
 
 /**
- * World-class Dual-SIM / Multi-SIM Carrier Management.
+ * Dual-SIM / Multi-SIM Carrier Management.
  * Dynamically queries SubscriptionManager and TelecomManager for active phone accounts.
  */
 object MultiSimManager {
@@ -49,63 +49,54 @@ object MultiSimManager {
             val handles = telecomManager?.callCapablePhoneAccounts ?: emptyList()
             val activeSubs = subscriptionManager?.activeSubscriptionInfoList ?: emptyList()
 
-            activeSubs.forEachIndexed { index, subInfo ->
+            for (subInfo in activeSubs) {
+                // FIXED: Use actual hardware slot index (subInfo.simSlotIndex) instead of loop index
+                val hardwareSlot = subInfo.simSlotIndex
+
                 val handle = handles.find { h ->
                     h.id.contains(subInfo.subscriptionId.toString()) || 
                     (!subInfo.iccId.isNullOrBlank() && h.id.contains(subInfo.iccId))
-                } ?: handles.getOrNull(index)
+                } ?: handles.getOrNull(hardwareSlot)
 
-                val displayLabel = subInfo.displayName?.toString()?.takeIf { it.isNotBlank() } ?: "SIM ${index + 1}"
+                val displayLabel = subInfo.displayName?.toString()?.takeIf { it.isNotBlank() } ?: "SIM ${hardwareSlot + 1}"
                 val carrier = subInfo.carrierName?.toString()?.takeIf { it.isNotBlank() } ?: "Carrier"
 
-                val simInfo = SimAccountInfo(
-                    slotIndex = index,
-                    subscriptionId = subInfo.subscriptionId,
-                    displayName = displayLabel,
-                    carrierName = carrier,
-                    number = subInfo.number ?: "",
-                    accountHandle = handle
+                // FIXED: Use modern API 33+ getPhoneNumber with safe fallback to avoid OEM SecurityExceptions
+                val phoneNum = try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        subscriptionManager?.getPhoneNumber(subInfo.subscriptionId) ?: ""
+                    } else {
+                        @Suppress("DEPRECATION")
+                        subInfo.number ?: ""
+                    }
+                } catch (_: Exception) {
+                    ""
+                }
+
+                simList.add(
+                    SimAccountInfo(
+                        slotIndex = hardwareSlot,
+                        subscriptionId = subInfo.subscriptionId,
+                        displayName = displayLabel,
+                        carrierName = carrier,
+                        number = phoneNum,
+                        accountHandle = handle
+                    )
                 )
-                simList.add(simInfo)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
 
-        // Ensure at least 2 SIM options exist so Dual SIM (SIM 1 & SIM 2) selection is always available
-        if (simList.isEmpty()) {
-            simList.add(SimAccountInfo(0, 1, "SIM 1", "SIM 1 Carrier", "", null))
-            simList.add(SimAccountInfo(1, 2, "SIM 2", "SIM 2 Carrier", "", null))
-        } else if (simList.size == 1) {
-            val first = simList[0]
-            val secondSlot = if (first.slotIndex == 0) 1 else 0
-            val secondSub = if (first.subscriptionId == 1) 2 else 1
-            simList.add(
-                SimAccountInfo(
-                    slotIndex = secondSlot,
-                    subscriptionId = secondSub,
-                    displayName = "SIM 2",
-                    carrierName = "SIM 2 Carrier",
-                    number = "",
-                    accountHandle = null
-                )
-            )
-        }
-
-        return simList
+        // FIXED: Never fabricate fake "Phantom SIMs" with null handles. Return real hardware state.
+        return simList.sortedBy { it.slotIndex }
     }
 
     @SuppressLint("MissingPermission")
     fun getPhysicalSimCount(context: Context): Int {
-        try {
-            val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-            val activeSubs = subscriptionManager?.activeSubscriptionInfoList
-            if (activeSubs != null && activeSubs.isNotEmpty()) {
-                return activeSubs.size
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        return try {
+            val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+            sm?.activeSubscriptionInfoList?.size ?: 0
+        } catch (_: Exception) {
+            0
         }
-        return 1
     }
 }

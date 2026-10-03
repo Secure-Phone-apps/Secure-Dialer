@@ -22,16 +22,18 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
- * Provides tactile haptic feedback and optional subtle acoustic audio chimes
+ * Provides tactile haptic feedback and acoustic audio chimes
  * for start and stop events during phone call audio recording.
  */
 object RecordingFeedbackHelper {
 
-    private val feedbackScope = CoroutineScope(Dispatchers.Default)
+    // FIXED: SupervisorJob prevents scope cancellation if an audio hardware exception occurs
+    private val feedbackScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /**
      * Dispatches tactile haptics and an optional subtle prompt tone when call recording starts.
@@ -39,7 +41,7 @@ object RecordingFeedbackHelper {
     fun triggerRecordingStartFeedback(context: Context, chimeEnabled: Boolean) {
         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.RECORDING_START)
         if (chimeEnabled) {
-            playTone(ToneGenerator.TONE_PROP_PROMPT, durationMs = 120, volume = 35)
+            playTone(ToneGenerator.TONE_PROP_PROMPT, durationMs = 120, volume = 40)
         }
     }
 
@@ -49,7 +51,7 @@ object RecordingFeedbackHelper {
     fun triggerRecordingStopFeedback(context: Context, chimeEnabled: Boolean) {
         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.RECORDING_STOP)
         if (chimeEnabled) {
-            playTone(ToneGenerator.TONE_PROP_BEEP, durationMs = 90, volume = 30)
+            playTone(ToneGenerator.TONE_PROP_BEEP, durationMs = 90, volume = 35)
         }
     }
 
@@ -57,11 +59,19 @@ object RecordingFeedbackHelper {
         feedbackScope.launch {
             var toneGen: ToneGenerator? = null
             try {
-                toneGen = ToneGenerator(AudioManager.STREAM_VOICE_CALL, volume)
+                // FIXED: Fallback to STREAM_NOTIFICATION if modem audio HAL locks STREAM_VOICE_CALL
+                toneGen = try {
+                    ToneGenerator(AudioManager.STREAM_VOICE_CALL, volume)
+                } catch (_: Exception) {
+                    try {
+                        ToneGenerator(AudioManager.STREAM_NOTIFICATION, volume)
+                    } catch (_: Exception) {
+                        ToneGenerator(AudioManager.STREAM_SYSTEM, volume)
+                    }
+                }
                 toneGen.startTone(toneType, durationMs)
                 delay(durationMs.toLong() + 30L)
             } catch (_: Exception) {
-                // Audio hardware or focus temporarily unavailable; fail silently
             } finally {
                 try {
                     toneGen?.release()

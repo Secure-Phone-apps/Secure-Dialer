@@ -21,20 +21,27 @@ import android.content.Context
 import android.telephony.SubscriptionManager
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.abs
 
 /**
  * Tracks SIM selection (SIM 1 vs SIM 2) for placed and logged calls.
- * Ensures consistent SIM attribution across system syncs and emulator environments.
+ * Ensures consistent SIM attribution across system syncs with automatic
+ * minute-boundary bridging and storage pruning.
  */
 object SimCallTracker {
     private const val PREFS_NAME = "dialer_sim_tracker_prefs"
+    private const val MAX_RETENTION_MS = 48 * 60 * 60 * 1000L // 48-hour retention prevents unbounded XML disk growth
     private val memoryCache = ConcurrentHashMap<String, Int>()
 
     private fun hashNumber(number: String): String {
         return try {
             val digest = MessageDigest.getInstance("SHA-256")
             val hashBytes = digest.digest(number.toByteArray(Charsets.UTF_8))
-            hashBytes.joinToString("") { "%02x".format(it) }
+            buildString(hashBytes.size * 2) {
+                for (b in hashBytes) {
+                    append(String.format("%02x", b))
+                }
+            }
         } catch (_: Exception) {
             number.hashCode().toString()
         }
@@ -45,77 +52,94 @@ object SimCallTracker {
         val minuteBucket = timestampMs / 60000L
 
         if (clean.isNotEmpty()) {
-            memoryCache["${clean}_${minuteBucket}"] = simSlot
+            if (memoryCache.size > 150) memoryCache.clear()
+            memoryCache["${clean}_$minuteBucket"] = simSlot
         }
 
         try {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             val editor = prefs.edit()
+
             if (clean.isNotEmpty()) {
                 val hashed = hashNumber(clean)
-                editor.putInt("sim_${hashed}_${minuteBucket}", simSlot)
+                editor.putInt("sim_${hashed}_$minuteBucket", simSlot)
             }
-            editor.putInt("sim_time_${timestampMs}", simSlot)
+            editor.putInt("sim_time_$timestampMs", simSlot)
+            editor.putLong("sim_ts_$timestampMs", timestampMs)
+
+            // AUTO-PRUNE: Periodically cleans up keys older than 48 hours to keep XML < 10KB
+            val allEntries = prefs.all
+            if (allEntries.size > 80) {
+                val cutoff = System.currentTimeMillis() - MAX_RETENTION_MS
+                for ((key, value) in allEntries) {
+                    if (key.startsWith("sim_ts_") && (value as? Long ?: 0L) < cutoff) {
+                        val ts = key.removePrefix("sim_ts_")
+                        editor.remove(key)
+                        editor.remove("sim_time_$ts")
+                    }
+                }
+            }
             editor.apply()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
     }
 
     fun getSimSlotForCall(context: Context, number: String, timestampMs: Long): Int? {
         val clean = number.filter { it.isDigit() }
         val minuteBucket = timestampMs / 60000L
 
-        // 1. Check in-memory cache for exact minute bucket
+        // FIXED: Check current minute and adjacent +/- 1 minute buckets to eliminate network setup latency desyncs
+        val candidateBuckets = listOf(minuteBucket, minuteBucket - 1, minuteBucket + 1)
+
+        // 1. Check in-memory cache
         if (clean.isNotEmpty()) {
-            memoryCache["${clean}_${minuteBucket}"]?.let { return it }
+            for (bucket in candidateBuckets) {
+                memoryCache["${clean}_$bucket"]?.let { return it }
+            }
         }
 
-        // 2. Check SharedPreferences for exact minute bucket or timestamp
+        // 2. Check SharedPreferences
         try {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
             if (clean.isNotEmpty()) {
                 val hashed = hashNumber(clean)
-                val direct = prefs.getInt("sim_${hashed}_${minuteBucket}", 0)
-                if (direct in 1..2) {
-                    memoryCache["${clean}_${minuteBucket}"] = direct
-                    return direct
-                }
-                // Fallback for pre-migration entries
-                val legacyDirect = prefs.getInt("sim_${clean}_${minuteBucket}", 0)
-                if (legacyDirect in 1..2) {
-                    memoryCache["${clean}_${minuteBucket}"] = legacyDirect
-                    return legacyDirect
+                for (bucket in candidateBuckets) {
+                    val direct = prefs.getInt("sim_${hashed}_$bucket", 0)
+                    if (direct in 1..2) {
+                        memoryCache["${clean}_$minuteBucket"] = direct
+                        return direct
+                    }
+                    val legacyDirect = prefs.getInt("sim_${clean}_$bucket", 0)
+                    if (legacyDirect in 1..2) {
+                        memoryCache["${clean}_$minuteBucket"] = legacyDirect
+                        return legacyDirect
+                    }
                 }
             }
-            val timeDirect = prefs.getInt("sim_time_${timestampMs}", 0)
-            if (timeDirect in 1..2) {
-                if (clean.isNotEmpty()) {
-                    memoryCache["${clean}_${minuteBucket}"] = timeDirect
+
+            // Check exact or near timestamp (within 15 seconds)
+            val timeDirect = prefs.getInt("sim_time_$timestampMs", 0)
+            if (timeDirect in 1..2) return timeDirect
+
+            for ((key, value) in prefs.all) {
+                if (key.startsWith("sim_time_") && value is Int && value in 1..2) {
+                    val recordedTs = key.removePrefix("sim_time_").toLongOrNull() ?: continue
+                    if (abs(recordedTs - timestampMs) <= 15000L) {
+                        return value
+                    }
                 }
-                return timeDirect
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
 
         return null
     }
 
     fun isMultiSimActive(context: Context): Boolean {
-        try {
-            val subManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-            if (subManager != null) {
-                val count = try {
-                    subManager.activeSubscriptionInfoCount
-                } catch (e: SecurityException) {
-                    0
-                }
-                if (count > 1) return true
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        return try {
+            val subManager = context.applicationContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
+            val count = subManager?.activeSubscriptionInfoList?.size ?: 0
+            count > 1
+        } catch (_: Exception) {
+            false
         }
-        return false
     }
 }

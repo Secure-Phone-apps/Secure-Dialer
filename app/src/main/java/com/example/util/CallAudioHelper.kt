@@ -19,19 +19,19 @@ package com.example.util
 
 import android.content.Context
 import android.media.AudioManager
+import android.os.Build
 import android.telecom.CallAudioState
 import android.telecom.InCallService
-import android.util.Log
 
 /**
  * Manages acoustic balancing for call recording.
  *
  * Balances speakerphone output at ~55% of STREAM_VOICE_CALL max volume to avoid
  * chassis clipping and acoustic distortion while capturing both parties clearly.
- * Silently saves and restores the original volume index and audio route.
+ * Silently saves and restores the original volume index and audio route across Bluetooth,
+ * Wired Headsets, and Earpiece.
  */
 object CallAudioHelper {
-    private const val TAG = "CallAudioHelper"
     private const val SWEET_SPOT_RATIO = 0.55
 
     @Volatile
@@ -45,12 +45,8 @@ object CallAudioHelper {
 
     /**
      * Prepares speakerphone and volume level at the 55% sweet spot for recording.
-     *
-     * @param context Application or Service Context
-     * @param inCallService Telecom InCallService instance (can be null in simulations)
-     * @param currentAudioState Current CallAudioState
-     * @return true if adjustments were applied
      */
+    @Synchronized
     fun prepareSpeakerForRecording(
         context: Context,
         inCallService: InCallService?,
@@ -60,61 +56,61 @@ object CallAudioHelper {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
                 ?: return false
 
-            // 1. Determine current route (from CallAudioState or fallback to AudioManager)
             val currentRoute = currentAudioState?.route ?: CallAudioState.ROUTE_EARPIECE
             originalRoute = currentRoute
 
-            // 2. Save original voice call volume before modifying
             val currentVol = audioManager.getStreamVolume(AudioManager.STREAM_VOICE_CALL)
             originalVolume = currentVol
 
-            // 3. Switch route to Speakerphone if not already on speaker
-            if (currentRoute != CallAudioState.ROUTE_SPEAKER) {
+            // Switch to Speakerphone if currently on earpiece
+            if (currentRoute == CallAudioState.ROUTE_EARPIECE) {
                 inCallService?.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
             }
 
-            // 4. Calculate balanced 55% sweet spot
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
-            val balancedVolume = (maxVolume * SWEET_SPOT_RATIO).toInt().coerceIn(1, maxVolume)
+            val minVolume = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try { audioManager.getStreamMinVolume(AudioManager.STREAM_VOICE_CALL) } catch (_: Exception) { 0 }
+            } else {
+                0
+            }
 
-            // 5. Set volume silently (flag 0 = no visible UI volume slider overlay)
-            audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, balancedVolume, 0)
+            val balancedVolume = (maxVolume * SWEET_SPOT_RATIO).toInt().coerceIn(minVolume, maxVolume)
+
+            try {
+                audioManager.setStreamVolume(AudioManager.STREAM_VOICE_CALL, balancedVolume, 0)
+            } catch (_: SecurityException) {
+                // Ignore if restricted by system Zen/DND policy on certain OEM ROMs
+            }
 
             didAdjustAudio = true
-            Log.d(TAG, "Prepared recording audio: vol=$balancedVolume/$maxVolume (was $currentVol), route=SPEAKER")
             return true
-        } catch (e: Exception) {
-            Log.e(TAG, "Error preparing speaker for recording", e)
+        } catch (_: Exception) {
             return false
         }
     }
 
     /**
-     * Restores the user's previous volume and audio route when recording ends or call disconnects.
-     *
-     * @param context Application or Service Context
-     * @param inCallService Telecom InCallService instance
+     * Restores the user's previous volume and audio route (Bluetooth, Headset, or Earpiece).
      */
+    @Synchronized
     fun restoreAudioState(context: Context, inCallService: InCallService?) {
         if (!didAdjustAudio) return
         try {
             val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
 
-            // 1. Restore previous volume level silently
             originalVolume?.let { prevVol ->
-                audioManager?.setStreamVolume(AudioManager.STREAM_VOICE_CALL, prevVol, 0)
-                Log.d(TAG, "Restored volume: $prevVol")
+                try {
+                    audioManager?.setStreamVolume(AudioManager.STREAM_VOICE_CALL, prevVol, 0)
+                } catch (_: SecurityException) {}
             }
 
-            // 2. Restore previous route if it was earpiece
+            // FIXED: Fully restores ANY previous route (Bluetooth, Wired Headset, or Earpiece)
             originalRoute?.let { prevRoute ->
-                if (prevRoute == CallAudioState.ROUTE_EARPIECE) {
-                    inCallService?.setAudioRoute(CallAudioState.ROUTE_EARPIECE)
-                    Log.d(TAG, "Restored route: EARPIECE")
+                if (prevRoute != CallAudioState.ROUTE_SPEAKER) {
+                    inCallService?.setAudioRoute(prevRoute)
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error restoring audio state", e)
+        } catch (_: Exception) {
         } finally {
             originalVolume = null
             originalRoute = null
@@ -122,9 +118,7 @@ object CallAudioHelper {
         }
     }
 
-    /**
-     * Reset state tracking without hardware side-effects.
-     */
+    @Synchronized
     fun reset() {
         originalVolume = null
         originalRoute = null

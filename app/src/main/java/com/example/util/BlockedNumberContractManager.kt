@@ -22,13 +22,14 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.BlockedNumberContract
+import android.telephony.PhoneNumberUtils
 import com.example.data.DialerDao
 import com.example.model.BlockedNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * World-class native integration for system-wide and local call blocking.
+ * Native integration for system-wide and local call blocking.
  * Integrates with Android's system BlockedNumberContract with automatic fallback
  * to Room DB for maximum reliability across custom ROMs and older Android versions.
  */
@@ -36,44 +37,57 @@ object BlockedNumberContractManager {
 
     suspend fun isBlocked(context: Context, number: String, dao: DialerDao? = null): Boolean =
         withContext(Dispatchers.IO) {
-            if (number.isBlank()) return@withContext false
-            val cleanNum = number.filter { it.isDigit() || it == '+' }
+            val trimmed = number.trim()
+            if (trimmed.isEmpty()) return@withContext false
 
-            // 1. Check System BlockedNumberContract if supported
+            // CRITICAL SAFETY FIX: Emergency services must NEVER be blocked under any condition
             try {
-                if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
-                    val isSystemBlocked = BlockedNumberContract.isBlocked(context, cleanNum)
+                if (PhoneNumberUtils.isEmergencyNumber(trimmed)) return@withContext false
+            } catch (_: Exception) {}
+
+            val cleanNum = trimmed.filter { it.isDigit() || it == '+' }
+
+            // 1. Check System BlockedNumberContract (requires default dialer role)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+                    val isSystemBlocked = BlockedNumberContract.isBlocked(context, cleanNum) || 
+                                          BlockedNumberContract.isBlocked(context, trimmed)
                     if (isSystemBlocked) return@withContext true
                 }
-            } catch (e: Exception) {
-                // System query restricted or unsupported on custom ROM
-            }
+            } catch (_: Exception) {}
 
-            // 2. Check Local Room Database
+            // 2. Check Local Room Database (handles exact match, formatted match, and wildcard rules)
             try {
                 if (dao != null) {
-                    val localBlocked = dao.isBlocked(cleanNum)
-                    if (localBlocked) return@withContext true
+                    val isLocalBlocked = dao.isBlocked(cleanNum) || 
+                                         dao.isBlocked(trimmed) || 
+                                         dao.isBlockedSql(cleanNum) ||
+                                         dao.isBlockedSql(trimmed)
+                    if (isLocalBlocked) return@withContext true
                 }
-            } catch (e: Exception) {
-                // DB error fallback
-            }
+            } catch (_: Exception) {}
 
             false
         }
 
     suspend fun blockNumber(context: Context, number: String, dao: DialerDao? = null): Boolean =
         withContext(Dispatchers.IO) {
-            val cleanNum = number.trim()
-            if (cleanNum.isEmpty()) return@withContext false
+            val trimmed = number.trim()
+            if (trimmed.isEmpty()) return@withContext false
 
+            // Never block emergency numbers
+            try {
+                if (PhoneNumberUtils.isEmergencyNumber(trimmed)) return@withContext false
+            } catch (_: Exception) {}
+
+            val cleanNum = if (trimmed.contains("*")) trimmed else trimmed.filter { it.isDigit() || it == '+' }
             var systemSuccess = false
 
             // Try System BlockedNumberContract first
             try {
-                if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
                     val values = ContentValues().apply {
-                        put(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER, cleanNum)
+                        put(BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER, trimmed)
                     }
                     val uri: Uri? = context.contentResolver.insert(
                         BlockedNumberContract.BlockedNumbers.CONTENT_URI,
@@ -81,45 +95,47 @@ object BlockedNumberContractManager {
                     )
                     systemSuccess = (uri != null)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 systemSuccess = false
             }
 
-            // Always sync to Local DB for ultra-fast local lookups
+            // FIXED: Always insert both normalized and raw formats into Room to ensure incoming calls match 100%
             try {
                 dao?.insertBlockedNumber(BlockedNumber(number = cleanNum))
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+                if (cleanNum != trimmed) {
+                    dao?.insertBlockedNumber(BlockedNumber(number = trimmed))
+                }
+            } catch (_: Exception) {}
 
             systemSuccess
         }
 
     suspend fun unblockNumber(context: Context, number: String, dao: DialerDao? = null): Boolean =
         withContext(Dispatchers.IO) {
-            val cleanNum = number.trim()
-            if (cleanNum.isEmpty()) return@withContext false
+            val trimmed = number.trim()
+            if (trimmed.isEmpty()) return@withContext false
 
+            val cleanNum = trimmed.filter { it.isDigit() || it == '+' }
             var systemSuccess = false
 
             try {
-                if (BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
                     val count = context.contentResolver.delete(
                         BlockedNumberContract.BlockedNumbers.CONTENT_URI,
-                        "${BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER} = ?",
-                        arrayOf(cleanNum)
+                        "${BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER} = ? OR ${BlockedNumberContract.BlockedNumbers.COLUMN_ORIGINAL_NUMBER} = ?",
+                        arrayOf(trimmed, cleanNum)
                     )
                     systemSuccess = (count > 0)
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 systemSuccess = false
             }
 
+            // Delete both raw and normalized entries from local DB
             try {
                 dao?.deleteBlockedNumber(BlockedNumber(number = cleanNum))
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+                dao?.deleteBlockedNumber(BlockedNumber(number = trimmed))
+            } catch (_: Exception) {}
 
             systemSuccess
         }

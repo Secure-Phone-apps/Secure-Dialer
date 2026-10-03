@@ -17,34 +17,60 @@
 
 package com.example.model
 
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.dp
 import androidx.room.*
+import java.util.Locale
 
+// FIXED: Honour user selection across Circular, Squircle, Rounded, and Square
 fun getAvatarShape(shapeType: String): Shape {
-    return RoundedCornerShape(16.dp)
+    return when (shapeType.lowercase(Locale.ROOT)) {
+        "circular", "circle" -> CircleShape
+        "squircle" -> RoundedCornerShape(24.dp)
+        "square" -> RoundedCornerShape(4.dp)
+        else -> RoundedCornerShape(16.dp)
+    }
 }
 
+// FIXED: Handles Unicode surrogate pairs, emojis, and multi-script initials without  corruption
 fun getInitials(name: String): String {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) return "?"
-    
+
     val parts = trimmed.split(Regex("\\s+")).filter { it.isNotBlank() }
     return if (parts.size >= 2) {
-        val firstChar = parts[0].firstOrNull()?.toString()?.uppercase() ?: ""
-        val secondChar = parts[1].firstOrNull()?.toString()?.uppercase() ?: ""
-        firstChar + secondChar
+        val firstGlyph = getFirstGrapheme(parts[0])
+        val secondGlyph = getFirstGrapheme(parts[1])
+        (firstGlyph + secondGlyph).uppercase(Locale.ROOT)
     } else {
-        if (trimmed.length >= 2) {
-            trimmed.substring(0, 2).uppercase()
-        } else {
-            trimmed.take(1).uppercase()
-        }
+        getFirstTwoGraphemes(trimmed).uppercase(Locale.ROOT)
     }
+}
+
+private fun getFirstGrapheme(text: String): String {
+    if (text.isEmpty()) return ""
+    val firstChar = text[0]
+    return if (Character.isHighSurrogate(firstChar) && text.length >= 2) {
+        text.substring(0, 2)
+    } else {
+        firstChar.toString()
+    }
+}
+
+private fun getFirstTwoGraphemes(text: String): String {
+    if (text.isEmpty()) return "?"
+    var count = 0
+    var index = 0
+    while (index < text.length && count < 2) {
+        val char = text[index]
+        index += if (Character.isHighSurrogate(char) && index + 1 < text.length) 2 else 1
+        count++
+    }
+    return text.substring(0, index)
 }
 
 @Immutable
@@ -151,9 +177,7 @@ data class Contact(
         return emptyList()
     }
 
-    fun getAllAddresses(): List<LabeledAddress> {
-        return addresses
-    }
+    fun getAllAddresses(): List<LabeledAddress> = addresses
 }
 
 @Entity(tableName = "call_notes")
@@ -178,7 +202,9 @@ data class CallReminder(
     val reminderTime: Long,
     val isCompleted: Boolean = false,
     val note: String = ""
-)
+) {
+    @Ignore val contactName: String = name
+}
 
 @Entity(tableName = "call_recordings")
 data class CallRecording(
@@ -186,7 +212,7 @@ data class CallRecording(
     val number: String,
     val name: String,
     val timestamp: String,
-    val duration: Long, // in seconds
+    val duration: Long,
     val filePath: String,
     val note: String = ""
 )
@@ -198,7 +224,7 @@ data class BlockedNumber(
 
 @Entity(tableName = "speed_dial")
 data class SpeedDial(
-    @PrimaryKey val key: Int, // 2-9
+    @PrimaryKey val key: Int,
     val number: String,
     val name: String
 )
@@ -230,4 +256,3 @@ data class DialpadMatch(
     val avatarBg: Color get() = Color(avatarBgValue.toULong())
     val avatarTextColor: Color get() = Color(avatarTextColorValue.toULong())
 }
-

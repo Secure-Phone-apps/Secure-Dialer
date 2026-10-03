@@ -22,31 +22,34 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 /**
- * World-class Hardware Sensor Manager for Call Gestures:
- * - Proximity detection (Ear close screen dimming)
+ * Hardware Sensor Manager for Call Gestures:
+ * - Proximity detection (Ear-close screen dimming across physical & ultrasound sensors)
  * - Flip-Face-Down to Mute incoming ringer
  * - Shake gesture detection
  */
 class CallGestureSensorManager(
-    private val context: Context,
+    context: Context,
     private val onProximityChanged: (Boolean) -> Unit,
     private val onFlipFaceDown: () -> Unit = {},
     private val onShake: () -> Unit = {}
 ) : SensorEventListener {
 
-    private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
+    private val appContext = context.applicationContext
+    private val sensorManager = appContext.getSystemService(Context.SENSOR_SERVICE) as? SensorManager
     private val proximitySensor = sensorManager?.getDefaultSensor(Sensor.TYPE_PROXIMITY)
     private val accelerometer = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+    private val prefs = appContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
     private var isListening = false
     private var lastShakeTime = 0L
-    private val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
     private var wasFaceUp = false
     private var faceDownStartTime = 0L
     private var hasFlippedThisCall = false
+    private var isFlipEnabled = false
 
     fun startListening() {
         if (isListening || sensorManager == null) return
@@ -54,11 +57,18 @@ class CallGestureSensorManager(
         faceDownStartTime = 0L
         hasFlippedThisCall = false
 
+        // PERF FIX: Read preference once at start instead of 60 times a second inside onSensorChanged
+        isFlipEnabled = prefs.getBoolean("flip_to_silence_enabled", false)
+
         proximitySensor?.let {
             sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)
         }
-        accelerometer?.let {
-            sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+
+        // Only register power-hungry accelerometer if gesture features are enabled
+        if (isFlipEnabled) {
+            accelerometer?.let {
+                sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+            }
         }
         isListening = true
     }
@@ -76,7 +86,8 @@ class CallGestureSensorManager(
             Sensor.TYPE_PROXIMITY -> {
                 val distance = event.values.getOrNull(0) ?: return
                 val maxRange = proximitySensor?.maximumRange ?: 5f
-                val isNear = distance < maxRange && distance < 5f
+                // FIXED: Accurate proximity detection for physical, binary, and virtual ultrasound sensors
+                val isNear = distance == 0f || (distance < maxRange && distance < 5f)
                 onProximityChanged(isNear)
             }
             Sensor.TYPE_ACCELEROMETER -> {
@@ -85,13 +96,11 @@ class CallGestureSensorManager(
                 val z = event.values.getOrNull(2) ?: 0f
 
                 // 1. Check Flip Face Down (requires phone was face-up first, then turned face-down and held for 500ms)
-                val isFlipEnabled = prefs.getBoolean("flip_to_silence_enabled", false)
                 if (isFlipEnabled && !hasFlippedThisCall) {
                     if (z > 3.0f) {
-                        // Phone is upright or face-up
                         wasFaceUp = true
                         faceDownStartTime = 0L
-                    } else if (wasFaceUp && z < -7.5f && kotlin.math.abs(x) < 4.0f && kotlin.math.abs(y) < 4.0f) {
+                    } else if (wasFaceUp && z < -7.5f && abs(x) < 4.0f && abs(y) < 4.0f) {
                         val now = System.currentTimeMillis()
                         if (faceDownStartTime == 0L) {
                             faceDownStartTime = now

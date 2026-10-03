@@ -17,189 +17,91 @@
 
 package com.example
 
+import android.app.KeyguardManager
 import android.app.role.RoleManager
 import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.telecom.TelecomManager
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import com.example.ui.MainScreen
-import com.example.ui.theme.MyApplicationTheme
-import com.example.ui.viewmodel.DialerViewModel
-import android.app.KeyguardManager
-import android.media.AudioManager
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
+import com.example.ui.MainScreen
+import com.example.ui.theme.MyApplicationTheme
+import com.example.ui.viewmodel.DialerViewModel
 
 class MainActivity : ComponentActivity() {
 
     private val viewModel: DialerViewModel by viewModels()
     private val isAppAuthenticated = mutableStateOf(false)
-    val recordAudioPermissionLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        viewModel.hasRecordAudioPermission.value = isGranted
-    }
-    private val authLauncher = registerForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        isAuthenticating = false
-        if (result.resultCode == RESULT_OK) {
-            isAppAuthenticated.value = true
-        } else {
-            isAppAuthenticated.value = false
-        }
-    }
     private var isAuthenticating = false
     private var isAppStopped = false
     private var isLaunchedForCall = false
 
-    private fun dismissCallUiAndExit() {
-        setLockScreenVisibility(false)
-        if (isLaunchedForCall) {
-            isLaunchedForCall = false
-            viewModel.isLaunchedForCall.value = false
-            if (viewModel.isBiometricLockEnabled.value) {
-                isAppAuthenticated.value = false
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                finishAndRemoveTask()
-            } else {
-                finish()
-            }
-        }
+    val recordAudioPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        viewModel.hasRecordAudioPermission.value = isGranted
     }
 
-    companion object {
-        private const val REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL = 4224
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putBoolean("is_authenticated", isAppAuthenticated.value)
-    }
-
-    override fun onStop() {
-        super.onStop()
-        CallManager.isAppInForeground = false
-        isAppStopped = true
-    }
-
-    override fun onResume() {
-        super.onResume()
-        volumeControlStream = AudioManager.STREAM_VOICE_CALL
-        CallManager.isAppInForeground = true
-        viewModel.hasRecordAudioPermission.value = androidx.core.content.ContextCompat.checkSelfPermission(
-            this,
-            android.Manifest.permission.RECORD_AUDIO
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-    }
-
-    override fun onStart() {
-        super.onStart()
-        volumeControlStream = AudioManager.STREAM_VOICE_CALL
-        CallManager.isAppInForeground = true
-        val hasRealActiveCall = CallManager.currentCall.value != null || 
-                                CallManager.calls.value.isNotEmpty() ||
-                                viewModel.isFakeCallActive.value
-        val hasActiveOrIncomingCall = hasRealActiveCall || 
-                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealActiveCall)
-        if (hasActiveOrIncomingCall) {
-            isAppAuthenticated.value = true
-            setLockScreenVisibility(true)
-        } else if (isAppStopped) {
-            isAppStopped = false
-            if (viewModel.isBiometricLockEnabled.value) {
-                isAppAuthenticated.value = false
-            }
-        }
-    }
-
-    override fun onAttachedToWindow() {
-        super.onAttachedToWindow()
-        val hasRealActiveCall = CallManager.currentCall.value != null || 
-                                CallManager.calls.value.isNotEmpty() ||
-                                viewModel.isFakeCallActive.value
-        val hasActiveOrIncomingCall = hasRealActiveCall || 
-                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealActiveCall)
-        if (hasActiveOrIncomingCall) {
-            setLockScreenVisibility(true)
-        }
-    }
-
-    private fun triggerDeviceAuthentication() {
-        if (isAuthenticating) return
-        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager ?: return
-        if (keyguardManager.isDeviceSecure) {
-            val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                "Secure Dialer",
-                "Authenticate to open Secure Dialer"
-            )
-            if (intent != null) {
-                isAuthenticating = true
-                authLauncher.launch(intent)
-            } else {
-                isAppAuthenticated.value = true
-            }
-        } else {
-            isAppAuthenticated.value = true
-        }
+    private val authLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        isAuthenticating = false
+        isAppAuthenticated.value = (result.resultCode == RESULT_OK)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CallManager.appContext = applicationContext
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
-        // Obscure UI content visibility in release builds to prevent PII snapshot leaks without blocking emulator preview
+
+        // Protect PII from OS switcher task snapshots
         if (!BuildConfig.DEBUG) {
-            window.setFlags(
-                android.view.WindowManager.LayoutParams.FLAG_SECURE,
-                android.view.WindowManager.LayoutParams.FLAG_SECURE
-            )
+            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
 
-        if (savedInstanceState != null) {
+        // FIXED: Do not restore authentication across process recreation if biometric lock is enabled
+        if (savedInstanceState != null && !viewModel.isBiometricLockEnabled.value) {
             isAppAuthenticated.value = savedInstanceState.getBoolean("is_authenticated", false)
         } else {
             isAppAuthenticated.value = !viewModel.isBiometricLockEnabled.value
         }
 
         enableEdgeToEdge()
-        val hasRealActiveCall = CallManager.currentCall.value != null || 
-                                CallManager.calls.value.isNotEmpty() ||
-                                viewModel.isFakeCallActive.value
-        val hasActiveOrIncomingCall = hasRealActiveCall || 
-                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealActiveCall)
-        if (hasActiveOrIncomingCall) {
+
+        val hasRealCall = CallManager.currentCall.value != null ||
+                CallManager.calls.value.isNotEmpty() ||
+                viewModel.isFakeCallActive.value
+        if (hasRealCall || intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true) {
             setLockScreenVisibility(true)
         }
+
         try {
             handleIntent(intent)
-        } catch (_: Exception) {
-        }
+        } catch (_: Exception) {}
 
         setContent {
             val context = LocalContext.current
@@ -207,28 +109,34 @@ class MainActivity : ComponentActivity() {
             val isDarkTheme by viewModel.isDarkTheme
             val isCallActive by viewModel.isCallActive
 
+            // FIXED: Prevent lock screen back-gesture from revealing private contacts or recents
+            val keyguardManager = remember { context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager }
+            BackHandler(enabled = keyguardManager?.isKeyguardLocked == true) {
+                if (isCallActive) {
+                    moveTaskToBack(true)
+                } else {
+                    dismissCallUiAndExit()
+                }
+            }
+
             LaunchedEffect(isCallActive) {
                 try {
                     setLockScreenVisibility(isCallActive)
                     if (!isCallActive && isLaunchedForCall && CallManager.calls.value.isEmpty() && !viewModel.isFakeCallActive.value) {
                         dismissCallUiAndExit()
                     }
-                } catch (_: Exception) {
-                }
+                } catch (_: Exception) {}
             }
 
-            // Observe lifecycle to refresh default dialer status and handle authentication
             val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
             DisposableEffect(lifecycleOwner) {
                 val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
                     if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
                         updateDefaultDialerStatus(context)
-                        val hasRealCall = CallManager.currentCall.value != null || 
-                                          CallManager.calls.value.isNotEmpty() ||
-                                          viewModel.isFakeCallActive.value
-                        val hasCall = hasRealCall || 
-                                     (intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true && hasRealCall)
-                        if (hasCall) {
+                        val hasActiveCall = CallManager.currentCall.value != null ||
+                                CallManager.calls.value.isNotEmpty() ||
+                                viewModel.isFakeCallActive.value
+                        if (hasActiveCall || intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true) {
                             isAppAuthenticated.value = true
                             setLockScreenVisibility(true)
                         } else if (viewModel.isBiometricLockEnabled.value) {
@@ -257,9 +165,7 @@ class MainActivity : ComponentActivity() {
                             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", packageName, null)
                             })
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
+                        } catch (_: Exception) {}
                     }
                 )
             }
@@ -289,10 +195,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center,
@@ -304,10 +207,7 @@ class MainActivity : ComponentActivity() {
                                     tonalElevation = 4.dp,
                                     modifier = Modifier.size(96.dp)
                                 ) {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.fillMaxSize()
-                                    ) {
+                                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                         Icon(
                                             imageVector = Icons.Default.Lock,
                                             contentDescription = "App Locked",
@@ -341,15 +241,105 @@ class MainActivity : ComponentActivity() {
                                     onClick = { triggerDeviceAuthentication() },
                                     modifier = Modifier.fillMaxWidth(0.7f)
                                 ) {
-                                    Text(
-                                        text = "Unlock Dialer",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
+                                    Text(text = "Unlock Dialer", style = MaterialTheme.typography.titleMedium)
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Only preserve authentication in state if biometric lock is turned off
+        if (!viewModel.isBiometricLockEnabled.value) {
+            outState.putBoolean("is_authenticated", isAppAuthenticated.value)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        CallManager.isAppInForeground = false
+        isAppStopped = true
+    }
+
+    override fun onResume() {
+        super.onResume()
+        volumeControlStream = AudioManager.STREAM_VOICE_CALL
+        CallManager.isAppInForeground = true
+        viewModel.hasRecordAudioPermission.value = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.RECORD_AUDIO
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    override fun onStart() {
+        super.onStart()
+        volumeControlStream = AudioManager.STREAM_VOICE_CALL
+        CallManager.isAppInForeground = true
+        val hasRealCall = CallManager.currentCall.value != null ||
+                CallManager.calls.value.isNotEmpty() ||
+                viewModel.isFakeCallActive.value
+        if (hasRealCall || intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true) {
+            isAppAuthenticated.value = true
+            setLockScreenVisibility(true)
+        } else if (isAppStopped) {
+            isAppStopped = false
+            if (viewModel.isBiometricLockEnabled.value) {
+                isAppAuthenticated.value = false
+            }
+        }
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        val hasRealCall = CallManager.currentCall.value != null ||
+                CallManager.calls.value.isNotEmpty() ||
+                viewModel.isFakeCallActive.value
+        if (hasRealCall || intent?.getBooleanExtra("SHOW_CALL_SCREEN", false) == true) {
+            setLockScreenVisibility(true)
+        }
+    }
+
+    private fun triggerDeviceAuthentication() {
+        if (isAuthenticating) return
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager ?: return
+        if (keyguardManager.isDeviceSecure) {
+            val intent = keyguardManager.createConfirmDeviceCredentialIntent(
+                "Secure Dialer",
+                "Authenticate to open Secure Dialer"
+            )
+            if (intent != null) {
+                isAuthenticating = true
+                try {
+                    authLauncher.launch(intent)
+                } catch (_: Exception) {
+                    // FIXED: Prevent deadlock if OS fails to launch credential chooser
+                    isAuthenticating = false
+                    isAppAuthenticated.value = false
+                }
+            } else {
+                isAppAuthenticated.value = true
+            }
+        } else {
+            isAppAuthenticated.value = true
+        }
+    }
+
+    private fun dismissCallUiAndExit() {
+        setLockScreenVisibility(false)
+        if (isLaunchedForCall) {
+            isLaunchedForCall = false
+            viewModel.isLaunchedForCall.value = false
+            if (viewModel.isBiometricLockEnabled.value) {
+                isAppAuthenticated.value = false
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                finishAndRemoveTask()
+            } else {
+                finish()
             }
         }
     }
@@ -363,44 +353,22 @@ class MainActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             if (show) {
                 window.addFlags(
-                    android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                    android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 )
+                val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    km?.requestDismissKeyguard(this, null)
+                }
             } else {
                 window.clearFlags(
-                    android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                    android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-                    android.view.WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                    android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
+                    WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 )
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    private fun checkDefaultDialerRole() {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val roleManager = getSystemService(Context.ROLE_SERVICE) as? RoleManager
-                if (roleManager != null && !roleManager.isRoleHeld(RoleManager.ROLE_DIALER)) {
-                    val intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_DIALER)
-                    startActivity(intent)
-                }
-            } else {
-                val telecomManager = getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
-                if (telecomManager != null && telecomManager.defaultDialerPackage != packageName) {
-                    val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                        putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, packageName)
-                    }
-                    startActivity(intent)
-                }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        } catch (_: Exception) {}
     }
 
     private fun updateDefaultDialerStatus(context: Context) {
@@ -410,8 +378,7 @@ class MainActivity : ComponentActivity() {
             } else {
                 (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.defaultDialerPackage == context.packageName
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             viewModel.isDefaultDialer.value = false
         }
     }
@@ -433,7 +400,6 @@ class MainActivity : ComponentActivity() {
                 viewModel.fakeCallState.value = "RINGING"
                 viewModel.isSettingsVisible.value = false
                 viewModel.isCallMinimized.value = false
-                // Also bypass lockscreen authentication automatically for safety/escape features
                 isAppAuthenticated.value = true
                 setLockScreenVisibility(true)
             }
@@ -448,9 +414,9 @@ class MainActivity : ComponentActivity() {
             setLockScreenVisibility(true)
         }
 
-        val hasGenuineActiveCall = CallManager.currentCall.value != null || 
-                                   CallManager.calls.value.isNotEmpty() ||
-                                   viewModel.isFakeCallActive.value
+        val hasGenuineActiveCall = CallManager.currentCall.value != null ||
+                CallManager.calls.value.isNotEmpty() ||
+                viewModel.isFakeCallActive.value
         if (hasGenuineActiveCall) {
             isLaunchedForCall = true
             viewModel.isLaunchedForCall.value = true
@@ -466,12 +432,10 @@ class MainActivity : ComponentActivity() {
         val action = intent.action
         val data = intent.data
         if (action == Intent.ACTION_CALL || action == Intent.ACTION_DIAL || action == Intent.ACTION_VIEW) {
-            val scheme = data?.scheme
-            if (scheme == "tel") {
-                val number = data?.schemeSpecificPart ?: ""
+            if (data?.scheme == "tel") {
+                val number = data.schemeSpecificPart ?: ""
                 if (number.isNotEmpty()) {
-                    // SEC-02: Intercept Intent.ACTION_CALL to populate dialpad preview instead of dialing immediately,
-                    // preventing Confused Deputy exploits from untrusted external callers.
+                    // SEC-02: Populate dialpad preview instead of placing call directly to avoid confused deputy attacks
                     viewModel.dialpadInput.value = number
                     viewModel.selectTabBySlotKey("DIALPAD")
                 }

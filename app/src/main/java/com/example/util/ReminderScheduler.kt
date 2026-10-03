@@ -24,12 +24,16 @@ import android.content.Intent
 import android.os.Build
 
 object ReminderScheduler {
+
     fun schedule(context: Context, reminderId: Int, triggerTimeMillis: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+        if (triggerTimeMillis <= System.currentTimeMillis()) return
+
         val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
             setPackage(context.packageName)
             putExtra("reminder_id", reminderId)
         }
+
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             reminderId,
@@ -38,14 +42,33 @@ object ReminderScheduler {
         )
 
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+            val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                alarmManager.canScheduleExactAlarms()
             } else {
-                alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+                true
             }
-        } catch (e: SecurityException) {
-            // Fallback to normal set in case exact alarms are restricted on some customized Android 13/14 ROMs
-            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+
+            if (canScheduleExact) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+                } else {
+                    alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+                }
+            } else {
+                // FIXED: Fires reliably during Doze mode without needing exact alarm permission
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+                } else {
+                    alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+                }
+            }
+        } catch (_: SecurityException) {
+            // Safe fallback if revoked mid-execution
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+            } else {
+                alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTimeMillis, pendingIntent)
+            }
         }
     }
 
@@ -53,6 +76,7 @@ object ReminderScheduler {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
         val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
             setPackage(context.packageName)
+            putExtra("reminder_id", reminderId)
         }
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -64,9 +88,7 @@ object ReminderScheduler {
             try {
                 alarmManager.cancel(pendingIntent)
                 pendingIntent.cancel()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+            } catch (_: Exception) {}
         }
     }
 }

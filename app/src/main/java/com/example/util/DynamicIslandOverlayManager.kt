@@ -17,34 +17,35 @@
 
 package com.example.util
 
+import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
-import android.os.Bundle
 import android.provider.Settings
-import android.telecom.Call
 import android.telecom.CallAudioState
 import android.view.Gravity
+import android.view.MotionEvent
 import android.view.WindowManager
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.savedstate.SavedStateRegistry
 import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.CallManager
 import com.example.MainActivity
 import com.example.ui.components.DynamicIslandPill
 import com.example.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlin.math.abs
+import kotlin.math.hypot
 
 object DynamicIslandOverlayManager {
-    private var windowManager: WindowManager? = null
     private var overlayComposeView: ComposeView? = null
     private var overlayLifecycleOwner: OverlayLifecycleOwner? = null
     private var monitorJob: Job? = null
@@ -63,22 +64,27 @@ object DynamicIslandOverlayManager {
         monitorJob = scope.launch {
             CallManager.currentCall.collectLatest { call ->
                 if (call != null) {
-                    val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                    val appContext = context.applicationContext
+                    val prefs = appContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
                     val isEnabled = prefs.getBoolean("is_dynamic_island_enabled", true)
                     val speakerOnly = prefs.getBoolean("is_dynamic_island_speaker_only", false)
-                    
-                    if (isEnabled && canDrawOverlay(context) && !CallManager.isAppInForeground) {
+
+                    // PRIVACY FIX: Do not float caller PII over a locked device keyguard
+                    val km = appContext.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                    val isLocked = km?.isKeyguardLocked == true
+
+                    if (isEnabled && canDrawOverlay(appContext) && !CallManager.isAppInForeground && !isLocked) {
                         val isSpeaker = CallManager.audioState.value?.route == CallAudioState.ROUTE_SPEAKER
                         if (!speakerOnly || isSpeaker) {
-                            showOverlay(context)
+                            showOverlay(appContext)
                         } else {
-                            hideOverlay()
+                            hideOverlay(appContext)
                         }
                     } else {
-                        hideOverlay()
+                        hideOverlay(appContext)
                     }
                 } else {
-                    hideOverlay()
+                    hideOverlay(context.applicationContext)
                 }
             }
         }
@@ -91,12 +97,10 @@ object DynamicIslandOverlayManager {
     }
 
     fun showOverlay(context: Context) {
-        if (overlayComposeView != null) return
-        if (!canDrawOverlay(context)) return
+        if (overlayComposeView != null || !canDrawOverlay(context)) return
 
         try {
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
-            windowManager = wm
 
             val layoutParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -133,31 +137,41 @@ object DynamicIslandOverlayManager {
                 var initialTouchX = 0f
                 var initialTouchY = 0f
                 var isDraggingWindow = false
+                var lastUpdateX = 0
+                var lastUpdateY = 0
 
                 setOnTouchListener { _, event ->
                     when (event.action) {
-                        android.view.MotionEvent.ACTION_DOWN -> {
+                        MotionEvent.ACTION_DOWN -> {
                             initialX = layoutParams.x
                             initialY = layoutParams.y
                             initialTouchX = event.rawX
                             initialTouchY = event.rawY
+                            lastUpdateX = initialX
+                            lastUpdateY = initialY
                             isDraggingWindow = false
                             false
                         }
-                        android.view.MotionEvent.ACTION_MOVE -> {
+                        MotionEvent.ACTION_MOVE -> {
                             val dx = event.rawX - initialTouchX
                             val dy = event.rawY - initialTouchY
-                            if (kotlin.math.hypot(dx.toDouble(), dy.toDouble()) > 20) {
+                            if (hypot(dx.toDouble(), dy.toDouble()) > 20) {
                                 isDraggingWindow = true
-                                layoutParams.x = initialX + dx.toInt()
-                                layoutParams.y = (initialY + dy.toInt()).coerceAtLeast(10)
-                                try {
-                                    wm.updateViewLayout(this, layoutParams)
-                                } catch (_: Exception) {}
+                                val newX = initialX + dx.toInt()
+                                val newY = (initialY + dy.toInt()).coerceAtLeast(10)
+
+                                // BINDER PERF FIX: Gate IPC updates to minimum 8px deltas to protect 120Hz frame rates
+                                if (abs(newX - lastUpdateX) > 8 || abs(newY - lastUpdateY) > 8) {
+                                    layoutParams.x = newX
+                                    layoutParams.y = newY
+                                    lastUpdateX = newX
+                                    lastUpdateY = newY
+                                    try { wm.updateViewLayout(this, layoutParams) } catch (_: Exception) {}
+                                }
                             }
                             false
                         }
-                        android.view.MotionEvent.ACTION_UP -> {
+                        MotionEvent.ACTION_UP -> {
                             if (isDraggingWindow) {
                                 val metrics = context.resources.displayMetrics
                                 val halfScreen = metrics.widthPixels / 2
@@ -167,9 +181,7 @@ object DynamicIslandOverlayManager {
                                     else -> 0
                                 }
                                 layoutParams.x = targetX
-                                try {
-                                    wm.updateViewLayout(this, layoutParams)
-                                } catch (_: Exception) {}
+                                try { wm.updateViewLayout(this, layoutParams) } catch (_: Exception) {}
                             }
                             false
                         }
@@ -190,16 +202,18 @@ object DynamicIslandOverlayManager {
                             callState = callState,
                             audioState = audioState,
                             onExpandToFullScreen = {
+                                // FIXED: Align intent extras with MainActivity contracts
                                 val intent = Intent(context, MainActivity::class.java).apply {
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                    putExtra("SHOW_CALL_SCREEN", true)
                                     putExtra("EXTRA_NAVIGATE_TO_INCALL", true)
                                 }
                                 context.startActivity(intent)
-                                hideOverlay()
+                                hideOverlay(context)
                             },
                             onHangUp = {
                                 CallManager.disconnect()
-                                hideOverlay()
+                                hideOverlay(context)
                             }
                         )
                     }
@@ -208,20 +222,20 @@ object DynamicIslandOverlayManager {
 
             overlayComposeView = composeView
             wm.addView(composeView, layoutParams)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             overlayComposeView = null
             overlayLifecycleOwner = null
         }
     }
 
-    fun hideOverlay() {
+    fun hideOverlay(context: Context? = null) {
         try {
             overlayComposeView?.let { view ->
-                windowManager?.removeViewImmediate(view)
+                val wm = context?.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                    ?: view.context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                wm?.removeView(view)
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         } finally {
             overlayLifecycleOwner?.onDestroy()
             overlayLifecycleOwner = null

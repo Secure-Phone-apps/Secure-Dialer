@@ -22,15 +22,18 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import java.text.Normalizer
 
 object T9HighlightHelper {
 
     /**
-     * Converts a name string to its corresponding T9 keypad digit sequence (1-to-1 character index mapping).
+     * Converts a single character to its T9 keypad digit while strictly preserving 1-to-1 character index length.
+     * Supports accented Latin, Cyrillic, and European diacritics.
      */
-    fun nameToT9(name: String): String {
-        return name.uppercase().map { char ->
-            when (char) {
+    private fun charToT9Digit(c: Char): Char {
+        val upper = c.uppercaseChar()
+        if (upper in 'A'..'Z') {
+            return when (upper) {
                 in 'A'..'C' -> '2'
                 in 'D'..'F' -> '3'
                 in 'G'..'I' -> '4'
@@ -38,10 +41,35 @@ object T9HighlightHelper {
                 in 'M'..'O' -> '6'
                 in 'P'..'S' -> '7'
                 in 'T'..'V' -> '8'
-                in 'W'..'Z' -> '9'
-                else -> char
+                else -> '9'
             }
-        }.joinToString("")
+        }
+
+        // Decompose single character to extract base Latin letter without altering string length
+        val decomposed = Normalizer.normalize(upper.toString(), Normalizer.Form.NFD)
+        val baseChar = decomposed.firstOrNull { it in 'A'..'Z' } ?: return upper
+
+        return when (baseChar) {
+            in 'A'..'C' -> '2'
+            in 'D'..'F' -> '3'
+            in 'G'..'I' -> '4'
+            in 'J'..'L' -> '5'
+            in 'M'..'O' -> '6'
+            in 'P'..'S' -> '7'
+            in 'T'..'V' -> '8'
+            else -> '9'
+        }
+    }
+
+    /**
+     * Converts a name string to its corresponding T9 keypad digit sequence (1-to-1 character index mapping).
+     */
+    fun nameToT9(name: String): String {
+        return buildString(name.length) {
+            for (char in name) {
+                append(charToT9Digit(char))
+            }
+        }
     }
 
     /**
@@ -69,7 +97,7 @@ object T9HighlightHelper {
         val matchRange = if (directIndex >= 0) {
             directIndex until (directIndex + cleanQuery.length).coerceAtMost(displayName.length)
         } else {
-            // 2. T9 mapping match
+            // 2. 1-to-1 index-safe T9 mapping match
             val t9 = nameToT9(displayName)
             val t9Index = t9.indexOf(cleanQuery, ignoreCase = true)
             if (t9Index >= 0) {
@@ -85,11 +113,13 @@ object T9HighlightHelper {
             if (matchRange != null && matchRange.first < displayName.length) {
                 val start = matchRange.first
                 val end = (matchRange.last + 1).coerceAtMost(displayName.length)
-                addStyle(
-                    SpanStyle(color = highlightColor, fontWeight = highlightFontWeight),
-                    start,
-                    end
-                )
+                if (start < end) {
+                    addStyle(
+                        SpanStyle(color = highlightColor, fontWeight = highlightFontWeight),
+                        start,
+                        end
+                    )
+                }
             }
         }
     }
@@ -121,34 +151,41 @@ object T9HighlightHelper {
             return buildAnnotatedString {
                 append(number)
                 addStyle(SpanStyle(color = defaultColor, fontWeight = defaultFontWeight), 0, number.length)
-                addStyle(SpanStyle(color = highlightColor, fontWeight = highlightFontWeight), directIndex, end)
+                if (directIndex < end) {
+                    addStyle(SpanStyle(color = highlightColor, fontWeight = highlightFontWeight), directIndex, end)
+                }
             }
         }
 
         // 2. Formatted number match (e.g. query "55512" matches "+1 (555) 123-4567")
         val cleanQueryDigits = cleanQuery.filter { it.isDigit() || it == '+' }
         if (cleanQueryDigits.isNotEmpty()) {
-            val digitIndices = mutableListOf<Int>()
-            val digitChars = StringBuilder()
-            number.forEachIndexed { index, c ->
-                if (c.isDigit() || c == '+') {
-                    digitIndices.add(index)
-                    digitChars.append(c)
+            val digitIndices = IntArray(number.length)
+            var digitCount = 0
+            val cleanNumber = buildString(number.length) {
+                for (i in number.indices) {
+                    val c = number[i]
+                    if (c.isDigit() || c == '+') {
+                        digitIndices[digitCount++] = i
+                        append(c)
+                    }
                 }
             }
-            val cleanNumberStr = digitChars.toString()
-            val matchInClean = cleanNumberStr.indexOf(cleanQueryDigits, ignoreCase = true)
-            if (matchInClean >= 0 && matchInClean + cleanQueryDigits.length <= digitIndices.size) {
+
+            val matchInClean = cleanNumber.indexOf(cleanQueryDigits, ignoreCase = true)
+            if (matchInClean >= 0 && matchInClean + cleanQueryDigits.length <= digitCount) {
                 val startCharIdx = digitIndices[matchInClean]
-                val endCharIdx = digitIndices[matchInClean + cleanQueryDigits.length - 1] + 1
+                val endCharIdx = (digitIndices[matchInClean + cleanQueryDigits.length - 1] + 1).coerceAtMost(number.length)
                 return buildAnnotatedString {
                     append(number)
                     addStyle(SpanStyle(color = defaultColor, fontWeight = defaultFontWeight), 0, number.length)
-                    addStyle(
-                        SpanStyle(color = highlightColor, fontWeight = highlightFontWeight),
-                        startCharIdx,
-                        endCharIdx.coerceAtMost(number.length)
-                    )
+                    if (startCharIdx < endCharIdx) {
+                        addStyle(
+                            SpanStyle(color = highlightColor, fontWeight = highlightFontWeight),
+                            startCharIdx,
+                            endCharIdx
+                        )
+                    }
                 }
             }
         }

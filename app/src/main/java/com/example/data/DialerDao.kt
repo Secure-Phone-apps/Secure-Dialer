@@ -24,11 +24,19 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface DialerDao {
-    // Contacts
-    @Query("SELECT * FROM contacts WHERE (:accountName = '' OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR LOWER(accountName) = 'phone' OR LOWER(accountType) LIKE '%local%')) OR accountName = :accountName) ORDER BY name ASC")
+
+    // ================= CONTACTS =================
+
+    @Query("""
+        SELECT * FROM contacts 
+        WHERE (:accountName = '' 
+           OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE)) 
+           OR accountName = :accountName COLLATE NOCASE) 
+        ORDER BY name COLLATE NOCASE ASC
+    """)
     fun getContactsPaged(accountName: String = ""): PagingSource<Int, Contact>
 
-    @Query("SELECT * FROM contacts ORDER BY name ASC")
+    @Query("SELECT * FROM contacts ORDER BY name COLLATE NOCASE ASC")
     fun getAllContactsFlow(): Flow<List<Contact>>
 
     @Query("SELECT * FROM contacts")
@@ -37,12 +45,20 @@ interface DialerDao {
     @Query("SELECT COUNT(*) FROM contacts")
     suspend fun getContactsCount(): Int
 
-    @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name ASC")
+    @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name COLLATE NOCASE ASC")
     fun getFavoriteContacts(): Flow<List<Contact>>
 
-    @Query("SELECT * FROM contacts WHERE (:accountName = '' OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR LOWER(accountName) = 'phone' OR LOWER(accountType) LIKE '%local%')) OR accountName = :accountName) AND (name LIKE :query OR number LIKE :query OR t9Mapping LIKE :query) ORDER BY name ASC")
+    @Query("""
+        SELECT * FROM contacts 
+        WHERE (:accountName = '' 
+           OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE)) 
+           OR accountName = :accountName COLLATE NOCASE) 
+          AND (name LIKE :query ESCAPE '\' OR number LIKE :query ESCAPE '\' OR t9Mapping LIKE :query ESCAPE '\') 
+        ORDER BY name COLLATE NOCASE ASC
+    """)
     fun searchContacts(query: String, accountName: String = ""): PagingSource<Int, Contact>
 
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertContacts(contacts: List<Contact>)
 
@@ -58,10 +74,16 @@ interface DialerDao {
     @Query("DELETE FROM contacts WHERE id = :id")
     suspend fun deleteContactById(id: Long)
 
-    @Query("SELECT * FROM contacts WHERE number = :number LIMIT 1")
+    @Query("""
+        SELECT * FROM contacts 
+        WHERE number = :number 
+           OR (length(:number) >= 7 AND number LIKE '%' || substr(:number, -7)) 
+        LIMIT 1
+    """)
     suspend fun getContactByNumber(number: String): Contact?
 
-    // Call History
+    // ================= CALL HISTORY =================
+
     @Query("SELECT * FROM call_history ORDER BY id DESC")
     fun getCallHistoryPaged(): PagingSource<Int, CallRecord>
 
@@ -74,6 +96,7 @@ interface DialerDao {
     @Query("SELECT MAX(id) FROM call_history")
     suspend fun getMaxCallLogId(): Int?
 
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallLogs(logs: List<CallRecord>)
 
@@ -86,7 +109,8 @@ interface DialerDao {
     @Query("SELECT * FROM call_history WHERE number = :number ORDER BY id DESC")
     suspend fun getCallHistoryByNumber(number: String): List<CallRecord>
 
-    // Blocked Numbers
+    // ================= BLOCKED NUMBERS =================
+
     @Query("SELECT * FROM blocked_numbers")
     fun getBlockedNumbersFlow(): Flow<List<BlockedNumber>>
 
@@ -105,7 +129,8 @@ interface DialerDao {
     @Query("SELECT EXISTS(SELECT 1 FROM blocked_numbers WHERE number = :number)")
     suspend fun isBlocked(number: String): Boolean
 
-    // Speed Dial
+    // ================= SPEED DIAL =================
+
     @Query("SELECT * FROM speed_dial")
     fun getSpeedDialFlow(): Flow<List<SpeedDial>>
 
@@ -118,7 +143,8 @@ interface DialerDao {
     @Query("DELETE FROM speed_dial WHERE `key` = :key")
     suspend fun deleteSpeedDial(key: Int)
 
-    // Quick Responses
+    // ================= QUICK RESPONSES =================
+
     @Query("SELECT * FROM quick_responses")
     fun getQuickResponsesFlow(): Flow<List<QuickResponse>>
 
@@ -131,7 +157,8 @@ interface DialerDao {
     @Delete
     suspend fun deleteQuickResponse(response: QuickResponse)
 
-    // App Settings
+    // ================= APP SETTINGS =================
+
     @Query("SELECT value FROM app_settings WHERE `key` = :key")
     suspend fun getSetting(key: String): String?
 
@@ -141,7 +168,8 @@ interface DialerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSetting(setting: AppSetting)
 
-    // Call Notes
+    // ================= CALL NOTES =================
+
     @Query("SELECT * FROM call_notes WHERE number = :number ORDER BY id DESC")
     fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>>
 
@@ -163,7 +191,8 @@ interface DialerDao {
     @Query("DELETE FROM call_notes WHERE number = :number")
     suspend fun deleteCallNotesForNumber(number: String)
 
-    // Call Recordings
+    // ================= CALL RECORDINGS =================
+
     @Query("SELECT * FROM call_recordings ORDER BY id DESC")
     fun getAllCallRecordingsFlow(): Flow<List<CallRecording>>
 
@@ -182,7 +211,8 @@ interface DialerDao {
     @Query("DELETE FROM call_recordings WHERE id = :id")
     suspend fun deleteCallRecording(id: Int)
 
-    // Spam Numbers
+    // ================= SPAM NUMBERS =================
+
     @Query("SELECT * FROM spam_numbers ORDER BY number ASC")
     fun getAllSpamNumbersFlow(): Flow<List<SpamNumber>>
 
@@ -192,6 +222,7 @@ interface DialerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSpamNumber(spam: SpamNumber)
 
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSpamNumbers(spam: List<SpamNumber>)
 
@@ -204,7 +235,8 @@ interface DialerDao {
     @Query("SELECT EXISTS(SELECT 1 FROM spam_numbers WHERE number = :number)")
     suspend fun isSpamNumber(number: String): Boolean
 
-    // Call Reminders
+    // ================= CALL REMINDERS =================
+
     @Query("SELECT * FROM call_reminders ORDER BY reminderTime ASC")
     fun getAllRemindersFlow(): Flow<List<CallReminder>>
 

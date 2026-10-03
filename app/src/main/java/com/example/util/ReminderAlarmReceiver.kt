@@ -32,13 +32,16 @@ import com.example.data.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 class ReminderAlarmReceiver : BroadcastReceiver() {
+
     override fun onReceive(context: Context?, intent: Intent?) {
         if (context == null || intent == null) return
-        val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-        val isCallbackRemindersEnabled = prefs.getBoolean("is_callback_reminders_enabled", true)
-        if (!isCallbackRemindersEnabled) return
+        val appContext = context.applicationContext
+
+        val prefs = appContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        if (!prefs.getBoolean("is_callback_reminders_enabled", true)) return
 
         val reminderId = intent.getIntExtra("reminder_id", -1)
         if (reminderId == -1) return
@@ -46,62 +49,65 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val db = AppDatabase.getDatabase(context)
-                val reminders = db.dialerDao().getAllRemindersList()
-                val reminder = reminders.find { it.id == reminderId } ?: return@launch
+                // ANR GUARD: Ensure DB operations never exceed the OS BroadcastReceiver execution budget
+                withTimeoutOrNull(8000L) {
+                    val db = AppDatabase.getDatabase(appContext)
+                    val reminder = db.dialerDao().getAllRemindersList().find { it.id == reminderId } ?: return@withTimeoutOrNull
 
-                // Mark as completed
-                db.dialerDao().updateReminder(reminder.copy(isCompleted = true))
+                    // Mark reminder as completed
+                    db.dialerDao().updateReminder(reminder.copy(isCompleted = true))
 
-                // Post Notification
-                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                val channelId = "call_reminders_channel"
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    nm.createNotificationChannel(
-                        NotificationChannel(channelId, "Call Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
-                            description = "Notifications for scheduled callback reminders"
-                        }
+                    val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    val channelId = "call_reminders_channel"
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        nm.createNotificationChannel(
+                            NotificationChannel(channelId, "Call Reminders", NotificationManager.IMPORTANCE_HIGH).apply {
+                                description = "Notifications for scheduled callback reminders"
+                                enableVibration(true)
+                            }
+                        )
+                    }
+
+                    // Intent to open Main Dialer Screen
+                    val mainPendingIntent = PendingIntent.getActivity(
+                        appContext,
+                        reminderId,
+                        Intent(appContext, MainActivity::class.java).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        },
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
                     )
+
+                    // FIXED: Use ACTION_DIAL to eliminate ActivityNotFoundException crashes
+                    val callPendingIntent = PendingIntent.getActivity(
+                        appContext,
+                        reminderId + 100000,
+                        Intent(Intent.ACTION_DIAL).apply {
+                            data = Uri.parse("tel:${reminder.number}")
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        },
+                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+
+                    val targetLabel = if (reminder.name.isNotBlank()) "${reminder.name} (${reminder.number})" else reminder.number
+                    val notification = NotificationCompat.Builder(appContext, channelId)
+                        .setSmallIcon(android.R.drawable.sym_action_chat)
+                        .setContentTitle(appContext.getString(R.string.callback_reminders_title))
+                        .setContentText(appContext.getString(R.string.remind_call_back_prompt, targetLabel))
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setCategory(NotificationCompat.CATEGORY_REMINDER)
+                        .setContentIntent(mainPendingIntent)
+                        .setAutoCancel(true)
+                        .addAction(
+                            android.R.drawable.sym_action_call,
+                            appContext.getString(R.string.btn_call_back),
+                            callPendingIntent
+                        )
+                        .build()
+
+                    nm.notify(reminderId, notification)
                 }
-
-                // Intent to open Main Dialer Screen
-                val mainIntent = Intent(context, MainActivity::class.java).apply {
-                    setPackage(context.packageName)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                }
-                val mainPendingIntent = PendingIntent.getActivity(
-                    context,
-                    reminderId,
-                    mainIntent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                )
-
-                // Intent to initiate Call
-                val callIntent = Intent(Intent.ACTION_CALL).apply {
-                    setPackage(context.packageName)
-                    data = Uri.parse("tel:${reminder.number}")
-                }
-                val callPendingIntent = PendingIntent.getActivity(
-                    context,
-                    reminderId + 100000,
-                    callIntent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                )
-
-                val notification = NotificationCompat.Builder(context, channelId)
-                    .setSmallIcon(android.R.drawable.sym_action_chat)
-                    .setContentTitle(context.getString(R.string.callback_reminders_title))
-                    .setContentText(context.getString(R.string.remind_call_back_prompt, "${reminder.name} (${reminder.number})"))
-                    .setPriority(NotificationCompat.PRIORITY_HIGH)
-                    .setContentIntent(mainPendingIntent)
-                    .setAutoCancel(true)
-                    .addAction(android.R.drawable.sym_action_call, context.getString(R.string.btn_call_back), callPendingIntent)
-                    .build()
-
-                nm.notify(reminderId, notification)
-
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (_: Exception) {
             } finally {
                 pendingResult.finish()
             }
