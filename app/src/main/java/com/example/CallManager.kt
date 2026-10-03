@@ -280,13 +280,13 @@ object CallManager {
         }
     }
 
-    fun autoStopRecordingIfNeeded(context: Context? = null) {
-        val ctx = context?.applicationContext ?: appContext ?: inCallService?.applicationContext ?: return
+    fun autoStopRecordingIfNeeded(context: Context? = null): Job? {
+        val ctx = context?.applicationContext ?: appContext ?: inCallService?.applicationContext ?: return null
         val result = CallAudioRecorder.stopRecording()
         CallAudioHelper.restoreAudioState(ctx, inCallService)
 
-        val file = result.file ?: return
-        if (!file.exists() || file.length() <= 128L) return
+        val file = result.file ?: return null
+        if (!file.exists() || file.length() <= 128L) return null
 
         val durationSec = result.durationSeconds.coerceAtLeast(1L)
         val number = _callerNumber.value.ifEmpty {
@@ -309,7 +309,7 @@ object CallManager {
             filePath = file.absolutePath
         )
 
-        scope.launch {
+        return scope.launch {
             try {
                 val db = AppDatabase.getDatabase(ctx)
                 if (db.dialerDao().getCallRecordingByPath(file.absolutePath) == null) {
@@ -423,9 +423,9 @@ object CallManager {
         } catch (_: Exception) {}
     }
 
-    fun formatOutgoingNumberWithClir(number: String, isHide: Boolean, prefix: String): String {
-        if (!isHide || number.isBlank() || isEmergencyNumber(number)) return number
-        val clir = prefix.trim().ifBlank { "#31#" }
+    fun formatOutgoingNumberWithClir(number: String, isHideCallerId: Boolean, clirPrefix: String): String {
+        if (!isHideCallerId || number.isBlank() || isEmergencyNumber(number)) return number
+        val clir = clirPrefix.trim().ifBlank { "#31#" }
         return if (number.startsWith(clir)) number else "$clir$number"
     }
 

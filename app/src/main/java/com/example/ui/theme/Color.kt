@@ -22,7 +22,7 @@ import androidx.compose.ui.graphics.Color
 val White = Color(0xFFFFFFFF)
 val Black = Color(0xFF000000)
 
-// Modern Refined Indigo / Material 3 Default Palette
+// Modern Refined Material 3 Palette
 val PrimaryLight = Color(0xFF2563EB)
 val OnPrimaryLight = Color(0xFFFFFFFF)
 val PrimaryContainerLight = Color(0xFFDBEAFE)
@@ -63,7 +63,7 @@ val OnErrorDark = Color(0xFF690005)
 val ErrorContainerDark = Color(0xFF93000A)
 val OnErrorContainerDark = Color(0xFFFFDAD6)
 
-// Clean light background and surface for speed & readability (Pure White)
+// Clean light background and surface (Pure White)
 val BackgroundLight = Color(0xFFFFFFFF)
 val OnBackgroundLight = Color(0xFF000000)
 val SurfaceLight = Color(0xFFFFFFFF)
@@ -72,7 +72,7 @@ val SurfaceVariantLight = Color(0xFFF1F3F4)
 val OnSurfaceVariantLight = Color(0xFF43474E)
 val OutlineLight = Color(0xFF73777F)
 
-// Deep sleek dark background for OLED & battery efficiency (Pure Black)
+// Deep dark background for OLED & battery efficiency (Pure Black)
 val BackgroundDark = Color(0xFF000000)
 val OnBackgroundDark = Color(0xFFFFFFFF)
 val SurfaceDark = Color(0xFF000000)
@@ -81,7 +81,7 @@ val SurfaceVariantDark = Color(0xFF1E2022)
 val OnSurfaceVariantDark = Color(0xFFC3C7CF)
 val OutlineDark = Color(0xFF8D9199)
 
-// Avatar Colors
+// High-contrast WCAG AAA compliant avatar color pairs
 val AvatarOrange = Color(0xFFFFDBCB)
 val AvatarOrangeText = Color(0xFF311300)
 val AvatarBlue = Color(0xFFD1E4FF)

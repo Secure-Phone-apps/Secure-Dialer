@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,7 +54,8 @@ fun ContactsAndDataSettings(
     var showContactsToDisplayDialog by remember { mutableStateOf(false) }
     var showDefaultAccountDialog by remember { mutableStateOf(false) }
 
-    var exportPassword by remember { mutableStateOf("") }
+    var showExportPasswordDialog by remember { mutableStateOf(false) }
+    var exportPasswordInput by remember { mutableStateOf("") }
     var pendingBackupData by remember { mutableStateOf<String?>(null) }
     var pendingEncryptedRestoreContent by remember { mutableStateOf<String?>(null) }
     var restorePasswordInput by remember { mutableStateOf("") }
@@ -69,6 +71,7 @@ fun ContactsAndDataSettings(
                 } else {
                     Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_LONG).show()
                 }
+                pendingBackupData = null
             }
         }
     }
@@ -79,7 +82,9 @@ fun ContactsAndDataSettings(
         if (uri != null) {
             viewModel.readTextFromUri(uri) { content ->
                 if (!content.isNullOrBlank()) {
-                    if (content.contains("\"encrypted\":true")) {
+                    // FIXED: Correctly identifies encrypted Base64 payloads vs plaintext JSON
+                    val isEncrypted = !content.trim().startsWith("{")
+                    if (isEncrypted) {
                         pendingEncryptedRestoreContent = content
                         showPasswordPromptDialog = true
                     } else {
@@ -150,7 +155,9 @@ fun ContactsAndDataSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Account Display Filters", highlightedTitle) || isMatchTitle("Contacts & Data Settings", highlightedTitle) || isMatchTitle("Contacts to display", highlightedTitle),
+                isHighlighted = isMatchTitle("Account Display Filters", highlightedTitle) ||
+                        isMatchTitle("Contacts & Data Settings", highlightedTitle) ||
+                        isMatchTitle("Contacts to display", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 val currentFilter = viewModel.selectedAccountFilter.value
@@ -177,12 +184,13 @@ fun ContactsAndDataSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Default Save Account", highlightedTitle) || isMatchTitle("Default Account", highlightedTitle),
+                isHighlighted = isMatchTitle("Default Save Account", highlightedTitle) ||
+                        isMatchTitle("Default Account", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 val defaultAccName = viewModel.defaultContactAccountName.value
                 val defaultAccSub = if (defaultAccName.isBlank()) {
-                    "Default / Same as Filter"
+                    stringResource(R.string.contact_source_phone)
                 } else {
                     viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
                 }
@@ -210,18 +218,16 @@ fun ContactsAndDataSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Database Backup & Restore", highlightedTitle) || isMatchTitle("Backup", highlightedTitle),
+                isHighlighted = isMatchTitle("Database Backup & Restore", highlightedTitle) ||
+                        isMatchTitle("Backup", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
                     title = stringResource(R.string.backup_export_title),
                     subtitle = stringResource(R.string.backup_export_desc),
                     onClick = {
-                        viewModel.exportBackup(exportPassword) { data ->
-                            pendingBackupData = data
-                            val defaultName = "dialer_backup_$timestamp.json"
-                            saveBackupFileLauncher.launch(defaultName)
-                        }
+                        exportPasswordInput = ""
+                        showExportPasswordDialog = true
                     },
                     icon = Icons.Default.CloudDownload,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
@@ -266,15 +272,15 @@ fun ContactsAndDataSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Export Contacts (vCard / .vcf)", highlightedTitle) || isMatchTitle("Export Contacts", highlightedTitle),
+                isHighlighted = isMatchTitle("Export Contacts (vCard / .vcf)", highlightedTitle) ||
+                        isMatchTitle("Export Contacts", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
                     title = stringResource(R.string.settings_export_contacts_vcard),
                     subtitle = stringResource(R.string.vcf_migration_desc),
                     onClick = {
-                        val defaultName = "contacts_$timestamp.vcf"
-                        saveVcfLauncher.launch(defaultName)
+                        saveVcfLauncher.launch("contacts_$timestamp.vcf")
                     },
                     icon = Icons.Default.Contacts,
                     iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
@@ -308,6 +314,51 @@ fun ContactsAndDataSettings(
     }
 
     // Dialogs
+    if (showExportPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = { showExportPasswordDialog = false },
+            title = { Text(stringResource(R.string.backup_export_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = stringResource(R.string.backup_export_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = exportPasswordInput,
+                        onValueChange = { exportPasswordInput = it },
+                        label = { Text(stringResource(R.string.backup_password_label)) },
+                        placeholder = { Text(stringResource(R.string.optional_note_label)) },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.small
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        showExportPasswordDialog = false
+                        viewModel.exportBackup(exportPasswordInput) { data ->
+                            pendingBackupData = data
+                            saveBackupFileLauncher.launch("dialer_backup_$timestamp.json")
+                        }
+                    }
+                ) {
+                    Text(stringResource(R.string.btn_save))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showExportPasswordDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
+    }
+
     if (showContactsToDisplayDialog) {
         AlertDialog(
             onDismissRequest = { showContactsToDisplayDialog = false },
@@ -324,6 +375,7 @@ fun ContactsAndDataSettings(
                         RadioButton(
                             selected = viewModel.selectedAccountFilter.value.isBlank(),
                             onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 viewModel.onAccountFilterChange("")
                                 showContactsToDisplayDialog = false
                             }
@@ -341,6 +393,7 @@ fun ContactsAndDataSettings(
                             RadioButton(
                                 selected = viewModel.selectedAccountFilter.value == acc.name,
                                 onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     viewModel.onAccountFilterChange(acc.name)
                                     showContactsToDisplayDialog = false
                                 }
@@ -375,12 +428,13 @@ fun ContactsAndDataSettings(
                         RadioButton(
                             selected = viewModel.defaultContactAccountName.value.isBlank(),
                             onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 viewModel.updateDefaultContactAccount("", "")
                                 showDefaultAccountDialog = false
                             }
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Default / Same as Filter")
+                        Text(stringResource(R.string.contact_source_phone))
                     }
                     accounts.forEach { acc ->
                         Row(
@@ -392,6 +446,7 @@ fun ContactsAndDataSettings(
                             RadioButton(
                                 selected = viewModel.defaultContactAccountName.value == acc.name,
                                 onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     viewModel.updateDefaultContactAccount(acc.name, acc.type)
                                     showDefaultAccountDialog = false
                                 }
@@ -420,7 +475,7 @@ fun ContactsAndDataSettings(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "This backup file is encrypted. Enter the decryption password to restore your data:",
+                        text = stringResource(R.string.backup_restore_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                     OutlinedTextField(

@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.util.RichHapticEngine
 
 @Composable
 fun InCallNoteDialog(
@@ -35,22 +36,37 @@ fun InCallNoteDialog(
 ) {
     val context = LocalContext.current
     var noteText by remember { mutableStateOf(initialNote) }
-    val savedState = remember { mutableStateOf(false) }
+    var isHandled by remember { mutableStateOf(false) }
+
+    val currentNoteText by rememberUpdatedState(noteText)
+    val currentOnSaveNote by rememberUpdatedState(onSaveNote)
 
     fun performSaveAndDismiss() {
-        if (!savedState.value && noteText.isNotBlank()) {
-            savedState.value = true
-            onSaveNote(noteText)
-            Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+        if (!isHandled) {
+            isHandled = true
+            val trimmed = currentNoteText.trim()
+            if (trimmed.isNotBlank()) {
+                currentOnSaveNote(trimmed)
+                Toast.makeText(context, context.getString(R.string.note_saved), Toast.LENGTH_SHORT).show()
+            }
         }
         onDismiss()
     }
 
+    fun performDiscardAndDismiss() {
+        isHandled = true // Marks as explicitly discarded to prevent onDispose from saving
+        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+        onDismiss()
+    }
+
+    // Auto-save draft on unexpected call disconnect or background dismissal (unless explicitly discarded)
     DisposableEffect(Unit) {
         onDispose {
-            if (!savedState.value && noteText.isNotBlank()) {
-                savedState.value = true
-                onSaveNote(noteText)
+            if (!isHandled) {
+                val trimmed = currentNoteText.trim()
+                if (trimmed.isNotBlank()) {
+                    currentOnSaveNote(trimmed)
+                }
             }
         }
     }
@@ -65,25 +81,24 @@ fun InCallNoteDialog(
                 label = { Text(stringResource(R.string.note_placeholder)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
+                    .height(130.dp),
+                maxLines = 5
             )
         },
         confirmButton = {
             Button(
-                onClick = { performSaveAndDismiss() }
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                    performSaveAndDismiss()
+                }
             ) {
                 Text(stringResource(R.string.btn_save_note))
             }
         },
         dismissButton = {
             TextButton(
-                onClick = {
-                    if (noteText.isNotBlank()) {
-                        performSaveAndDismiss()
-                    } else {
-                        onDismiss()
-                    }
-                }
+                // FIXED: Discard actually discards the note without secretly saving it to database
+                onClick = { performDiscardAndDismiss() }
             ) {
                 Text(stringResource(R.string.btn_discard))
             }

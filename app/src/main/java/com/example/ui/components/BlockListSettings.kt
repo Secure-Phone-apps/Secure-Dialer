@@ -23,9 +23,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -34,15 +33,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -53,11 +54,8 @@ fun BlockListSettings(
     cardBgColor: Color
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     val timestamp = remember { SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date()) }
-
-    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
-    val blockedNumbers = remember(blockedNumbersEntities) { blockedNumbersEntities.map { it.number } }
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
     var newBlockedInput by remember { mutableStateOf("") }
 
     val saveBlocklistLauncher = rememberLauncherForActivityResult(
@@ -97,11 +95,13 @@ fun BlockListSettings(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
+        // FIXED: Added Phone keyboard type for numerical input
         OutlinedTextField(
             value = newBlockedInput,
             onValueChange = { newBlockedInput = it },
             label = { Text(stringResource(R.string.enter_number_to_block)) },
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Phone,
@@ -112,60 +112,67 @@ fun BlockListSettings(
             trailingIcon = {
                 if (newBlockedInput.isNotEmpty()) {
                     IconButton(onClick = { newBlockedInput = "" }) {
-                        Icon(Icons.Default.Clear, "Clear")
+                        Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.dialpad_clear))
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.small
         )
-        
+
         Spacer(modifier = Modifier.height(10.dp))
-        
+
         Button(
             onClick = {
-                if (newBlockedInput.isNotBlank()) {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    viewModel.addBlockedNumber(newBlockedInput.trim())
+                val trimmed = newBlockedInput.trim()
+                if (trimmed.isNotBlank()) {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                    viewModel.addBlockedNumber(trimmed)
                     newBlockedInput = ""
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
             shape = MaterialTheme.shapes.small
         ) {
-            Icon(Icons.Default.Block, null, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Block, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.block_this_number), fontWeight = FontWeight.SemiBold)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // File-Based Import / Export Action Strip
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedButton(
                 onClick = {
-                    val defaultName = "blocked_numbers_$timestamp.txt"
-                    saveBlocklistLauncher.launch(defaultName)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    saveBlocklistLauncher.launch("blocked_numbers_$timestamp.txt")
                 },
-                modifier = Modifier.weight(1f).height(42.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp),
                 shape = MaterialTheme.shapes.small
             ) {
-                Icon(Icons.Default.Download, null, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(stringResource(R.string.btn_export_blocklist), style = MaterialTheme.typography.labelMedium)
             }
 
             OutlinedButton(
                 onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                     openBlocklistLauncher.launch(arrayOf("text/plain", "text/csv", "application/json", "*/*"))
                 },
-                modifier = Modifier.weight(1f).height(42.dp),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(42.dp),
                 shape = MaterialTheme.shapes.small
             ) {
-                Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(16.dp))
+                Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(stringResource(R.string.btn_import_blocklist), style = MaterialTheme.typography.labelMedium)
             }
@@ -174,7 +181,7 @@ fun BlockListSettings(
         Spacer(modifier = Modifier.height(20.dp))
 
         Text(
-            stringResource(R.string.blocked_callers_header),
+            text = stringResource(R.string.blocked_callers_header),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
@@ -183,7 +190,7 @@ fun BlockListSettings(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        if (blockedNumbers.isEmpty()) {
+        if (blockedNumbersEntities.isEmpty()) {
             SettingsEmptyState(
                 icon = Icons.Default.Block,
                 title = stringResource(R.string.no_blocked_numbers_title),
@@ -195,13 +202,12 @@ fun BlockListSettings(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                blockedNumbers.forEach { num ->
+                // FIXED: Direct entity iteration eliminates redundant list mapping allocations
+                blockedNumbersEntities.forEach { blockedItem ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = cardBgColor
-                        )
+                        colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
                         Row(
                             modifier = Modifier
@@ -222,25 +228,25 @@ fun BlockListSettings(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        Icons.Default.Phone,
-                                        null,
+                                        imageVector = Icons.Default.Phone,
+                                        contentDescription = null,
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    num,
+                                    text = blockedItem.number,
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                             IconButton(onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                viewModel.removeBlockedNumber(num)
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.removeBlockedNumber(blockedItem.number)
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,

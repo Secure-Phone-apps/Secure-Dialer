@@ -1,32 +1,20 @@
 /*
  * Copyright (C) 2026 MovStore
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.example.ui.components
 
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import android.os.Build
+import android.telecom.Call
+import android.telecom.Connection
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,9 +26,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.CallManager
+import com.example.ContactCache
 import com.example.R
 import com.example.model.Contact
 
@@ -53,7 +43,7 @@ fun InCallHeader(
     contactName: String,
     contactNumber: String,
     formattedTime: String,
-    heldCall: android.telecom.Call?,
+    heldCall: Call?,
     contacts: List<Contact>,
     onMerge: (() -> Unit)? = null,
     isConference: Boolean = false,
@@ -70,11 +60,11 @@ fun InCallHeader(
         }
 
         val displayHeader = when {
-            callState == android.telecom.Call.STATE_DISCONNECTED -> stringResource(R.string.call_status_ended)
-            isOnHold || callState == android.telecom.Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
-            callState == android.telecom.Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
-            callState == android.telecom.Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
-            callState == android.telecom.Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
+            callState == Call.STATE_DISCONNECTED -> stringResource(R.string.call_status_ended)
+            isOnHold || callState == Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
+            callState == Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
+            callState == Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
+            callState == Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
             isConference || participants.size > 1 -> "${stringResource(R.string.call_status_conference)} • $simDisplay"
             else -> "${stringResource(R.string.call_status_ongoing)} • $simDisplay"
         }
@@ -104,7 +94,10 @@ fun InCallHeader(
             text = displayName,
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -128,8 +121,42 @@ fun InCallHeader(
                 text = displaySubtitle,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
+        }
+
+        // STIR/SHAKEN Anti-Spoofing Detection (Android 11+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R && callState == Call.STATE_RINGING) {
+            val activeCallObj = CallManager.currentCall.value
+            val verificationStatus = activeCallObj?.details?.callerNumberVerificationStatus
+            if (verificationStatus == Connection.VERIFICATION_STATUS_FAILED) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Potential Spoofed Number",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -139,74 +166,25 @@ fun InCallHeader(
             horizontalArrangement = Arrangement.Center
         ) {
             if (isRecording) {
-                val infiniteTransition = rememberInfiniteTransition(label = "header_rec_pulse")
-                val pulseScale by infiniteTransition.animateFloat(
-                    initialValue = 0.8f,
-                    targetValue = 1.3f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = 800, easing = FastOutSlowInEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "header_rec_scale"
-                )
-                val pulseAlpha by infiniteTransition.animateFloat(
-                    initialValue = 0.8f,
-                    targetValue = 0.2f,
-                    animationSpec = infiniteRepeatable(
-                        animation = tween(durationMillis = 800, easing = FastOutSlowInEasing),
-                        repeatMode = RepeatMode.Reverse
-                    ),
-                    label = "header_rec_alpha"
-                )
-
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFB71C1C).copy(alpha = 0.15f),
-                    modifier = Modifier.padding(end = 8.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(12.dp)) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .scale(pulseScale)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE53935).copy(alpha = pulseAlpha))
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFE53935))
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = "REC",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE53935),
-                            fontSize = 11.sp
-                        )
-                    }
-                }
+                RecordingBadge()
             }
 
-            Text(
-                text = formattedTime,
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
+            if (callState == Call.STATE_ACTIVE || callState == Call.STATE_HOLDING) {
+                Text(
+                    text = formattedTime,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
 
         if (heldCall != null) {
             Spacer(modifier = Modifier.height(16.dp))
             val heldNumber = heldCall.details?.handle?.schemeSpecificPart ?: ""
-            val heldName = contacts.find { it.number == heldNumber }?.name ?: heldNumber
+            val heldName = ContactCache.getContact(heldNumber)?.name
+                ?: contacts.find { it.number == heldNumber }?.name
+                ?: heldNumber
 
             Card(
                 modifier = Modifier
@@ -228,13 +206,16 @@ fun InCallHeader(
                                 text = "${stringResource(R.string.on_hold_prefix)} $heldName",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
-                            if (heldName != heldNumber) {
+                            if (heldName != heldNumber && heldNumber.isNotEmpty()) {
                                 Text(
                                     text = heldNumber,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                                    maxLines = 1
                                 )
                             }
                         }
@@ -248,11 +229,8 @@ fun InCallHeader(
                                 try {
                                     val activeCall = CallManager.currentCall.value
                                     activeCall?.hold()
-                                    heldCall.unhold()
                                     CallManager.updateCall(heldCall)
-                                } catch (e: Exception) {
-                                    e.printStackTrace()
-                                }
+                                } catch (_: Exception) {}
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp),
@@ -279,6 +257,64 @@ fun InCallHeader(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun RecordingBadge() {
+    val infiniteTransition = rememberInfiniteTransition(label = "header_rec_pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "header_rec_scale"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.8f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "header_rec_alpha"
+    )
+
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFB71C1C).copy(alpha = 0.15f),
+        modifier = Modifier.padding(end = 8.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(12.dp)) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .scale(pulseScale)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE53935).copy(alpha = pulseAlpha))
+                )
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFE53935))
+                )
+            }
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "REC",
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFE53935),
+                fontSize = 11.sp
+            )
         }
     }
 }

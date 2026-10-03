@@ -17,10 +17,15 @@
 
 package com.example.ui.components
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,29 +33,24 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.platform.testTag
@@ -59,13 +59,16 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ContactCache
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
+import com.example.model.getAvatarShape
 import com.example.ui.theme.LocalAmoledMode
-import com.example.model.*
+import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.getCallGreenColor
+import com.example.ui.theme.getOnCallGreenColor
+import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -78,10 +81,9 @@ fun DialpadOverlay(
     onSpeedDialCall: (String) -> Unit,
     speedDialMap: Map<Int, String>,
     voicemailNumber: String,
-    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
+    viewModel: DialerViewModel? = null
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
 
@@ -92,19 +94,19 @@ fun DialpadOverlay(
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
-    val actionButtonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
+    val actionButtonShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "rounded")
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .clip(
                 RoundedCornerShape(
-                    topStart = if (LocalM3Expressive.current) 40.dp else 28.dp,
-                    topEnd = if (LocalM3Expressive.current) 40.dp else 28.dp
+                    topStart = if (isExpressive) 40.dp else 28.dp,
+                    topEnd = if (isExpressive) 40.dp else 28.dp
                 )
             ),
         color = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
-        border = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF222222)) else null,
+        border = if (isAmoled) BorderStroke(1.dp, Color(0xFF222222)) else null,
         tonalElevation = if (isAmoled) 0.dp else 8.dp
     ) {
         Column(
@@ -120,31 +122,18 @@ fun DialpadOverlay(
                     .height(4.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.outlineVariant)
-                    .padding(vertical = 12.dp)
                     .clickable {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                         onClose()
                     }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Quick Action Chips for Unsaved Number (Material 3 Expressive)
-            val allContacts by (viewModel?.allContactsFlow ?: MutableStateFlow(emptyList())).collectAsState()
-            val isUnsavedNumber = remember(inputValue, allContacts) {
+            // PERF FIX: Replaces 100,000 loop scan with O(1) in-memory cache lookup
+            val isUnsavedNumber = remember(inputValue) {
                 if (inputValue.isBlank()) false
-                else {
-                    val cleanInput = inputValue.filter { it.isDigit() || it == '+' }
-                    if (cleanInput.isEmpty()) false
-                    else {
-                        !allContacts.any { contact ->
-                            val cleanContactNum = contact.number.filter { it.isDigit() || it == '+' }
-                            cleanContactNum == cleanInput || contact.getAllNumbers().any { 
-                                it.number.filter { c -> c.isDigit() || c == '+' } == cleanInput 
-                            }
-                        }
-                    }
-                }
+                else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
             }
 
             if (isUnsavedNumber && inputValue.isNotBlank()) {
@@ -155,7 +144,6 @@ fun DialpadOverlay(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // [+ Create Contact] Symmetrical Button
                     Surface(
                         onClick = {
                             if (viewModel?.vibrateOnClickEnabled?.value != false) {
@@ -193,7 +181,6 @@ fun DialpadOverlay(
                         }
                     }
 
-                    // [Add to Existing] Symmetrical Button
                     Surface(
                         onClick = {
                             if (viewModel?.vibrateOnClickEnabled?.value != false) {
@@ -235,12 +222,10 @@ fun DialpadOverlay(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Input Display Screen with In-Line Cursor Editing & Selection
             var expandedOverlayClipboardMenu by remember { mutableStateOf(false) }
-            val overlayClipboardManager = remember { context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager }
+            val overlayClipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
             val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
             val keyboardController = LocalSoftwareKeyboardController.current
-            val focusManager = LocalFocusManager.current
 
             Row(
                 modifier = Modifier
@@ -256,9 +241,8 @@ fun DialpadOverlay(
                         .fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CompositionLocalProvider(
-                        LocalTextInputService provides null
-                    ) {
+                    @Suppress("DEPRECATION")
+                    CompositionLocalProvider(LocalTextInputService provides null) {
                         BasicTextField(
                             value = currentTfv,
                             onValueChange = { newTfv ->
@@ -337,12 +321,13 @@ fun DialpadOverlay(
                                 text = { Text(stringResource(R.string.dialpad_copy)) },
                                 onClick = {
                                     try {
-                                        val clip = android.content.ClipData.newPlainText("phone_number", inputValue)
+                                        val clip = ClipData.newPlainText("phone_number", inputValue)
                                         overlayClipboardManager?.setPrimaryClip(clip)
-                                        Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
-                                    } catch (e: Exception) {
-                                        e.printStackTrace()
-                                    }
+                                        // FIXED: Suppress redundant Toast on Android 13+ which has native system clipboard preview
+                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                            Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
+                                        }
+                                    } catch (_: Exception) {}
                                     expandedOverlayClipboardMenu = false
                                 }
                             )
@@ -365,7 +350,7 @@ fun DialpadOverlay(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .clip(androidx.compose.foundation.shape.CircleShape)
+                            .clip(CircleShape)
                             .combinedClickable(
                                 onClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
@@ -391,8 +376,8 @@ fun DialpadOverlay(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Delete,
-                            contentDescription = "Backspace",
+                            imageVector = Icons.AutoMirrored.Filled.Backspace,
+                            contentDescription = stringResource(R.string.dialpad_clear),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -431,16 +416,12 @@ fun DialpadOverlay(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Call Action Button - Geometrically identical to the other buttons
-            val overlayCallShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
+            // Call Action Button
             val callInteractionSource = remember { MutableInteractionSource() }
             val isCallPressed by callInteractionSource.collectIsPressedAsState()
             val callScale by animateFloatAsState(
                 targetValue = if (isCallPressed) 0.92f else 1.0f,
-                animationSpec = spring(
-                    stiffness = Spring.StiffnessHigh,
-                    dampingRatio = Spring.DampingRatioMediumBouncy
-                ),
+                animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = Spring.DampingRatioMediumBouncy),
                 label = "overlay_call_button_scale"
             )
 
@@ -451,9 +432,9 @@ fun DialpadOverlay(
                     }
                     onCallClick(inputValue)
                 },
-                shape = overlayCallShape,
-                color = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                shape = actionButtonShape,
+                color = getCallGreenColor(),
+                contentColor = getOnCallGreenColor(),
                 interactionSource = callInteractionSource,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -464,7 +445,7 @@ fun DialpadOverlay(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.Call,
-                        contentDescription = "Place call",
+                        contentDescription = stringResource(R.string.call_status_ongoing),
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -485,13 +466,12 @@ fun DialButton(
     speedDialMap: Map<Int, String>,
     voicemailNumber: String,
     modifier: Modifier = Modifier,
-    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
+    viewModel: DialerViewModel? = null
 ) {
-    val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
-    val buttonShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: RoundedCornerShape(16.dp)
+    val buttonShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "rounded")
     val buttonColor = if (isAmoled) {
         Color(0xFF141414)
     } else if (isExpressive) {
@@ -504,16 +484,12 @@ fun DialButton(
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1.0f,
-        animationSpec = spring(
-            stiffness = Spring.StiffnessHigh,
-            dampingRatio = Spring.DampingRatioMediumBouncy
-        ),
+        animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "dial_button_scale"
     )
 
     Surface(
         modifier = modifier
-            .size(if (modifier == Modifier) 64.dp else Dp.Unspecified)
             .heightIn(min = 52.dp)
             .scale(scale)
             .clip(buttonShape)
@@ -536,10 +512,9 @@ fun DialButton(
                     }
                     if (key.first == "1") {
                         if (voicemailNumber.isNotBlank()) {
-                            Toast.makeText(context, "📞 Calling Voicemail", Toast.LENGTH_SHORT).show()
                             onSpeedDialCall(voicemailNumber)
                         } else {
-                            Toast.makeText(context, "Voicemail number not set. Configure in Settings!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.voicemail_settings), Toast.LENGTH_SHORT).show()
                         }
                     } else if (key.first == "0") {
                         if (viewModel != null) {
@@ -550,10 +525,9 @@ fun DialButton(
                     } else if (key.third != -1) {
                         val speedNum = speedDialMap[key.third]
                         if (speedNum != null) {
-                            Toast.makeText(context, "📞 Calling Speed Dial mapped to key ${key.first}!", Toast.LENGTH_SHORT).show()
                             onSpeedDialCall(speedNum)
                         } else {
-                            Toast.makeText(context, "Speed dial not assigned for key ${key.first}. Assign in Settings!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.speed_dial), Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

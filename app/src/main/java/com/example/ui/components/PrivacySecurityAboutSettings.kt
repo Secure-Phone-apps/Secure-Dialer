@@ -17,23 +17,29 @@
 
 package com.example.ui.components
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.PrivacyTip
+import androidx.compose.material.icons.filled.ScreenLockPortrait
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+import com.example.util.VaultBiometricAuthHelper
 
 @Composable
 fun PrivacySecurityAboutSettings(
@@ -44,6 +50,7 @@ fun PrivacySecurityAboutSettings(
     highlightedTitle: String? = null
 ) {
     val context = LocalContext.current
+    val activity = context as? Activity
     val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
     val isPocketProtectionEnabled by viewModel.isPocketProtectionEnabled
 
@@ -56,21 +63,38 @@ fun PrivacySecurityAboutSettings(
             PreferenceHeader(stringResource(R.string.header_privacy_protection))
         }
 
-        // Biometric Lock Card
+        // Biometric Lock Card (FIXED: Authenticates before enabling to prevent permanent lockouts)
         item {
             HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Biometric App Lock", highlightedTitle) || isMatchTitle("Privacy & Security Settings", highlightedTitle) || isMatchTitle("App Biometric Lock", highlightedTitle) || isMatchTitle("Biometric Lock", highlightedTitle),
+                isHighlighted = isMatchTitle("Biometric App Lock", highlightedTitle) ||
+                        isMatchTitle("Privacy & Security Settings", highlightedTitle) ||
+                        isMatchTitle("App Biometric Lock", highlightedTitle) ||
+                        isMatchTitle("Biometric Lock", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
                     title = stringResource(R.string.settings_biometric_lock),
                     subtitle = stringResource(R.string.settings_biometric_lock_sub),
                     checked = isBiometricLockEnabled,
-                    onCheckedChange = { viewModel.updateBiometricLockEnabled(it) },
+                    onCheckedChange = { enabled ->
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        if (enabled && activity != null) {
+                            VaultBiometricAuthHelper.authenticate(
+                                activity = activity,
+                                title = context.getString(R.string.settings_biometric_lock),
+                                subtitle = context.getString(R.string.settings_biometric_lock_sub),
+                                onSuccess = {
+                                    viewModel.updateBiometricLockEnabled(true)
+                                }
+                            )
+                        } else {
+                            viewModel.updateBiometricLockEnabled(enabled)
+                        }
+                    },
                     icon = Icons.Default.Lock,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.primary
@@ -85,14 +109,19 @@ fun PrivacySecurityAboutSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Pocket Protection Mode", highlightedTitle) || isMatchTitle("Pocket Protection Guard", highlightedTitle) || isMatchTitle("Pocket Protection", highlightedTitle),
+                isHighlighted = isMatchTitle("Pocket Protection Mode", highlightedTitle) ||
+                        isMatchTitle("Pocket Protection Guard", highlightedTitle) ||
+                        isMatchTitle("Pocket Protection", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
                     title = stringResource(R.string.settings_pocket_protection),
                     subtitle = stringResource(R.string.settings_pocket_protection_sub),
                     checked = isPocketProtectionEnabled,
-                    onCheckedChange = { viewModel.updatePocketProtectionEnabled(it) },
+                    onCheckedChange = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        viewModel.updatePocketProtectionEnabled(it)
+                    },
                     icon = Icons.Default.ScreenLockPortrait,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.secondary
@@ -113,7 +142,9 @@ fun PrivacySecurityAboutSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("App Version & Device Specifications", highlightedTitle) || isMatchTitle("App Information & Changelog", highlightedTitle) || isMatchTitle("About", highlightedTitle),
+                isHighlighted = isMatchTitle("App Version & Device Specifications", highlightedTitle) ||
+                        isMatchTitle("App Information & Changelog", highlightedTitle) ||
+                        isMatchTitle("About", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
@@ -134,7 +165,8 @@ fun PrivacySecurityAboutSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Zero-Data Privacy Policy", highlightedTitle) || isMatchTitle("Privacy", highlightedTitle),
+                isHighlighted = isMatchTitle("Zero-Data Privacy Policy", highlightedTitle) ||
+                        isMatchTitle("Privacy", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
@@ -161,15 +193,19 @@ fun PrivacySecurityAboutSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Help & Customer Support", highlightedTitle) || isMatchTitle("Support Open Source Development", highlightedTitle) || isMatchTitle("GitHub", highlightedTitle),
+                isHighlighted = isMatchTitle("Help & Customer Support", highlightedTitle) ||
+                        isMatchTitle("Support Open Source Development", highlightedTitle) ||
+                        isMatchTitle("GitHub", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowNav(
                     title = stringResource(R.string.settings_contribute_github),
                     subtitle = stringResource(R.string.settings_support_desc),
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com"))
-                        try { context.startActivity(intent) } catch (e: Exception) {}
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com")).apply {
+                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        }
+                        try { context.startActivity(intent) } catch (_: Exception) {}
                     },
                     icon = Icons.Default.Code,
                     iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),

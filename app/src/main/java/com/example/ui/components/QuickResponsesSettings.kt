@@ -19,33 +19,36 @@ package com.example.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 
 @Composable
 fun QuickResponsesSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
-    val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
-    val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
+    val context = LocalContext.current
+    val quickResponses by viewModel.quickResponsesFlow.collectAsStateWithLifecycle()
     var newQuickRespInput by remember { mutableStateOf("") }
 
     Column(
@@ -58,25 +61,32 @@ fun QuickResponsesSettings(
             onValueChange = { newQuickRespInput = it },
             label = { Text(stringResource(R.string.create_custom_reply)) },
             leadingIcon = {
-                Icon(Icons.Default.Message, null, tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Default.Message, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             },
             modifier = Modifier.fillMaxWidth(),
             shape = MaterialTheme.shapes.small
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         Button(
             onClick = {
-                if (newQuickRespInput.isNotBlank()) {
-                    viewModel.addQuickResponse(newQuickRespInput.trim())
+                val trimmed = newQuickRespInput.trim()
+                if (trimmed.isNotBlank()) {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                    // Prevent duplicate template entries
+                    if (quickResponses.none { it.message.equals(trimmed, ignoreCase = true) }) {
+                        viewModel.addQuickResponse(trimmed)
+                    }
                     newQuickRespInput = ""
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(48.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
             shape = MaterialTheme.shapes.small
         ) {
-            Icon(Icons.Default.Add, null, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Text(stringResource(R.string.add_message_template), fontWeight = FontWeight.SemiBold)
         }
@@ -84,7 +94,7 @@ fun QuickResponsesSettings(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            stringResource(R.string.quick_decline_messages),
+            text = stringResource(R.string.quick_decline_messages),
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
             fontWeight = FontWeight.Bold,
@@ -105,13 +115,12 @@ fun QuickResponsesSettings(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                quickResponses.forEach { resp ->
+                // FIXED: Direct entity iteration eliminates redundant list allocations and reverse lookups
+                quickResponses.forEach { responseItem ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = cardBgColor
-                        )
+                        colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
                         Row(
                             modifier = Modifier
@@ -132,27 +141,28 @@ fun QuickResponsesSettings(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        Icons.Default.ChatBubble,
-                                        null,
+                                        imageVector = Icons.Default.ChatBubble,
+                                        contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    resp,
+                                    text = responseItem.message,
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface,
                                     maxLines = 2,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                    overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.weight(1f)
                                 )
                             }
-                            IconButton(onClick = { 
-                                quickResponsesEntities.find { it.message == resp }?.let { 
-                                    viewModel.deleteQuickResponse(it)
+                            IconButton(
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                    viewModel.deleteQuickResponse(responseItem)
                                 }
-                            }) {
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = stringResource(R.string.delete_response),

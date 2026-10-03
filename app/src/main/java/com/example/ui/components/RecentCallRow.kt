@@ -17,25 +17,19 @@
 
 package com.example.ui.components
 
+import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import android.media.MediaPlayer
-import androidx.core.content.FileProvider
-import java.io.File
 import androidx.compose.material.icons.automirrored.filled.CallMade
-import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.automirrored.filled.CallReceived
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -45,43 +39,48 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
-import com.example.R
+import androidx.core.content.FileProvider
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.R
+import com.example.model.CallRecord
+import com.example.model.CallRecording
 import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.getAvatarShape
-import com.example.ui.theme.LocalM3Expressive
-import com.example.ui.theme.LocalAmoledMode
-import com.example.ui.theme.getMissedCallColor
-import com.example.ui.theme.getDialedCallColor
-import com.example.ui.theme.getReceivedCallColor
+import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.MultiSimManager
+import com.example.util.RichHapticEngine
+import kotlinx.coroutines.delay
+import java.io.File
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecentCallRow(
     group: CallGroup,
     onCallClick: () -> Unit,
     onDeleteRecord: (Int) -> Unit,
-    getHistory: suspend (String) -> List<com.example.model.CallRecord>,
+    getHistory: suspend (String) -> List<CallRecord>,
     viewModel: DialerViewModel,
     onHistoryClick: (String) -> Unit
 ) {
     val record = group.primary
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     var isExpanded by remember { mutableStateOf(false) }
 
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
+
     val searchBarColor = if (isAmoled) {
         Color(0xFF0C0C0C)
     } else if (isExpressive) {
@@ -89,16 +88,16 @@ fun RecentCallRow(
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
+
     val containerColor = if (isExpanded) {
         if (isAmoled) Color(0xFF141414) else searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
     } else {
         searchBarColor
     }
 
-    val context = LocalContext.current
     val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
+    val allRecordings by viewModel.recordingsFlow.collectAsStateWithLifecycle()
 
-    val allRecordings by viewModel.recordingsFlow.collectAsState()
     val matchingRecordings = remember(allRecordings, record.number) {
         val digits = record.number.filter { it.isDigit() }
         allRecordings.filter { rec ->
@@ -115,388 +114,349 @@ fun RecentCallRow(
             modifier = Modifier
                 .fillMaxWidth()
                 .clickable {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                     isExpanded = !isExpanded
                 },
-            colors = CardDefaults.cardColors(
-                containerColor = containerColor
-            ),
-            border = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
+            colors = CardDefaults.cardColors(containerColor = containerColor),
+            border = if (isAmoled) BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
             shape = MaterialTheme.shapes.medium
         ) {
-        Column {
-            ListItem(
-                headlineContent = {
-                    Column(
-                        modifier = Modifier.offset(x = (-8).dp),
-                        verticalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = if (record.name == "Unknown" || record.name.isBlank() || record.name == "-1" || record.name == "-2" || record.name == "-3") stringResource(R.string.unknown) else record.name,
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Medium,
-                                lineHeight = 18.sp,
-                                color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier.weight(1f, fill = false)
-                            )
-                            if (group.calls.size > 1) {
-                                Text(
-                                    text = " (${group.calls.size})",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+            Column {
+                ListItem(
+                    headlineContent = {
+                        Column(
+                            modifier = Modifier.offset(x = (-8).dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            val (icon, iconColor) = when (record.type) {
-                                CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
-                                CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
-                                CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
-                            }
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = iconColor,
-                                modifier = Modifier.size(13.dp)
-                            )
-
-                            // SIM Slot Indicator Chip
-                            val physicalSimCount = remember(context) { com.example.util.MultiSimManager.getPhysicalSimCount(context) }
-                            if (physicalSimCount > 1) {
-                                val isSim1 = record.simSlot <= 1
-                                if (isSim1) {
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        shadowElevation = 0.5.dp
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.sim_1),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontSize = 8.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp)
-                                        )
-                                    }
-                                } else {
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                                        border = BorderStroke(
-                                            1.dp,
-                                            MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.sim_2),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontSize = 8.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            // Verified Chip (for CNAP / CNAM network-identified names)
-                            if (record.isVerified) {
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
-                                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(10.dp)
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.caller_verified),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontSize = 9.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    }
-                                }
-                            } else {
-                                val isUnsavedWithoutCnap = record.name == record.number || record.name == "Unknown" || record.name.isBlank() || record.name == "-1" || record.name == "-2" || record.name == "-3"
-                                if (isUnsavedWithoutCnap) {
-                                    Surface(
-                                        shape = RoundedCornerShape(4.dp),
-                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                                        border = BorderStroke(
-                                            0.5.dp,
-                                            MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                                        )
-                                    ) {
-                                        Text(
-                                            text = stringResource(R.string.unknown),
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontSize = 8.5.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                                        )
-                                    }
-                                }
-                            }
-                            
-                            // Call Recording Mic Badge
-                            if (matchingRecordings.isNotEmpty()) {
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = MaterialTheme.colorScheme.tertiaryContainer,
-                                    modifier = Modifier.clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        showPlaybackDialog = true
-                                    }
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Mic,
-                                            contentDescription = "Recorded call",
-                                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
-                                            modifier = Modifier.size(10.dp)
-                                        )
-                                        Text(
-                                            text = "Rec",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontSize = 8.5.sp,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                                        )
-                                    }
-                                }
-                            }
-                            
-                            val extraInfo = when {
-                                record.isVerified && record.number.isNotBlank() -> "${record.number} • "
-                                record.label.isNotBlank() && !record.label.equals("Mobile", ignoreCase = true) -> "${localizeContactLabel(record.label)} • "
-                                else -> ""
-                            }
-                            Text(
-                                text = "$extraInfo${record.timestamp}",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 11.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                },
-                supportingContent = null,
-                leadingContent = {
-                    val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
-                    Surface(
-                        modifier = Modifier
-                            .offset(x = (-8).dp)
-                            .size(40.dp),
-                        shape = avatarShape,
-                        color = record.avatarBg.copy(alpha = 0.8f)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (record.photoUri.isNotEmpty()) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(record.photoUri)
-                                        .size(256, 256)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = "Contact Photo",
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3")) {
+                                        stringResource(R.string.unknown)
+                                    } else {
+                                        record.name
+                                    },
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    lineHeight = 18.sp,
+                                    color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
-                            } else {
-                                val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
-                                if (isSaved) {
+                                if (group.calls.size > 1) {
                                     Text(
-                                        text = record.avatarText,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = record.avatarTextColor,
-                                        fontWeight = FontWeight.SemiBold
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.Person,
-                                        contentDescription = "Unsaved Contact Icon",
-                                        tint = record.avatarTextColor,
-                                        modifier = Modifier.size(22.dp)
+                                        text = " (${group.calls.size})",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            ) {
+                                val (icon, iconColor) = when (record.type) {
+                                    CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
+                                    CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
+                                    CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
+                                }
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = iconColor,
+                                    modifier = Modifier.size(13.dp)
+                                )
+
+                                val physicalSimCount = remember(context) { MultiSimManager.getPhysicalSimCount(context) }
+                                if (physicalSimCount > 1) {
+                                    val isSim1 = record.simSlot <= 1
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = if (isSim1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                                        border = if (!isSim1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)) else null
+                                    ) {
+                                        Text(
+                                            text = stringResource(if (isSim1) R.string.sim_1 else R.string.sim_2),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (isSim1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                        )
+                                    }
+                                }
+
+                                if (record.isVerified) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Check,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary,
+                                                modifier = Modifier.size(10.dp)
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.caller_verified),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (matchingRecordings.isNotEmpty()) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = MaterialTheme.colorScheme.tertiaryContainer,
+                                        modifier = Modifier.clickable {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            showPlaybackDialog = true
+                                        }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Mic,
+                                                contentDescription = stringResource(R.string.recording),
+                                                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                                modifier = Modifier.size(10.dp)
+                                            )
+                                            Text(
+                                                text = "Rec",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 8.5.sp,
+                                                fontWeight = FontWeight.ExtraBold,
+                                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                                            )
+                                        }
+                                    }
+                                }
+
+                                val extraInfo = when {
+                                    record.isVerified && record.number.isNotBlank() -> "${record.number} • "
+                                    record.label.isNotBlank() && !record.label.equals("Mobile", ignoreCase = true) -> "${localizeContactLabel(record.label)} • "
+                                    else -> ""
+                                }
+                                Text(
+                                    text = "$extraInfo${record.timestamp}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
-                    }
-                },
-                trailingContent = {
-                    IconButton(onClick = {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onCallClick()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Call,
-                            contentDescription = "Call",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
-                        )
-                    }
-                },
-                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
-            )
+                    },
+                    supportingContent = null,
+                    leadingContent = {
+                        val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
+                        Surface(
+                            modifier = Modifier
+                                .offset(x = (-8).dp)
+                                .size(40.dp),
+                            shape = avatarShape,
+                            color = record.avatarBg.copy(alpha = 0.8f)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (record.photoUri.isNotEmpty()) {
+                                    AsyncImage(
+                                        model = ImageRequest.Builder(LocalContext.current)
+                                            .data(record.photoUri)
+                                            .size(128, 128)
+                                            .crossfade(true)
+                                            .build(),
+                                        contentDescription = record.name,
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
+                                    if (isSaved) {
+                                        Text(
+                                            text = record.avatarText,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = record.avatarTextColor,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = record.avatarTextColor,
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    trailingContent = {
+                        IconButton(onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            onCallClick()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Call,
+                                contentDescription = stringResource(R.string.call_status_ongoing),
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                    },
+                    colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+                )
 
-            val context = LocalContext.current
-            val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
-            val isBlocked = remember(blockedNumbersEntities, record.number) {
-                blockedNumbersEntities.any { it.number == record.number }
-            }
+                val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
+                val isBlocked = remember(blockedNumbersEntities, record.number) {
+                    blockedNumbersEntities.any { it.number == record.number }
+                }
 
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 8.dp)
+                AnimatedVisibility(
+                    visible = isExpanded,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
                 ) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
-                        thickness = 0.5.dp,
-                        color = MaterialTheme.colorScheme.outlineVariant
-                    )
-                    
-                    Row(
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically
+                            .padding(bottom = 8.dp)
                     ) {
-                        val isContact = record.name != record.number
-
-                        // 1. Send SMS
-                        RecentActionItem(
-                            icon = Icons.Default.Message,
-                            label = stringResource(R.string.send_sms),
-                            tint = MaterialTheme.colorScheme.primary,
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                    data = Uri.parse("smsto:${record.number}")
-                                }
-                                try {
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "No SMS app found", Toast.LENGTH_SHORT).show()
-                                }
-                            }
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
                         )
 
-                        // 2. Block/Spam
-                        RecentActionItem(
-                            icon = Icons.Default.Block,
-                            label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
-                            tint = if (isBlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
-                            onClick = {
-                                if (isBlocked) {
-                                    viewModel.removeBlockedNumber(record.number)
-                                } else {
-                                    viewModel.addBlockedNumber(record.number)
-                                }
-                            }
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            val isContact = record.name != record.number
 
-                        // 3. History
-                        RecentActionItem(
-                            icon = Icons.Default.History,
-                            label = stringResource(R.string.history),
-                            tint = MaterialTheme.colorScheme.secondary,
-                            onClick = {
-                                onHistoryClick(record.number)
-                            }
-                        )
-
-                        // 4. Add/Edit Contact
-                        RecentActionItem(
-                            icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
-                            label = if (isContact) stringResource(R.string.edit) else stringResource(R.string.add),
-                            tint = MaterialTheme.colorScheme.tertiary,
-                            onClick = {
-                                if (isContact) {
-                                    viewModel.oldContactToEdit.value = Contact(
-                                        number = record.number,
-                                        name = record.name,
-                                        label = record.label,
-                                        favorite = false,
-                                        avatarText = record.avatarText,
-                                        avatarBgValue = record.avatarBgValue,
-                                        avatarTextColorValue = record.avatarTextColorValue,
-                                        email = ""
-                                    )
-                                    viewModel.editContactName.value = record.name
-                                    viewModel.editContactNumber.value = record.number
-                                    viewModel.editContactLabel.value = record.label
-                                    viewModel.isEditContactDialogVisible.value = true
-                                } else {
-                                    viewModel.newContactName.value = ""
-                                    viewModel.newContactNumber.value = record.number
-                                    viewModel.newContactLabel.value = "Mobile"
-                                    viewModel.isAddContactDialogVisible.value = true
-                                }
-                            }
-                        )
-
-                        // 5. Recordings Playback Action (if recorded)
-                        if (matchingRecordings.isNotEmpty()) {
                             RecentActionItem(
-                                icon = Icons.Default.Mic,
-                                label = if (matchingRecordings.size == 1) "Recording" else "Records (${matchingRecordings.size})",
-                                tint = MaterialTheme.colorScheme.tertiary,
+                                icon = Icons.Default.Message,
+                                label = stringResource(R.string.send_sms),
+                                tint = MaterialTheme.colorScheme.primary,
                                 onClick = {
-                                    showPlaybackDialog = true
+                                    try {
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("smsto:${record.number}")
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             )
+
+                            RecentActionItem(
+                                icon = Icons.Default.Block,
+                                label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
+                                tint = if (isBlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    if (isBlocked) {
+                                        viewModel.removeBlockedNumber(record.number)
+                                    } else {
+                                        viewModel.addBlockedNumber(record.number)
+                                    }
+                                }
+                            )
+
+                            RecentActionItem(
+                                icon = Icons.Default.History,
+                                label = stringResource(R.string.history),
+                                tint = MaterialTheme.colorScheme.secondary,
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    onHistoryClick(record.number)
+                                }
+                            )
+
+                            RecentActionItem(
+                                icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
+                                label = if (isContact) stringResource(R.string.btn_edit) else stringResource(R.string.action_add_contact),
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    if (isContact) {
+                                        viewModel.oldContactToEdit.value = Contact(
+                                            number = record.number,
+                                            name = record.name,
+                                            label = record.label,
+                                            favorite = false,
+                                            avatarText = record.avatarText,
+                                            avatarBgValue = record.avatarBgValue,
+                                            avatarTextColorValue = record.avatarTextColorValue,
+                                            email = ""
+                                        )
+                                        viewModel.editContactName.value = record.name
+                                        viewModel.editContactNumber.value = record.number
+                                        viewModel.editContactLabel.value = record.label
+                                        viewModel.isEditContactDialogVisible.value = true
+                                    } else {
+                                        viewModel.newContactName.value = ""
+                                        viewModel.newContactNumber.value = record.number
+                                        viewModel.newContactLabel.value = "Mobile"
+                                        viewModel.isAddContactDialogVisible.value = true
+                                    }
+                                }
+                            )
+
+                            if (matchingRecordings.isNotEmpty()) {
+                                RecentActionItem(
+                                    icon = Icons.Default.Mic,
+                                    label = stringResource(R.string.recording),
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        showPlaybackDialog = true
+                                    }
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
-}
 
     if (isRowSwipeEnabled) {
         val dismissState = rememberSwipeToDismissBoxState(
             confirmValueChange = { dismissValue ->
                 when (dismissValue) {
                     SwipeToDismissBoxValue.StartToEnd -> {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                         onCallClick()
                         false
                     }
                     SwipeToDismissBoxValue.EndToStart -> {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                         try {
-                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${record.number}"))
+                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${record.number}")).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
                             context.startActivity(intent)
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Messaging app not available", Toast.LENGTH_SHORT).show()
+                        } catch (_: Exception) {
+                            Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                         }
                         false
                     }
@@ -510,7 +470,7 @@ fun RecentCallRow(
             backgroundContent = {
                 val direction = dismissState.dismissDirection
                 val bgContainerColor = when (direction) {
-                    SwipeToDismissBoxValue.StartToEnd -> com.example.ui.theme.getCallGreenColor()
+                    SwipeToDismissBoxValue.StartToEnd -> getCallGreenColor()
                     SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.primaryContainer
                     else -> Color.Transparent
                 }
@@ -578,16 +538,18 @@ fun RecentActionItem(
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = tint
+            color = tint,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
 
 @Composable
 fun DirectRecordingPlayerDialog(
-    recordings: List<com.example.model.CallRecording>,
+    recordings: List<CallRecording>,
     onDismiss: () -> Unit,
-    viewModel: com.example.ui.viewmodel.DialerViewModel
+    viewModel: DialerViewModel
 ) {
     val context = LocalContext.current
     var selectedIndex by remember { mutableIntStateOf(0) }
@@ -615,11 +577,11 @@ fun DirectRecordingPlayerDialog(
         currentPositionMs = 0
     }
 
-    fun startPlaying(rec: com.example.model.CallRecording) {
+    fun startPlaying(rec: CallRecording) {
         stopPlayer()
         val file = File(rec.filePath)
         if (!file.exists() || file.length() == 0L) {
-            Toast.makeText(context, "Audio file not found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
             return
         }
         try {
@@ -635,8 +597,10 @@ fun DirectRecordingPlayerDialog(
             }
             mediaPlayer = mp
             isPlaying = true
-        } catch (e: Exception) {
-            Toast.makeText(context, "Cannot play recording: ${e.message}", Toast.LENGTH_SHORT).show()
+        } catch (_: Exception) {
+            // FIXED: Clean release on failure to avoid leaking C++ AudioTrack client
+            stopPlayer()
+            Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -648,7 +612,7 @@ fun DirectRecordingPlayerDialog(
 
     LaunchedEffect(isPlaying) {
         while (isPlaying) {
-            kotlinx.coroutines.delay(100)
+            delay(100)
             mediaPlayer?.let { mp ->
                 try {
                     if (mp.isPlaying) {
@@ -708,7 +672,6 @@ fun DirectRecordingPlayerDialog(
                     }
                 }
 
-                // Audio Player Controls Box
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                     shape = RoundedCornerShape(12.dp),
@@ -734,7 +697,7 @@ fun DirectRecordingPlayerDialog(
                             ) {
                                 Icon(
                                     imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                    contentDescription = if (isPlaying) "Pause" else "Play"
+                                    contentDescription = stringResource(if (isPlaying) R.string.btn_answer else R.string.call_status_ongoing)
                                 )
                             }
 
@@ -755,12 +718,12 @@ fun DirectRecordingPlayerDialog(
                                     val currentSec = currentPositionMs / 1000
                                     val totalSec = totalDurationMs / 1000
                                     Text(
-                                        text = String.format("%02d:%02d", currentSec / 60, currentSec % 60),
+                                        text = String.format(Locale.ROOT, "%02d:%02d", currentSec / 60, currentSec % 60),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                     Text(
-                                        text = String.format("%02d:%02d", totalSec / 60, totalSec % 60),
+                                        text = String.format(Locale.ROOT, "%02d:%02d", totalSec / 60, totalSec % 60),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -770,7 +733,6 @@ fun DirectRecordingPlayerDialog(
                     }
                 }
 
-                // Note Preview / Edit
                 if (isEditingNote) {
                     OutlinedTextField(
                         value = noteInput,
@@ -812,10 +774,12 @@ fun DirectRecordingPlayerDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = if (currentRecording.note.isNotBlank()) "📝 ${currentRecording.note}" else "➕ Add note to recording",
+                            text = if (currentRecording.note.isNotBlank()) "📝 ${currentRecording.note}" else "➕ ${stringResource(R.string.jot_call_note_title)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = if (currentRecording.note.isNotBlank()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         IconButton(onClick = {
                             noteInput = currentRecording.note
@@ -823,7 +787,7 @@ fun DirectRecordingPlayerDialog(
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Note",
+                                contentDescription = stringResource(R.string.btn_edit),
                                 tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -831,7 +795,6 @@ fun DirectRecordingPlayerDialog(
                     }
                 }
 
-                // Share & Delete Actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -849,11 +812,11 @@ fun DirectRecordingPlayerDialog(
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "audio/*"
                                     putExtra(Intent.EXTRA_STREAM, uri)
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION
                                 }
-                                context.startActivity(Intent.createChooser(shareIntent, "Share Call Recording"))
+                                context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_recording)))
                             } else {
-                                Toast.makeText(context, "Audio file not found", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {

@@ -30,9 +30,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.util.RichHapticEngine
 
 @Composable
 fun DetailActionItem(
@@ -42,13 +46,21 @@ fun DetailActionItem(
     contentColor: Color,
     onClick: () -> Unit
 ) {
+    val context = LocalContext.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .width(68.dp)
+            .widthIn(min = 64.dp, max = 84.dp)
             .clip(MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick)
-            .padding(vertical = 6.dp)
+            .clickable(
+                role = Role.Button,
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    onClick()
+                }
+            )
+            .padding(vertical = 6.dp, horizontal = 2.dp)
     ) {
         Box(
             modifier = Modifier
@@ -70,7 +82,8 @@ fun DetailActionItem(
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }

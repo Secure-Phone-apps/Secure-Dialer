@@ -17,33 +17,13 @@
 
 package com.example.ui.components
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -51,13 +31,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.theme.LocalAmoledMode
+import com.example.ui.theme.LocalM3Expressive
 import com.example.util.RichHapticEngine
 
 @Composable
@@ -73,6 +54,7 @@ fun InCallButton(
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
+
     val btnColor = if (isActive) {
         if (isPulsingRecording) {
             Color(0xFFB71C1C).copy(alpha = 0.22f)
@@ -88,6 +70,7 @@ fun InCallButton(
             MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
         }
     }
+
     val contentColor = if (isActive) {
         if (isPulsingRecording) {
             Color(0xFFE53935)
@@ -115,7 +98,66 @@ fun InCallButton(
         label = "incall_button_scale"
     )
 
-    // Pulse animation for active recording
+    val finalModifier = if (modifier == Modifier) Modifier.size(64.dp) else modifier
+
+    Surface(
+        onClick = {
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+            onClick()
+        },
+        interactionSource = interactionSource,
+        modifier = finalModifier.scale(scale),
+        shape = shape,
+        color = btnColor,
+        contentColor = contentColor,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                // PERF FIX: Only runs the 60fps/120fps infinite ticker when recording is actively pulsing
+                if (isPulsingRecording) {
+                    RecordingPulseHalo()
+                }
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(horizontal = 4.dp)
+            ) {
+                if (isPulsingRecording) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                    Spacer(modifier = Modifier.width(3.dp))
+                }
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = contentColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecordingPulseHalo() {
     val infiniteTransition = rememberInfiniteTransition(label = "pulse_recording_transition")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 0.85f,
@@ -136,67 +178,11 @@ fun InCallButton(
         label = "pulse_recording_alpha"
     )
 
-    val finalModifier = if (modifier == Modifier) Modifier.size(64.dp) else modifier
-
-    Surface(
-        onClick = {
-            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-            onClick()
-        },
-        interactionSource = interactionSource,
-        modifier = finalModifier
-            .scale(scale),
-        shape = shape,
-        color = btnColor,
-        contentColor = contentColor,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                if (isPulsingRecording) {
-                    // Outer pulsating halo ring
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .scale(pulseScale)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE53935).copy(alpha = pulseAlpha))
-                    )
-                }
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    modifier = Modifier.size(22.dp)
-                )
-            }
-            Spacer(modifier = Modifier.height(2.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                if (isPulsingRecording) {
-                    // Small active red recording bead
-                    Box(
-                        modifier = Modifier
-                            .size(6.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFE53935))
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                }
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = contentColor,
-                    maxLines = 1
-                )
-            }
-        }
-    }
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .scale(pulseScale)
+            .clip(CircleShape)
+            .background(Color(0xFFE53935).copy(alpha = pulseAlpha))
+    )
 }
-

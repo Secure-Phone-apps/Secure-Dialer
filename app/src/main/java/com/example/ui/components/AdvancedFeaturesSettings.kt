@@ -22,13 +22,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PhoneCallback
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 
@@ -39,10 +42,10 @@ fun AdvancedFeaturesSettings(
     highlightedTitle: String? = null
 ) {
     val scrollState = rememberScrollState()
-    val reminders by viewModel.remindersFlow.collectAsState()
+    val reminders by viewModel.remindersFlow.collectAsStateWithLifecycle()
     val activeReminders = remember(reminders) { reminders.filter { !it.isCompleted } }
-    val allNotes by viewModel.notesFlow.collectAsState()
-    val recordings by viewModel.recordingsFlow.collectAsState()
+    val allNotes by viewModel.notesFlow.collectAsStateWithLifecycle()
+    val recordings by viewModel.recordingsFlow.collectAsStateWithLifecycle()
 
     val isCallbackRemindersEnabled by viewModel.isCallbackRemindersEnabled
     val isCallNotesEnabled by viewModel.isCallNotesEnabled
@@ -58,9 +61,15 @@ fun AdvancedFeaturesSettings(
     ) {
         // Feature Container 1: Automatic Call Recording (Expandable with Switch)
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) || isMatchTitle("Advanced Tools Settings", highlightedTitle) || isMatchTitle("Call Recording", highlightedTitle) || isMatchTitle("Lock Recordings with Biometrics", highlightedTitle) || isMatchTitle("Recording Vault", highlightedTitle),
+            isHighlighted = isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) ||
+                    isMatchTitle("Advanced Tools Settings", highlightedTitle) ||
+                    isMatchTitle("Call Recording", highlightedTitle) ||
+                    isMatchTitle("Lock Recordings with Biometrics", highlightedTitle) ||
+                    isMatchTitle("Recording Vault", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -70,11 +79,14 @@ fun AdvancedFeaturesSettings(
                 iconBgColor = MaterialTheme.colorScheme.tertiaryContainer,
                 iconTint = MaterialTheme.colorScheme.onTertiaryContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (recordings.isNotEmpty()) "${recordings.size} files" else null,
+                badgeText = if (recordings.isNotEmpty()) "${recordings.size}" else null,
                 hasSwitch = true,
                 isSwitchChecked = isRecordingEnabled,
                 onSwitchChange = { viewModel.updateRecordingEnabled(it) },
-                initiallyExpanded = isMatchTitle("Call Recording", highlightedTitle) || isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) || isMatchTitle("Lock Recordings with Biometrics", highlightedTitle) || isMatchTitle("Recording Vault", highlightedTitle)
+                initiallyExpanded = isMatchTitle("Call Recording", highlightedTitle) ||
+                        isMatchTitle("Call Recording & Local Audio Storage", highlightedTitle) ||
+                        isMatchTitle("Lock Recordings with Biometrics", highlightedTitle) ||
+                        isMatchTitle("Recording Vault", highlightedTitle)
             ) {
                 CallRecordingsSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }
@@ -82,9 +94,13 @@ fun AdvancedFeaturesSettings(
 
         // Feature Container 2: Callback Reminder Dashboard (Expandable with Switch)
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Scheduled Callback Reminders Dashboard", highlightedTitle) || isMatchTitle("Callback Reminders & Alerts", highlightedTitle) || isMatchTitle("Callback Reminder", highlightedTitle),
+            isHighlighted = isMatchTitle("Scheduled Callback Reminders Dashboard", highlightedTitle) ||
+                    isMatchTitle("Callback Reminders & Alerts", highlightedTitle) ||
+                    isMatchTitle("Callback Reminder", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -94,11 +110,13 @@ fun AdvancedFeaturesSettings(
                 iconBgColor = MaterialTheme.colorScheme.primaryContainer,
                 iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (activeReminders.isNotEmpty()) "${activeReminders.size} active" else null,
+                badgeText = if (activeReminders.isNotEmpty()) "${activeReminders.size}" else null,
                 hasSwitch = true,
                 isSwitchChecked = isCallbackRemindersEnabled,
                 onSwitchChange = { viewModel.updateCallbackRemindersEnabled(it) },
-                initiallyExpanded = isCallbackRemindersEnabled || isMatchTitle("Callback Reminder", highlightedTitle) || isMatchTitle("Scheduled Callback Reminders Dashboard", highlightedTitle)
+                initiallyExpanded = isCallbackRemindersEnabled ||
+                        isMatchTitle("Callback Reminder", highlightedTitle) ||
+                        isMatchTitle("Scheduled Callback Reminders Dashboard", highlightedTitle)
             ) {
                 ScheduledRemindersSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }
@@ -106,9 +124,13 @@ fun AdvancedFeaturesSettings(
 
         // Feature Container 3: Call Notes (Expandable with Switch)
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Call Notes & Memos", highlightedTitle) || isMatchTitle("Call Notes & Contact Memos", highlightedTitle) || isMatchTitle("Call Notes", highlightedTitle),
+            isHighlighted = isMatchTitle("Call Notes & Memos", highlightedTitle) ||
+                    isMatchTitle("Call Notes & Contact Memos", highlightedTitle) ||
+                    isMatchTitle("Call Notes", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -118,11 +140,12 @@ fun AdvancedFeaturesSettings(
                 iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
                 iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (allNotes.isNotEmpty()) "${allNotes.size} notes" else null,
+                badgeText = if (allNotes.isNotEmpty()) "${allNotes.size}" else null,
                 hasSwitch = true,
                 isSwitchChecked = isCallNotesEnabled,
                 onSwitchChange = { viewModel.updateCallNotesEnabled(it) },
-                initiallyExpanded = isMatchTitle("Call Notes", highlightedTitle) || isMatchTitle("Call Notes & Memos", highlightedTitle)
+                initiallyExpanded = isMatchTitle("Call Notes", highlightedTitle) ||
+                        isMatchTitle("Call Notes & Memos", highlightedTitle)
             ) {
                 CallNotesSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }
@@ -130,9 +153,13 @@ fun AdvancedFeaturesSettings(
 
         // Feature Container 4: Fake Call Simulator (Expandable with Switch)
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Fake Call Simulator", highlightedTitle) || isMatchTitle("Fake Call Generator", highlightedTitle) || isMatchTitle("Fake Call", highlightedTitle),
+            isHighlighted = isMatchTitle("Fake Call Simulator", highlightedTitle) ||
+                    isMatchTitle("Fake Call Generator", highlightedTitle) ||
+                    isMatchTitle("Fake Call", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -145,7 +172,8 @@ fun AdvancedFeaturesSettings(
                 hasSwitch = true,
                 isSwitchChecked = isFakeCallSimulatorEnabled,
                 onSwitchChange = { viewModel.updateFakeCallSimulatorEnabled(it) },
-                initiallyExpanded = isMatchTitle("Fake Call", highlightedTitle) || isMatchTitle("Fake Call Simulator", highlightedTitle)
+                initiallyExpanded = isMatchTitle("Fake Call", highlightedTitle) ||
+                        isMatchTitle("Fake Call Simulator", highlightedTitle)
             ) {
                 FakeCallSettings(viewModel = viewModel, cardBgColor = cardBgColor)
             }

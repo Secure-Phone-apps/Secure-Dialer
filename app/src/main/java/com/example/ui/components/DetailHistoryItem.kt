@@ -30,20 +30,23 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import com.example.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
-import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getDialedCallColor
+import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
+import com.example.util.MultiSimManager
+import com.example.util.RichHapticEngine
 
 @Composable
 fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
@@ -53,7 +56,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
         CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
         CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
     }
-    
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
@@ -64,20 +67,18 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
             .padding(vertical = 2.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(IntrinsicSize.Min),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .width(4.dp)
-                    .fillMaxHeight()
+                    .height(52.dp)
                     .background(color)
             )
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             Surface(
                 modifier = Modifier.size(32.dp),
                 shape = RoundedCornerShape(16.dp),
@@ -92,9 +93,9 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.width(12.dp))
-            
+
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -106,61 +107,40 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 val typeStr = when (record.type) {
                     CallType.MISSED -> stringResource(R.string.call_type_missed)
                     CallType.OUTGOING -> stringResource(R.string.call_type_outgoing)
                     CallType.INCOMING -> stringResource(R.string.call_type_incoming)
                 }
-                
+
                 val durationText = if (record.duration > 0) {
                     val mins = record.duration / 60
                     val secs = record.duration % 60
                     if (mins > 0) "${mins}m ${secs}s" else "${secs}s"
                 } else null
-                
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.padding(top = 2.dp)
                 ) {
-                    // SIM Slot Indicator Chip
-                    val physicalSimCount = remember(context) { com.example.util.MultiSimManager.getPhysicalSimCount(context) }
+                    val physicalSimCount = remember(context) { MultiSimManager.getPhysicalSimCount(context) }
                     if (physicalSimCount > 1) {
                         val isSim1 = record.simSlot <= 1
-                        if (isSim1) {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                shadowElevation = 0.5.dp
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.sim_1),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 8.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                                )
-                            }
-                        } else {
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)
-                                )
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.sim_2),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 8.5.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
-                                )
-                            }
+                        Surface(
+                            shape = RoundedCornerShape(4.dp),
+                            color = if (isSim1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
+                            border = if (!isSim1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)) else null
+                        ) {
+                            Text(
+                                text = stringResource(if (isSim1) R.string.sim_1 else R.string.sim_2),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 8.5.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = if (isSim1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                            )
                         }
                     }
 
@@ -191,15 +171,12 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                             }
                         }
                     } else {
-                        val isUnsavedWithoutCnap = record.name == record.number || record.name == "Unknown" || record.name.isBlank() || record.name == "-1" || record.name == "-2" || record.name == "-3"
+                        val isUnsavedWithoutCnap = record.name == record.number || record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3")
                         if (isUnsavedWithoutCnap) {
                             Surface(
                                 shape = RoundedCornerShape(4.dp),
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                                border = BorderStroke(
-                                    0.5.dp,
-                                    MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                                )
+                                border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                             ) {
                                 Text(
                                     text = stringResource(R.string.unknown),
@@ -219,7 +196,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                         color = color,
                         fontWeight = FontWeight.Medium
                     )
-                    
+
                     if (durationText != null) {
                         Text(
                             text = "• $durationText",
@@ -235,15 +212,18 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     }
                 }
             }
-            
+
             IconButton(
-                onClick = onDeleteClick,
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                    onDeleteClick()
+                },
                 modifier = Modifier.padding(end = 4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete call entry",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                    contentDescription = stringResource(R.string.btn_delete),
+                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
                     modifier = Modifier.size(18.dp)
                 )
             }

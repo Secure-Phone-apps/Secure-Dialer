@@ -25,14 +25,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
 import com.example.util.MultiSimManager
+import com.example.util.RichHapticEngine
 
 @Composable
 fun SimSelectDialog(
@@ -50,25 +48,33 @@ fun SimSelectDialog(
     onDismiss: () -> Unit,
     onSimSelected: (simLabel: String) -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
+    val realSimList = remember(context) { MultiSimManager.getActiveSimAccounts(context) }
+
+    // If only 1 SIM exists, auto-select it immediately without forcing user to pick
+    LaunchedEffect(realSimList) {
+        if (realSimList.size == 1) {
+            val sim = realSimList.first()
+            onSimSelected("SIM ${sim.slotIndex + 1}")
+        }
+    }
+
+    if (realSimList.size <= 1) return
 
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
-            usePlatformDefaultWidth = false
-        )
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
+                .background(Color.Black.copy(alpha = 0.5f))
                 .clickable { onDismiss() },
             contentAlignment = Alignment.BottomCenter
         ) {
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(enabled = false) {}
+                    .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
                     .padding(16.dp),
                 shape = RoundedCornerShape(24.dp),
                 color = MaterialTheme.colorScheme.surface,
@@ -109,36 +115,20 @@ fun SimSelectDialog(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    val rawSimList = remember { MultiSimManager.getActiveSimAccounts(context) }
-                    val simList = remember(rawSimList) {
-                        if (rawSimList.size >= 2) {
-                            rawSimList
-                        } else if (rawSimList.size == 1) {
-                            val first = rawSimList[0]
-                            listOf(
-                                first,
-                                com.example.util.SimAccountInfo(1, 2, "SIM 2", "SIM 2 Carrier", "", null)
-                            )
-                        } else {
-                            listOf(
-                                com.example.util.SimAccountInfo(0, 1, "SIM 1", "SIM 1 Carrier", "", null),
-                                com.example.util.SimAccountInfo(1, 2, "SIM 2", "SIM 2 Carrier", "", null)
-                            )
-                        }
-                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        simList.take(2).forEachIndexed { index, sim ->
-                            val simLabel = "SIM ${index + 1}"
+                        realSimList.take(2).forEachIndexed { index, sim ->
+                            // FIXED: Use actual hardware slot index (sim.slotIndex + 1)
+                            val simLabel = "SIM ${sim.slotIndex + 1}"
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(100.dp)
                                     .clip(RoundedCornerShape(16.dp))
                                     .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                         onSimSelected(simLabel)
                                     },
                                 color = if (index == 0) {
@@ -155,7 +145,9 @@ fun SimSelectDialog(
                                 tonalElevation = 2.dp
                             ) {
                                 Column(
-                                    modifier = Modifier.fillMaxSize().padding(8.dp),
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .padding(8.dp),
                                     horizontalAlignment = Alignment.CenterHorizontally,
                                     verticalArrangement = Arrangement.Center
                                 ) {
@@ -191,12 +183,15 @@ fun SimSelectDialog(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     TextButton(
-                        onClick = onDismiss,
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            onDismiss()
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp)
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = stringResource(R.string.btn_cancel),
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold
                         )

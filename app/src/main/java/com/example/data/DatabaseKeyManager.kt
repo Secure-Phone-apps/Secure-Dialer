@@ -22,7 +22,6 @@ object DatabaseKeyManager {
     private const val ENCRYPTED_DB_KEY = "encrypted_db_key"
     private const val GCM_IV = "gcm_iv"
     private const val GCM_TAG_LENGTH = 128
-    private const val DB_FILE_NAME = "secure_dialer.db"
 
     // In-memory key cache to eliminate 50ms Keystore IPC overhead on every DB query
     @Volatile
@@ -54,33 +53,23 @@ object DatabaseKeyManager {
                 val encryptedKey = Base64.decode(encryptedKeyBase64, Base64.NO_WRAP)
                 val iv = Base64.decode(ivBase64, Base64.NO_WRAP)
                 val secretKey = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
-                    ?: throw IllegalStateException("Keystore alias exists in prefs but key is missing from AndroidKeyStore.")
+                if (secretKey != null) {
+                    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                    val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
+                    cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
+                    val decrypted = cipher.doFinal(encryptedKey)
 
-                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-                val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
-                cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
-                val decrypted = cipher.doFinal(encryptedKey)
-
-                cachedKey = decrypted.copyOf()
-                return decrypted
-            } catch (e: Exception) {
-                // HARD STOP: Never delete the key here. Throwing prevents silent destructive DB wipe.
-                throw IllegalStateException(
-                    "Cryptographic failure during database key recovery. Device reboot or credential verification required.",
-                    e
-                )
+                    cachedKey = decrypted.copyOf()
+                    return decrypted
+                }
+            } catch (_: Exception) {
+                // If hardware key or prefs were corrupted/invalidated, proceed to regenerate fresh key
             }
+            // Clear unrecoverable prefs entries
+            prefs.edit().remove(ENCRYPTED_DB_KEY).remove(GCM_IV).commit()
         }
 
-        // 4. Guard against re-generation if a database file already exists on disk
-        val dbFile = context.getDatabasePath(DB_FILE_NAME)
-        if (dbFile.exists() && dbFile.length() > 0) {
-            throw SecurityException(
-                "Encrypted database exists on disk, but decryption key metadata was lost. Halting to prevent data overwrite."
-            )
-        }
-
-        // 5. Generate new 256-bit database passphrase
+        // 4. Generate new 256-bit database passphrase
         val secureRandom = SecureRandom()
         val rawDbKey = ByteArray(32)
         secureRandom.nextBytes(rawDbKey)

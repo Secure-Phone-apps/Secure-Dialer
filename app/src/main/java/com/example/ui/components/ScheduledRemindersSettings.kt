@@ -20,11 +20,13 @@ package com.example.ui.components
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.NotificationAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,12 +34,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
+import com.example.model.CallReminder
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,7 +52,7 @@ fun ScheduledRemindersSettings(
     cardBgColor: Color
 ) {
     val context = LocalContext.current
-    val reminders by viewModel.remindersFlow.collectAsState()
+    val reminders by viewModel.remindersFlow.collectAsStateWithLifecycle()
 
     val activeReminders = remember(reminders) { reminders.filter { !it.isCompleted } }
     val completedReminders = remember(reminders) { reminders.filter { it.isCompleted } }
@@ -92,7 +97,7 @@ fun ScheduledRemindersSettings(
                             .background(MaterialTheme.colorScheme.surface),
                         headlineContent = {
                             Text(
-                                text = reminder.name,
+                                text = reminder.name.ifEmpty { reminder.number },
                                 fontWeight = FontWeight.SemiBold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -100,11 +105,13 @@ fun ScheduledRemindersSettings(
                         },
                         supportingContent = {
                             Column {
-                                Text(
-                                    text = reminder.number,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                if (reminder.name.isNotBlank() && reminder.name != reminder.number) {
+                                    Text(
+                                        text = reminder.number,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                                 Text(
                                     text = stringResource(R.string.scheduled_prefix, sdf.format(Date(reminder.reminderTime))),
                                     style = MaterialTheme.typography.bodySmall,
@@ -132,10 +139,15 @@ fun ScheduledRemindersSettings(
                         },
                         trailingContent = {
                             IconButton(onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                 viewModel.deleteReminder(reminder)
-                                Toast.makeText(context, "Cancelled reminder for ${reminder.name}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
                             }) {
-                                Icon(Icons.Default.Cancel, stringResource(R.string.btn_cancel), tint = MaterialTheme.colorScheme.error)
+                                Icon(
+                                    imageVector = Icons.Default.Cancel,
+                                    contentDescription = stringResource(R.string.btn_cancel),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
                     )
@@ -160,7 +172,7 @@ fun ScheduledRemindersSettings(
                             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
                         headlineContent = {
                             Text(
-                                text = reminder.name,
+                                text = reminder.name.ifEmpty { reminder.number },
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -168,12 +180,14 @@ fun ScheduledRemindersSettings(
                         },
                         supportingContent = {
                             Column {
-                                Text(
-                                    text = reminder.number,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                if (reminder.name.isNotBlank() && reminder.name != reminder.number) {
+                                    Text(
+                                        text = reminder.number,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                                 Text(
                                     text = stringResource(R.string.triggered_prefix, sdf.format(Date(reminder.reminderTime))),
                                     style = MaterialTheme.typography.bodySmall,
@@ -193,9 +207,14 @@ fun ScheduledRemindersSettings(
                         },
                         trailingContent = {
                             IconButton(onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                 viewModel.deleteReminder(reminder)
                             }) {
-                                Icon(Icons.Default.Delete, stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
+                                Icon(
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = stringResource(R.string.btn_delete),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
                             }
                         }
                     )

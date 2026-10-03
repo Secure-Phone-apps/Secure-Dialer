@@ -36,6 +36,14 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.CallRecord
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+
+private enum class ReminderUnit(val key: String, val multiplier: Long) {
+    SEC("sec", 1L),
+    MIN("min", 60L),
+    HOUR("hour", 3600L),
+    DAY("day", 86400L)
+}
 
 @Composable
 fun CallbackReminderDialog(
@@ -46,18 +54,14 @@ fun CallbackReminderDialog(
 ) {
     var reminderNoteText by remember { mutableStateOf("") }
     var reminderDelayValue by remember { mutableStateOf("15") }
-    var reminderDelayUnit by remember { mutableStateOf("min") }
+    var selectedUnit by remember { mutableStateOf(ReminderUnit.MIN) }
 
-    val finalDelaySeconds = remember(reminderDelayValue, reminderDelayUnit) {
-        val value = reminderDelayValue.toIntOrNull() ?: 0
-        when (reminderDelayUnit) {
-            "sec" -> value
-            "min" -> value * 60
-            "hour" -> value * 3600
-            "day" -> value * 86400
-            else -> value * 60
-        }
+    val finalDelaySeconds = remember(reminderDelayValue, selectedUnit) {
+        val value = reminderDelayValue.toLongOrNull() ?: 0L
+        value * selectedUnit.multiplier
     }
+
+    val isValidDelay = finalDelaySeconds > 0L
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -69,12 +73,12 @@ fun CallbackReminderDialog(
                 tint = MaterialTheme.colorScheme.primary
             )
         },
-        title = { 
+        title = {
             Text(
                 text = stringResource(R.string.callback_reminders_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
-            ) 
+            )
         },
         text = {
             Column(
@@ -83,13 +87,13 @@ fun CallbackReminderDialog(
             ) {
                 Text(
                     text = stringResource(
-                        R.string.remind_call_back_prompt, 
+                        R.string.remind_call_back_prompt,
                         if (primaryRecord.name == "Unknown") primaryRecord.number else primaryRecord.name
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                
+
                 OutlinedTextField(
                     value = reminderDelayValue,
                     onValueChange = { newValue ->
@@ -109,17 +113,20 @@ fun CallbackReminderDialog(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    listOf("sec", "min", "hour", "day").forEach { unit ->
+                    ReminderUnit.entries.forEach { unit ->
                         FilterChip(
-                            selected = reminderDelayUnit == unit,
-                            onClick = { reminderDelayUnit = unit },
-                            label = { 
+                            selected = selectedUnit == unit,
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                selectedUnit = unit
+                            },
+                            label = {
                                 Text(
-                                    text = unit, 
+                                    text = unit.key,
                                     style = MaterialTheme.typography.bodySmall,
                                     modifier = Modifier.fillMaxWidth(),
                                     textAlign = TextAlign.Center
-                                ) 
+                                )
                             },
                             modifier = Modifier.weight(1f)
                         )
@@ -132,21 +139,24 @@ fun CallbackReminderDialog(
                     label = { Text(stringResource(R.string.optional_note_label)) },
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                    maxLines = 3
                 )
             }
         },
         confirmButton = {
             Button(
+                // FIXED: Disables Save button if delay is invalid (0 or empty) to prevent silent drops
+                enabled = isValidDelay,
                 onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                     val triggerTime = System.currentTimeMillis() + (finalDelaySeconds * 1000L)
                     viewModel.addReminder(
                         number = primaryRecord.number,
                         name = if (primaryRecord.name == "Unknown") primaryRecord.number else primaryRecord.name,
                         triggerTime = triggerTime,
-                        note = reminderNoteText
+                        note = reminderNoteText.trim()
                     )
-                    Toast.makeText(context, "Callback alarm scheduled!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.schedule_callback_reminder_title), Toast.LENGTH_SHORT).show()
                     onDismiss()
                 },
                 shape = RoundedCornerShape(100.dp)
@@ -156,7 +166,10 @@ fun CallbackReminderDialog(
         },
         dismissButton = {
             TextButton(
-                onClick = onDismiss
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    onDismiss()
+                }
             ) {
                 Text(stringResource(R.string.btn_cancel))
             }

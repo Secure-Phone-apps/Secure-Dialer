@@ -17,28 +17,36 @@
 
 package com.example.ui.components
 
+import android.content.Intent
+import android.net.Uri
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.ContactCache
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun CallNotesSettings(
@@ -46,21 +54,21 @@ fun CallNotesSettings(
     cardBgColor: Color
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
-    val allNotes by viewModel.notesFlow.collectAsState()
-    val allContacts by viewModel.allContactsFlow.collectAsState()
+    val allNotes by viewModel.notesFlow.collectAsStateWithLifecycle()
+    val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedNoteToEdit by remember { mutableStateOf<Pair<String, String>?>(null) } // Pair(number, note)
+    var selectedNoteToEdit by remember { mutableStateOf<Pair<String, String>?>(null) }
 
-    val filteredNotes = remember(allNotes, searchQuery) {
-        if (searchQuery.isBlank()) {
+    val filteredNotes = remember(allNotes, searchQuery, allContacts) {
+        val query = searchQuery.trim()
+        if (query.isBlank()) {
             allNotes
         } else {
             allNotes.filter { note ->
-                note.number.contains(searchQuery, ignoreCase = true) ||
-                note.note.contains(searchQuery, ignoreCase = true) ||
-                (allContacts.find { it.number == note.number }?.name?.contains(searchQuery, ignoreCase = true) == true)
+                note.number.contains(query, ignoreCase = true) ||
+                note.note.contains(query, ignoreCase = true) ||
+                (ContactCache.getContact(note.number)?.name?.contains(query, ignoreCase = true) == true)
             }
         }
     }
@@ -73,7 +81,7 @@ fun CallNotesSettings(
     ) {
         if (allNotes.isNotEmpty()) {
             Text(
-                text = "${allNotes.size} saved notes",
+                text = stringResource(R.string.call_notes_count_badge, allNotes.size),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -89,7 +97,7 @@ fun CallNotesSettings(
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.dialpad_clear))
                         }
                     }
                 },
@@ -99,7 +107,6 @@ fun CallNotesSettings(
             )
         }
 
-        // Empty State or Notes List
         if (filteredNotes.isEmpty()) {
             Box(
                 modifier = Modifier
@@ -117,129 +124,134 @@ fun CallNotesSettings(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 filteredNotes.forEach { note ->
-                val contactName = remember(allContacts, note.number) {
-                    allContacts.find { it.number == note.number }?.name ?: note.number
-                }
-                val dateStr = remember(note.lastUpdated) {
-                    java.text.SimpleDateFormat("MMM d, yyyy · h:mm a", java.util.Locale.getDefault()).format(java.util.Date(note.lastUpdated))
-                }
+                    // FIXED: ContactCache resolves contact names regardless of space formatting
+                    val contactName = remember(allContacts, note.number) {
+                        ContactCache.getContact(note.number)?.name
+                            ?: allContacts.find { it.number == note.number }?.name
+                            ?: note.number
+                    }
+                    val dateStr = remember(note.lastUpdated) {
+                        SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault()).format(Date(note.lastUpdated))
+                    }
 
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = cardBgColor),
-                    shape = RoundedCornerShape(18.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = cardBgColor),
+                        shape = RoundedCornerShape(18.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = contactName,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Text(
-                                    text = if (contactName != note.number) "${note.number} · $dateStr" else dateStr,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = contactName,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = if (contactName != note.number) "${note.number} · $dateStr" else dateStr,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
 
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                IconButton(
-                                    onClick = {
-                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                        val intent = android.content.Intent(android.content.Intent.ACTION_CALL, android.net.Uri.parse("tel:${note.number}")).apply {
-                                            flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-                                        }
-                                        try {
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            val dialIntent = android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:${note.number}")).apply {
-                                                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    IconButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            try {
+                                                val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:${note.number}")).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (_: Exception) {
+                                                val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${note.number}")).apply {
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(dialIntent)
                                             }
-                                            context.startActivity(dialIntent)
-                                        }
-                                    },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Call,
-                                        contentDescription = "Call",
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Call,
+                                            contentDescription = stringResource(R.string.action_call),
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
 
-                                IconButton(
-                                    onClick = {
-                                        selectedNoteToEdit = Pair(note.number, note.note)
-                                    },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Note",
-                                        tint = MaterialTheme.colorScheme.secondary,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
+                                    IconButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            selectedNoteToEdit = Pair(note.number, note.note)
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Edit,
+                                            contentDescription = stringResource(R.string.btn_edit),
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
 
-                                IconButton(
-                                    onClick = {
-                                        viewModel.deleteCallNoteById(note.id)
-                                        Toast.makeText(context, context.getString(R.string.note_deleted_toast), Toast.LENGTH_SHORT).show()
-                                    },
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Delete Note",
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.size(20.dp)
-                                    )
+                                    IconButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                            viewModel.deleteCallNoteById(note.id)
+                                            Toast.makeText(context, context.getString(R.string.note_deleted_toast), Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = stringResource(R.string.btn_delete),
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
                                 }
                             }
+
+                            HorizontalDivider(
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                            )
+
+                            Text(
+                                text = note.note,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
-
-                        HorizontalDivider(
-                            thickness = 0.5.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-
-                        Text(
-                            text = note.note,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
                     }
                 }
             }
         }
-    }
 
-    selectedNoteToEdit?.let { (number, note) ->
-        InCallNoteDialog(
-            initialNote = note,
-            onDismiss = { selectedNoteToEdit = null },
-            onSaveNote = { newNote ->
-                viewModel.saveCallNote(number, newNote)
-                selectedNoteToEdit = null
-            }
-        )
+        selectedNoteToEdit?.let { (number, note) ->
+            InCallNoteDialog(
+                initialNote = note,
+                onDismiss = { selectedNoteToEdit = null },
+                onSaveNote = { newNote ->
+                    viewModel.saveCallNote(number, newNote)
+                    selectedNoteToEdit = null
+                }
+            )
+        }
     }
-}
 }

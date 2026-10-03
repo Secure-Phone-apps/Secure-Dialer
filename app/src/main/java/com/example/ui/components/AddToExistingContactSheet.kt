@@ -32,6 +32,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -40,11 +41,13 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
-import com.example.model.*
 import com.example.model.Contact
+import com.example.model.getAvatarShape
+import com.example.model.getInitials
 import com.example.ui.theme.LocalAmoledMode
-import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,22 +56,24 @@ fun AddToExistingContactSheet(
     pendingNumber: String,
     onContactSelected: (Contact) -> Unit,
     onDismiss: () -> Unit,
-    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
+    viewModel: DialerViewModel? = null
 ) {
     val context = LocalContext.current
     val isAmoled = LocalAmoledMode.current
-    val isExpressive = LocalM3Expressive.current
     var searchQuery by remember { mutableStateOf("") }
 
+    // FIXED: Support name, numbers, secondary numbers, and T9 digit mapping
     val filteredContacts = remember(contacts, searchQuery) {
-        if (searchQuery.isBlank()) {
-            contacts.sortedBy { it.name.lowercase() }
+        val query = searchQuery.trim()
+        if (query.isBlank()) {
+            contacts.sortedBy { it.name.lowercase(Locale.ROOT) }
         } else {
             contacts.filter {
-                it.name.contains(searchQuery, ignoreCase = true) ||
-                it.number.contains(searchQuery, ignoreCase = true) ||
-                it.getAllNumbers().any { num -> num.number.contains(searchQuery, ignoreCase = true) }
-            }.sortedBy { it.name.lowercase() }
+                it.name.contains(query, ignoreCase = true) ||
+                it.number.contains(query, ignoreCase = true) ||
+                it.t9Mapping.contains(query, ignoreCase = true) ||
+                it.getAllNumbers().any { num -> num.number.contains(query, ignoreCase = true) }
+            }.sortedBy { it.name.lowercase(Locale.ROOT) }
         }
     }
 
@@ -95,7 +100,7 @@ fun AddToExistingContactSheet(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = stringResource(R.string.dialpad_select_contact_title),
                         style = MaterialTheme.typography.titleLarge,
@@ -103,17 +108,22 @@ fun AddToExistingContactSheet(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Adding $pendingNumber",
+                        text = pendingNumber,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
-                IconButton(onClick = onDismiss) {
+                IconButton(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        onDismiss()
+                    }
+                ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Close",
+                        contentDescription = stringResource(R.string.btn_cancel),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -129,7 +139,7 @@ fun AddToExistingContactSheet(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
+                        contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 },
@@ -138,7 +148,7 @@ fun AddToExistingContactSheet(
                         IconButton(onClick = { searchQuery = "" }) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "Clear search",
+                                contentDescription = stringResource(R.string.dialpad_clear),
                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -180,16 +190,14 @@ fun AddToExistingContactSheet(
                 ) {
                     items(
                         items = filteredContacts,
-                        key = { it.id }
+                        key = { "${it.id}_${it.number}" }
                     ) { contact ->
-                        val avatarShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: CircleShape
+                        val avatarShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "circular")
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                                    }
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                                     onContactSelected(contact)
                                 },
                             shape = RoundedCornerShape(12.dp),
@@ -198,7 +206,7 @@ fun AddToExistingContactSheet(
                             ListItem(
                                 headlineContent = {
                                     Text(
-                                        text = contact.name.ifBlank { "Unknown" },
+                                        text = contact.name.ifBlank { stringResource(R.string.unknown) },
                                         style = MaterialTheme.typography.bodyLarge,
                                         fontWeight = FontWeight.Medium,
                                         maxLines = 1,
@@ -220,16 +228,19 @@ fun AddToExistingContactSheet(
                                         shape = avatarShape,
                                         color = contact.avatarBg.copy(alpha = 0.85f)
                                     ) {
+                                        var imageFailed by remember(contact.photoUri) { mutableStateOf(false) }
                                         Box(contentAlignment = Alignment.Center) {
-                                            if (contact.photoUri.isNotEmpty()) {
+                                            if (contact.photoUri.isNotEmpty() && !imageFailed) {
                                                 AsyncImage(
                                                     model = ImageRequest.Builder(LocalContext.current)
                                                         .data(contact.photoUri)
-                                                        .size(256, 256)
+                                                        .size(128, 128)
                                                         .crossfade(true)
                                                         .build(),
-                                                    contentDescription = "Contact Avatar",
-                                                    modifier = Modifier.fillMaxSize()
+                                                    contentDescription = contact.name,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop,
+                                                    onError = { imageFailed = true }
                                                 )
                                             } else {
                                                 val hasName = contact.name.isNotBlank() && contact.name != contact.number
@@ -243,7 +254,7 @@ fun AddToExistingContactSheet(
                                                 } else {
                                                     Icon(
                                                         imageVector = Icons.Default.Person,
-                                                        contentDescription = "Avatar",
+                                                        contentDescription = null,
                                                         tint = contact.avatarTextColor,
                                                         modifier = Modifier.size(20.dp)
                                                     )

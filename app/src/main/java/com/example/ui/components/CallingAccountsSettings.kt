@@ -39,8 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
-
-import androidx.compose.ui.platform.LocalHapticFeedback
+import com.example.util.RichHapticEngine
 
 @Composable
 fun CallingAccountsSettings(
@@ -49,7 +48,6 @@ fun CallingAccountsSettings(
     highlightedTitle: String? = null
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     val callWaitingEnabled by viewModel.callWaitingEnabled
     val flashAlertsEnabled by viewModel.flashAlertsEnabled
 
@@ -74,8 +72,7 @@ fun CallingAccountsSettings(
             ) {
                 SettingsPreferredSimRow(
                     preferredSim = viewModel.preferredSim.value,
-                    onSimChange = { viewModel.updatePreferredSim(it) },
-                    haptic = haptic
+                    onSimChange = { viewModel.updatePreferredSim(it) }
                 )
             }
         }
@@ -93,26 +90,7 @@ fun CallingAccountsSettings(
                 SettingsRowNav(
                     title = stringResource(R.string.settings_carrier_call_settings),
                     subtitle = stringResource(R.string.settings_carrier_call_settings_sub),
-                    onClick = {
-                        val telecomIntent = Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS)
-                        val wirelessIntent = Intent(Settings.ACTION_WIRELESS_SETTINGS)
-                        val settingsIntent = Intent(Settings.ACTION_SETTINGS)
-                        try {
-                            if (telecomIntent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(telecomIntent)
-                            } else if (wirelessIntent.resolveActivity(context.packageManager) != null) {
-                                context.startActivity(wirelessIntent)
-                            } else {
-                                context.startActivity(settingsIntent)
-                            }
-                        } catch (e: Exception) {
-                            try {
-                                context.startActivity(settingsIntent)
-                            } catch (e2: Exception) {
-                                Toast.makeText(context, "Could not open phone account settings", Toast.LENGTH_SHORT).show()
-                            }
-                        }
-                    },
+                    onClick = { openSystemPhoneAccountSettings(context) },
                     icon = Icons.Default.SettingsPhone,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.primary
@@ -193,7 +171,6 @@ fun CallingAccountsSettings(
                 }
             }
         }
-
     }
 }
 
@@ -241,27 +218,26 @@ private fun VoicemailCallingAccountsRow(
                     if (voicemailInput.isNotBlank()) {
                         OutlinedButton(
                             onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 try {
-                                    val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$voicemailInput"))
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    try {
-                                        val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$voicemailInput"))
-                                        context.startActivity(dialIntent)
-                                    } catch (e2: Exception) {
-                                        Toast.makeText(context, "Unable to place call", Toast.LENGTH_SHORT).show()
+                                    val dialIntent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$voicemailInput")).apply {
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                     }
+                                    context.startActivity(dialIntent)
+                                } catch (_: Exception) {
+                                    Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         ) {
                             Icon(Icons.Default.Call, null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Call")
+                            Text(stringResource(R.string.action_call))
                         }
                     }
                     Button(
                         onClick = {
-                            viewModel.updateVoicemailNumber(voicemailInput)
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            viewModel.updateVoicemailNumber(voicemailInput.trim())
                             Toast.makeText(context, context.getString(R.string.save_voicemail_number), Toast.LENGTH_SHORT).show()
                             showVoicemailDialog = false
                         }
@@ -271,7 +247,10 @@ private fun VoicemailCallingAccountsRow(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showVoicemailDialog = false }) {
+                TextButton(onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    showVoicemailDialog = false
+                }) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }
@@ -371,7 +350,6 @@ private fun CallerIdClirCard(
                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
             )
 
-            // Direct shortcut to Android System SIM Caller ID settings
             SettingsRowNav(
                 title = stringResource(R.string.settings_system_sim_caller_id),
                 subtitle = stringResource(R.string.settings_system_sim_caller_id_sub),
@@ -401,6 +379,7 @@ private fun CallerIdClirCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     viewModel.updateClirPrefix(code)
                                     showPrefixDialog = false
                                 },
@@ -414,6 +393,7 @@ private fun CallerIdClirCard(
                                 RadioButton(
                                     selected = isSelected,
                                     onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                         viewModel.updateClirPrefix(code)
                                         showPrefixDialog = false
                                     }
@@ -433,6 +413,7 @@ private fun CallerIdClirCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 showPrefixDialog = false
                                 showCustomInputDialog = true
                             },
@@ -446,13 +427,14 @@ private fun CallerIdClirCard(
                             RadioButton(
                                 selected = isCustom,
                                 onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     showPrefixDialog = false
                                     showCustomInputDialog = true
                                 }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = if (isCustom) "Custom: $clirPrefix" else stringResource(R.string.settings_clir_prefix_custom),
+                                text = if (isCustom) "${stringResource(R.string.settings_clir_prefix_custom)}: $clirPrefix" else stringResource(R.string.settings_clir_prefix_custom),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = if (isCustom) FontWeight.SemiBold else FontWeight.Normal
                             )
@@ -461,7 +443,10 @@ private fun CallerIdClirCard(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showPrefixDialog = false }) {
+                TextButton(onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    showPrefixDialog = false
+                }) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }
@@ -491,6 +476,7 @@ private fun CallerIdClirCard(
             confirmButton = {
                 Button(
                     onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                         val sanitized = customPrefixInput.trim()
                         if (sanitized.isNotEmpty()) {
                             viewModel.updateClirPrefix(sanitized)
@@ -502,11 +488,31 @@ private fun CallerIdClirCard(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showCustomInputDialog = false }) {
+                TextButton(onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    showCustomInputDialog = false
+                }) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }
         )
+    }
+}
+
+private fun openSystemPhoneAccountSettings(context: Context) {
+    val intents = listOf(
+        Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS),
+        Intent("android.telecom.action.SHOW_CALL_SETTINGS"),
+        Intent(Settings.ACTION_NETWORK_OPERATOR_SETTINGS),
+        Intent(Settings.ACTION_WIRELESS_SETTINGS),
+        Intent(Settings.ACTION_SETTINGS)
+    )
+    for (intent in intents) {
+        try {
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            context.startActivity(intent)
+            return
+        } catch (_: Exception) {}
     }
 }
 
@@ -521,15 +527,8 @@ fun openSystemCallerIdSettings(context: Context) {
     for (intent in intents) {
         try {
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            if (intent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(intent)
-                return
-            }
+            context.startActivity(intent)
+            return
         } catch (_: Exception) {}
-    }
-    try {
-        context.startActivity(Intent(Settings.ACTION_SETTINGS).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK })
-    } catch (_: Exception) {
-        Toast.makeText(context, "Could not open system settings", Toast.LENGTH_SHORT).show()
     }
 }

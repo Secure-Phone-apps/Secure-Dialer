@@ -17,10 +17,8 @@
 
 package com.example.ui
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.components.AddContactDialog
 import com.example.ui.components.AddToExistingContactSheet
 import com.example.ui.viewmodel.DialerViewModel
@@ -33,7 +31,7 @@ fun MainScreenContactDialogs(
     var isEditContactDialogVisible by viewModel.isEditContactDialogVisible
     var isAddToExistingSheetVisible by viewModel.isAddToExistingSheetVisible
     val addToExistingPendingNumber by viewModel.addToExistingPendingNumber
-    val allContacts by viewModel.allContactsFlow.collectAsState()
+    val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
     var oldContactToEdit by viewModel.oldContactToEdit
     val newContactName by viewModel.newContactName
     val newContactNumber by viewModel.newContactNumber
@@ -69,26 +67,32 @@ fun MainScreenContactDialogs(
         )
     }
 
-    if (isEditContactDialogVisible && oldContactToEdit != null) {
-        val currentOldContact = oldContactToEdit
-        if (currentOldContact != null) {
-            AddContactDialog(
-                initialName = currentOldContact.name,
-                initialNumber = currentOldContact.number,
-                initialLabel = currentOldContact.label,
-                initialEmail = currentOldContact.email,
-                initialNumbers = currentOldContact.getAllNumbers(),
-                initialEmails = currentOldContact.getAllEmails(),
-                initialAddresses = currentOldContact.getAllAddresses(),
-                availableAccounts = viewModel.availableAccounts,
-                selectedAccountFilter = currentOldContact.accountName,
-                onDismiss = { isEditContactDialogVisible = false },
-                onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
-                    viewModel.deleteContact(currentOldContact)
-                    viewModel.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
-                    isEditContactDialogVisible = false
+    val contactToEdit = oldContactToEdit
+    if (isEditContactDialogVisible && contactToEdit != null) {
+        AddContactDialog(
+            initialName = contactToEdit.name,
+            initialNumber = contactToEdit.number,
+            initialLabel = contactToEdit.label,
+            initialEmail = contactToEdit.email,
+            initialNumbers = contactToEdit.getAllNumbers(),
+            initialEmails = contactToEdit.getAllEmails(),
+            initialAddresses = contactToEdit.getAllAddresses(),
+            availableAccounts = viewModel.availableAccounts,
+            selectedAccountFilter = contactToEdit.accountName,
+            onDismiss = {
+                isEditContactDialogVisible = false
+                oldContactToEdit = null
+            },
+            onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
+                viewModel.deleteContact(contactToEdit)
+                viewModel.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
+                if (contactToEdit.favorite) {
+                    val primaryNum = numbers.firstOrNull()?.number ?: contactToEdit.number
+                    viewModel.toggleFavorite(primaryNum, true)
                 }
-            )
-        }
+                isEditContactDialogVisible = false
+                oldContactToEdit = null
+            }
+        )
     }
 }

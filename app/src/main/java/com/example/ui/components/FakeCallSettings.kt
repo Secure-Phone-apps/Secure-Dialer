@@ -18,30 +18,35 @@
 package com.example.ui.components
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.FakeCallReceiver
+import com.example.util.RichHapticEngine
+
+private enum class FakeCallDelayUnit(val key: String, val multiplier: Int) {
+    SEC("sec", 1),
+    MIN("min", 60),
+    HOUR("hour", 3600)
+}
 
 @Composable
 fun FakeCallSettings(
@@ -52,18 +57,25 @@ fun FakeCallSettings(
 
     var fakeName by remember { mutableStateOf("Boss") }
     var fakeNumber by remember { mutableStateOf("+1 (555) 492-0192") }
-    
-    var delayValue by remember { mutableStateOf("10") }
-    var delayUnit by remember { mutableStateOf("sec") } // "sec", "min", "hour"
 
-    val finalDelaySeconds = remember(delayValue, delayUnit) {
+    var delayValue by remember { mutableStateOf("10") }
+    var selectedDelayUnit by remember { mutableStateOf(FakeCallDelayUnit.SEC) }
+
+    val finalDelaySeconds = remember(delayValue, selectedDelayUnit) {
         val value = delayValue.toIntOrNull() ?: 0
-        when (delayUnit) {
-            "min" -> value * 60
-            "hour" -> value * 3600
-            else -> value // "sec"
-        }
+        (value * selectedDelayUnit.multiplier).coerceAtLeast(0)
     }
+
+    var repeatCount by remember { mutableIntStateOf(1) }
+    var intervalValue by remember { mutableStateOf("1") }
+    var selectedIntervalUnit by remember { mutableStateOf(FakeCallDelayUnit.MIN) }
+
+    val finalIntervalSeconds = remember(intervalValue, selectedIntervalUnit) {
+        val value = intervalValue.toIntOrNull() ?: 0
+        (value * selectedIntervalUnit.multiplier).coerceAtLeast(0)
+    }
+
+    val isValidConfig = finalDelaySeconds >= 1 && fakeNumber.trim().isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -99,7 +111,7 @@ fun FakeCallSettings(
                     singleLine = true
                 )
 
-                // Quick presets in sleek single row
+                // Quick presets
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -115,6 +127,7 @@ fun FakeCallSettings(
                         FilterChip(
                             selected = fakeName == presetName,
                             onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 fakeName = presetName
                                 fakeNumber = presetNum
                             },
@@ -123,10 +136,12 @@ fun FakeCallSettings(
                     }
                 }
 
+                // FIXED: Numerical keyboard for phone number entry
                 OutlinedTextField(
                     value = fakeNumber,
                     onValueChange = { fakeNumber = it },
                     label = { Text(stringResource(R.string.label_phone_number_hint)) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
@@ -172,28 +187,18 @@ fun FakeCallSettings(
                     )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("sec", "min", "hour").forEach { unit ->
+                        FakeCallDelayUnit.entries.forEach { unit ->
                             FilterChip(
-                                selected = delayUnit == unit,
-                                onClick = { delayUnit = unit },
-                                label = { Text(unit, maxLines = 1) }
+                                selected = selectedDelayUnit == unit,
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    selectedDelayUnit = unit
+                                },
+                                label = { Text(unit.key, maxLines = 1) }
                             )
                         }
                     }
                 }
-            }
-        }
-
-        var repeatCount by remember { mutableStateOf(1) }
-        var intervalValue by remember { mutableStateOf("1") }
-        var intervalUnit by remember { mutableStateOf("min") }
-
-        val finalIntervalSeconds = remember(intervalValue, intervalUnit) {
-            val value = intervalValue.toIntOrNull() ?: 0
-            when (intervalUnit) {
-                "min" -> value * 60
-                "hour" -> value * 3600
-                else -> value // "sec"
             }
         }
 
@@ -220,7 +225,7 @@ fun FakeCallSettings(
                     text = stringResource(R.string.sequential_multi_call_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
 
@@ -240,7 +245,10 @@ fun FakeCallSettings(
                         listOf(1, 2, 3, 5).forEach { num ->
                             FilterChip(
                                 selected = repeatCount == num,
-                                onClick = { repeatCount = num },
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    repeatCount = num
+                                },
                                 label = { Text(num.toString(), maxLines = 1) }
                             )
                         }
@@ -267,12 +275,15 @@ fun FakeCallSettings(
                     )
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        listOf("sec", "min", "hour").forEach { unit ->
+                        FakeCallDelayUnit.entries.forEach { unit ->
                             FilterChip(
-                                selected = intervalUnit == unit,
+                                selected = selectedIntervalUnit == unit,
                                 enabled = repeatCount > 1,
-                                onClick = { intervalUnit = unit },
-                                label = { Text(unit, maxLines = 1) }
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    selectedIntervalUnit = unit
+                                },
+                                label = { Text(unit.key, maxLines = 1) }
                             )
                         }
                     }
@@ -296,7 +307,10 @@ fun FakeCallSettings(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
+                // FIXED: Enforce valid minimum delay to prevent zero-millisecond Doze dropouts
+                enabled = isValidConfig,
                 onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                     FakeCallReceiver.scheduleFakeCall(
                         context,
                         fakeName.trim(),
@@ -305,18 +319,13 @@ fun FakeCallSettings(
                         repeatCount,
                         finalIntervalSeconds
                     )
-                    val msg = if (repeatCount > 1) {
-                        "Scheduled $repeatCount fake calls (first in $finalDelaySeconds sec, then every $intervalValue $intervalUnit)!"
-                    } else {
-                        "Fake call scheduled in $finalDelaySeconds seconds!"
-                    }
-                    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, context.getString(R.string.schedule_callback_reminder_title), Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Icon(Icons.Default.AccessTime, null)
+                Icon(Icons.Default.AccessTime, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 val btnText = if (repeatCount > 1) {
                     stringResource(R.string.schedule_sequential_calls, repeatCount)
@@ -328,13 +337,14 @@ fun FakeCallSettings(
 
             OutlinedButton(
                 onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                     FakeCallReceiver.cancelFakeCall(context)
-                    Toast.makeText(context, "Cancelled pending fake calls", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp)
             ) {
-                Icon(Icons.Default.Cancel, null)
+                Icon(Icons.Default.Cancel, contentDescription = null)
                 Spacer(Modifier.width(8.dp))
                 Text(stringResource(R.string.btn_cancel_scheduled_escape_calls), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }

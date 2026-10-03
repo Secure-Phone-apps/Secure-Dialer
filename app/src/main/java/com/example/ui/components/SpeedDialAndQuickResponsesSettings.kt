@@ -21,13 +21,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Quickreply
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 
@@ -38,8 +41,8 @@ fun SpeedDialAndQuickResponsesSettings(
     highlightedTitle: String? = null
 ) {
     val scrollState = rememberScrollState()
-    val speedDialEntities by viewModel.speedDialFlow.collectAsState()
-    val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
+    val speedDialEntities by viewModel.speedDialFlow.collectAsStateWithLifecycle()
+    val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -50,9 +53,12 @@ fun SpeedDialAndQuickResponsesSettings(
     ) {
         // Expandable Speed Dial
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Speed Dial Shortcuts (Keys 1–9)", highlightedTitle) || isMatchTitle("Speed Dial", highlightedTitle),
+            isHighlighted = isMatchTitle("Speed Dial Shortcuts (Keys 1–9)", highlightedTitle) ||
+                    isMatchTitle("Speed Dial", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -62,7 +68,7 @@ fun SpeedDialAndQuickResponsesSettings(
                 iconBgColor = MaterialTheme.colorScheme.primaryContainer,
                 iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (speedDialEntities.isNotEmpty()) "${speedDialEntities.size} configured" else null,
+                badgeText = if (speedDialEntities.isNotEmpty()) "${speedDialEntities.size}" else null,
                 initiallyExpanded = isMatchTitle("Speed Dial Shortcuts (Keys 1–9)", highlightedTitle)
             ) {
                 SpeedDialSettings(viewModel = viewModel, cardBgColor = cardBgColor)
@@ -71,9 +77,12 @@ fun SpeedDialAndQuickResponsesSettings(
 
         // Expandable Quick Responses
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Quick Decline Text Replies", highlightedTitle) || isMatchTitle("Quick Reply", highlightedTitle),
+            isHighlighted = isMatchTitle("Quick Decline Text Replies", highlightedTitle) ||
+                    isMatchTitle("Quick Reply", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -83,7 +92,7 @@ fun SpeedDialAndQuickResponsesSettings(
                 iconBgColor = MaterialTheme.colorScheme.secondaryContainer,
                 iconTint = MaterialTheme.colorScheme.onSecondaryContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (quickResponsesEntities.isNotEmpty()) "${quickResponsesEntities.size} templates" else null,
+                badgeText = if (quickResponsesEntities.isNotEmpty()) "${quickResponsesEntities.size}" else null,
                 initiallyExpanded = isMatchTitle("Quick Decline Text Replies", highlightedTitle)
             ) {
                 QuickResponsesSettings(viewModel = viewModel, cardBgColor = cardBgColor)

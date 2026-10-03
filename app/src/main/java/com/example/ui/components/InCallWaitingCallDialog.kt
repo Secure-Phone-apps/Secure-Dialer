@@ -17,20 +17,13 @@
 
 package com.example.ui.components
 
+import android.telecom.Call
+import android.telecom.VideoProfile
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,27 +31,40 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.CallManager
+import com.example.ContactCache
 import com.example.R
 import com.example.model.Contact
+import com.example.model.getAvatarShape
+import com.example.model.getInitials
+import com.example.ui.theme.getCallGreenColor
+import com.example.ui.theme.getDeclineRedColor
+import com.example.ui.theme.getOnCallGreenColor
+import com.example.ui.theme.getOnDeclineRedColor
 
 @Composable
 fun InCallWaitingCallDialog(
-    waitingCall: android.telecom.Call,
+    waitingCall: Call,
     contacts: List<Contact>,
     avatarShapeType: String = "circular"
 ) {
     val waitingNumber = waitingCall.details?.handle?.schemeSpecificPart ?: ""
+    // FIXED: Multi-number & normalized cache lookup with CNAP fallback
     val waitingName = remember(waitingNumber, contacts) {
-        contacts.find { it.number == waitingNumber }?.name ?: waitingNumber
+        ContactCache.getContact(waitingNumber)?.name
+            ?: contacts.find { it.number == waitingNumber }?.name
+            ?: waitingCall.details?.callerDisplayName?.takeIf { it.isNotBlank() }
+            ?: waitingNumber
     }
 
-    val initials = com.example.model.getInitials(waitingName)
-    val avatarShape = com.example.model.getAvatarShape(avatarShapeType)
+    val initials = getInitials(waitingName)
+    val avatarShape = getAvatarShape(avatarShapeType)
 
     AlertDialog(
-        onDismissRequest = { /* Force explicit choice */ },
+        // FIXED: Dismissing dialog allows user to continue using keypad/controls without rejecting caller
+        onDismissRequest = { CallManager.updateWaitingCall(null) },
         shape = MaterialTheme.shapes.extraLarge,
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp,
@@ -85,7 +91,6 @@ fun InCallWaitingCallDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Beautiful Avatar representation conforming to theme shapes!
                 Box(
                     modifier = Modifier
                         .size(72.dp)
@@ -117,13 +122,17 @@ fun InCallWaitingCallDialog(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    if (waitingName != waitingNumber) {
+                    if (waitingName != waitingNumber && waitingNumber.isNotBlank()) {
                         Text(
                             text = waitingNumber,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -143,17 +152,15 @@ fun InCallWaitingCallDialog(
                     try {
                         val activeCall = CallManager.currentCall.value
                         activeCall?.hold()
-                        waitingCall.answer(android.telecom.VideoProfile.STATE_AUDIO_ONLY)
+                        waitingCall.answer(VideoProfile.STATE_AUDIO_ONLY)
                         CallManager.updateCall(waitingCall)
                         CallManager.updateWaitingCall(null)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                    } catch (_: Exception) {}
                 },
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = com.example.ui.theme.getCallGreenColor(),
-                    contentColor = com.example.ui.theme.getOnCallGreenColor()
+                    containerColor = getCallGreenColor(),
+                    contentColor = getOnCallGreenColor()
                 )
             ) {
                 Text(stringResource(R.string.btn_answer_hold), fontWeight = FontWeight.Bold)
@@ -165,14 +172,12 @@ fun InCallWaitingCallDialog(
                     try {
                         waitingCall.reject(false, null)
                         CallManager.updateWaitingCall(null)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                    } catch (_: Exception) {}
                 },
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = com.example.ui.theme.getDeclineRedColor(),
-                    contentColor = com.example.ui.theme.getOnDeclineRedColor()
+                    containerColor = getDeclineRedColor(),
+                    contentColor = getOnDeclineRedColor()
                 )
             ) {
                 Text(stringResource(R.string.btn_decline), fontWeight = FontWeight.Bold)

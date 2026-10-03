@@ -22,11 +22,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -36,13 +34,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
+import com.example.util.RichHapticEngine
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -54,7 +53,7 @@ fun SpamDatabaseSettings(
 ) {
     val context = LocalContext.current
     val timestamp = remember { SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date()) }
-    val spamList by viewModel.spamFlow.collectAsState()
+    val spamList by viewModel.spamFlow.collectAsStateWithLifecycle()
 
     var manualNumber by remember { mutableStateOf("") }
     var manualLabel by remember { mutableStateOf("") }
@@ -96,9 +95,7 @@ fun SpamDatabaseSettings(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Status info & Export/Import Controls
-        Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Column {
                 Text(
                     text = stringResource(R.string.spam_entries_label),
@@ -113,21 +110,20 @@ fun SpamDatabaseSettings(
                 )
             }
 
-            // Export / Import CSV Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
                     onClick = {
-                        val defaultName = "spam_database_$timestamp.csv"
-                        saveSpamCsvLauncher.launch(defaultName)
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        saveSpamCsvLauncher.launch("spam_database_$timestamp.csv")
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
                 ) {
-                    Icon(Icons.Default.Download, null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = stringResource(R.string.btn_export_spam_csv),
@@ -138,13 +134,14 @@ fun SpamDatabaseSettings(
 
                 Button(
                     onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                         openSpamFileLauncher.launch(arrayOf("text/csv", "text/plain", "text/comma-separated-values", "*/*"))
                     },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 8.dp, vertical = 10.dp)
                 ) {
-                    Icon(Icons.Default.UploadFile, null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
                     Text(
                         text = stringResource(R.string.btn_import_spam_file),
@@ -160,66 +157,62 @@ fun SpamDatabaseSettings(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
             shape = RoundedCornerShape(16.dp)
         ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.add_spam_manually_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(R.string.add_spam_manually_title),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                    // FIXED: Numerical keyboard for phone number entry
+                    OutlinedTextField(
+                        value = manualNumber,
+                        onValueChange = { manualNumber = it },
+                        label = { Text(stringResource(R.string.label_phone_number_hint)) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1.3f),
+                        singleLine = true
                     )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        OutlinedTextField(
-                            value = manualNumber,
-                            onValueChange = { manualNumber = it },
-                            label = { Text(stringResource(R.string.label_phone_number_hint)) },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .weight(1.3f)
-                                .fillMaxHeight(),
-                            singleLine = true,
-                            maxLines = 1
-                        )
+                    OutlinedTextField(
+                        value = manualLabel,
+                        onValueChange = { manualLabel = it },
+                        label = { Text(stringResource(R.string.label_spam_label_hint)) },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.weight(1f),
+                        singleLine = true
+                    )
+                }
 
-                        OutlinedTextField(
-                            value = manualLabel,
-                            onValueChange = { manualLabel = it },
-                            label = { Text(stringResource(R.string.label_spam_label_hint)) },
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight(),
-                            singleLine = true,
-                            maxLines = 1
-                        )
-                    }
-
-                    Button(
-                        onClick = {
-                            if (manualNumber.isNotBlank()) {
-                                viewModel.addSpamNumber(manualNumber.trim(), manualLabel.ifBlank { "Spam" })
-                                Toast.makeText(context, "Added $manualNumber to spam list", Toast.LENGTH_SHORT).show()
-                                manualNumber = ""
-                                manualLabel = ""
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(Icons.Default.Add, null)
-                        Spacer(Modifier.width(8.dp))
-                        Text(stringResource(R.string.btn_add_to_offline_db))
-                    }
+                Button(
+                    onClick = {
+                        val trimmedNum = manualNumber.trim()
+                        if (trimmedNum.isNotBlank()) {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            viewModel.addSpamNumber(trimmedNum, manualLabel.ifBlank { "Spam" })
+                            Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                            manualNumber = ""
+                            manualLabel = ""
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.btn_add_to_offline_db))
                 }
             }
+        }
 
         // List block
         if (spamList.isEmpty()) {
@@ -243,10 +236,11 @@ fun SpamDatabaseSettings(
                 )
 
                 TextButton(onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                     viewModel.clearAllSpam()
-                    Toast.makeText(context, "Cleared spam blocklist", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
                 }) {
-                    Icon(Icons.Default.DeleteSweep, null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
                     Text(stringResource(R.string.btn_clear_all))
                 }
@@ -278,10 +272,10 @@ fun SpamDatabaseSettings(
                         },
                         trailingContent = {
                             IconButton(onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 viewModel.deleteSpamNumber(spam)
-                                Toast.makeText(context, "Removed ${spam.number}", Toast.LENGTH_SHORT).show()
                             }) {
-                                Icon(Icons.Default.Delete, stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.btn_delete), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     )

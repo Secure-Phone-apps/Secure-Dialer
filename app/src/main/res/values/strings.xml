@@ -211,6 +211,8 @@
     <string name="settings_calls_blocking">Calls &amp; Blocking</string>
     <string name="settings_speed_dial">Speed Dial</string>
     <string name="settings_speed_dial_sub">Assign fast call keys 1-9</string>
+    <string name="speed_dial">Speed Dial</string>
+    <string name="voicemail_settings">Voicemail Settings</string>
     <string name="settings_blocked_numbers">Blocked Numbers</string>
     <string name="settings_blocked_numbers_sub">Manage restricted incoming callers</string>
     <string name="settings_quick_responses">Quick Responses</string>

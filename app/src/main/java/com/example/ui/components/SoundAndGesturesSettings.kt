@@ -21,9 +21,12 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Gesture
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -58,7 +61,8 @@ fun SoundAndGesturesSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Dialpad Keypad Tones", highlightedTitle),
+                isHighlighted = isMatchTitle("Dialpad Keypad Tones", highlightedTitle) ||
+                        isMatchTitle("Sound & Gestures Settings", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -80,7 +84,8 @@ fun SoundAndGesturesSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Call Vibration & Haptics", highlightedTitle),
+                isHighlighted = isMatchTitle("Call Vibration & Haptics", highlightedTitle) ||
+                        isMatchTitle("Vibrate", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -102,7 +107,8 @@ fun SoundAndGesturesSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Flip to Silence", highlightedTitle),
+                isHighlighted = isMatchTitle("Flip to Silence", highlightedTitle) ||
+                        isMatchTitle("Flip", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -113,6 +119,29 @@ fun SoundAndGesturesSettings(
                     icon = Icons.Default.ScreenRotation,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Row Swipe Actions Card (RESTORED: Fixed dormant preference bug)
+        item {
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Call Swipe Actions", highlightedTitle) ||
+                        isMatchTitle("Swipe", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.action_swipe_call),
+                    subtitle = stringResource(R.string.action_swipe_message),
+                    checked = isRowSwipeEnabled,
+                    onCheckedChange = { viewModel.updateRowSwipeEnabled(it) },
+                    icon = Icons.Default.Gesture,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
                 )
             }
         }

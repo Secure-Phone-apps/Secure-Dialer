@@ -17,8 +17,6 @@
 
 package com.example.ui.components
 
-import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,7 +27,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.CallManager
 import com.example.R
+import com.example.util.RichHapticEngine
 
 @Composable
 fun InCallQuickDeclineSheet(
@@ -46,37 +46,51 @@ fun InCallQuickDeclineSheet(
             .padding(16.dp),
         shape = MaterialTheme.shapes.large
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+        ) {
             Text(
                 text = stringResource(R.string.quick_responses),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+
+            // FIXED: Constrain LazyColumn height so Cancel button is never pushed off-screen
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 items(quickResponses, key = { it }) { resp ->
                     Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                com.example.CallManager.rejectCallWithMessage(context, contactNumber, resp)
-                                onQuickDecline(resp)
-                            },
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            CallManager.rejectCallWithMessage(context, contactNumber, resp)
+                            onQuickDecline(resp)
+                        },
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f)
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                         ),
-                        shape = MaterialTheme.shapes.medium
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
-                            resp,
+                            text = resp,
                             modifier = Modifier.padding(16.dp),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             TextButton(
-                onClick = onClose,
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    onClose()
+                },
                 modifier = Modifier.align(Alignment.End)
             ) {
                 Text(stringResource(R.string.btn_cancel))

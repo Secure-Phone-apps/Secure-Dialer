@@ -23,38 +23,52 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.util.MultiSimManager
+import com.example.util.RichHapticEngine
 
 @Composable
 fun SettingsPreferredSimRow(
     preferredSim: String,
     onSimChange: (String) -> Unit,
-    haptic: HapticFeedback
+    haptic: HapticFeedback? = null
 ) {
+    val context = LocalContext.current
+    val physicalSimCount = remember(context) { MultiSimManager.getPhysicalSimCount(context) }
+
     ListItem(
-        headlineContent = { 
+        headlineContent = {
             Text(
-                stringResource(R.string.settings_preferred_sim),
+                text = stringResource(R.string.settings_preferred_sim),
                 fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge
-            ) 
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         },
-        supportingContent = { 
+        supportingContent = {
             Text(
-                stringResource(R.string.settings_preferred_sim_sub),
+                text = if (physicalSimCount <= 1) {
+                    stringResource(R.string.sim_1)
+                } else {
+                    stringResource(R.string.settings_preferred_sim_sub)
+                },
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            ) 
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         },
         leadingContent = {
             Box(
@@ -80,20 +94,27 @@ fun SettingsPreferredSimRow(
                 val askLabel = stringResource(R.string.sim_ask)
                 val sim1Label = stringResource(R.string.sim_1)
                 val sim2Label = stringResource(R.string.sim_2)
-                listOf("SIM 1" to sim1Label, "SIM 2" to sim2Label, "Ask" to askLabel).forEach { (opKey, labelText) ->
-                    val sel = preferredSim == opKey
+
+                val options = if (physicalSimCount > 1) {
+                    listOf("SIM 1" to sim1Label, "SIM 2" to sim2Label, "Ask" to askLabel)
+                } else {
+                    listOf("SIM 1" to sim1Label)
+                }
+
+                options.forEach { (opKey, labelText) ->
+                    val isSelected = preferredSim == opKey || (physicalSimCount <= 1 && opKey == "SIM 1")
                     FilterChip(
-                        selected = sel,
+                        selected = isSelected,
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             onSimChange(opKey)
                         },
-                        label = { 
+                        label = {
                             Text(
-                                text = labelText, 
+                                text = labelText,
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = if (sel) FontWeight.Bold else FontWeight.Normal
-                            ) 
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
                         },
                         shape = RoundedCornerShape(16.dp),
                         border = null,

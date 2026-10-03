@@ -21,7 +21,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,8 +34,9 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
 import com.example.model.Contact
-import com.example.model.getInitials
 import com.example.model.getAvatarShape
+import com.example.model.getInitials
+import com.example.util.RichHapticEngine
 
 @Composable
 fun InCallAddCallDialog(
@@ -54,17 +54,18 @@ fun InCallAddCallDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (addCallNumberInput.isNotBlank()) {
+                    val targetNum = addCallNumberInput.trim()
+                    if (targetNum.isNotBlank()) {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                         val finalName = if (selectedAddCallContactName.isNotBlank()) {
                             selectedAddCallContactName
                         } else {
-                            contacts.find { it.number == addCallNumberInput }?.name ?: addCallNumberInput
+                            contacts.find { it.number == targetNum }?.name ?: targetNum
                         }
-                        onAddCall(finalName, addCallNumberInput)
-                        Toast.makeText(context, "📞 Merged call with $finalName", Toast.LENGTH_LONG).show()
+                        onAddCall(finalName, targetNum)
                         onDismiss()
                     } else {
-                        Toast.makeText(context, "Please select or enter a valid number", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.add_call_search_hint), Toast.LENGTH_SHORT).show()
                     }
                 }
             ) {
@@ -72,7 +73,12 @@ fun InCallAddCallDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    onDismiss()
+                }
+            ) {
                 Text(stringResource(R.string.btn_cancel))
             }
         },
@@ -95,12 +101,18 @@ fun InCallAddCallDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                val filteredContacts = if (addCallNumberInput.isBlank()) {
-                    contacts
-                } else {
-                    contacts.filter {
-                        it.name.contains(addCallNumberInput, ignoreCase = true) ||
-                                it.number.contains(addCallNumberInput)
+                // FIXED: Support name, primary number, secondary numbers, and T9 digit mapping
+                val filteredContacts = remember(addCallNumberInput, contacts) {
+                    val query = addCallNumberInput.trim()
+                    if (query.isBlank()) {
+                        contacts
+                    } else {
+                        contacts.filter { contact ->
+                            contact.name.contains(query, ignoreCase = true) ||
+                            contact.number.contains(query) ||
+                            contact.t9Mapping.contains(query) ||
+                            contact.getAllNumbers().any { it.number.contains(query) }
+                        }
                     }
                 }
 
@@ -112,12 +124,14 @@ fun InCallAddCallDialog(
                 ) {
                     items(
                         items = filteredContacts,
-                        key = { it.number },
+                        // FIXED: Guaranteed unique key prevents fatal Compose IllegalArgumentException crash
+                        key = { "${it.id}_${it.number}" },
                         contentType = { "add_call_contact" }
                     ) { contact ->
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
                             onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 addCallNumberInput = contact.number
                                 selectedAddCallContactName = contact.name
                             },
@@ -129,21 +143,23 @@ fun InCallAddCallDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
-                                    modifier = Modifier.size(32.dp),
+                                    modifier = Modifier.size(36.dp),
                                     shape = getAvatarShape(avatarShapeType),
                                     color = contact.avatarBg
                                 ) {
+                                    var imageFailed by remember(contact.photoUri) { mutableStateOf(false) }
                                     Box(contentAlignment = Alignment.Center) {
-                                        if (contact.photoUri.isNotEmpty()) {
+                                        if (contact.photoUri.isNotEmpty() && !imageFailed) {
                                             AsyncImage(
                                                 model = ImageRequest.Builder(context)
                                                     .data(contact.photoUri)
-                                                    .size(256, 256)
+                                                    .size(128, 128)
                                                     .crossfade(true)
                                                     .build(),
-                                                contentDescription = "Contact Photo",
+                                                contentDescription = contact.name,
                                                 modifier = Modifier.fillMaxSize(),
-                                                contentScale = ContentScale.Crop
+                                                contentScale = ContentScale.Crop,
+                                                onError = { imageFailed = true }
                                             )
                                         } else {
                                             Text(

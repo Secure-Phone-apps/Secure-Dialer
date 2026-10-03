@@ -17,6 +17,7 @@
 
 package com.example.ui.components
 
+import android.telecom.Call
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,10 +34,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.CallManager
+import com.example.R
+import com.example.ui.theme.getCallGreenColor
+import com.example.ui.theme.getDeclineRedColor
+import com.example.util.RichHapticEngine
 import kotlinx.coroutines.delay
 
 @Composable
@@ -47,11 +55,12 @@ fun MinimizedCallBanner(
     onExpand: () -> Unit,
     onHangUp: () -> Unit
 ) {
-    val activeStartTimestamp by CallManager.activeStartTimestamp.collectAsState()
-    var tickTrigger by remember { mutableStateOf(0) }
+    val context = LocalContext.current
+    val activeStartTimestamp by CallManager.activeStartTimestamp.collectAsStateWithLifecycle()
+    var tickTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(callState) {
-        if (callState == android.telecom.Call.STATE_ACTIVE) {
+        if (callState == Call.STATE_ACTIVE) {
             while (true) {
                 delay(1000)
                 tickTrigger++
@@ -60,10 +69,9 @@ fun MinimizedCallBanner(
     }
 
     val callDuration = remember(activeStartTimestamp, tickTrigger, callState) {
-        if (callState == android.telecom.Call.STATE_ACTIVE) {
+        if (callState == Call.STATE_ACTIVE) {
             val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
-            val durationMs = System.currentTimeMillis() - start
-            (durationMs / 1000).coerceAtLeast(0L).toInt()
+            ((System.currentTimeMillis() - start) / 1000).coerceAtLeast(0L).toInt()
         } else {
             0
         }
@@ -75,11 +83,12 @@ fun MinimizedCallBanner(
         "%02d:%02d".format(mins, secs)
     }
 
+    // FIXED: Fully localized telephony status strings
     val statusText = when (callState) {
-        android.telecom.Call.STATE_RINGING -> "Incoming..."
-        android.telecom.Call.STATE_DIALING -> "Dialing..."
-        android.telecom.Call.STATE_CONNECTING -> "Connecting..."
-        android.telecom.Call.STATE_HOLDING -> "On Hold"
+        Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
+        Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
+        Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
+        Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
         else -> formattedTime
     }
 
@@ -87,7 +96,10 @@ fun MinimizedCallBanner(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clickable { onExpand() },
+            .clickable {
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                onExpand()
+            },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -106,43 +118,7 @@ fun MinimizedCallBanner(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // Pulsing indicator
-                Box(contentAlignment = Alignment.Center) {
-                    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-                    val scale by infiniteTransition.animateFloat(
-                        initialValue = 1.0f,
-                        targetValue = 1.6f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1200, easing = LinearEasing),
-                            repeatMode = RepeatMode.Restart
-                        ),
-                        label = "scale"
-                    )
-                    val alpha by infiniteTransition.animateFloat(
-                        initialValue = 0.6f,
-                        targetValue = 0.0f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1200, easing = LinearEasing),
-                            repeatMode = RepeatMode.Restart
-                        ),
-                        label = "alpha"
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .graphicsLayer(scaleX = scale, scaleY = scale, alpha = alpha)
-                            .background(
-                                color = if (callState == android.telecom.Call.STATE_RINGING) Color.Red else Color.Green,
-                                shape = CircleShape
-                            )
-                    )
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp),
-                        tint = if (callState == android.telecom.Call.STATE_RINGING) Color.Red else Color.Green
-                    )
-                }
+                BannerPulseIndicator(callState = callState)
 
                 Spacer(modifier = Modifier.width(12.dp))
 
@@ -157,25 +133,35 @@ fun MinimizedCallBanner(
                     Text(
                         text = statusText,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
-                    onClick = onExpand,
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        onExpand()
+                    },
                     modifier = Modifier.size(36.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = "Expand Call Screen",
+                        contentDescription = stringResource(R.string.btn_answer),
                         modifier = Modifier.size(24.dp)
                     )
                 }
+
                 Spacer(modifier = Modifier.width(8.dp))
+
                 IconButton(
-                    onClick = onHangUp,
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                        onHangUp()
+                    },
                     modifier = Modifier.size(36.dp),
                     colors = IconButtonDefaults.iconButtonColors(
                         containerColor = MaterialTheme.colorScheme.error,
@@ -184,11 +170,52 @@ fun MinimizedCallBanner(
                 ) {
                     Icon(
                         imageVector = Icons.Default.CallEnd,
-                        contentDescription = "End Call",
+                        contentDescription = stringResource(R.string.call_status_ended),
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
         }
+    }
+}
+
+// PERF FIX: Isolates 60fps/120fps infinite pulse animation from triggering whole-banner recomposition
+@Composable
+private fun BannerPulseIndicator(callState: Int) {
+    val indicatorColor = if (callState == Call.STATE_RINGING) getDeclineRedColor() else getCallGreenColor()
+
+    val infiniteTransition = rememberInfiniteTransition(label = "banner_pulse")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1.0f,
+        targetValue = 1.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "banner_scale"
+    )
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = 0.0f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "banner_alpha"
+    )
+
+    Box(contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .graphicsLayer(scaleX = scale, scaleY = scale, alpha = alpha)
+                .background(color = indicatorColor, shape = CircleShape)
+        )
+        Icon(
+            imageVector = Icons.Default.Call,
+            contentDescription = null,
+            modifier = Modifier.size(16.dp),
+            tint = indicatorColor
+        )
     }
 }

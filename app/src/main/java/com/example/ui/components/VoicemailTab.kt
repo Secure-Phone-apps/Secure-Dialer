@@ -17,41 +17,43 @@
 
 package com.example.ui.components
 
-import androidx.compose.foundation.background
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.model.*
-import androidx.compose.ui.res.stringResource
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
+import com.example.model.CallRecord
+import com.example.model.getAvatarShape
+import com.example.model.getInitials
+import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+import java.util.Locale
 
 @Composable
 fun VoicemailTabContent(
     voicemailRecords: List<CallRecord>,
     onPlayClick: (CallRecord) -> Unit,
-    viewModel: com.example.ui.viewmodel.DialerViewModel? = null
+    viewModel: DialerViewModel? = null
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,12 +82,12 @@ fun VoicemailTabContent(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        stringResource(R.string.no_voicemails_title),
+                        text = stringResource(R.string.no_voicemails_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        stringResource(R.string.no_voicemails_subtitle),
+                        text = stringResource(R.string.no_voicemails_subtitle),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -106,18 +108,29 @@ fun VoicemailTabContent(
                             ListItem(
                                 headlineContent = {
                                     Text(
-                                        record.name,
-                                        style = MaterialTheme.typography.titleMedium
+                                        text = record.name.ifBlank { record.number },
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 },
                                 supportingContent = {
+                                    // FIXED: Formats real duration from record.duration instead of hardcoded 0:24
+                                    val durationStr = if (record.duration > 0) {
+                                        val mins = record.duration / 60
+                                        val secs = record.duration % 60
+                                        String.format(Locale.ROOT, "%02d:%02d", mins, secs)
+                                    } else {
+                                        "00:00"
+                                    }
                                     Text(
-                                        "${record.timestamp} • 0:24",
+                                        text = "${record.timestamp} • $durationStr",
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 },
                                 leadingContent = {
-                                    val avatarShape = viewModel?.let { getAvatarShape(it.avatarShapeType.value) } ?: CircleShape
+                                    val avatarShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "circular")
                                     Surface(
                                         modifier = Modifier.size(40.dp),
                                         shape = avatarShape,
@@ -128,10 +141,10 @@ fun VoicemailTabContent(
                                                 AsyncImage(
                                                     model = ImageRequest.Builder(LocalContext.current)
                                                         .data(record.photoUri)
-                                                        .size(256, 256)
+                                                        .size(128, 128)
                                                         .crossfade(true)
                                                         .build(),
-                                                    contentDescription = "Contact Photo",
+                                                    contentDescription = record.name,
                                                     modifier = Modifier.fillMaxSize(),
                                                     contentScale = ContentScale.Crop
                                                 )
@@ -139,7 +152,7 @@ fun VoicemailTabContent(
                                                 val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
                                                 if (isSaved) {
                                                     Text(
-                                                        record.avatarText,
+                                                        text = record.avatarText.ifEmpty { getInitials(record.name) },
                                                         style = MaterialTheme.typography.titleSmall,
                                                         color = record.avatarTextColor,
                                                         fontWeight = FontWeight.SemiBold
@@ -147,7 +160,7 @@ fun VoicemailTabContent(
                                                 } else {
                                                     Icon(
                                                         imageVector = Icons.Default.Person,
-                                                        contentDescription = "Unsaved Contact Icon",
+                                                        contentDescription = null,
                                                         tint = record.avatarTextColor,
                                                         modifier = Modifier.size(22.dp)
                                                     )
@@ -157,14 +170,16 @@ fun VoicemailTabContent(
                                     }
                                 },
                                 trailingContent = {
-                                    val buttonShape = RoundedCornerShape(16.dp)
                                     FilledIconButton(
-                                        onClick = { onPlayClick(record) },
-                                        shape = buttonShape
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            onPlayClick(record)
+                                        },
+                                        shape = RoundedCornerShape(16.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.PlayArrow,
-                                            contentDescription = "Play"
+                                            contentDescription = stringResource(R.string.call_status_ongoing)
                                         )
                                     }
                                 },

@@ -1,19 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2026 MovStore
+  ~ SPDX-License-Identifier: GPL-3.0-or-later
+  -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <!-- Zero-Data Privacy: Block all automatic cloud backups of sensitive PII, keys, and call recordings -->
+        <exclude domain="database" path="dialer_database" />
+        <exclude domain="database" path="dialer_database-journal" />
+        <exclude domain="database" path="dialer_database-wal" />
+        <exclude domain="sharedpref" path="dialer_secure_device_prefs.xml" />
+        <exclude domain="sharedpref" path="dialer_prefs.xml" />
+        <exclude domain="file" path="CallRecordings/" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!-- Block automated device-to-device migration of raw encrypted keys and recordings -->
+        <exclude domain="database" path="dialer_database" />
+        <exclude domain="sharedpref" path="dialer_secure_device_prefs.xml" />
+        <exclude domain="file" path="CallRecordings/" />
     </device-transfer>
-    -->
 </data-extraction-rules>

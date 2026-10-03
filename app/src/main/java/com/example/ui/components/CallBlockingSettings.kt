@@ -21,13 +21,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
 
@@ -38,8 +41,8 @@ fun CallBlockingSettings(
     highlightedTitle: String? = null
 ) {
     val scrollState = rememberScrollState()
-    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
-    val spamList by viewModel.spamFlow.collectAsState()
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
+    val spamList by viewModel.spamFlow.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -50,9 +53,13 @@ fun CallBlockingSettings(
     ) {
         // Expandable Blocklist
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Blocked Numbers & Blacklist", highlightedTitle) || isMatchTitle("Block Unknown & Private Calls", highlightedTitle) || isMatchTitle("Blocked Numbers", highlightedTitle),
+            isHighlighted = isMatchTitle("Blocked Numbers & Blacklist", highlightedTitle) ||
+                    isMatchTitle("Block Unknown & Private Calls", highlightedTitle) ||
+                    isMatchTitle("Blocked Numbers", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -62,7 +69,7 @@ fun CallBlockingSettings(
                 iconBgColor = MaterialTheme.colorScheme.errorContainer,
                 iconTint = MaterialTheme.colorScheme.onErrorContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (blockedNumbersEntities.isNotEmpty()) "${blockedNumbersEntities.size} blocked" else null,
+                badgeText = if (blockedNumbersEntities.isNotEmpty()) "${blockedNumbersEntities.size}" else null,
                 initiallyExpanded = isMatchTitle("Blocked Numbers", highlightedTitle) || isMatchTitle("Block Unknown", highlightedTitle)
             ) {
                 BlockListSettings(viewModel = viewModel, cardBgColor = cardBgColor)
@@ -71,9 +78,12 @@ fun CallBlockingSettings(
 
         // Expandable Spam Defense Database
         HighlightableCard(
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
-            isHighlighted = isMatchTitle("Offline Spam Database & Protection", highlightedTitle) || isMatchTitle("Spam", highlightedTitle),
+            isHighlighted = isMatchTitle("Offline Spam Database & Protection", highlightedTitle) ||
+                    isMatchTitle("Spam", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -83,7 +93,7 @@ fun CallBlockingSettings(
                 iconBgColor = MaterialTheme.colorScheme.primaryContainer,
                 iconTint = MaterialTheme.colorScheme.onPrimaryContainer,
                 cardBgColor = Color.Transparent,
-                badgeText = if (spamList.isNotEmpty()) "${spamList.size} rules" else null,
+                badgeText = if (spamList.isNotEmpty()) "${spamList.size}" else null,
                 initiallyExpanded = isMatchTitle("Offline Spam Database", highlightedTitle) || isMatchTitle("Spam", highlightedTitle)
             ) {
                 Box(modifier = Modifier.padding(16.dp)) {

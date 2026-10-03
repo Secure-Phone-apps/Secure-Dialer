@@ -23,25 +23,22 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CallEnd
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.getAvatarShape
+import com.example.ui.theme.*
 import com.example.util.RichHapticEngine
 
 @Composable
@@ -53,7 +50,6 @@ fun InCallBottomBar(
     avatarShapeType: String = "circular"
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     val buttonShape = getAvatarShape(avatarShapeType)
 
     Column(
@@ -101,8 +97,8 @@ fun InCallBottomBar(
                         onAnswer()
                     },
                     interactionSource = answerInteractionSource,
-                    color = com.example.ui.theme.getCallGreenColor(),
-                    contentColor = com.example.ui.theme.getOnCallGreenColor(),
+                    color = getCallGreenColor(),
+                    contentColor = getOnCallGreenColor(),
                     shape = buttonShape,
                     tonalElevation = 0.dp,
                     shadowElevation = 0.dp,
@@ -115,115 +111,82 @@ fun InCallBottomBar(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Call,
-                            contentDescription = "Answer",
+                            // FIXED: Localized accessibility description
+                            contentDescription = stringResource(R.string.btn_answer),
                             modifier = Modifier.size(28.dp)
                         )
                     }
                 }
 
-                // Center spacer matching DialButton dimensions for absolute symmetry
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Empty center space
-                }
+                // FIXED: Lightweight Spacer maintains column alignment without dummy Box overhead
+                Spacer(modifier = Modifier.weight(1f))
 
-                val hangUpInteractionSource = remember { MutableInteractionSource() }
-                val isHangUpPressed by hangUpInteractionSource.collectIsPressedAsState()
-                val hangUpScale by animateFloatAsState(
-                    targetValue = if (isHangUpPressed) 0.92f else 1.0f,
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessHigh,
-                        dampingRatio = Spring.DampingRatioMediumBouncy
-                    ),
-                    label = "hangup_button_scale"
+                HangUpActionCallButton(
+                    onHangUp = onHangUp,
+                    buttonShape = buttonShape,
+                    labelResId = R.string.btn_decline,
+                    modifier = Modifier.weight(1f)
                 )
-
-                Surface(
-                    onClick = {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
-                        onHangUp()
-                    },
-                    interactionSource = hangUpInteractionSource,
-                    color = com.example.ui.theme.getDeclineRedColor(),
-                    contentColor = com.example.ui.theme.getOnDeclineRedColor(),
-                    shape = buttonShape,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp)
-                        .scale(hangUpScale)
-                        .testTag("hangup_button")
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.CallEnd,
-                            contentDescription = "Hang up",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
             } else {
                 // Outgoing/Active: Symmetrical 3-slot layout with centered Hang Up
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Empty Left Slot
-                }
+                Spacer(modifier = Modifier.weight(1f))
 
-                val hangUpInteractionSource = remember { MutableInteractionSource() }
-                val isHangUpPressed by hangUpInteractionSource.collectIsPressedAsState()
-                val hangUpScale by animateFloatAsState(
-                    targetValue = if (isHangUpPressed) 0.92f else 1.0f,
-                    animationSpec = spring(
-                        stiffness = Spring.StiffnessHigh,
-                        dampingRatio = Spring.DampingRatioMediumBouncy
-                    ),
-                    label = "hangup_button_scale"
+                HangUpActionCallButton(
+                    onHangUp = onHangUp,
+                    buttonShape = buttonShape,
+                    labelResId = R.string.call_status_ended,
+                    modifier = Modifier.weight(1f)
                 )
 
-                Surface(
-                    onClick = {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
-                        onHangUp()
-                    },
-                    interactionSource = hangUpInteractionSource,
-                    color = com.example.ui.theme.getDeclineRedColor(),
-                    contentColor = com.example.ui.theme.getOnDeclineRedColor(),
-                    shape = buttonShape,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp)
-                        .scale(hangUpScale)
-                        .testTag("hangup_button")
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = Icons.Default.CallEnd,
-                            contentDescription = "Hang up",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Empty Right Slot
-                }
+                Spacer(modifier = Modifier.weight(1f))
             }
+        }
+    }
+}
+
+// DRY FIX: Unified Hang Up / Decline action button eliminates duplicate styling & animation code
+@Composable
+private fun HangUpActionCallButton(
+    onHangUp: () -> Unit,
+    buttonShape: Shape,
+    labelResId: Int,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val hangUpInteractionSource = remember { MutableInteractionSource() }
+    val isHangUpPressed by hangUpInteractionSource.collectIsPressedAsState()
+    val hangUpScale by animateFloatAsState(
+        targetValue = if (isHangUpPressed) 0.92f else 1.0f,
+        animationSpec = spring(
+            stiffness = Spring.StiffnessHigh,
+            dampingRatio = Spring.DampingRatioMediumBouncy
+        ),
+        label = "hangup_button_scale"
+    )
+
+    Surface(
+        onClick = {
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+            onHangUp()
+        },
+        interactionSource = hangUpInteractionSource,
+        color = getDeclineRedColor(),
+        contentColor = getOnDeclineRedColor(),
+        shape = buttonShape,
+        tonalElevation = 0.dp,
+        shadowElevation = 0.dp,
+        modifier = modifier
+            .height(64.dp)
+            .scale(hangUpScale)
+            .testTag("hangup_button")
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = Icons.Default.CallEnd,
+                // FIXED: Localized accessibility description
+                contentDescription = stringResource(labelResId),
+                modifier = Modifier.size(28.dp)
+            )
         }
     }
 }

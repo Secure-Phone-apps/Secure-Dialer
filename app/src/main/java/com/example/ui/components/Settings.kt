@@ -17,57 +17,38 @@
 
 package com.example.ui.components
 
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.*
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.style.TextOverflow
-import com.example.ui.viewmodel.DialerViewModel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.stringResource
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.theme.LocalAmoledMode
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.togetherWith
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.ui.draw.scale
+import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,12 +56,12 @@ fun SettingsPanel(
     viewModel: DialerViewModel,
     onClose: () -> Unit
 ) {
-    var activeTab by remember { mutableStateOf(0) }
+    var activeTab by remember { mutableIntStateOf(0) }
     var highlightedTitle by remember { mutableStateOf<String?>(null) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
 
-    androidx.activity.compose.BackHandler(enabled = true) {
+    BackHandler(enabled = true) {
         if (activeTab != 0) {
             activeTab = 0
         } else {
@@ -228,12 +209,19 @@ fun HighlightableCard(
     modifier: Modifier = Modifier,
     isHighlighted: Boolean = false,
     cardBgColor: Color,
-    shape: androidx.compose.ui.graphics.Shape = MaterialTheme.shapes.medium,
+    shape: Shape = MaterialTheme.shapes.medium,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val isAmoled = LocalAmoledMode.current
-    val cardBorder = if (isAmoled) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1E1E1E)) else null
+    val cardBorder = if (isHighlighted) {
+        BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+    } else if (isAmoled) {
+        BorderStroke(1.dp, Color(0xFF1E1E1E))
+    } else {
+        null
+    }
+
     if (onClick != null) {
         Card(
             modifier = modifier,
@@ -254,8 +242,12 @@ fun HighlightableCard(
     }
 }
 
+// FIXED: Restores case-insensitive deep-link and search card highlighting
 fun isMatchTitle(title: String, highlightedTitle: String?): Boolean {
-    return false
+    if (highlightedTitle.isNullOrBlank() || title.isBlank()) return false
+    return title.equals(highlightedTitle, ignoreCase = true) ||
+            title.contains(highlightedTitle, ignoreCase = true) ||
+            highlightedTitle.contains(title, ignoreCase = true)
 }
 
 @Composable
@@ -269,31 +261,32 @@ fun SettingsRowToggle(
     iconTint: Color = Color.Unspecified,
     enabled: Boolean = true
 ) {
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
+
     ListItem(
         modifier = Modifier.clickable(enabled = enabled) {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
             onCheckedChange(!checked)
         },
-        headlineContent = { 
+        headlineContent = {
             Text(
-                title,
+                text = title,
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) 
+            )
         },
-        supportingContent = { 
+        supportingContent = {
             Text(
-                subtitle,
+                text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-                maxLines = 2,
+                maxLines = 3,
                 overflow = TextOverflow.Ellipsis
-            ) 
+            )
         },
         leadingContent = if (icon != null) {
             {
@@ -312,7 +305,7 @@ fun SettingsRowToggle(
             Switch(
                 checked = checked,
                 onCheckedChange = {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                     onCheckedChange(it)
                 },
                 enabled = enabled,
@@ -339,29 +332,30 @@ fun SettingsRowNav(
     iconBgColor: Color = Color.Transparent,
     iconTint: Color = Color.Unspecified
 ) {
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+
     ListItem(
         modifier = Modifier.clickable {
-            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
             onClick()
         },
-        headlineContent = { 
+        headlineContent = {
             Text(
-                title,
+                text = title,
                 fontWeight = FontWeight.Medium,
                 style = MaterialTheme.typography.bodyLarge,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            ) 
+            )
         },
-        supportingContent = { 
+        supportingContent = {
             Text(
-                subtitle,
+                text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
-            ) 
+            )
         },
         leadingContent = if (icon != null) {
             {
@@ -443,7 +437,7 @@ fun SettingsEmptyState(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            maxLines = 2,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 16.dp)
         )

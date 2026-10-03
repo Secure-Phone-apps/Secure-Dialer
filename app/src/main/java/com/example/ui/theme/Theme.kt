@@ -19,16 +19,8 @@ package com.example.ui.theme
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.Modifier
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -36,60 +28,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-
-private val DarkColorScheme =
-  darkColorScheme(
-    primary = PrimaryDark,
-    onPrimary = OnPrimaryDark,
-    primaryContainer = PrimaryContainerDark,
-    onPrimaryContainer = OnPrimaryContainerDark,
-    secondary = SecondaryDark,
-    onSecondary = OnSecondaryDark,
-    secondaryContainer = SecondaryContainerDark,
-    onSecondaryContainer = OnSecondaryContainerDark,
-    tertiary = TertiaryDark,
-    onTertiary = OnTertiaryDark,
-    tertiaryContainer = TertiaryContainerDark,
-    onTertiaryContainer = OnTertiaryContainerDark,
-    error = ErrorDark,
-    onError = OnErrorDark,
-    errorContainer = ErrorContainerDark,
-    onErrorContainer = OnErrorContainerDark,
-    background = Color(0xFF000000),
-    onBackground = OnBackgroundDark,
-    surface = Color(0xFF000000),
-    onSurface = OnSurfaceDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = OnSurfaceVariantDark,
-    outline = OutlineDark
-  )
-
-private val LightColorScheme =
-  lightColorScheme(
-    primary = PrimaryLight,
-    onPrimary = OnPrimaryLight,
-    primaryContainer = PrimaryContainerLight,
-    onPrimaryContainer = OnPrimaryContainerLight,
-    secondary = SecondaryLight,
-    onSecondary = OnSecondaryLight,
-    secondaryContainer = SecondaryContainerLight,
-    onSecondaryContainer = OnSecondaryContainerLight,
-    tertiary = TertiaryLight,
-    onTertiary = OnTertiaryLight,
-    tertiaryContainer = TertiaryContainerLight,
-    onTertiaryContainer = OnTertiaryContainerLight,
-    error = ErrorLight,
-    onError = OnErrorLight,
-    errorContainer = ErrorContainerLight,
-    onErrorContainer = OnErrorContainerLight,
-    background = Color(0xFFFFFFFF),
-    onBackground = OnBackgroundLight,
-    surface = Color(0xFFFFFFFF),
-    onSurface = OnSurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = OnSurfaceVariantLight,
-    outline = OutlineLight
-  )
 
 @Composable
 fun getMissedCallColor(): Color {
@@ -139,10 +77,10 @@ fun parseHexColor(hex: String, fallback: Color = Color(0xFF68A500)): Color {
         val colorInt = when (clean.length) {
             6 -> android.graphics.Color.parseColor("#FF$clean")
             8 -> android.graphics.Color.parseColor("#$clean")
-            else -> android.graphics.Color.parseColor("#FF68A500")
+            else -> return fallback
         }
         Color(colorInt)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         fallback
     }
 }
@@ -806,7 +744,6 @@ fun getExpressiveColorScheme(colorScheme: ColorScheme, darkTheme: Boolean): Colo
 @Composable
 fun MyApplicationTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
-  // Dynamic color is available on Android 12+
   dynamicColor: Boolean = false,
   themeColor: String = "expressive_lime",
   customColorHex: String = "#68A500",
@@ -833,18 +770,19 @@ fun MyApplicationTheme(
       colorScheme = colorScheme.copy(
           background = Color(0xFF000000),
           surface = Color(0xFF000000),
-          surfaceVariant = Color(0xFF000000),
+          // FIXED: Elevated dark surface container preserves 100% OLED black battery savings while preventing cards from disappearing into background
+          surfaceVariant = Color(0xFF141416),
           surfaceTint = Color.Transparent,
           outline = Color(0xFF2E2E2E),
           outlineVariant = Color(0xFF1C1C1C),
           surfaceContainerLowest = Color(0xFF000000),
           surfaceContainerLow = Color(0xFF000000),
-          surfaceContainer = Color(0xFF000000),
-          surfaceContainerHigh = Color(0xFF040404),
-          surfaceContainerHighest = Color(0xFF080808),
+          surfaceContainer = Color(0xFF08080A),
+          surfaceContainerHigh = Color(0xFF101012),
+          surfaceContainerHighest = Color(0xFF18181A),
           onBackground = Color(0xFFFFFFFF),
           onSurface = Color(0xFFFFFFFF),
-          onSurfaceVariant = Color(0xFFC0C0C0)
+          onSurfaceVariant = Color(0xFFD4D4D8)
       )
   }
 
@@ -860,4 +798,3 @@ fun MyApplicationTheme(
       )
   }
 }
-

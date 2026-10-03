@@ -239,7 +239,7 @@ object BackupRestoreManager {
                     dao.insertReminder(
                         CallReminder(
                             number = obj.getString("number"),
-                            contactName = obj.optString("contactName", ""),
+                            name = obj.optString("contactName", ""),
                             reminderTime = obj.getLong("reminderTime"),
                             note = obj.optString("note", "")
                         )

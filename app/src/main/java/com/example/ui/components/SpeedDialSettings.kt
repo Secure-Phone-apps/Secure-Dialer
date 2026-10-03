@@ -18,31 +18,38 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Voicemail
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 
 @Composable
 fun SpeedDialSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
-    val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+    val context = LocalContext.current
+    val speedDialEntities by viewModel.speedDialFlow.collectAsStateWithLifecycle()
     val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
+    val voicemailNum by viewModel.voicemailNumber
     var targetSpeedDialKey by remember { mutableIntStateOf(-1) }
 
     Column(
@@ -51,14 +58,17 @@ fun SpeedDialSettings(
             .padding(16.dp)
     ) {
         Text(
-            stringResource(R.string.speed_dial_desc),
+            text = stringResource(R.string.speed_dial_desc),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(16.dp))
 
         if (targetSpeedDialKey != -1) {
-            var speedNumInput by remember { mutableStateOf("") }
+            var speedNumInput by remember(targetSpeedDialKey) {
+                mutableStateOf(speedDialMap[targetSpeedDialKey] ?: "")
+            }
+
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
@@ -78,7 +88,7 @@ fun SpeedDialSettings(
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
-                                    targetSpeedDialKey.toString(),
+                                    text = targetSpeedDialKey.toString(),
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -86,34 +96,47 @@ fun SpeedDialSettings(
                             }
                         }
                         Text(
-                            stringResource(R.string.assign_speed_dial_key, targetSpeedDialKey),
+                            text = stringResource(R.string.assign_speed_dial_key, targetSpeedDialKey),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold
                         )
                     }
+
                     Spacer(modifier = Modifier.height(16.dp))
+
+                    // FIXED: Correct label and number keyboard
                     OutlinedTextField(
                         value = speedNumInput,
                         onValueChange = { speedNumInput = it },
-                        label = { Text(stringResource(R.string.enter_number_to_block)) },
+                        label = { Text(stringResource(R.string.label_phone_number)) },
                         singleLine = true,
-                        leadingIcon = { Icon(Icons.Default.Phone, null) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.small
                     )
+
                     Spacer(modifier = Modifier.height(20.dp))
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        TextButton(onClick = { targetSpeedDialKey = -1 }) {
+                        TextButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                targetSpeedDialKey = -1
+                            }
+                        ) {
                             Text(stringResource(R.string.btn_cancel))
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Button(
                             onClick = {
-                                if (speedNumInput.isNotBlank()) {
-                                    viewModel.saveSpeedDial(targetSpeedDialKey, speedNumInput.trim(), "Speed Dial")
+                                val trimmed = speedNumInput.trim()
+                                if (trimmed.isNotBlank()) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    viewModel.saveSpeedDial(targetSpeedDialKey, trimmed, "Speed Dial")
                                     targetSpeedDialKey = -1
                                 }
                             },
@@ -129,15 +152,73 @@ fun SpeedDialSettings(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                (1..9).forEach { digit ->
+                // Key 1: Dedicated Voicemail Key
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(containerColor = cardBgColor)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                modifier = Modifier.size(38.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text(
+                                        text = "1",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = if (voicemailNum.isNotBlank()) voicemailNum else stringResource(R.string.settings_voicemail_num_sub),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Text(
+                                    text = stringResource(R.string.voicemail_settings),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = Icons.Default.Voicemail,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                }
+
+                // Keys 2 through 9: Standard Speed Dial Slots
+                (2..9).forEach { digit ->
                     val assignedNum = speedDialMap[digit]
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         shape = MaterialTheme.shapes.medium,
-                        colors = CardDefaults.cardColors(
-                            containerColor = cardBgColor
-                        )
+                        colors = CardDefaults.cardColors(containerColor = cardBgColor)
                     ) {
                         Row(
                             modifier = Modifier
@@ -157,7 +238,7 @@ fun SpeedDialSettings(
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Text(
-                                            digit.toString(),
+                                            text = digit.toString(),
                                             style = MaterialTheme.typography.titleMedium,
                                             fontWeight = FontWeight.Bold,
                                             color = if (assignedNum != null) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -172,7 +253,7 @@ fun SpeedDialSettings(
                                         fontWeight = if (assignedNum != null) FontWeight.Medium else FontWeight.Normal,
                                         color = if (assignedNum != null) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline,
                                         maxLines = 1,
-                                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                     if (assignedNum != null) {
                                         Text(
@@ -180,7 +261,7 @@ fun SpeedDialSettings(
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f),
                                             maxLines = 1,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis
                                         )
                                     }
                                 }
@@ -188,7 +269,10 @@ fun SpeedDialSettings(
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 IconButton(
-                                    onClick = { targetSpeedDialKey = digit },
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        targetSpeedDialKey = digit
+                                    },
                                     colors = IconButtonDefaults.iconButtonColors(
                                         contentColor = MaterialTheme.colorScheme.primary
                                     )
@@ -200,7 +284,10 @@ fun SpeedDialSettings(
                                 }
                                 if (assignedNum != null) {
                                     IconButton(
-                                        onClick = { viewModel.deleteSpeedDial(digit) },
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                            viewModel.deleteSpeedDial(digit)
+                                        },
                                         colors = IconButtonDefaults.iconButtonColors(
                                             contentColor = MaterialTheme.colorScheme.error
                                         )

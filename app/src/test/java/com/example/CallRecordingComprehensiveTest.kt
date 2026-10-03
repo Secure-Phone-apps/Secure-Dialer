@@ -350,23 +350,24 @@ class CallRecordingComprehensiveTest {
             CallManager.appContext = context
             CallManager.inCallService = null // inCallService is null (simulating teardown)
 
-            val testFile = File(context.filesDir, "CallRecordings/REC_5554321_20260925_000000.m4a").apply {
-                parentFile?.mkdirs()
-                writeBytes(ByteArray(1024))
-            }
-
             val started = CallAudioRecorder.startRecording(context, "5554321")
             assertTrue(started)
 
+            val recordDir = File(context.filesDir, "CallRecordings")
+            val files = recordDir.listFiles() ?: emptyArray()
+            val latestFile = files.maxByOrNull { it.lastModified() }
+            latestFile?.writeBytes(ByteArray(1024))
+
             // When autoStopRecordingIfNeeded executes with inCallService = null, appContext allows Room DB insert
-            CallManager.autoStopRecordingIfNeeded()
+            val job = CallManager.autoStopRecordingIfNeeded()
+            job?.join() ?: kotlinx.coroutines.delay(200)
 
             val dao = database.dialerDao()
             val recordings = dao.getAllCallRecordingsFlow().first()
             assertTrue("Recording should be saved into Room even when inCallService is null",
                 recordings.any { it.filePath.contains("5554321") || it.number.contains("5554321") })
 
-            testFile.delete()
+            latestFile?.delete()
         }
     }
 

@@ -17,76 +17,48 @@
 
 package com.example.ui.components
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.CallMade
-import androidx.compose.material.icons.automirrored.filled.CallReceived
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.Block
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CallMissed
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.NotificationsActive
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import java.util.Calendar
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
-import com.example.R
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.R
 import com.example.model.CallRecord
-import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CallHistoryDetailsScreen(
     number: String,
@@ -95,31 +67,30 @@ fun CallHistoryDetailsScreen(
     onCallClick: (CallRecord) -> Unit,
     onBack: () -> Unit
 ) {
-    androidx.activity.compose.BackHandler(enabled = true, onBack = onBack)
+    BackHandler(enabled = true, onBack = onBack)
 
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
-    
+    val coroutineScope = rememberCoroutineScope()
     val primaryRecord = logs.firstOrNull() ?: return
-    
-    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
     val isBlocked = remember(blockedNumbersEntities, number) {
         blockedNumbersEntities.any { it.number == number }
     }
-    
+
     val isContact = primaryRecord.name != primaryRecord.number
 
-    val allNotes by viewModel.notesFlow.collectAsState()
-    val existingNote = remember(allNotes, number) {
-        allNotes.find { it.number == number }
-    }
     var showNoteDialog by remember { mutableStateOf(false) }
     var editingNoteText by remember { mutableStateOf("") }
-
     var showReminderDialog by remember { mutableStateOf(false) }
-    var reminderNoteText by remember { mutableStateOf("") }
-    var reminderDelayValue by remember { mutableStateOf("15") }
-    var reminderDelayUnit by remember { mutableStateOf("min") } // "sec", "min", "hour", "day"
+
+    fun deleteAllLogsWithNumber() {
+        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+        coroutineScope.launch(Dispatchers.IO) {
+            logs.forEach { log -> viewModel.deleteCallLog(log.id) }
+        }
+        onBack()
+    }
 
     Scaffold(
         topBar = {
@@ -132,10 +103,13 @@ fun CallHistoryDetailsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        onBack()
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.btn_cancel)
                         )
                     }
                 },
@@ -144,7 +118,7 @@ fun CallHistoryDetailsScreen(
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options"
+                            contentDescription = null
                         )
                     }
                     DropdownMenu(
@@ -155,32 +129,32 @@ fun CallHistoryDetailsScreen(
                             text = { Text(stringResource(R.string.delete_all_history)) },
                             onClick = {
                                 showMenu = false
-                                logs.forEach { log -> viewModel.deleteCallLog(log.id) }
-                                onBack()
+                                deleteAllLogsWithNumber()
                             },
-                            leadingIcon = { 
+                            leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.Delete, 
-                                    contentDescription = null, 
+                                    imageVector = Icons.Default.Delete,
+                                    contentDescription = null,
                                     tint = MaterialTheme.colorScheme.error
-                                ) 
+                                )
                             }
                         )
                         DropdownMenuItem(
                             text = { Text(if (isBlocked) stringResource(R.string.unblock_number) else stringResource(R.string.block_number)) },
                             onClick = {
                                 showMenu = false
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 if (isBlocked) {
                                     viewModel.removeBlockedNumber(number)
                                 } else {
                                     viewModel.addBlockedNumber(number)
                                 }
                             },
-                            leadingIcon = { 
+                            leadingIcon = {
                                 Icon(
-                                    imageVector = Icons.Default.Block, 
+                                    imageVector = Icons.Default.Block,
                                     contentDescription = null
-                                ) 
+                                )
                             }
                         )
                     }
@@ -218,7 +192,7 @@ fun CallHistoryDetailsScreen(
                                         .size(256, 256)
                                         .crossfade(true)
                                         .build(),
-                                    contentDescription = "Contact Photo",
+                                    contentDescription = primaryRecord.name,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
@@ -234,7 +208,7 @@ fun CallHistoryDetailsScreen(
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.Person,
-                                        contentDescription = "Unsaved Contact Icon",
+                                        contentDescription = null,
                                         tint = primaryRecord.avatarTextColor,
                                         modifier = Modifier.size(36.dp)
                                     )
@@ -242,9 +216,9 @@ fun CallHistoryDetailsScreen(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     Text(
                         text = if (primaryRecord.name == "Unknown") stringResource(R.string.unknown) else primaryRecord.name,
                         style = MaterialTheme.typography.titleLarge,
@@ -252,23 +226,22 @@ fun CallHistoryDetailsScreen(
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Text(
                         text = primaryRecord.number,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 1.dp)
                     )
-                    
+
                     if (primaryRecord.label.isNotEmpty()) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
                             shape = RoundedCornerShape(100.dp),
                             modifier = Modifier.padding(top = 6.dp)
                         ) {
-                            val labelRes = localizeContactLabel(primaryRecord.label)
                             Text(
-                                text = labelRes.uppercase(java.util.Locale.ROOT),
+                                text = localizeContactLabel(primaryRecord.label).uppercase(Locale.ROOT),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
@@ -279,7 +252,7 @@ fun CallHistoryDetailsScreen(
                     }
                 }
             }
-            
+
             item {
                 Row(
                     modifier = Modifier
@@ -294,7 +267,7 @@ fun CallHistoryDetailsScreen(
                         containerColor = MaterialTheme.colorScheme.primaryContainer,
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                             onCallClick(primaryRecord)
                         }
                     )
@@ -305,13 +278,14 @@ fun CallHistoryDetailsScreen(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                data = Uri.parse("smsto:$number")
-                            }
                             try {
+                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                    data = Uri.parse("smsto:$number")
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
                                 context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "No SMS app found", Toast.LENGTH_SHORT).show()
+                            } catch (_: Exception) {
+                                Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                             }
                         }
                     )
@@ -322,6 +296,7 @@ fun CallHistoryDetailsScreen(
                         containerColor = if (isBlocked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
                         contentColor = if (isBlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
                         onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             if (isBlocked) {
                                 viewModel.removeBlockedNumber(number)
                             } else {
@@ -332,10 +307,11 @@ fun CallHistoryDetailsScreen(
 
                     DetailActionItem(
                         icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
-                        label = if (isContact) stringResource(R.string.edit) else stringResource(R.string.add),
+                        label = if (isContact) stringResource(R.string.btn_edit) else stringResource(R.string.action_add_contact),
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                         onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             if (isContact) {
                                 viewModel.oldContactToEdit.value = Contact(
                                     number = primaryRecord.number,
@@ -361,7 +337,7 @@ fun CallHistoryDetailsScreen(
                     )
                 }
             }
-            
+
             item {
                 CallLogSummaryDashboard(callRecords = logs)
             }
@@ -369,199 +345,210 @@ fun CallHistoryDetailsScreen(
             if (viewModel.isCallNotesEnabled.value) {
                 item {
                     val numberNotesFlow = remember(number) { viewModel.getCallNotesForNumberFlow(number) }
-                val numberNotes by numberNotesFlow.collectAsState(initial = emptyList())
-                var showNotesListModal by remember { mutableStateOf(false) }
-                val noteSdf = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
+                    val numberNotes by numberNotesFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+                    var showNotesListModal by remember { mutableStateOf(false) }
+                    val noteSdf = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
 
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f),
-                    border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    if (numberNotes.isNotEmpty()) {
-                        val latestNote = numberNotes.first()
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { showNotesListModal = true }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.tertiary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Text(
-                                        text = latestNote.note,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = FontWeight.Medium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.weight(1f, fill = false)
-                                    )
-                                    if (numberNotes.size > 1) {
-                                        Surface(
-                                            shape = RoundedCornerShape(8.dp),
-                                            color = MaterialTheme.colorScheme.tertiaryContainer
-                                        ) {
-                                            Text(
-                                                text = stringResource(R.string.call_notes_count_badge, numberNotes.size),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                            )
-                                        }
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f),
+                        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        if (numberNotes.isNotEmpty()) {
+                            val latestNote = numberNotes.first()
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        showNotesListModal = true
                                     }
-                                }
-                                Text(
-                                    text = noteSdf.format(Date(latestNote.lastUpdated)),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            IconButton(
-                                onClick = {
-                                    editingNoteText = ""
-                                    showNoteDialog = true
-                                },
-                                modifier = Modifier.size(28.dp)
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = latestNote.note,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.weight(1f, fill = false)
+                                        )
+                                        if (numberNotes.size > 1) {
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = MaterialTheme.colorScheme.tertiaryContainer
+                                            ) {
+                                                Text(
+                                                    text = stringResource(R.string.call_notes_count_badge, numberNotes.size),
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Text(
+                                        text = noteSdf.format(Date(latestNote.lastUpdated)),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                IconButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        editingNoteText = ""
+                                        showNoteDialog = true
+                                    },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Add,
+                                        contentDescription = stringResource(R.string.add_call_note_btn),
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        } else {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        editingNoteText = ""
+                                        showNoteDialog = true
+                                    }
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = stringResource(R.string.add_call_note_btn),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Icon(
                                     imageVector = Icons.Default.Add,
-                                    contentDescription = "Add Note",
+                                    contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
-                    } else {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    editingNoteText = ""
-                                    showNoteDialog = true
-                                }
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Description,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = stringResource(R.string.add_call_note_btn),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
                     }
-                }
 
-                if (showNoteDialog) {
-                    InCallNoteDialog(
-                        initialNote = editingNoteText,
-                        onDismiss = { showNoteDialog = false },
-                        onSaveNote = { newNote ->
-                            viewModel.saveCallNote(number, newNote)
-                        }
-                    )
-                }
+                    if (showNoteDialog) {
+                        InCallNoteDialog(
+                            initialNote = editingNoteText,
+                            onDismiss = { showNoteDialog = false },
+                            onSaveNote = { newNote ->
+                                viewModel.saveCallNote(number, newNote)
+                            }
+                        )
+                    }
 
-                if (showNotesListModal && numberNotes.isNotEmpty()) {
-                    AlertDialog(
-                        onDismissRequest = { showNotesListModal = false },
-                        title = { Text(stringResource(R.string.call_notes_count_title, numberNotes.size)) },
-                        text = {
-                            LazyColumn(
-                                verticalArrangement = Arrangement.spacedBy(10.dp),
-                                modifier = Modifier.heightIn(max = 300.dp)
-                            ) {
-                                items(numberNotes, key = { it.id }) { itemNote ->
-                                    Card(
-                                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                        shape = RoundedCornerShape(12.dp)
-                                    ) {
-                                        Column(modifier = Modifier.padding(12.dp)) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = noteSdf.format(Date(itemNote.lastUpdated)),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    color = MaterialTheme.colorScheme.primary,
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                                IconButton(
-                                                    onClick = {
-                                                        viewModel.deleteCallNoteById(itemNote.id)
-                                                    },
-                                                    modifier = Modifier.size(24.dp)
+                    if (showNotesListModal && numberNotes.isNotEmpty()) {
+                        AlertDialog(
+                            onDismissRequest = { showNotesListModal = false },
+                            title = { Text(stringResource(R.string.call_notes_count_title, numberNotes.size)) },
+                            text = {
+                                LazyColumn(
+                                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                                    modifier = Modifier.heightIn(max = 300.dp)
+                                ) {
+                                    items(numberNotes, key = { it.id }) { itemNote ->
+                                        Card(
+                                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                                            shape = RoundedCornerShape(12.dp)
+                                        ) {
+                                            Column(modifier = Modifier.padding(12.dp)) {
+                                                Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                                    verticalAlignment = Alignment.CenterVertically
                                                 ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Delete,
-                                                        contentDescription = "Delete",
-                                                        tint = MaterialTheme.colorScheme.error,
-                                                        modifier = Modifier.size(16.dp)
+                                                    Text(
+                                                        text = noteSdf.format(Date(itemNote.lastUpdated)),
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = MaterialTheme.colorScheme.primary,
+                                                        fontWeight = FontWeight.SemiBold
                                                     )
+                                                    IconButton(
+                                                        onClick = {
+                                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                                            viewModel.deleteCallNoteById(itemNote.id)
+                                                        },
+                                                        modifier = Modifier.size(24.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.Delete,
+                                                            contentDescription = stringResource(R.string.btn_delete),
+                                                            tint = MaterialTheme.colorScheme.error,
+                                                            modifier = Modifier.size(16.dp)
+                                                        )
+                                                    }
                                                 }
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                Text(
+                                                    text = itemNote.note,
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
                                             }
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = itemNote.note,
-                                                style = MaterialTheme.typography.bodyMedium
-                                            )
                                         }
                                     }
                                 }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { showNotesListModal = false }) {
+                                    Text(stringResource(R.string.close))
+                                }
                             }
-                        },
-                        confirmButton = {
-                            TextButton(onClick = { showNotesListModal = false }) {
-                                Text(stringResource(R.string.close))
-                            }
-                        }
-                    )
+                        )
+                    }
                 }
             }
-            }
-            
+
             if (viewModel.isCallbackRemindersEnabled.value) {
                 item {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
                         shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { showReminderDialog = true }
+                                .clickable {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    showReminderDialog = true
+                                }
                                 .padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -609,7 +596,7 @@ fun CallHistoryDetailsScreen(
                     }
                 }
             }
-            
+
             item {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(
@@ -623,7 +610,7 @@ fun CallHistoryDetailsScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    
+
                     Text(
                         text = stringResource(R.string.calls_count, logs.size),
                         style = MaterialTheme.typography.bodySmall,
@@ -631,7 +618,7 @@ fun CallHistoryDetailsScreen(
                     )
                 }
             }
-            
+
             items(
                 items = logs,
                 key = { it.id }
@@ -639,18 +626,16 @@ fun CallHistoryDetailsScreen(
                 DetailHistoryItem(
                     record = logRecord,
                     onDeleteClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                         viewModel.deleteCallLog(logRecord.id)
                     }
                 )
             }
-            
+
             item {
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = {
-                        logs.forEach { log -> viewModel.deleteCallLog(log.id) }
-                        onBack()
-                    },
+                    onClick = { deleteAllLogsWithNumber() },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f),
                         contentColor = MaterialTheme.colorScheme.onErrorContainer
@@ -679,4 +664,3 @@ fun CallHistoryDetailsScreen(
         }
     }
 }
-

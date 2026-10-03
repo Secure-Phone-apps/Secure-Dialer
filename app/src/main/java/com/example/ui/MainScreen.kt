@@ -20,71 +20,52 @@ package com.example.ui
 import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioManager
 import android.media.ToneGenerator
-import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
-import com.example.R
+import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import com.example.CallManager
-import com.example.getContactNameFromNumber
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
-import com.example.model.CallRecord
+import com.example.CallManager
+import com.example.ContactCache
+import com.example.R
+import com.example.getContactNameFromNumber
+import com.example.getSavedCnapName
+import com.example.model.CallRecording
 import com.example.model.CallType
-import com.example.model.Contact
 import com.example.ui.components.*
-import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-@OptIn(ExperimentalFoundationApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun MainScreen(
     viewModel: DialerViewModel,
@@ -92,14 +73,12 @@ fun MainScreen(
     isDefaultDialer: Boolean
 ) {
     val context = LocalContext.current
-    val haptic = LocalHapticFeedback.current
     val coroutineScope = rememberCoroutineScope()
-    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
-    val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
 
-    // Localized state declarations for MainScreen
     val preferredSim by viewModel.preferredSim
-    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsState()
+    val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
     val blockedNumbers = remember(blockedNumbersEntities) { blockedNumbersEntities.map { it.number } }
 
     var selectedTab by viewModel.selectedTab
@@ -111,7 +90,6 @@ fun MainScreen(
     var isCallActive by viewModel.isCallActive
     var isCallMinimized by viewModel.isCallMinimized
 
-    // Automatically dismiss keyboard and clear focus on tab changes, settings visibility changes, and call transitions
     LaunchedEffect(selectedTab) {
         focusManager.clearFocus()
         keyboardController?.hide()
@@ -137,38 +115,37 @@ fun MainScreen(
             isCallMinimized = false
         }
     }
+
     var callingContactName by viewModel.callingContactName
     var callingContactNumber by viewModel.callingContactNumber
     var isAddContactDialogVisible by viewModel.isAddContactDialogVisible
-    var newContactName by viewModel.newContactName
-    var newContactNumber by viewModel.newContactNumber
-    var newContactLabel by viewModel.newContactLabel
-    var isEditContactDialogVisible by viewModel.isEditContactDialogVisible
     var oldContactToEdit by viewModel.oldContactToEdit
     var editContactName by viewModel.editContactName
     var editContactNumber by viewModel.editContactNumber
     var editContactLabel by viewModel.editContactLabel
-    
-    // Permission state
+    var isEditContactDialogVisible by viewModel.isEditContactDialogVisible
+
     var hasContactsPermission by viewModel.hasContactsPermission
     var hasCallLogPermission by viewModel.hasCallLogPermission
     var hasNotificationPermission by viewModel.hasNotificationPermission
     var isLoadingPermissions by viewModel.isLoadingPermissions
     var showProminentDisclosure by remember { mutableStateOf(false) }
 
-    // Real-time Telecom Call observers
-    val systemActiveCall by CallManager.currentCall.collectAsState()
-    val systemCallState by CallManager.callState.collectAsState()
-    val systemAudioState by CallManager.audioState.collectAsState()
-    val systemCallerNumber by CallManager.callerNumber.collectAsState()
-    val systemCallerCnapName by CallManager.callerCnapName.collectAsState()
+    val systemActiveCall by CallManager.currentCall.collectAsStateWithLifecycle()
+    val systemCallState by CallManager.callState.collectAsStateWithLifecycle()
+    val systemAudioState by CallManager.audioState.collectAsStateWithLifecycle()
+    val systemCallerNumber by CallManager.callerNumber.collectAsStateWithLifecycle()
+    val systemCallerCnapName by CallManager.callerCnapName.collectAsStateWithLifecycle()
 
-    // DTMF Tone Generator
-    val toneGenerator = remember {
-        try { ToneGenerator(AudioManager.STREAM_DTMF, 80) } catch (e: Exception) { null }
-    }
+    var toneGenerator by remember { mutableStateOf<ToneGenerator?>(null) }
     DisposableEffect(Unit) {
-        onDispose { try { toneGenerator?.release() } catch (e: Exception) { e.printStackTrace() } }
+        try {
+            toneGenerator = ToneGenerator(AudioManager.STREAM_DTMF, 80)
+        } catch (_: Exception) {}
+        onDispose {
+            try { toneGenerator?.release() } catch (_: Exception) {}
+            toneGenerator = null
+        }
     }
 
     fun playDtmf(key: String) {
@@ -190,10 +167,7 @@ fun MainScreen(
                     else -> -1
                 }
                 if (tone != -1) tg.startTone(tone, 120)
-            } catch (e: Throwable) {
-                // Defensive guard against native AudioTrack / ToneGenerator exceptions on OEM audio HALs
-                e.printStackTrace()
-            }
+            } catch (_: Throwable) {}
         }
     }
 
@@ -216,16 +190,16 @@ fun MainScreen(
     LaunchedEffect(Unit) {
         val contactsGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
         val callLogGranted = ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED
-        
+
         hasContactsPermission = contactsGranted
         hasCallLogPermission = callLogGranted
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            hasNotificationPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
         } else {
-            hasNotificationPermission = true
+            true
         }
         isLoadingPermissions = false
-        
+
         if (contactsGranted || callLogGranted) {
             viewModel.startDataSyncAndObservation()
         }
@@ -246,13 +220,13 @@ fun MainScreen(
                 } else if (systemCallerCnapName.isNotEmpty()) {
                     callingContactName = systemCallerCnapName
                 } else {
-                    val savedCnap = com.example.getSavedCnapName(context, systemCallerNumber)
+                    val savedCnap = getSavedCnapName(context, systemCallerNumber)
                     callingContactName = savedCnap ?: systemCallerNumber
                 }
             }
         } else {
             if (isCallActive) {
-                kotlinx.coroutines.delay(650)
+                delay(650)
             }
             isCallActive = false
         }
@@ -269,11 +243,11 @@ fun MainScreen(
             Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
         }
-        
+
         var resolvedName = name
         val memoryContact = getContactNameFromNumber(context, number)
-        val memoryCnap = com.example.ContactCache.getCnapName(number)
-        
+        val memoryCnap = ContactCache.getCnapName(number)
+
         if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
             if (memoryContact != null) {
                 resolvedName = memoryContact
@@ -281,15 +255,15 @@ fun MainScreen(
                 resolvedName = memoryCnap
             }
         }
-        
+
         if (preferredSim == "Ask") {
             pendingCallName = resolvedName
             pendingCallNumber = number
             showSimSelectDialog = true
-            
+
             if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
-                    val savedCnap = com.example.getSavedCnapName(context, number)
+                    val savedCnap = getSavedCnapName(context, number)
                     if (!savedCnap.isNullOrBlank()) {
                         pendingCallName = savedCnap
                     }
@@ -300,10 +274,10 @@ fun MainScreen(
             callingContactNumber = number
             isCallActive = true
             CallManager.placeCall(context, number, preferredSim)
-            
+
             if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
-                    val savedCnap = com.example.getSavedCnapName(context, number)
+                    val savedCnap = getSavedCnapName(context, number)
                     if (!savedCnap.isNullOrBlank()) {
                         callingContactName = savedCnap
                     }
@@ -311,8 +285,6 @@ fun MainScreen(
             }
         }
     }
-
-    val isDark by viewModel.isDarkTheme
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -327,7 +299,7 @@ fun MainScreen(
         }
         val currentSlotKey = tabSlots.getOrElse(selectedTab) { "RECENTS" }
 
-        androidx.activity.compose.BackHandler(enabled = isDialpadVisible || isSettingsVisible) {
+        BackHandler(enabled = isDialpadVisible || isSettingsVisible) {
             if (isDialpadVisible) {
                 isDialpadVisible = false
             } else if (isSettingsVisible) {
@@ -404,16 +376,10 @@ fun MainScreen(
                 AnimatedVisibility(
                     visible = currentSlotKey != "DIALPAD" && !isCallHistoryDetailsOpen,
                     enter = expandVertically(
-                        animationSpec = spring(
-                            stiffness = Spring.StiffnessMedium,
-                            dampingRatio = Spring.DampingRatioNoBouncy
-                        )
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
                     ) + fadeIn(animationSpec = tween(120)),
                     exit = shrinkVertically(
-                        animationSpec = spring(
-                            stiffness = Spring.StiffnessMedium,
-                            dampingRatio = Spring.DampingRatioNoBouncy
-                        )
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
                     ) + fadeOut(animationSpec = tween(120))
                 ) {
                     HeaderSearchBar(
@@ -423,75 +389,71 @@ fun MainScreen(
                     )
                 }
 
-                val virtualPageCount = 3000
-                val initialVirtualPage = 1500
-                val pagerState = rememberPagerState(initialPage = initialVirtualPage + selectedTab) { virtualPageCount }
-                
+                // FIXED: Standard, accessible 3-page pager eliminates infinite carousel jumps and TalkBack bugs
+                val pagerState = rememberPagerState(initialPage = selectedTab.coerceIn(0, tabSlots.size - 1)) { tabSlots.size }
+
                 LaunchedEffect(pagerState.currentPage) {
-                    val activeIndex = pagerState.currentPage % tabSlots.size
-                    if (selectedTab != activeIndex) {
-                        selectedTab = activeIndex
+                    if (selectedTab != pagerState.currentPage) {
+                        selectedTab = pagerState.currentPage
                     }
                 }
 
                 LaunchedEffect(selectedTab) {
-                    val currentTab = pagerState.currentPage % tabSlots.size
-                    if (currentTab != selectedTab) {
-                        val tabDiff = selectedTab - currentTab
-                        val shortestDiff = when (tabDiff) {
-                            2 -> -1
-                            -2 -> 1
-                            else -> tabDiff
-                        }
-                        pagerState.animateScrollToPage(pagerState.currentPage + shortestDiff)
+                    if (pagerState.currentPage != selectedTab) {
+                        pagerState.animateScrollToPage(selectedTab)
                     }
                 }
 
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    val currentVirtualSlot = tabSlots.getOrElse(pagerState.currentPage % tabSlots.size) { "RECENTS" }
+                    val currentSlot = tabSlots.getOrElse(pagerState.currentPage) { "RECENTS" }
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
                         beyondViewportPageCount = 1,
-                        userScrollEnabled = !isRowSwipeEnabled || currentVirtualSlot != "RECENTS"
+                        userScrollEnabled = !isRowSwipeEnabled || currentSlot != "RECENTS"
                     ) { page ->
-                        val slotIndex = page % tabSlots.size
-                        val slotKey = tabSlots.getOrElse(slotIndex) { "RECENTS" }
-                        when (slotKey) {
+                        when (tabSlots.getOrElse(page) { "RECENTS" }) {
                             "RECENTS" -> {
-                                val allCallHistory by viewModel.allCallHistoryFlow.collectAsState()
+                                val allCallHistory by viewModel.allCallHistoryFlow.collectAsStateWithLifecycle()
                                 RecentsTabContent(
                                     viewModel = viewModel,
                                     callRecords = allCallHistory,
-                                    onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
+                                    onCallClick = { initiateCall(it.name, it.number, it.label) },
                                     onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
-                                    hasPermission = hasCallLogPermission, isLoading = isLoadingPermissions,
+                                    hasPermission = hasCallLogPermission,
+                                    isLoading = isLoadingPermissions,
                                     onRequestPermission = { showProminentDisclosure = true }
                                 )
                             }
                             "CONTACTS" -> {
                                 val contactsPaged = viewModel.contactsPaged.collectAsLazyPagingItems()
-                                val favoriteContacts by viewModel.favoriteContacts.collectAsState()
+                                val favoriteContacts by viewModel.favoriteContacts.collectAsStateWithLifecycle()
                                 ContactsTabContent(
                                     viewModel = viewModel,
                                     contactsPaged = contactsPaged,
                                     favoriteContacts = favoriteContacts,
-                                    onCallClick = { it -> initiateCall(it.name, it.number, it.label) },
+                                    onCallClick = { initiateCall(it.name, it.number, it.label) },
                                     onAddContactClick = { isAddContactDialogVisible = true },
                                     onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
-                                    hasPermission = hasContactsPermission, isLoading = isLoadingPermissions,
+                                    hasPermission = hasContactsPermission,
+                                    isLoading = isLoadingPermissions,
                                     onRequestPermission = { showProminentDisclosure = true },
-                                    onEditContact = { it -> oldContactToEdit = it; editContactName = it.name; editContactNumber = it.number; editContactLabel = it.label; isEditContactDialogVisible = true },
-                                    onDeleteContact = { it -> viewModel.deleteContact(it) }
+                                    onEditContact = {
+                                        oldContactToEdit = it
+                                        editContactName = it.name
+                                        editContactNumber = it.number
+                                        editContactLabel = it.label
+                                        isEditContactDialogVisible = true
+                                    },
+                                    onDeleteContact = { viewModel.deleteContact(it) }
                                 )
                             }
                             "DIALPAD" -> {
                                 val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
-                                val vibrateOnClickEnabled by viewModel.vibrateOnClickEnabled
                                 val voicemailNumber by viewModel.voicemailNumber
-                                val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+                                val speedDialEntities by viewModel.speedDialFlow.collectAsStateWithLifecycle()
                                 val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
-                                val dialpadMatches by viewModel.dialpadMatches.collectAsState()
+                                val dialpadMatches by viewModel.dialpadMatches.collectAsStateWithLifecycle()
 
                                 DialpadTabContent(
                                     inputValue = dialpadInput,
@@ -501,9 +463,15 @@ fun MainScreen(
                                         }
                                         viewModel.onDialpadInputChange(it)
                                     },
-                                    onCallClick = { it -> if (it.isNotEmpty()) { initiateCall("Unknown", it); viewModel.onDialpadInputChange("") } },
-                                    onSpeedDialCall = { it -> initiateCall("Speed Dial", it) },
-                                    voicemailNumber = voicemailNumber, speedDialMap = speedDialMap,
+                                    onCallClick = {
+                                        if (it.isNotEmpty()) {
+                                            initiateCall("Unknown", it)
+                                            viewModel.onDialpadInputChange("")
+                                        }
+                                    },
+                                    onSpeedDialCall = { initiateCall("Speed Dial", it) },
+                                    voicemailNumber = voicemailNumber,
+                                    speedDialMap = speedDialMap,
                                     dialpadMatches = dialpadMatches,
                                     onCollapseClick = {},
                                     viewModel = viewModel
@@ -526,21 +494,8 @@ fun MainScreen(
                             audioState = systemAudioState,
                             onExpandToFullScreen = { isCallMinimized = false },
                             onHangUp = {
-                                val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
-                                    (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
-                                } else {
-                                    0L
-                                }
-                                val currentSlot = CallManager.currentSimSlot.value
-                                val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
-                                if (callingContactNumber.isNotEmpty()) {
-                                    viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
-                                }
-
                                 CallManager.disconnect()
-                                if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
-                                    isCallActive = false
-                                }
+                                isCallActive = false
                             }
                         )
                     } else {
@@ -550,21 +505,8 @@ fun MainScreen(
                             callState = systemCallState,
                             onExpand = { isCallMinimized = false },
                             onHangUp = {
-                                val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
-                                    (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
-                                } else {
-                                    0L
-                                }
-                                val currentSlot = CallManager.currentSimSlot.value
-                                val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
-                                if (callingContactNumber.isNotEmpty()) {
-                                    viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
-                                }
-
                                 CallManager.disconnect()
-                                if (CallManager.calls.value.none { it != CallManager.currentCall.value && it.state != android.telecom.Call.STATE_DISCONNECTED }) {
-                                    isCallActive = false
-                                }
+                                isCallActive = false
                             }
                         )
                     }
@@ -574,18 +516,9 @@ fun MainScreen(
                     BottomNavBar(
                         selectedTab = selectedTab,
                         onTabSelected = { targetTab ->
-                            val currentVirtualPage = pagerState.currentPage
-                            val currentTab = currentVirtualPage % tabSlots.size
-                            val tabDiff = targetTab - currentTab
-                            val shortestDiff = when (tabDiff) {
-                                2 -> -1
-                                -2 -> 1
-                                else -> tabDiff
-                            }
-                            val targetVirtualPage = currentVirtualPage + shortestDiff
                             selectedTab = targetTab
                             coroutineScope.launch {
-                                pagerState.animateScrollToPage(targetVirtualPage)
+                                pagerState.animateScrollToPage(targetTab)
                             }
                         },
                         tabSlots = tabSlots
@@ -602,15 +535,16 @@ fun MainScreen(
                 visible = isSettingsVisible && !isFakeCallActive && (!isCallActive || isCallMinimized),
                 enter = slideInVertically(
                     initialOffsetY = { it },
-                    animationSpec = tween(200, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                    animationSpec = tween(200, easing = FastOutSlowInEasing)
                 ) + fadeIn(animationSpec = tween(150)),
                 exit = slideOutVertically(
                     targetOffsetY = { it },
-                    animationSpec = tween(150, easing = androidx.compose.animation.core.FastOutLinearInEasing)
+                    animationSpec = tween(150, easing = FastOutLinearInEasing)
                 ) + fadeOut(animationSpec = tween(120))
             ) {
                 SettingsPanel(
-                    viewModel = viewModel, onClose = { isSettingsVisible = false }
+                    viewModel = viewModel,
+                    onClose = { isSettingsVisible = false }
                 )
             }
 
@@ -619,8 +553,8 @@ fun MainScreen(
                 enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
                 exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
             ) {
-                val allContacts by viewModel.allContactsFlow.collectAsState()
-                val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsState()
+                val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
+                val quickResponsesEntities by viewModel.quickResponsesFlow.collectAsStateWithLifecycle()
                 val quickResponses = remember(quickResponsesEntities) { quickResponsesEntities.map { it.message } }
 
                 ActiveCallScreen(
@@ -631,31 +565,19 @@ fun MainScreen(
                     onHangUp = {
                         if (isFakeCallActive) {
                             try {
-                                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-                                nm?.cancel(9999)
+                                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                             } catch (_: Exception) {}
                             val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
                                 (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
                             } else {
                                 0L
                             }
-                            val callType = if (fakeCallState == "ACTIVE") com.example.model.CallType.INCOMING else com.example.model.CallType.MISSED
+                            val callType = if (fakeCallState == "ACTIVE") CallType.INCOMING else CallType.MISSED
                             viewModel.logFakeCall(fakeCallerName, fakeCallerNumber, callType, durationSeconds)
                             viewModel.fakeCallStartTimestamp = 0L
                             viewModel.isFakeCallActive.value = false
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
-                            val durationSeconds = if (systemCallState == android.telecom.Call.STATE_ACTIVE && CallManager.activeStartTimestamp.value > 0L) {
-                                (System.currentTimeMillis() - CallManager.activeStartTimestamp.value) / 1000
-                            } else {
-                                0L
-                            }
-                            val currentSlot = CallManager.currentSimSlot.value
-                            val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
-                            if (callingContactNumber.isNotEmpty()) {
-                                viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.OUTGOING, durationSeconds, currentSlot)
-                            }
-
                             CallManager.disconnect()
                         }
                     },
@@ -663,27 +585,12 @@ fun MainScreen(
                     onQuickDecline = {
                         if (isFakeCallActive) {
                             try {
-                                val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-                                nm?.cancel(9999)
+                                (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                             } catch (_: Exception) {}
-                            val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
-                                (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
-                            } else {
-                                0L
-                            }
-                            val callType = if (fakeCallState == "ACTIVE") com.example.model.CallType.INCOMING else com.example.model.CallType.MISSED
-                            viewModel.logFakeCall(fakeCallerName, fakeCallerNumber, callType, durationSeconds)
                             viewModel.fakeCallStartTimestamp = 0L
                             viewModel.isFakeCallActive.value = false
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
-                            val durationSeconds = 0L
-                            val currentSlot = CallManager.currentSimSlot.value
-                            val nameToLog = if (callingContactName.isNotEmpty() && callingContactName != "Unknown") callingContactName else callingContactNumber
-                            if (callingContactNumber.isNotEmpty()) {
-                                viewModel.logCall(nameToLog, callingContactNumber, com.example.model.CallType.MISSED, durationSeconds, currentSlot)
-                            }
-
                             CallManager.disconnect()
                         }
                     },
@@ -701,7 +608,7 @@ fun MainScreen(
                     callNotesEnabled = viewModel.isCallNotesEnabled.value,
                     onSaveRecording = { duration, filePath ->
                         viewModel.saveCallRecording(
-                            com.example.model.CallRecording(
+                            CallRecording(
                                 name = if (isFakeCallActive) fakeCallerName else callingContactName,
                                 number = if (isFakeCallActive) fakeCallerNumber else callingContactNumber,
                                 timestamp = System.currentTimeMillis().toString(),
@@ -718,29 +625,27 @@ fun MainScreen(
                     isPocketProtectionEnabled = viewModel.isPocketProtectionEnabled.value,
                     isFake = isFakeCallActive,
                     fakeState = fakeCallState,
-                    onFakeAnswer = { 
+                    onFakeAnswer = {
                         try {
-                            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-                            nm?.cancel(9999)
+                            (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                         } catch (_: Exception) {}
                         viewModel.fakeCallStartTimestamp = System.currentTimeMillis()
-                        viewModel.fakeCallState.value = "ACTIVE" 
+                        viewModel.fakeCallState.value = "ACTIVE"
                     },
-                    onFakeHangUp = { 
+                    onFakeHangUp = {
                         try {
-                            val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager
-                            nm?.cancel(9999)
+                            (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                         } catch (_: Exception) {}
                         val durationSeconds = if (fakeCallState == "ACTIVE" && viewModel.fakeCallStartTimestamp > 0L) {
                             (System.currentTimeMillis() - viewModel.fakeCallStartTimestamp) / 1000
                         } else {
                             0L
                         }
-                        val callType = if (fakeCallState == "ACTIVE") com.example.model.CallType.INCOMING else com.example.model.CallType.MISSED
+                        val callType = if (fakeCallState == "ACTIVE") CallType.INCOMING else CallType.MISSED
                         viewModel.logFakeCall(fakeCallerName, fakeCallerNumber, callType, durationSeconds)
                         viewModel.fakeCallStartTimestamp = 0L
-                        viewModel.isFakeCallActive.value = false 
-                        viewModel.fakeCallState.value = "DISCONNECTED" 
+                        viewModel.isFakeCallActive.value = false
+                        viewModel.fakeCallState.value = "DISCONNECTED"
                     }
                 )
             }
@@ -803,10 +708,7 @@ fun MainScreen(
                 )
             }
 
-
-            // Slide Up Dialpad Overlay Backdrop
             if (isDialpadVisible) {
-                // Dimmed backdrop with smooth animation
                 val backdropAlpha by animateFloatAsState(
                     targetValue = 0.5f,
                     animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
@@ -829,23 +731,17 @@ fun MainScreen(
                 visible = isDialpadVisible,
                 enter = slideInVertically(
                     initialOffsetY = { it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow)
                 ) + fadeIn(animationSpec = tween(150)),
                 exit = slideOutVertically(
                     targetOffsetY = { it },
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioNoBouncy,
-                        stiffness = Spring.StiffnessMedium
-                    )
+                    animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
                 ) + fadeOut(animationSpec = tween(100)),
                 modifier = Modifier.align(Alignment.BottomCenter)
             ) {
                 val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
                 val voicemailNumber by viewModel.voicemailNumber
-                val speedDialEntities by viewModel.speedDialFlow.collectAsState()
+                val speedDialEntities by viewModel.speedDialFlow.collectAsStateWithLifecycle()
                 val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
 
                 DialpadOverlay(
@@ -876,4 +772,3 @@ fun MainScreen(
         }
     }
 }
-

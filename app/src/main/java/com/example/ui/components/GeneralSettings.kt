@@ -17,6 +17,11 @@
 
 package com.example.ui.components
 
+import android.app.role.RoleManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.telecom.TelecomManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -33,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import kotlinx.coroutines.launch
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+import java.util.Locale
 
 data class SettingsSearchItem(
     val title: String,
@@ -124,339 +130,79 @@ fun GeneralSettings(
     val context = LocalContext.current
     val isDefaultDialer = viewModel.isDefaultDialer.value
     var searchQuery by remember { mutableStateOf("") }
-    var selectedItemTitle by remember { mutableStateOf<String?>(null) }
-    val coroutineScope = rememberCoroutineScope()
 
     val settingsIndex = remember {
         listOf(
-            // ================= 1. APPEARANCE =================
-            SettingsSearchItem(
-                title = "Appearance Settings",
-                description = "Dark mode, themes, colors & layout styles",
-                categoryName = "Appearance",
-                categoryTab = 1,
-                icon = Icons.Default.Palette
-            ),
-            SettingsSearchItem(
-                title = "Dark Mode & Theme Mode",
-                description = "Switch between Dark, Light, or System default theme",
-                categoryName = "Appearance",
-                categoryTab = 1,
-                icon = Icons.Default.DarkMode
-            ),
-            SettingsSearchItem(
-                title = "True Black OLED Mode",
-                description = "Pure pitch-black #000000 theme to maximize battery savings on AMOLED displays",
-                categoryName = "Appearance",
-                categoryTab = 1,
-                icon = Icons.Default.Contrast
-            ),
-            SettingsSearchItem(
-                title = "Expressive Material 3 Layout",
-                description = "Enable fluid Material 3 Expressive shapes, rounded cards & container layouts",
-                categoryName = "Appearance",
-                categoryTab = 1,
-                icon = Icons.Default.Style
-            ),
-            SettingsSearchItem(
-                title = "Dynamic Colors (Monet)",
-                description = "Use system wallpaper colors for app accents and container backgrounds",
-                categoryName = "Appearance",
-                categoryTab = 1,
-                icon = Icons.Default.ColorLens
-            ),
-            SettingsSearchItem(
-                title = "Accent Color Palette",
-                description = "Select custom accent color palette for buttons, sliders & highlights",
-                categoryName = "Appearance",
-                categoryTab = 1,
-                icon = Icons.Default.Brush
-            ),
-            // ================= 2. SOUND & GESTURES =================
-            SettingsSearchItem(
-                title = "Sound & Gestures Settings",
-                description = "Keypad tones, vibration & gestures",
-                categoryName = "Sound & Gestures",
-                categoryTab = 2,
-                icon = Icons.Default.VolumeUp
-            ),
-            SettingsSearchItem(
-                title = "Dialpad Keypad Tones",
-                description = "Enable or disable DTMF keypad sounds when dialing numbers",
-                categoryName = "Sound & Gestures",
-                categoryTab = 2,
-                icon = Icons.Default.Dialpad
-            ),
-            SettingsSearchItem(
-                title = "Call Vibration & Haptics",
-                description = "Configure call vibration, connection feedback & touch haptics",
-                categoryName = "Sound & Gestures",
-                categoryTab = 2,
-                icon = Icons.Default.Vibration
-            ),
-            SettingsSearchItem(
-                title = "Default Startup Tab & Home Layout",
-                description = "Choose whether app opens to Recents, Contacts, or Dialpad layout",
-                categoryName = "Sound & Gestures",
-                categoryTab = 2,
-                icon = Icons.Default.Home
-            ),
-            SettingsSearchItem(
-                title = "Call Swipe Actions & Gestures",
-                description = "Configure swipe to answer, swipe to reject, and in-call gestures",
-                categoryName = "Sound & Gestures",
-                categoryTab = 2,
-                icon = Icons.Default.Gesture
-            ),
-            SettingsSearchItem(
-                title = "Call Log Summary Dashboard & Analytics",
-                description = "Analytics dashboard displaying total call duration, call counts, and stats in Navigation & Layout",
-                categoryName = "Sound & Gestures",
-                categoryTab = 2,
-                icon = Icons.Default.BarChart
-            ),
+            // 1. APPEARANCE
+            SettingsSearchItem("Appearance Settings", "Dark mode, themes, colors & layout styles", "Appearance", 1, Icons.Default.Palette),
+            SettingsSearchItem("Dark Mode & Theme Mode", "Switch between Dark, Light, or System default theme", "Appearance", 1, Icons.Default.DarkMode),
+            SettingsSearchItem("True Black OLED Mode", "Pure pitch-black #000000 theme to maximize battery savings on AMOLED displays", "Appearance", 1, Icons.Default.Contrast),
+            SettingsSearchItem("Expressive Material 3 Layout", "Enable fluid Material 3 Expressive shapes, rounded cards & container layouts", "Appearance", 1, Icons.Default.Style),
+            SettingsSearchItem("Dynamic Colors (Monet)", "Use system wallpaper colors for app accents and container backgrounds", "Appearance", 1, Icons.Default.ColorLens),
+            SettingsSearchItem("Accent Color Palette", "Select custom accent color palette for buttons, sliders & highlights", "Appearance", 1, Icons.Default.Brush),
 
-            // ================= 3. SIM & CALLING =================
-            SettingsSearchItem(
-                title = "SIM & Calling Accounts",
-                description = "Dual SIM cards, call waiting, forwarding & voicemail",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.SimCard
-            ),
-            SettingsSearchItem(
-                title = "Preferred SIM Card",
-                description = "Set default SIM for outgoing calls in dual SIM devices",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.SimCard
-            ),
-            SettingsSearchItem(
-                title = "Call Waiting",
-                description = "Receive notifications for incoming calls while on an active call",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.PhoneCallback
-            ),
-            SettingsSearchItem(
-                title = "Call Forwarding",
-                description = "Forward incoming calls to another phone number",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.PhoneForwarded
-            ),
-            SettingsSearchItem(
-                title = "Carrier Voicemail Setup",
-                description = "Configure carrier voicemail number and quick dial action",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.Voicemail
-            ),
-            SettingsSearchItem(
-                title = "Hide Caller ID (CLIR)",
-                description = "Suppress outgoing number so recipient sees Private or Unknown Caller",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.VisibilityOff
-            ),
-            SettingsSearchItem(
-                title = "Caller ID Prefix & Codes",
-                description = "Select carrier CLIR prefix: #31#, *67, 141, 1831 or custom dial code",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.Pin
-            ),
-            SettingsSearchItem(
-                title = "Carrier SIM Hardware Caller ID",
-                description = "Direct system shortcut to per-SIM network Caller ID settings",
-                categoryName = "SIM & Calling",
-                categoryTab = 3,
-                icon = Icons.Default.SimCard
-            ),
+            // 2. SOUND & GESTURES
+            SettingsSearchItem("Sound & Gestures Settings", "Keypad tones, vibration & gestures", "Sound & Gestures", 2, Icons.Default.VolumeUp),
+            SettingsSearchItem("Dialpad Keypad Tones", "Enable or disable DTMF keypad sounds when dialing numbers", "Sound & Gestures", 2, Icons.Default.Dialpad),
+            SettingsSearchItem("Call Vibration & Haptics", "Configure call vibration, connection feedback & touch haptics", "Sound & Gestures", 2, Icons.Default.Vibration),
+            SettingsSearchItem("Default Startup Tab & Home Layout", "Choose whether app opens to Recents, Contacts, or Dialpad layout", "Sound & Gestures", 2, Icons.Default.Home),
+            SettingsSearchItem("Call Swipe Actions & Gestures", "Configure swipe to answer, swipe to reject, and in-call gestures", "Sound & Gestures", 2, Icons.Default.Gesture),
+            SettingsSearchItem("Call Log Summary Dashboard & Analytics", "Analytics dashboard displaying total call duration, call counts, and stats", "Sound & Gestures", 2, Icons.Default.BarChart),
 
-            // ================= 4. SPEED DIAL & QUICK REPLY =================
-            SettingsSearchItem(
-                title = "Speed Dial & Quick Reply Settings",
-                description = "Number key shortcuts and quick decline SMS responses",
-                categoryName = "Speed Dial & Quick Reply",
-                categoryTab = 4,
-                icon = Icons.Default.TouchApp
-            ),
-            SettingsSearchItem(
-                title = "Speed Dial Shortcuts (Keys 1–9)",
-                description = "Assign favorite contacts to dialpad number keys for 1-tap quick calling",
-                categoryName = "Speed Dial & Quick Reply",
-                categoryTab = 4,
-                icon = Icons.Default.Speed
-            ),
-            SettingsSearchItem(
-                title = "Quick Decline Text Replies",
-                description = "Manage predefined SMS messages to decline incoming calls with text",
-                categoryName = "Speed Dial & Quick Reply",
-                categoryTab = 4,
-                icon = Icons.Default.Sms
-            ),
+            // 3. SIM & CALLING
+            SettingsSearchItem("SIM & Calling Accounts", "Dual SIM cards, call waiting, forwarding & voicemail", "SIM & Calling", 3, Icons.Default.SimCard),
+            SettingsSearchItem("Preferred SIM Card", "Set default SIM for outgoing calls in dual SIM devices", "SIM & Calling", 3, Icons.Default.SimCard),
+            SettingsSearchItem("Call Waiting", "Receive notifications for incoming calls while on an active call", "SIM & Calling", 3, Icons.Default.PhoneCallback),
+            SettingsSearchItem("Call Forwarding", "Forward incoming calls to another phone number", "SIM & Calling", 3, Icons.Default.PhoneForwarded),
+            SettingsSearchItem("Carrier Voicemail Setup", "Configure carrier voicemail number and quick dial action", "SIM & Calling", 3, Icons.Default.Voicemail),
+            SettingsSearchItem("Hide Caller ID (CLIR)", "Suppress outgoing number so recipient sees Private or Unknown Caller", "SIM & Calling", 3, Icons.Default.VisibilityOff),
+            SettingsSearchItem("Caller ID Prefix & Codes", "Select carrier CLIR prefix: #31#, *67, 141, 1831 or custom dial code", "SIM & Calling", 3, Icons.Default.Pin),
+            SettingsSearchItem("Carrier SIM Hardware Caller ID", "Direct system shortcut to per-SIM network Caller ID settings", "SIM & Calling", 3, Icons.Default.SimCard),
 
-            // ================= 5. SPAM & CALL BLOCK =================
-            SettingsSearchItem(
-                title = "Spam & Call Block Settings",
-                description = "Blocked numbers list, spam database & unknown number blocking",
-                categoryName = "Spam & Call Block",
-                categoryTab = 5,
-                icon = Icons.Default.Shield
-            ),
-            SettingsSearchItem(
-                title = "Blocked Numbers & Blacklist",
-                description = "Add, manage, or remove phone numbers from your block list",
-                categoryName = "Spam & Call Block",
-                categoryTab = 5,
-                icon = Icons.Default.Block
-            ),
-            SettingsSearchItem(
-                title = "Offline Spam Database & Protection",
-                description = "Identify spam calls locally without internet using built-in database",
-                categoryName = "Spam & Call Block",
-                categoryTab = 5,
-                icon = Icons.Default.Security
-            ),
-            SettingsSearchItem(
-                title = "Block Unknown & Private Calls",
-                description = "Automatically decline calls from hidden, private, or unknown numbers",
-                categoryName = "Spam & Call Block",
-                categoryTab = 5,
-                icon = Icons.Default.PhonelinkErase
-            ),
+            // 4. SPEED DIAL & QUICK REPLY
+            SettingsSearchItem("Speed Dial & Quick Reply Settings", "Number key shortcuts and quick decline SMS responses", "Speed Dial & Quick Reply", 4, Icons.Default.TouchApp),
+            SettingsSearchItem("Speed Dial Shortcuts (Keys 1–9)", "Assign favorite contacts to dialpad number keys for 1-tap quick calling", "Speed Dial & Quick Reply", 4, Icons.Default.Speed),
+            SettingsSearchItem("Quick Decline Text Replies", "Manage predefined SMS messages to decline incoming calls with text", "Speed Dial & Quick Reply", 4, Icons.Default.Sms),
 
-            // ================= 6. CONTACTS & DATA =================
-            SettingsSearchItem(
-                title = "Contacts & Data Settings",
-                description = "Account filters, vCard import/export & database backup",
-                categoryName = "Contacts & Data",
-                categoryTab = 6,
-                icon = Icons.Default.Contacts
-            ),
-            SettingsSearchItem(
-                title = "Account Display Filters",
-                description = "Choose which account contacts to display (Google, Phone, SIM)",
-                categoryName = "Contacts & Data",
-                categoryTab = 6,
-                icon = Icons.Default.FilterList
-            ),
-            SettingsSearchItem(
-                title = "Default Save Account",
-                description = "Set default account location for saving newly created contacts",
-                categoryName = "Contacts & Data",
-                categoryTab = 6,
-                icon = Icons.Default.AccountBox
-            ),
-            SettingsSearchItem(
-                title = "Export Contacts (vCard / .vcf)",
-                description = "Export all contacts to a standard .vcf backup file",
-                categoryName = "Contacts & Data",
-                categoryTab = 6,
-                icon = Icons.Default.Upload
-            ),
-            SettingsSearchItem(
-                title = "Import Contacts",
-                description = "Restore contacts from a saved .vcf file",
-                categoryName = "Contacts & Data",
-                categoryTab = 6,
-                icon = Icons.Default.Download
-            ),
-            SettingsSearchItem(
-                title = "Database Backup & Restore",
-                description = "Backup or restore local call logs, settings, and app data",
-                categoryName = "Contacts & Data",
-                categoryTab = 6,
-                icon = Icons.Default.Backup
-            ),
+            // 5. SPAM & CALL BLOCK
+            SettingsSearchItem("Spam & Call Block Settings", "Blocked numbers list, spam database & unknown number blocking", "Spam & Call Block", 5, Icons.Default.Shield),
+            SettingsSearchItem("Blocked Numbers & Blacklist", "Add, manage, or remove phone numbers from your block list", "Spam & Call Block", 5, Icons.Default.Block),
+            SettingsSearchItem("Offline Spam Database & Protection", "Identify spam calls locally without internet using built-in database", "Spam & Call Block", 5, Icons.Default.Security),
+            SettingsSearchItem("Block Unknown & Private Calls", "Automatically decline calls from hidden, private, or unknown numbers", "Spam & Call Block", 5, Icons.Default.PhonelinkErase),
 
-            // ================= 7. ADVANCED TOOLS =================
-            SettingsSearchItem(
-                title = "Advanced Tools Settings",
-                description = "Call recording, callback reminders, call notes & fake call simulator",
-                categoryName = "Advanced Tools",
-                categoryTab = 7,
-                icon = Icons.Default.AutoAwesome
-            ),
-            SettingsSearchItem(
-                title = "Call Recording & Local Audio Storage",
-                description = "Enable in-call recording controls and view saved local call audio recordings",
-                categoryName = "Advanced Tools",
-                categoryTab = 7,
-                icon = Icons.Default.Mic
-            ),
-            SettingsSearchItem(
-                title = "Scheduled Callback Reminders Dashboard",
-                description = "Dashboard for viewing and setting scheduled call alarms and reminders",
-                categoryName = "Advanced Tools",
-                categoryTab = 7,
-                icon = Icons.Default.Schedule
-            ),
-            SettingsSearchItem(
-                title = "Call Notes & Memos",
-                description = "Create, view, and search notes linked to specific phone numbers",
-                categoryName = "Advanced Tools",
-                categoryTab = 7,
-                icon = Icons.Default.NoteAlt
-            ),
-            SettingsSearchItem(
-                title = "Fake Call Simulator",
-                description = "Schedule simulated incoming phone calls with custom caller name & timer",
-                categoryName = "Advanced Tools",
-                categoryTab = 7,
-                icon = Icons.Default.PhoneInTalk
-            ),
+            // 6. CONTACTS & DATA
+            SettingsSearchItem("Contacts & Data Settings", "Account filters, vCard import/export & database backup", "Contacts & Data", 6, Icons.Default.Contacts),
+            SettingsSearchItem("Account Display Filters", "Choose which account contacts to display (Google, Phone, SIM)", "Contacts & Data", 6, Icons.Default.FilterList),
+            SettingsSearchItem("Default Save Account", "Set default account location for saving newly created contacts", "Contacts & Data", 6, Icons.Default.AccountBox),
+            SettingsSearchItem("Export Contacts (vCard / .vcf)", "Export all contacts to a standard .vcf backup file", "Contacts & Data", 6, Icons.Default.Upload),
+            SettingsSearchItem("Import Contacts", "Restore contacts from a saved .vcf file", "Contacts & Data", 6, Icons.Default.Download),
+            SettingsSearchItem("Database Backup & Restore", "Backup or restore local call logs, settings, and app data", "Contacts & Data", 6, Icons.Default.Backup),
 
-            // ================= 8. PRIVACY & ABOUT =================
-            SettingsSearchItem(
-                title = "Privacy & Security Settings",
-                description = "Biometric app lock, pocket protection, app lock & app specs",
-                categoryName = "Privacy & About",
-                categoryTab = 8,
-                icon = Icons.Default.Lock
-            ),
-            SettingsSearchItem(
-                title = "Biometric App Lock",
-                description = "Require fingerprint or PIN lock to open dialer application",
-                categoryName = "Privacy & About",
-                categoryTab = 8,
-                icon = Icons.Default.Fingerprint
-            ),
-            SettingsSearchItem(
-                title = "Pocket Protection Mode",
-                description = "Prevent accidental pocket touches using proximity sensor",
-                categoryName = "Privacy & About",
-                categoryTab = 8,
-                icon = Icons.Default.PhonelinkLock
-            ),
-            SettingsSearchItem(
-                title = "App Version & Device Specifications",
-                description = "View application version, build numbers, and system permissions",
-                categoryName = "Privacy & About",
-                categoryTab = 8,
-                icon = Icons.Default.Info
-            ),
-            SettingsSearchItem(
-                title = "Help & Customer Support",
-                description = "Send feedback or contact developer support",
-                categoryName = "Privacy & About",
-                categoryTab = 8,
-                icon = Icons.Default.Help
-            )
+            // 7. ADVANCED TOOLS
+            SettingsSearchItem("Advanced Tools Settings", "Call recording, callback reminders, call notes & fake call simulator", "Advanced Tools", 7, Icons.Default.AutoAwesome),
+            SettingsSearchItem("Call Recording & Local Audio Storage", "Enable in-call recording controls and view saved local call audio recordings", "Advanced Tools", 7, Icons.Default.Mic),
+            SettingsSearchItem("Scheduled Callback Reminders Dashboard", "Dashboard for viewing and setting scheduled call alarms and reminders", "Advanced Tools", 7, Icons.Default.Schedule),
+            SettingsSearchItem("Call Notes & Memos", "Create, view, and search notes linked to specific phone numbers", "Advanced Tools", 7, Icons.Default.NoteAlt),
+            SettingsSearchItem("Fake Call Simulator", "Schedule simulated incoming phone calls with custom caller name & timer", "Advanced Tools", 7, Icons.Default.PhoneInTalk),
+
+            // 8. PRIVACY & ABOUT
+            SettingsSearchItem("Privacy & Security Settings", "Biometric app lock, pocket protection, app lock & app specs", "Privacy & About", 8, Icons.Default.Lock),
+            SettingsSearchItem("Biometric App Lock", "Require fingerprint or PIN lock to open dialer application", "Privacy & About", 8, Icons.Default.Fingerprint),
+            SettingsSearchItem("Pocket Protection Mode", "Prevent accidental pocket touches using proximity sensor", "Privacy & About", 8, Icons.Default.PhonelinkLock),
+            SettingsSearchItem("App Version & Device Specifications", "View application version, build numbers, and system permissions", "Privacy & About", 8, Icons.Default.Info),
+            SettingsSearchItem("Help & Customer Support", "Send feedback or contact developer support", "Privacy & About", 8, Icons.Default.Help)
         )
     }
 
+    // FIXED: Search matches title, description, and category name to enable full discoverability
     val searchResults = remember(searchQuery) {
         if (searchQuery.isBlank()) {
             emptyList()
         } else {
-            val queryWords = searchQuery.trim().lowercase().split("\\s+".toRegex()).filter { it.isNotBlank() }
+            val queryWords = searchQuery.trim().lowercase(Locale.ROOT).split("\\s+".toRegex()).filter { it.isNotBlank() }
             settingsIndex.filter { item ->
-                val titleLower = item.title.lowercase()
-                queryWords.all { word ->
-                    titleLower.contains(word)
-                }
+                val fullSearchBlob = "${item.title} ${item.description} ${item.categoryName}".lowercase(Locale.ROOT)
+                queryWords.all { word -> fullSearchBlob.contains(word) }
             }
         }
     }
@@ -466,7 +212,6 @@ fun GeneralSettings(
         contentPadding = PaddingValues(bottom = 32.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // Search Bar at the top of settings
         item {
             SettingsSearchBar(
                 searchQuery = searchQuery,
@@ -477,7 +222,7 @@ fun GeneralSettings(
         if (searchQuery.isNotBlank()) {
             item {
                 Text(
-                    text = stringResource(R.string.search_results_count, searchResults.size).uppercase(),
+                    text = stringResource(R.string.search_results_count, searchResults.size).uppercase(Locale.ROOT),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold,
@@ -510,6 +255,7 @@ fun GeneralSettings(
                         colors = CardDefaults.cardColors(containerColor = cardBgColor),
                         shape = MaterialTheme.shapes.medium,
                         onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             onNavigateToTab(resultItem.categoryTab, resultItem.title)
                             searchQuery = ""
                         }
@@ -561,20 +307,29 @@ fun GeneralSettings(
                 }
             }
         } else {
-            // Standard category cards when not searching
+            // Standard category cards
             if (!isDefaultDialer) {
                 item {
                     DefaultDialerWarningCard(
                         onShowRestrictedSettings = {
-                            val telecomManager = context.getSystemService(android.content.Context.TELECOM_SERVICE) as? android.telecom.TelecomManager
-                            val intent = android.content.Intent(android.telecom.TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                                putExtra(android.telecom.TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
-                            }
                             try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                // Fallback
-                            }
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                                    val rm = context.getSystemService(Context.ROLE_SERVICE) as? RoleManager
+                                    if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_DIALER)) {
+                                        val roleIntent = rm.createRequestRoleIntent(RoleManager.ROLE_DIALER).apply {
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(roleIntent)
+                                    }
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+                                        putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
+                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                    }
+                                    context.startActivity(intent)
+                                }
+                            } catch (_: Exception) {}
                         }
                     )
                 }

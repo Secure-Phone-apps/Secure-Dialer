@@ -28,21 +28,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 
 @Composable
 fun DefaultStartupTabCard(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    val context = LocalContext.current
+
+    Column(modifier = Modifier.fillMaxWidth()) {
         // 1. Default Startup Tab Card
         Card(
             modifier = Modifier
@@ -53,7 +55,7 @@ fun DefaultStartupTabCard(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    stringResource(R.string.settings_default_startup_tab),
+                    text = stringResource(R.string.settings_default_startup_tab),
                     fontWeight = FontWeight.Medium,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -78,11 +80,11 @@ fun DefaultStartupTabCard(
                             modifier = Modifier
                                 .weight(1f)
                                 .clip(MaterialTheme.shapes.extraSmall)
-                                .background(
-                                    if (isSel) MaterialTheme.colorScheme.primary
-                                    else Color.Transparent
-                                )
-                                .clickable { viewModel.updateDefaultStartupTabKey(key) }
+                                .background(if (isSel) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    viewModel.updateDefaultStartupTabKey(key)
+                                }
                                 .padding(vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
@@ -90,9 +92,9 @@ fun DefaultStartupTabCard(
                                 text = title,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSel) MaterialTheme.colorScheme.onPrimary
-                                else MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
+                                color = if (isSel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -100,14 +102,18 @@ fun DefaultStartupTabCard(
             }
         }
 
-        // 2. Call Log Dashboard Card
+        // 2. Call Log Dashboard Card (Full-row clickable)
         val isCallLogDashboardEnabled by viewModel.isCallLogDashboardEnabled
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            onClick = {
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                viewModel.updateCallLogDashboardEnabled(!isCallLogDashboardEnabled)
+            }
         ) {
             Row(
                 modifier = Modifier
@@ -130,19 +136,26 @@ fun DefaultStartupTabCard(
                 }
                 Switch(
                     checked = isCallLogDashboardEnabled,
-                    onCheckedChange = { viewModel.updateCallLogDashboardEnabled(it) }
+                    onCheckedChange = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        viewModel.updateCallLogDashboardEnabled(it)
+                    }
                 )
             }
         }
 
-        // 3. Call Log Filters Card
+        // 3. Call Log Filters Card (Full-row clickable)
         val isCallLogFiltersEnabled by viewModel.isCallLogFiltersEnabled
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            onClick = {
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                viewModel.updateCallLogFiltersEnabled(!isCallLogFiltersEnabled)
+            }
         ) {
             Row(
                 modifier = Modifier
@@ -165,7 +178,10 @@ fun DefaultStartupTabCard(
                 }
                 Switch(
                     checked = isCallLogFiltersEnabled,
-                    onCheckedChange = { viewModel.updateCallLogFiltersEnabled(it) }
+                    onCheckedChange = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        viewModel.updateCallLogFiltersEnabled(it)
+                    }
                 )
             }
         }
@@ -233,14 +249,18 @@ fun DefaultStartupTabCard(
             }
         }
 
-        // 5. Swipe Actions Toggle Card
+        // 5. Swipe Actions Toggle Card (Full-row clickable)
         val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             colors = CardDefaults.cardColors(containerColor = cardBgColor),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
+            onClick = {
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                viewModel.updateRowSwipeEnabled(!isRowSwipeEnabled)
+            }
         ) {
             Row(
                 modifier = Modifier
@@ -263,7 +283,10 @@ fun DefaultStartupTabCard(
                 }
                 Switch(
                     checked = isRowSwipeEnabled,
-                    onCheckedChange = { viewModel.updateRowSwipeEnabled(it) }
+                    onCheckedChange = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        viewModel.updateRowSwipeEnabled(it)
+                    }
                 )
             }
         }
@@ -278,6 +301,7 @@ fun TabSlotDropdown(
     onSelect: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
     val displayTitle = screens.firstOrNull { it.first == selectedKey }?.second ?: selectedKey
 
@@ -291,7 +315,10 @@ fun TabSlotDropdown(
         )
         Box {
             Surface(
-                onClick = { expanded = true },
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    expanded = true
+                },
                 shape = MaterialTheme.shapes.small,
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
                 modifier = Modifier.fillMaxWidth()
@@ -305,7 +332,8 @@ fun TabSlotDropdown(
                         text = displayTitle,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,
@@ -327,6 +355,7 @@ fun TabSlotDropdown(
                             )
                         },
                         onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             expanded = false
                             onSelect(key)
                         }

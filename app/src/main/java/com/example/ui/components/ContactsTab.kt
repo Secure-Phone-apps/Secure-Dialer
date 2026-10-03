@@ -17,72 +17,47 @@
 
 package com.example.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+
 import androidx.compose.foundation.background
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
-import com.example.model.*
-import androidx.compose.ui.res.stringResource
 import com.example.R
-import com.example.ui.theme.LocalM3Expressive
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Person
-
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
-import androidx.compose.foundation.gestures.detectDragGestures
+import com.example.model.Contact
+import com.example.ui.viewmodel.DialerViewModel
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @Composable
 fun ContactsTabContent(
-    viewModel: com.example.ui.viewmodel.DialerViewModel,
+    viewModel: DialerViewModel,
     contactsPaged: LazyPagingItems<Contact>,
     favoriteContacts: List<Contact>,
     onCallClick: (Contact) -> Unit,
@@ -94,31 +69,36 @@ fun ContactsTabContent(
     onEditContact: (Contact) -> Unit = {},
     onDeleteContact: (Contact) -> Unit = {}
 ) {
-    val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+    val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    
+
     val allContacts by viewModel.allContactsFlow.collectAsState()
     val selectedAccountFilter by viewModel.selectedAccountFilter
     var showOnlyFavorites by remember { mutableStateOf(false) }
-    val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase() } }
+    val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase(Locale.ROOT) } }
 
-    val alphabet = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter) {
-        val contactsList = if (showOnlyFavorites) {
+    // Unified contacts pipeline eliminates duplicate filtering
+    val activeContactsList = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter) {
+        if (showOnlyFavorites) {
             sortedFavorites
         } else if (selectedAccountFilter.isBlank()) {
             allContacts
         } else if (selectedAccountFilter.equals("Phone", ignoreCase = true)) {
-            allContacts.filter { it.accountName.isBlank() || it.accountName.equals("Phone", ignoreCase = true) || it.accountType.contains("local", ignoreCase = true) }
+            allContacts.filter {
+                it.accountName.isBlank() || it.accountName.equals("Phone", ignoreCase = true) || it.accountType.contains("local", ignoreCase = true)
+            }
         } else {
             allContacts.filter { it.accountName == selectedAccountFilter }
         }
+    }
 
-        val uniqueLetters = contactsList.asSequence()
+    val alphabet = remember(activeContactsList) {
+        val uniqueLetters = activeContactsList.asSequence()
             .map { it.name.trim() }
             .filter { it.isNotEmpty() }
             .map { it.first().uppercaseChar() }
             .distinct()
-            .toMutableList()
+            .toList()
 
         val letterChars = uniqueLetters.filter { it.isLetter() }.sorted()
         val otherChars = uniqueLetters.filter { !it.isLetter() }
@@ -128,28 +108,14 @@ fun ContactsTabContent(
         if (otherChars.isNotEmpty() || result.isEmpty()) {
             result.add('#')
         }
-        
-        if (result.size <= 1) {
-            ('A'..'Z').toList() + '#'
-        } else {
-            result
-        }
+
+        if (result.size <= 1) ('A'..'Z').toList() + '#' else result
     }
 
-    val letterToIndex = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter) {
-        val contactsList = if (showOnlyFavorites) {
-            sortedFavorites
-        } else if (selectedAccountFilter.isBlank()) {
-            allContacts
-        } else if (selectedAccountFilter.equals("Phone", ignoreCase = true)) {
-            allContacts.filter { it.accountName.isBlank() || it.accountName.equals("Phone", ignoreCase = true) || it.accountType.contains("local", ignoreCase = true) }
-        } else {
-            allContacts.filter { it.accountName == selectedAccountFilter }
-        }
-
+    val letterToIndex = remember(activeContactsList) {
         val map = HashMap<Char, Int>()
-        for (i in contactsList.indices) {
-            val contact = contactsList[i]
+        for (i in activeContactsList.indices) {
+            val contact = activeContactsList[i]
             val firstChar = contact.name.trim().firstOrNull()?.uppercaseChar() ?: '#'
             val key = if (firstChar.isLetter()) firstChar else '#'
             if (!map.containsKey(key)) {
@@ -166,13 +132,7 @@ fun ContactsTabContent(
                 if (firstVisibleIndex < sortedFavorites.size) {
                     val contact = sortedFavorites.getOrNull(firstVisibleIndex)
                     val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
-                    if (alphabet.contains(firstChar)) {
-                        firstChar
-                    } else if (!firstChar.isLetter() && alphabet.contains('#')) {
-                        '#'
-                    } else {
-                        alphabet.firstOrNull() ?: '#'
-                    }
+                    if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
                 } else {
                     alphabet.firstOrNull() ?: '#'
                 }
@@ -180,13 +140,7 @@ fun ContactsTabContent(
                 if (firstVisibleIndex < contactsPaged.itemCount) {
                     val contact = contactsPaged.peek(firstVisibleIndex)
                     val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
-                    if (alphabet.contains(firstChar)) {
-                        firstChar
-                    } else if (!firstChar.isLetter() && alphabet.contains('#')) {
-                        '#'
-                    } else {
-                        alphabet.firstOrNull() ?: '#'
-                    }
+                    if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
                 } else {
                     alphabet.firstOrNull() ?: '#'
                 }
@@ -241,11 +195,10 @@ fun ContactsTabContent(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 0.dp, bottom = 6.dp),
+                        .padding(bottom = 6.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Favorites Filter Toggle Button
                     Button(
                         onClick = { showOnlyFavorites = !showOnlyFavorites },
                         shape = RoundedCornerShape(16.dp),
@@ -258,7 +211,7 @@ fun ContactsTabContent(
                     ) {
                         Icon(
                             imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = "Toggle Favorites",
+                            contentDescription = stringResource(R.string.tab_favorites),
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -268,7 +221,6 @@ fun ContactsTabContent(
                         )
                     }
 
-                    // Squircle Add Contact Button (+ Add)
                     Button(
                         onClick = onAddContactClick,
                         shape = RoundedCornerShape(16.dp),
@@ -287,7 +239,8 @@ fun ContactsTabContent(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Add",
+                                // FIXED: Fully localized Add action string
+                                text = stringResource(R.string.action_add_contact),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -318,15 +271,15 @@ fun ContactsTabContent(
                     modifier = Modifier.fillMaxSize().padding(end = 36.dp)
                 ) {
                     if (showOnlyFavorites) {
-                        items(
+                        // FIXED: itemsIndexed eliminates O(N^2) indexOf lookup on every scroll frame
+                        itemsIndexed(
                             items = sortedFavorites,
-                            key = { "${it.id}_${it.number}" }
-                        ) { contact ->
-                            val index = sortedFavorites.indexOf(contact)
+                            key = { _, contact -> "${contact.id}_${contact.number}" }
+                        ) { index, contact ->
                             val firstLetter = contact.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
                             val prevContact = if (index > 0) sortedFavorites[index - 1] else null
                             val prevLetter = prevContact?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: ""
-                            
+
                             if (firstLetter != prevLetter) {
                                 Text(
                                     text = firstLetter,
@@ -356,7 +309,7 @@ fun ContactsTabContent(
                                 val firstLetter = contact.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
                                 val prevContact = if (index > 0) contactsPaged[index - 1] else null
                                 val prevLetter = prevContact?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: ""
-                                
+
                                 if (firstLetter != prevLetter) {
                                     Text(
                                         text = firstLetter,
@@ -389,41 +342,39 @@ fun ContactsTabContent(
             }
         }
 
-
-
         // A-Z Scroller Rail
         val hasItems = if (showOnlyFavorites) sortedFavorites.isNotEmpty() else contactsPaged.itemCount > 0
         if (hasItems) {
             val haptic = LocalHapticFeedback.current
+            val maxScrollTarget = (if (showOnlyFavorites) sortedFavorites.size else contactsPaged.itemCount) - 1
+
             Column(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
                     .width(40.dp)
                     .padding(vertical = 40.dp)
-                    .pointerInput(alphabet, letterToIndex) {
+                    .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
                         detectTapGestures { offset ->
-                            val index = (offset.y / size.height * alphabet.size)
-                                .toInt()
-                                .coerceIn(0, alphabet.size - 1)
+                            val index = (offset.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
                             val char = alphabet[index]
-                            letterToIndex[char]?.let { i ->
+                            letterToIndex[char]?.let { targetIndex ->
+                                val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
                                 coroutineScope.launch {
-                                    listState.animateScrollToItem(i)
+                                    listState.animateScrollToItem(safeIndex)
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 }
                             }
                         }
                     }
-                    .pointerInput(alphabet, letterToIndex) {
+                    .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
                         detectDragGestures { change, _ ->
-                            val index = (change.position.y / size.height * alphabet.size)
-                                .toInt()
-                                .coerceIn(0, alphabet.size - 1)
+                            val index = (change.position.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
                             val char = alphabet[index]
-                            letterToIndex[char]?.let { i ->
+                            letterToIndex[char]?.let { targetIndex ->
+                                val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
                                 coroutineScope.launch {
-                                    listState.scrollToItem(i)
+                                    listState.scrollToItem(safeIndex)
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                 }
                             }

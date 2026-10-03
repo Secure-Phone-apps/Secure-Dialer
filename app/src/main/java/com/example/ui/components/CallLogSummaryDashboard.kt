@@ -17,53 +17,42 @@
 
 package com.example.ui.components
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.CallMissed
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
-import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.res.stringResource
 import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.ui.theme.LocalM3Expressive
-import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getDialedCallColor
+import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
+import com.example.util.RichHapticEngine
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-enum class SummaryTimeRange(val label: String) {
-    TODAY("Today"),
-    WEEK("Week"),
-    MONTH("Month"),
-    YEAR("Year"),
-    ALL("All")
+enum class SummaryTimeRange {
+    TODAY, WEEK, MONTH, YEAR, ALL
 }
 
 @Composable
@@ -83,9 +72,10 @@ fun CallLogSummaryDashboard(
     dashboardMode: String = "FULL",
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var isExpanded by remember { mutableStateOf(true) }
     var selectedRange by remember { mutableStateOf(SummaryTimeRange.TODAY) }
-    
+
     val now = System.currentTimeMillis()
     val startOfWeek = remember(now) { now - 7L * 24 * 60 * 60 * 1000 }
     val startOfMonth = remember(now) { now - 30L * 24 * 60 * 60 * 1000 }
@@ -93,126 +83,35 @@ fun CallLogSummaryDashboard(
 
     val activeRange = if (dashboardMode == "FULL") selectedRange else SummaryTimeRange.ALL
 
-    val context = androidx.compose.ui.platform.LocalContext.current
     val filteredRecords = remember(callRecords, activeRange, startOfWeek, startOfMonth, startOfYear, context) {
         val currentLocale = getCurrentLocale(context)
         val todayPrefix = SimpleDateFormat("MMM d", currentLocale).format(Date())
-        
+
         when (activeRange) {
             SummaryTimeRange.TODAY -> {
+                val calToday = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }
+                val todayStartMs = calToday.timeInMillis
                 callRecords.filter { record ->
-                    if (record.timestampMs != 0L) {
-                        val calToday = java.util.Calendar.getInstance().apply {
-                            set(java.util.Calendar.HOUR_OF_DAY, 0)
-                            set(java.util.Calendar.MINUTE, 0)
-                            set(java.util.Calendar.SECOND, 0)
-                            set(java.util.Calendar.MILLISECOND, 0)
-                        }
-                        record.timestampMs >= calToday.timeInMillis
-                    } else {
-                        record.timestamp.startsWith(todayPrefix)
-                    }
+                    if (record.timestampMs != 0L) record.timestampMs >= todayStartMs else record.timestamp.startsWith(todayPrefix)
                 }
             }
-            SummaryTimeRange.WEEK -> {
-                callRecords.filter { record ->
-                    if (record.timestampMs != 0L) {
-                        record.timestampMs >= startOfWeek
-                    } else {
-                        try {
-                            val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
-                            val calCurrent = java.util.Calendar.getInstance()
-                            val currentYear = calCurrent.get(java.util.Calendar.YEAR)
-                            val currentMillis = calCurrent.timeInMillis
-                            val parsed = sdf.parse(record.timestamp)
-                            if (parsed != null) {
-                                val calParsed = java.util.Calendar.getInstance().apply { 
-                                    time = parsed
-                                    set(java.util.Calendar.YEAR, currentYear)
-                                }
-                                if (calParsed.timeInMillis > currentMillis) {
-                                    calParsed.add(java.util.Calendar.YEAR, -1)
-                                }
-                                calParsed.timeInMillis >= startOfWeek
-                            } else false
-                        } catch (e: Exception) {
-                            false
-                        }
-                    }
-                }
-            }
-            SummaryTimeRange.MONTH -> {
-                callRecords.filter { record ->
-                    if (record.timestampMs != 0L) {
-                        record.timestampMs >= startOfMonth
-                    } else {
-                        try {
-                            val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
-                            val calCurrent = java.util.Calendar.getInstance()
-                            val currentYear = calCurrent.get(java.util.Calendar.YEAR)
-                            val currentMillis = calCurrent.timeInMillis
-                            val parsed = sdf.parse(record.timestamp)
-                            if (parsed != null) {
-                                val calParsed = java.util.Calendar.getInstance().apply { 
-                                    time = parsed
-                                    set(java.util.Calendar.YEAR, currentYear)
-                                }
-                                if (calParsed.timeInMillis > currentMillis) {
-                                    calParsed.add(java.util.Calendar.YEAR, -1)
-                                }
-                                calParsed.timeInMillis >= startOfMonth
-                            } else false
-                        } catch (e: Exception) {
-                            false
-                        }
-                    }
-                }
-            }
-            SummaryTimeRange.YEAR -> {
-                callRecords.filter { record ->
-                    if (record.timestampMs != 0L) {
-                        record.timestampMs >= startOfYear
-                    } else {
-                        try {
-                            val sdf = SimpleDateFormat("MMM d, HH:mm", currentLocale)
-                            val calCurrent = java.util.Calendar.getInstance()
-                            val currentYear = calCurrent.get(java.util.Calendar.YEAR)
-                            val currentMillis = calCurrent.timeInMillis
-                            val parsed = sdf.parse(record.timestamp)
-                            if (parsed != null) {
-                                val calParsed = java.util.Calendar.getInstance().apply { 
-                                    time = parsed
-                                    set(java.util.Calendar.YEAR, currentYear)
-                                }
-                                if (calParsed.timeInMillis > currentMillis) {
-                                    calParsed.add(java.util.Calendar.YEAR, -1)
-                                }
-                                calParsed.timeInMillis >= startOfYear
-                            } else false
-                        } catch (e: Exception) {
-                            false
-                        }
-                    }
-                }
-            }
+            SummaryTimeRange.WEEK -> filterByThreshold(callRecords, startOfWeek, currentLocale)
+            SummaryTimeRange.MONTH -> filterByThreshold(callRecords, startOfMonth, currentLocale)
+            SummaryTimeRange.YEAR -> filterByThreshold(callRecords, startOfYear, currentLocale)
             SummaryTimeRange.ALL -> callRecords
         }
     }
-    
+
     val totalCallsCount = filteredRecords.size
-    
-    val missedCallsCount = remember(filteredRecords) {
-        filteredRecords.count { it.type == CallType.MISSED }
-    }
-    val outgoingCallsCount = remember(filteredRecords) {
-        filteredRecords.count { it.type == CallType.OUTGOING }
-    }
-    val receivedCallsCount = remember(filteredRecords) {
-        filteredRecords.count { it.type == CallType.INCOMING }
-    }
-    val totalDurationSeconds = remember(filteredRecords) {
-        filteredRecords.sumOf { it.duration }
-    }
+    val missedCallsCount = remember(filteredRecords) { filteredRecords.count { it.type == CallType.MISSED } }
+    val outgoingCallsCount = remember(filteredRecords) { filteredRecords.count { it.type == CallType.OUTGOING } }
+    val receivedCallsCount = remember(filteredRecords) { filteredRecords.count { it.type == CallType.INCOMING } }
+    val totalDurationSeconds = remember(filteredRecords) { filteredRecords.sumOf { it.duration } }
 
     val formattedTotalDuration = remember(totalDurationSeconds) {
         val hrs = totalDurationSeconds / 3600
@@ -224,7 +123,7 @@ fun CallLogSummaryDashboard(
             else -> "${secs}s"
         }
     }
-    
+
     val isExpressive = LocalM3Expressive.current
     val cardColor = if (isExpressive) {
         MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f)
@@ -241,7 +140,10 @@ fun CallLogSummaryDashboard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded },
+                    .clickable {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        isExpanded = !isExpanded
+                    },
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -253,8 +155,8 @@ fun CallLogSummaryDashboard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    val headerTitle = if (dashboardMode == "COMPACT_FILTERS") {
-                        "Call Summary"
+                    val headerTitle = if (dashboardMode == "COMPACT_FILTERS" || activeRange == SummaryTimeRange.ALL) {
+                        stringResource(R.string.today_call_summary)
                     } else if (activeRange == SummaryTimeRange.TODAY) {
                         stringResource(R.string.today_call_summary)
                     } else {
@@ -268,7 +170,7 @@ fun CallLogSummaryDashboard(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (!isExpanded) {
                         Text(
@@ -280,7 +182,7 @@ fun CallLogSummaryDashboard(
                     }
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = if (isExpanded) "Collapse" else "Expand",
+                        contentDescription = stringResource(if (isExpanded) R.string.btn_cancel else R.string.btn_answer),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )
@@ -294,7 +196,7 @@ fun CallLogSummaryDashboard(
             ) {
                 Column {
                     Spacer(modifier = Modifier.height(4.dp))
-                    
+
                     if (dashboardMode == "FULL") {
                         Row(
                             modifier = Modifier
@@ -304,17 +206,18 @@ fun CallLogSummaryDashboard(
                                 .padding(2.dp),
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
-                            SummaryTimeRange.values().forEach { range ->
+                            // FIXED: Use .entries instead of .values() to eliminate array allocations
+                            SummaryTimeRange.entries.forEach { range ->
                                 val isSelected = selectedRange == range
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primary
-                                            else Color.Transparent
-                                        )
-                                        .clickable { selectedRange = range }
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                        .clickable {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            selectedRange = range
+                                        }
                                         .padding(vertical = 3.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -328,10 +231,9 @@ fun CallLogSummaryDashboard(
                                 }
                             }
                         }
-                        
                         Spacer(modifier = Modifier.height(4.dp))
                     }
-                    
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -368,10 +270,10 @@ fun CallLogSummaryDashboard(
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    
+
                     if (dashboardMode == "FULL") {
                         Spacer(modifier = Modifier.height(4.dp))
-                        
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -410,11 +312,39 @@ fun CallLogSummaryDashboard(
     }
 }
 
+// PERF FIX: Consolidated threshold filtering avoids repeated Date & Calendar allocations in loops
+private fun filterByThreshold(records: List<CallRecord>, thresholdMs: Long, locale: Locale): List<CallRecord> {
+    val sdf by lazy { SimpleDateFormat("MMM d, HH:mm", locale) }
+    val currentYear by lazy { Calendar.getInstance().get(Calendar.YEAR) }
+
+    return records.filter { record ->
+        if (record.timestampMs != 0L) {
+            record.timestampMs >= thresholdMs
+        } else {
+            try {
+                val parsed = sdf.parse(record.timestamp)
+                if (parsed != null) {
+                    val cal = Calendar.getInstance().apply {
+                        time = parsed
+                        set(Calendar.YEAR, currentYear)
+                    }
+                    if (cal.timeInMillis > System.currentTimeMillis()) {
+                        cal.add(Calendar.YEAR, -1)
+                    }
+                    cal.timeInMillis >= thresholdMs
+                } else false
+            } catch (_: Exception) {
+                false
+            }
+        }
+    }
+}
+
 @Composable
 fun SummaryBox(
     value: String,
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     iconColor: Color,
     modifier: Modifier = Modifier
 ) {
@@ -435,10 +365,7 @@ fun SummaryBox(
     ) {
         Text(
             text = value,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = 18.sp,
-                lineHeight = 20.sp
-            ),
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 20.sp),
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,

@@ -20,15 +20,13 @@ package com.example.ui.components
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -37,9 +35,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.ContactCache
 import com.example.model.Contact
-import com.example.model.getInitials
 import com.example.model.getAvatarShape
+import com.example.model.getInitials
 
 @Composable
 fun InCallAvatarDisplay(
@@ -51,47 +50,63 @@ fun InCallAvatarDisplay(
 ) {
     val context = LocalContext.current
 
+    // FIXED: Multi-number and normalized suffix matching resolves contact photos reliably
+    val matchedContact = remember(contactNumber, contacts) {
+        if (contactNumber.isNotBlank()) {
+            ContactCache.getContact(contactNumber) ?: contacts.find { it.number == contactNumber }
+        } else null
+    }
+
+    val pName = participants.firstOrNull()?.first ?: contactName
+    val isSaved = matchedContact != null || (pName != contactNumber && pName != "Unknown" && pName.isNotBlank() && pName.any { it.isLetter() })
+    var imageLoadFailed by remember(matchedContact?.photoUri) { mutableStateOf(false) }
+
+    val bgColor = when {
+        participants.size > 1 -> MaterialTheme.colorScheme.primaryContainer
+        matchedContact != null -> matchedContact.avatarBg
+        else -> MaterialTheme.colorScheme.surfaceVariant
+    }
+
+    val textColor = when {
+        participants.size > 1 -> MaterialTheme.colorScheme.onPrimaryContainer
+        matchedContact != null -> matchedContact.avatarTextColor
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     Surface(
         modifier = Modifier.size(120.dp),
         shape = getAvatarShape(avatarShapeType),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        color = bgColor
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (participants.size > 1) {
-                Text(text = "👥", fontSize = 64.sp)
+                Text(text = "👥", fontSize = 56.sp)
+            } else if (matchedContact != null && matchedContact.photoUri.isNotEmpty() && !imageLoadFailed) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(matchedContact.photoUri)
+                        .size(256, 256)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = pName,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    onError = { imageLoadFailed = true }
+                )
             } else {
-                val matchedContact = remember(contactNumber, contacts) {
-                    contacts.find { it.number == contactNumber }
-                }
-                if (matchedContact != null && matchedContact.photoUri.isNotEmpty()) {
-                    AsyncImage(
-                        model = ImageRequest.Builder(context)
-                            .data(matchedContact.photoUri)
-                            .size(256, 256)
-                            .crossfade(true)
-                            .build(),
-                        contentDescription = "Contact Photo",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                if (isSaved) {
+                    Text(
+                        text = getInitials(pName),
+                        style = MaterialTheme.typography.displayLarge,
+                        color = textColor
                     )
                 } else {
-                    val pName = participants.firstOrNull()?.first ?: contactName
-                    val isSaved = matchedContact != null || (pName != contactNumber && pName != "Unknown" && pName.isNotBlank() && pName.any { it.isLetter() })
-                    if (isSaved) {
-                        val avatarText = getInitials(pName)
-                        Text(
-                            text = avatarText,
-                            style = MaterialTheme.typography.displayLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = "Unsaved Contact Icon",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(64.dp)
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = null,
+                        tint = textColor,
+                        modifier = Modifier.size(64.dp)
+                    )
                 }
             }
         }

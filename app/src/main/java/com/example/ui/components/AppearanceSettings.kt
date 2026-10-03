@@ -17,19 +17,27 @@
 
 package com.example.ui.components
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
+import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 
 @Composable
 fun AppearanceSettings(
@@ -37,6 +45,7 @@ fun AppearanceSettings(
     cardBgColor: Color,
     highlightedTitle: String? = null
 ) {
+    val context = LocalContext.current
     val isDarkTheme by viewModel.isDarkTheme
     val isAmoledMode by viewModel.isAmoledMode
     val useDynamicColor by viewModel.useDynamicColor
@@ -58,7 +67,9 @@ fun AppearanceSettings(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Dark Mode & Theme Mode", highlightedTitle) || isMatchTitle("Appearance Settings", highlightedTitle) || isMatchTitle("Appearance & Theme", highlightedTitle),
+                isHighlighted = isMatchTitle("Dark Mode & Theme Mode", highlightedTitle) ||
+                        isMatchTitle("Appearance Settings", highlightedTitle) ||
+                        isMatchTitle("Appearance & Theme", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -73,14 +84,17 @@ fun AppearanceSettings(
             }
         }
 
-        // Pure Black AMOLED Card (Permanently visible for direct OLED configuration)
+        // Pure Black AMOLED Card
         item {
             HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Pure Black", highlightedTitle) || isMatchTitle("True Black", highlightedTitle) || isMatchTitle("OLED", highlightedTitle) || isMatchTitle("AMOLED", highlightedTitle),
+                isHighlighted = isMatchTitle("Pure Black", highlightedTitle) ||
+                        isMatchTitle("True Black", highlightedTitle) ||
+                        isMatchTitle("OLED", highlightedTitle) ||
+                        isMatchTitle("AMOLED", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 SettingsRowToggle(
@@ -91,9 +105,7 @@ fun AppearanceSettings(
                         stringResource(R.string.settings_pure_black_sub)
                     },
                     checked = isAmoledMode && isDarkTheme,
-                    onCheckedChange = { checked ->
-                        viewModel.updateAmoledMode(checked)
-                    },
+                    onCheckedChange = { checked -> viewModel.updateAmoledMode(checked) },
                     icon = Icons.Default.Contrast,
                     iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.tertiary
@@ -101,7 +113,7 @@ fun AppearanceSettings(
             }
         }
 
-        // Dynamic Color Card
+        // Dynamic Color Card (Monet)
         val isDynamicSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         item {
             HighlightableCard(
@@ -181,14 +193,14 @@ fun AppearanceSettings(
         item {
             val isDynamicIslandEnabled by viewModel.isDynamicIslandEnabled
             val isDynamicIslandSpeakerOnly by viewModel.isDynamicIslandSpeakerOnly
-            val context = androidx.compose.ui.platform.LocalContext.current
 
             HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 4.dp),
                 cardBgColor = cardBgColor,
-                isHighlighted = isMatchTitle("Dynamic Island", highlightedTitle) || isMatchTitle("Dynamic Island Call Capsule", highlightedTitle),
+                isHighlighted = isMatchTitle("Dynamic Island", highlightedTitle) ||
+                        isMatchTitle("Dynamic Island Call Capsule", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -218,8 +230,8 @@ fun AppearanceSettings(
                             iconTint = MaterialTheme.colorScheme.secondary
                         )
 
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                            val canOverlay = android.provider.Settings.canDrawOverlays(context)
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            val canOverlay = Settings.canDrawOverlays(context)
                             if (!canOverlay) {
                                 HorizontalDivider(
                                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -229,14 +241,14 @@ fun AppearanceSettings(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(16.dp),
-                                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                                    verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = stringResource(R.string.settings_dynamic_island_floating_permission),
                                             style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                                            fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
                                             text = stringResource(R.string.settings_dynamic_island_floating_permission_sub),
@@ -247,18 +259,33 @@ fun AppearanceSettings(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     FilledTonalButton(
                                         onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            // FIXED: Triple-fallback intent pattern guarantees overlay settings open on all OEM builds
                                             try {
-                                                val intent = android.content.Intent(
-                                                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                                    android.net.Uri.parse("package:${context.packageName}")
-                                                )
+                                                val intent = Intent(
+                                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                                    Uri.parse("package:${context.packageName}")
+                                                ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
                                                 context.startActivity(intent)
-                                            } catch (e: Exception) {
-                                                e.printStackTrace()
+                                            } catch (_: Exception) {
+                                                try {
+                                                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
+                                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                    }
+                                                    context.startActivity(intent)
+                                                } catch (_: Exception) {
+                                                    try {
+                                                        val intent = Intent(
+                                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                                            Uri.parse("package:${context.packageName}")
+                                                        ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
+                                                        context.startActivity(intent)
+                                                    } catch (_: Exception) {}
+                                                }
                                             }
                                         }
                                     ) {
-                                        Text("Grant")
+                                        Text(stringResource(R.string.enable_contacts_perm))
                                     }
                                 }
                             }
