@@ -1,18 +1,6 @@
 /*
  * Copyright (C) 2026 MovStore
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.example.ui.components
@@ -22,6 +10,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -34,11 +23,11 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.GroupAdd
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
@@ -60,14 +49,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ContactCache
 import com.example.R
-import com.example.model.getAvatarShape
-import com.example.ui.theme.LocalAmoledMode
-import com.example.ui.theme.LocalM3Expressive
-import com.example.ui.theme.getCallGreenColor
-import com.example.ui.theme.getOnCallGreenColor
+import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 
@@ -81,7 +65,8 @@ fun DialpadOverlay(
     onSpeedDialCall: (String) -> Unit,
     speedDialMap: Map<Int, String>,
     voicemailNumber: String,
-    viewModel: DialerViewModel? = null
+    viewModel: DialerViewModel? = null,
+    onCallWithSim: ((String, String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
@@ -94,17 +79,11 @@ fun DialpadOverlay(
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
-    val actionButtonShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "rounded")
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(
-                RoundedCornerShape(
-                    topStart = if (isExpressive) 40.dp else 28.dp,
-                    topEnd = if (isExpressive) 40.dp else 28.dp
-                )
-            ),
+            .clip(AppShapes.BottomSheet),
         color = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
         border = if (isAmoled) BorderStroke(1.dp, Color(0xFF222222)) else null,
         tonalElevation = if (isAmoled) 0.dp else 8.dp
@@ -115,12 +94,11 @@ fun DialpadOverlay(
                 .padding(horizontal = 24.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Swipe down handle
             Box(
                 modifier = Modifier
                     .width(40.dp)
                     .height(4.dp)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(AppShapes.Chip)
                     .background(MaterialTheme.colorScheme.outlineVariant)
                     .clickable {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -130,7 +108,6 @@ fun DialpadOverlay(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // PERF FIX: Replaces 100,000 loop scan with O(1) in-memory cache lookup
             val isUnsavedNumber = remember(inputValue) {
                 if (inputValue.isBlank()) false
                 else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
@@ -151,7 +128,7 @@ fun DialpadOverlay(
                             }
                             viewModel?.openAddContactWithNumber(inputValue)
                         },
-                        shape = actionButtonShape,
+                        shape = AppShapes.Chip,
                         color = dialKeyColor,
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
@@ -166,18 +143,8 @@ fun DialpadOverlay(
                             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PersonAdd,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = stringResource(R.string.dialpad_create_contact),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1
-                            )
+                            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.dialpad_create_contact), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
                         }
                     }
 
@@ -189,7 +156,7 @@ fun DialpadOverlay(
                             viewModel?.addToExistingPendingNumber?.value = inputValue
                             viewModel?.isAddToExistingSheetVisible?.value = true
                         },
-                        shape = actionButtonShape,
+                        shape = AppShapes.Chip,
                         color = dialKeyColor,
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
@@ -204,18 +171,8 @@ fun DialpadOverlay(
                             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.GroupAdd,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.secondary
-                            )
-                            Text(
-                                text = stringResource(R.string.dialpad_add_to_existing),
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                maxLines = 1
-                            )
+                            Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                            Text(stringResource(R.string.dialpad_add_to_existing), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
                         }
                     }
                 }
@@ -236,9 +193,7 @@ fun DialpadOverlay(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
                     contentAlignment = Alignment.Center
                 ) {
                     @Suppress("DEPRECATION")
@@ -246,11 +201,8 @@ fun DialpadOverlay(
                         BasicTextField(
                             value = currentTfv,
                             onValueChange = { newTfv ->
-                                if (viewModel != null) {
-                                    viewModel.onDialpadTextFieldValueChange(newTfv)
-                                } else {
-                                    onValueChange(newTfv.text)
-                                }
+                                if (viewModel != null) viewModel.onDialpadTextFieldValueChange(newTfv)
+                                else onValueChange(newTfv.text)
                             },
                             textStyle = if (currentTfv.text.isEmpty()) {
                                 MaterialTheme.typography.titleMedium.copy(
@@ -269,24 +221,12 @@ fun DialpadOverlay(
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .onFocusChanged { focusState ->
-                                    if (focusState.isFocused) {
-                                        keyboardController?.hide()
-                                    }
-                                }
+                                .onFocusChanged { if (it.isFocused) keyboardController?.hide() }
                                 .testTag("dialpad_overlay_number_field"),
                             decorationBox = { innerTextField ->
-                                Box(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentAlignment = Alignment.Center
-                                ) {
+                                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     if (currentTfv.text.isEmpty()) {
-                                        Text(
-                                            text = stringResource(R.string.dialpad_enter_number),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                            textAlign = TextAlign.Center
-                                        )
+                                        Text(stringResource(R.string.dialpad_enter_number), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), textAlign = TextAlign.Center)
                                     }
                                     innerTextField()
                                 }
@@ -306,11 +246,8 @@ fun DialpadOverlay(
                                 DropdownMenuItem(
                                     text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
                                     onClick = {
-                                        if (viewModel != null) {
-                                            viewModel.insertDialpadDigit(filteredDigits)
-                                        } else {
-                                            onValueChange(filteredDigits)
-                                        }
+                                        if (viewModel != null) viewModel.insertDialpadDigit(filteredDigits)
+                                        else onValueChange(filteredDigits)
                                         expandedOverlayClipboardMenu = false
                                     }
                                 )
@@ -323,7 +260,6 @@ fun DialpadOverlay(
                                     try {
                                         val clip = ClipData.newPlainText("phone_number", inputValue)
                                         overlayClipboardManager?.setPrimaryClip(clip)
-                                        // FIXED: Suppress redundant Toast on Android 13+ which has native system clipboard preview
                                         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
                                             Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
                                         }
@@ -334,11 +270,7 @@ fun DialpadOverlay(
                             DropdownMenuItem(
                                 text = { Text(stringResource(R.string.dialpad_clear)) },
                                 onClick = {
-                                    if (viewModel != null) {
-                                        viewModel.clearDialpad()
-                                    } else {
-                                        onValueChange("")
-                                    }
+                                    if (viewModel != null) viewModel.clearDialpad() else onValueChange("")
                                     expandedOverlayClipboardMenu = false
                                 }
                             )
@@ -350,36 +282,20 @@ fun DialpadOverlay(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .clip(CircleShape)
+                            .clip(AppShapes.Chip)
                             .combinedClickable(
                                 onClick = {
-                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    }
-                                    if (viewModel != null) {
-                                        viewModel.backspaceDialpad()
-                                    } else {
-                                        onValueChange(inputValue.dropLast(1))
-                                    }
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    if (viewModel != null) viewModel.backspaceDialpad() else onValueChange(inputValue.dropLast(1))
                                 },
                                 onLongClick = {
-                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
-                                    }
-                                    if (viewModel != null) {
-                                        viewModel.clearDialpad()
-                                    } else {
-                                        onValueChange("")
-                                    }
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                    if (viewModel != null) viewModel.clearDialpad() else onValueChange("")
                                 }
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Backspace,
-                            contentDescription = stringResource(R.string.dialpad_clear),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = stringResource(R.string.dialpad_clear), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
@@ -416,38 +332,138 @@ fun DialpadOverlay(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Call Action Button
-            val callInteractionSource = remember { MutableInteractionSource() }
-            val isCallPressed by callInteractionSource.collectIsPressedAsState()
-            val callScale by animateFloatAsState(
-                targetValue = if (isCallPressed) 0.92f else 1.0f,
-                animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = Spring.DampingRatioMediumBouncy),
-                label = "overlay_call_button_scale"
-            )
+            val activeSims = remember(context) { com.example.util.MultiSimManager.getActiveSimAccounts(context) }
+            val preferredSim = viewModel?.preferredSim?.value ?: "Ask"
+            val isDualSim = (preferredSim == "Ask" || activeSims.size > 1) && (activeSims.size >= 2 || com.example.util.MultiSimManager.getPhysicalSimCount(context) >= 2)
 
-            Surface(
-                onClick = {
-                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                    }
-                    onCallClick(inputValue)
-                },
-                shape = actionButtonShape,
-                color = getCallGreenColor(),
-                contentColor = getOnCallGreenColor(),
-                interactionSource = callInteractionSource,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .scale(callScale)
-                    .testTag("dialpad_call_button")
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        imageVector = Icons.Default.Call,
-                        contentDescription = stringResource(R.string.call_status_ongoing),
-                        modifier = Modifier.size(28.dp)
+            val sim1 = activeSims.getOrNull(0)
+            val sim2 = activeSims.getOrNull(1)
+            val sim1Label = sim1?.displayName?.takeIf { it.isNotBlank() && !it.startsWith("SIM", ignoreCase = true) }
+                ?: sim1?.carrierName?.takeIf { it.isNotBlank() && !it.equals("Carrier", ignoreCase = true) && !it.equals("Mobile Network", ignoreCase = true) }
+                ?: "SIM 1"
+            val sim2Label = sim2?.displayName?.takeIf { it.isNotBlank() && !it.startsWith("SIM", ignoreCase = true) }
+                ?: sim2?.carrierName?.takeIf { it.isNotBlank() && !it.equals("Carrier", ignoreCase = true) && !it.equals("Mobile Network", ignoreCase = true) }
+                ?: "SIM 2"
+
+            if (isDualSim) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    val call1InteractionSource = remember { MutableInteractionSource() }
+                    val isCall1Pressed by call1InteractionSource.collectIsPressedAsState()
+                    val call1Scale by animateFloatAsState(
+                        targetValue = if (isCall1Pressed) 0.92f else 1.0f,
+                        animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "overlay_call_sim1_scale"
                     )
+
+                    Surface(
+                        onClick = {
+                            if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            }
+                            if (onCallWithSim != null) onCallWithSim(inputValue, "SIM 1") else onCallClick(inputValue)
+                        },
+                        shape = AppShapes.Keypad,
+                        color = getCallGreenColor(),
+                        contentColor = getOnCallGreenColor(),
+                        interactionSource = call1InteractionSource,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp)
+                            .scale(call1Scale)
+                            .testTag("dialpad_call_sim1_button")
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = sim1Label,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+
+                    val call2InteractionSource = remember { MutableInteractionSource() }
+                    val isCall2Pressed by call2InteractionSource.collectIsPressedAsState()
+                    val call2Scale by animateFloatAsState(
+                        targetValue = if (isCall2Pressed) 0.92f else 1.0f,
+                        animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = Spring.DampingRatioMediumBouncy),
+                        label = "overlay_call_sim2_scale"
+                    )
+
+                    Surface(
+                        onClick = {
+                            if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            }
+                            if (onCallWithSim != null) onCallWithSim(inputValue, "SIM 2") else onCallClick(inputValue)
+                        },
+                        shape = AppShapes.Keypad,
+                        color = getCallGreenColor().copy(alpha = 0.88f),
+                        contentColor = getOnCallGreenColor(),
+                        interactionSource = call2InteractionSource,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(64.dp)
+                            .scale(call2Scale)
+                            .testTag("dialpad_call_sim2_button")
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(Icons.Default.Call, contentDescription = null, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = sim2Label,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            } else {
+                val callInteractionSource = remember { MutableInteractionSource() }
+                val isCallPressed by callInteractionSource.collectIsPressedAsState()
+                val callScale by animateFloatAsState(
+                    targetValue = if (isCallPressed) 0.92f else 1.0f,
+                    animationSpec = spring(stiffness = Spring.StiffnessHigh, dampingRatio = Spring.DampingRatioMediumBouncy),
+                    label = "overlay_call_button_scale"
+                )
+
+                Surface(
+                    onClick = {
+                        if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        }
+                        onCallClick(inputValue)
+                    },
+                    shape = AppShapes.Keypad,
+                    color = getCallGreenColor(),
+                    contentColor = getOnCallGreenColor(),
+                    interactionSource = callInteractionSource,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .scale(callScale)
+                        .testTag("dialpad_call_button")
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(Icons.Default.Call, contentDescription = stringResource(R.string.call_status_ongoing), modifier = Modifier.size(28.dp))
+                    }
                 }
             }
 
@@ -471,7 +487,10 @@ fun DialButton(
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
-    val buttonShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "rounded")
+
+    // FIXED: Keypad buttons are permanently locked to AppShapes.Keypad (RoundedCornerShape 16dp)
+    val buttonShape = AppShapes.Keypad
+
     val buttonColor = if (isAmoled) {
         Color(0xFF141414)
     } else if (isExpressive) {
@@ -511,24 +530,15 @@ fun DialButton(
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
                     }
                     if (key.first == "1") {
-                        if (voicemailNumber.isNotBlank()) {
-                            onSpeedDialCall(voicemailNumber)
-                        } else {
-                            Toast.makeText(context, context.getString(R.string.voicemail_settings), Toast.LENGTH_SHORT).show()
-                        }
+                        if (voicemailNumber.isNotBlank()) onSpeedDialCall(voicemailNumber)
+                        else Toast.makeText(context, context.getString(R.string.voicemail_settings), Toast.LENGTH_SHORT).show()
                     } else if (key.first == "0") {
-                        if (viewModel != null) {
-                            viewModel.insertDialpadDigit("+")
-                        } else {
-                            onValueChange(inputValue + "+")
-                        }
+                        if (viewModel != null) viewModel.insertDialpadDigit("+")
+                        else onValueChange(inputValue + "+")
                     } else if (key.third != -1) {
                         val speedNum = speedDialMap[key.third]
-                        if (speedNum != null) {
-                            onSpeedDialCall(speedNum)
-                        } else {
-                            Toast.makeText(context, context.getString(R.string.speed_dial), Toast.LENGTH_SHORT).show()
-                        }
+                        if (speedNum != null) onSpeedDialCall(speedNum)
+                        else Toast.makeText(context, context.getString(R.string.speed_dial), Toast.LENGTH_SHORT).show()
                     }
                 }
             )

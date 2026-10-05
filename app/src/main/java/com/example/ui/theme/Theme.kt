@@ -1,18 +1,6 @@
 /*
  * Copyright (C) 2026 MovStore
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.example.ui.theme
@@ -28,6 +16,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+
+val UnifiedSquircleMaterialShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = AppShapes.Chip,
+    medium = AppShapes.Card,
+    large = AppShapes.Dialog,
+    extraLarge = RoundedCornerShape(28.dp)
+)
+
+val ExpressiveShapes = UnifiedSquircleMaterialShapes
+val StandardShapes = UnifiedSquircleMaterialShapes
 
 @Composable
 fun getMissedCallColor(): Color {
@@ -705,22 +704,6 @@ fun getColorSchemeForTheme(
 val LocalM3Expressive = staticCompositionLocalOf { true }
 val LocalAmoledMode = staticCompositionLocalOf { false }
 
-val ExpressiveShapes = Shapes(
-    extraSmall = RoundedCornerShape(12.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(24.dp),
-    large = RoundedCornerShape(32.dp),
-    extraLarge = RoundedCornerShape(40.dp)
-)
-
-val StandardShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(28.dp)
-)
-
 fun getExpressiveColorScheme(colorScheme: ColorScheme, darkTheme: Boolean): ColorScheme {
     return if (darkTheme) {
         colorScheme.copy(
@@ -770,7 +753,6 @@ fun MyApplicationTheme(
       colorScheme = colorScheme.copy(
           background = Color(0xFF000000),
           surface = Color(0xFF000000),
-          // FIXED: Elevated dark surface container preserves 100% OLED black battery savings while preventing cards from disappearing into background
           surfaceVariant = Color(0xFF141416),
           surfaceTint = Color.Transparent,
           outline = Color(0xFF2E2E2E),
@@ -788,11 +770,12 @@ fun MyApplicationTheme(
 
   CompositionLocalProvider(
       LocalM3Expressive provides isM3Expressive,
-      LocalAmoledMode provides effectiveAmoled
+      LocalAmoledMode provides effectiveAmoled,
+      LocalUnifiedShapes provides calculateUnifiedShapes(ShapeStyle.SQUIRCLE)
   ) {
       MaterialTheme(
           colorScheme = colorScheme,
-          shapes = if (isM3Expressive) ExpressiveShapes else StandardShapes,
+          shapes = UnifiedSquircleMaterialShapes,
           typography = if (isM3Expressive) ExpressiveTypography else Typography,
           content = content
       )

@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getMissedCallColor
@@ -134,7 +135,7 @@ fun CallLogSummaryDashboard(
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = cardColor),
-        shape = MaterialTheme.shapes.medium
+        shape = AppShapes.Card
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Row(
@@ -201,7 +202,7 @@ fun CallLogSummaryDashboard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
+                                .clip(AppShapes.Chip)
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
                                 .padding(2.dp),
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
@@ -212,7 +213,7 @@ fun CallLogSummaryDashboard(
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(10.dp))
+                                        .clip(AppShapes.Small)
                                         .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
                                         .clickable {
                                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -277,7 +278,7 @@ fun CallLogSummaryDashboard(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(MaterialTheme.shapes.small)
+                                .clip(AppShapes.Small)
                                 .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -357,7 +358,7 @@ fun SummaryBox(
 
     Column(
         modifier = modifier
-            .clip(MaterialTheme.shapes.small)
+            .clip(AppShapes.Small)
             .background(bgColor)
             .padding(vertical = 6.dp, horizontal = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

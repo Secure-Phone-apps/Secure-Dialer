@@ -20,7 +20,6 @@ package com.example.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
@@ -42,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
@@ -61,7 +61,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.15f)
         ),
-        shape = MaterialTheme.shapes.medium,
+        shape = AppShapes.Card,
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp)
@@ -81,7 +81,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
 
             Surface(
                 modifier = Modifier.size(32.dp),
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.Avatar,
                 color = color.copy(alpha = 0.15f)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -129,7 +129,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     if (physicalSimCount > 1) {
                         val isSim1 = record.simSlot <= 1
                         Surface(
-                            shape = RoundedCornerShape(4.dp),
+                            shape = AppShapes.Small,
                             color = if (isSim1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
                             border = if (!isSim1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)) else null
                         ) {
@@ -146,7 +146,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
 
                     if (record.isVerified) {
                         Surface(
-                            shape = RoundedCornerShape(4.dp),
+                            shape = AppShapes.Small,
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
                             border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
                         ) {
@@ -174,7 +174,7 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                         val isUnsavedWithoutCnap = record.name == record.number || record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3")
                         if (isUnsavedWithoutCnap) {
                             Surface(
-                                shape = RoundedCornerShape(4.dp),
+                                shape = AppShapes.Small,
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
                                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                             ) {

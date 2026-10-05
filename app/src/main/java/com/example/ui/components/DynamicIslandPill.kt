@@ -52,6 +52,7 @@ import com.example.CallManager
 import com.example.R
 import com.example.data.AppDatabase
 import com.example.model.CallRecording
+import com.example.ui.theme.AppShapes
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.RecordingFeedbackHelper
@@ -180,7 +181,7 @@ fun DynamicIslandPill(
                 if (!expanded) {
                     // Compact Dynamic Island Pill
                     Surface(
-                        shape = RoundedCornerShape(26.dp),
+                        shape = AppShapes.Card,
                         color = Color(0xFF0F0F12),
                         contentColor = Color.White,
                         border = BorderStroke(1.dp, Color(0x33FFFFFF)),
@@ -189,7 +190,7 @@ fun DynamicIslandPill(
                             .wrapContentWidth()
                             .widthIn(min = 200.dp, max = 340.dp)
                             .height(48.dp)
-                            .clip(RoundedCornerShape(26.dp))
+                            .clip(AppShapes.Card)
                             .clickable {
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
                                 isExpanded = true
@@ -212,7 +213,7 @@ fun DynamicIslandPill(
                                                 isMuted -> Color(0xFFFF5252).copy(alpha = 0.25f)
                                                 else -> Color(0xFF00E676).copy(alpha = 0.25f)
                                             },
-                                            CircleShape
+                                            AppShapes.Chip
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -264,7 +265,7 @@ fun DynamicIslandPill(
                 } else {
                     // Expanded Dynamic Island Card
                     Surface(
-                        shape = RoundedCornerShape(24.dp),
+                        shape = AppShapes.Dialog,
                         color = Color(0xFF141418),
                         contentColor = Color.White,
                         border = BorderStroke(1.dp, Color(0x44FFFFFF)),
@@ -272,7 +273,7 @@ fun DynamicIslandPill(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 4.dp)
-                            .clip(RoundedCornerShape(24.dp))
+                            .clip(AppShapes.Dialog)
                     ) {
                         Column(
                             modifier = Modifier
@@ -297,7 +298,7 @@ fun DynamicIslandPill(
                                                     isSpeakerOn -> Color(0xFF00E5FF).copy(alpha = 0.2f)
                                                     else -> Color(0xFF00E676).copy(alpha = 0.2f)
                                                 },
-                                                CircleShape
+                                                AppShapes.Avatar
                                             ),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -476,12 +477,12 @@ fun DynamicIslandPill(
 
                                 // 4. End Call Button
                                 Surface(
-                                    shape = CircleShape,
+                                    shape = AppShapes.Keypad,
                                     color = Color(0xFFFF1744),
                                     contentColor = Color.White,
                                     modifier = Modifier
                                         .size(48.dp)
-                                        .clip(CircleShape)
+                                        .clip(AppShapes.Keypad)
                                         .clickable {
                                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                             onHangUp()
@@ -537,9 +538,9 @@ private fun EqualizerBars(isSpeakerOn: Boolean) {
         modifier = Modifier.height(18.dp)
     ) {
         val barColor = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
-        Box(modifier = Modifier.width(2.5.dp).height(bar1Height.dp).background(barColor, RoundedCornerShape(1.dp)))
-        Box(modifier = Modifier.width(2.5.dp).height(bar2Height.dp).background(barColor, RoundedCornerShape(1.dp)))
-        Box(modifier = Modifier.width(2.5.dp).height(bar3Height.dp).background(barColor, RoundedCornerShape(1.dp)))
+        Box(modifier = Modifier.width(2.5.dp).height(bar1Height.dp).background(barColor, AppShapes.Small))
+        Box(modifier = Modifier.width(2.5.dp).height(bar2Height.dp).background(barColor, AppShapes.Small))
+        Box(modifier = Modifier.width(2.5.dp).height(bar3Height.dp).background(barColor, AppShapes.Small))
     }
 }
 
@@ -556,12 +557,12 @@ private fun DynamicIslandActionButton(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Surface(
-            shape = CircleShape,
+            shape = AppShapes.Keypad,
             color = if (isActive) activeColor else Color(0xFF26262D),
             contentColor = if (isActive) Color.Black else Color.White,
             modifier = Modifier
                 .size(44.dp)
-                .clip(CircleShape)
+                .clip(AppShapes.Keypad)
                 .clickable { onClick() }
         ) {
             Box(

@@ -17,38 +17,41 @@
 
 package com.example.model
 
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.unit.dp
 import androidx.room.*
 import java.util.Locale
 
-// FIXED: Honour user selection across Circular, Squircle, Rounded, and Square
-fun getAvatarShape(shapeType: String): Shape {
+// UNIFIED SQUIRCLE ARCHITECTURE: Strictly enforce Squircle (percent = 32)
+fun getAvatarShape(shapeType: String = "squircle"): Shape {
     return when (shapeType.lowercase(Locale.ROOT)) {
-        "circular", "circle" -> CircleShape
-        "squircle" -> RoundedCornerShape(24.dp)
-        "square" -> RoundedCornerShape(4.dp)
-        else -> RoundedCornerShape(16.dp)
+        "square" -> RoundedCornerShape(percent = 12)
+        "rounded" -> RoundedCornerShape(percent = 24)
+        else -> RoundedCornerShape(percent = 32) // Strict Squircle percent = 32
     }
 }
 
-// FIXED: Handles Unicode surrogate pairs, emojis, and multi-script initials without  corruption
+private val initialsCache = object : android.util.LruCache<String, String>(2048) {}
+
+// FIXED: Handles Unicode surrogate pairs, emojis, and multi-script initials with thread-safe LRU caching
 fun getInitials(name: String): String {
     val trimmed = name.trim()
     if (trimmed.isEmpty()) return "?"
+    val cached = initialsCache.get(trimmed)
+    if (cached != null) return cached
 
     val parts = trimmed.split(Regex("\\s+")).filter { it.isNotBlank() }
-    return if (parts.size >= 2) {
+    val result = if (parts.size >= 2) {
         val firstGlyph = getFirstGrapheme(parts[0])
         val secondGlyph = getFirstGrapheme(parts[1])
         (firstGlyph + secondGlyph).uppercase(Locale.ROOT)
     } else {
         getFirstTwoGraphemes(trimmed).uppercase(Locale.ROOT)
     }
+    initialsCache.put(trimmed, result)
+    return result
 }
 
 private fun getFirstGrapheme(text: String): String {
@@ -103,23 +106,27 @@ enum class CallType {
     MISSED, OUTGOING, INCOMING
 }
 
+@Immutable
 data class ContactAccount(
     val name: String,
     val type: String,
     val displayName: String
 )
 
+@Immutable
 data class LabeledNumber(
     val number: String,
     val label: String = "Mobile",
     val isPrimary: Boolean = false
 )
 
+@Immutable
 data class LabeledEmail(
     val email: String,
     val label: String = "Home"
 )
 
+@Immutable
 data class LabeledAddress(
     val address: String,
     val label: String = "Home"
@@ -180,6 +187,7 @@ data class Contact(
     fun getAllAddresses(): List<LabeledAddress> = addresses
 }
 
+@Immutable
 @Entity(tableName = "call_notes")
 data class CallNote(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -188,12 +196,14 @@ data class CallNote(
     val lastUpdated: Long = System.currentTimeMillis()
 )
 
+@Immutable
 @Entity(tableName = "spam_numbers")
 data class SpamNumber(
     @PrimaryKey val number: String,
     val label: String = "Spam"
 )
 
+@Immutable
 @Entity(tableName = "call_reminders")
 data class CallReminder(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -206,6 +216,7 @@ data class CallReminder(
     @Ignore val contactName: String = name
 }
 
+@Immutable
 @Entity(tableName = "call_recordings")
 data class CallRecording(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
@@ -217,11 +228,13 @@ data class CallRecording(
     val note: String = ""
 )
 
+@Immutable
 @Entity(tableName = "blocked_numbers")
 data class BlockedNumber(
     @PrimaryKey val number: String
 )
 
+@Immutable
 @Entity(tableName = "speed_dial")
 data class SpeedDial(
     @PrimaryKey val key: Int,
@@ -229,12 +242,14 @@ data class SpeedDial(
     val name: String
 )
 
+@Immutable
 @Entity(tableName = "quick_responses")
 data class QuickResponse(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val message: String
 )
 
+@Immutable
 @Entity(tableName = "app_settings")
 data class AppSetting(
     @PrimaryKey val key: String,

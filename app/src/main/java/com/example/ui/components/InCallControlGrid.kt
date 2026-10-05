@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
-import com.example.model.getAvatarShape
+import com.example.ui.theme.AppShapes
 
 @Composable
 fun InCallControlGrid(
@@ -49,20 +49,21 @@ fun InCallControlGrid(
     callNotesEnabled: Boolean = true,
     isNoteDialogOpen: Boolean,
     onOpenNoteDialog: () -> Unit,
-    avatarShapeType: String = "circular"
+    avatarShapeType: String = "squircle"
 ) {
-    val btnShape = getAvatarShape(avatarShapeType)
+    val btnShape = AppShapes.Keypad
+    val buttonHeight = 68.dp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Row 1: Keypad, Mute, Speaker
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             InCallButton(
@@ -71,7 +72,7 @@ fun InCallControlGrid(
                 isActive = isInCallDialpadOpen,
                 onClick = onToggleDialpad,
                 shape = btnShape,
-                modifier = Modifier.weight(1f).height(64.dp)
+                modifier = Modifier.weight(1f).height(buttonHeight)
             )
             InCallButton(
                 icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
@@ -79,7 +80,7 @@ fun InCallControlGrid(
                 isActive = isMuted,
                 onClick = onToggleMute,
                 shape = btnShape,
-                modifier = Modifier.weight(1f).height(64.dp)
+                modifier = Modifier.weight(1f).height(buttonHeight)
             )
             InCallButton(
                 icon = Icons.AutoMirrored.Filled.VolumeUp,
@@ -87,14 +88,14 @@ fun InCallControlGrid(
                 isActive = isSpeakerOn,
                 onClick = onToggleSpeaker,
                 shape = btnShape,
-                modifier = Modifier.weight(1f).height(64.dp)
+                modifier = Modifier.weight(1f).height(buttonHeight)
             )
         }
 
         // Row 2: Hold, Bluetooth, Add Call
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             InCallButton(
@@ -103,7 +104,7 @@ fun InCallControlGrid(
                 isActive = isOnHold,
                 onClick = onToggleHold,
                 shape = btnShape,
-                modifier = Modifier.weight(1f).height(64.dp)
+                modifier = Modifier.weight(1f).height(buttonHeight)
             )
             InCallButton(
                 icon = Icons.Default.Bluetooth,
@@ -111,7 +112,7 @@ fun InCallControlGrid(
                 isActive = isBluetoothOn,
                 onClick = onToggleBluetooth,
                 shape = btnShape,
-                modifier = Modifier.weight(1f).height(64.dp)
+                modifier = Modifier.weight(1f).height(buttonHeight)
             )
             InCallButton(
                 icon = Icons.Default.GroupAdd,
@@ -119,28 +120,29 @@ fun InCallControlGrid(
                 isActive = isAddCallDialogOpen,
                 onClick = onOpenAddCallDialog,
                 shape = btnShape,
-                modifier = Modifier.weight(1f).height(64.dp)
+                modifier = Modifier.weight(1f).height(buttonHeight)
             )
         }
 
-        // Row 3: Record & Note (Clean, balanced layout with zero dummy Box nodes)
+        // Row 3: Recording & Note (Clean, balanced 3-slot row with no stretched buttons)
         if (recordingEnabled || callNotesEnabled) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (recordingEnabled) {
                     InCallButton(
-                        // FIXED: Use distinct FiberManualRecord/Stop icon to eliminate confusion with Mute button
                         icon = if (isRecording) Icons.Default.Stop else Icons.Default.FiberManualRecord,
                         label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
                         isActive = isRecording,
                         onClick = onToggleRecording,
                         shape = btnShape,
                         isPulsingRecording = isRecording,
-                        modifier = Modifier.weight(1f).height(64.dp)
+                        modifier = Modifier.weight(1f).height(buttonHeight)
                     )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
 
                 if (callNotesEnabled) {
@@ -150,14 +152,13 @@ fun InCallControlGrid(
                         isActive = isNoteDialogOpen,
                         onClick = onOpenNoteDialog,
                         shape = btnShape,
-                        modifier = Modifier.weight(1f).height(64.dp)
+                        modifier = Modifier.weight(1f).height(buttonHeight)
                     )
-                }
-
-                // Balance row to 3 items if both are enabled
-                if (recordingEnabled && callNotesEnabled) {
+                } else {
                     Spacer(modifier = Modifier.weight(1f))
                 }
+
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

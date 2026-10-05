@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.CallManager
 import com.example.R
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.getCallGreenColor
 import com.example.ui.theme.getDeclineRedColor
 import com.example.util.RichHapticEngine
@@ -105,7 +106,7 @@ fun MinimizedCallBanner(
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = AppShapes.Card
     ) {
         Row(
             modifier = Modifier
@@ -209,7 +210,7 @@ private fun BannerPulseIndicator(callState: Int) {
             modifier = Modifier
                 .size(24.dp)
                 .graphicsLayer(scaleX = scale, scaleY = scale, alpha = alpha)
-                .background(color = indicatorColor, shape = CircleShape)
+                .background(color = indicatorColor, shape = AppShapes.Chip)
         )
         Icon(
             imageVector = Icons.Default.Call,

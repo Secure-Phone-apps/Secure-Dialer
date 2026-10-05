@@ -206,12 +206,25 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         if (query.isBlank()) {
             emptyList()
         } else {
+            val cleanQuery = query.trim()
+            val cleanQueryDigits = cleanQuery.filter { it.isDigit() || it == '+' }
+            val normalizedQuery = java.text.Normalizer.normalize(cleanQuery, java.text.Normalizer.Form.NFD)
+                .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+                .lowercase(java.util.Locale.ROOT)
+
             val matchedContacts = contacts.asSequence().filter { contact ->
-                contact.number.isNotBlank() && (
-                    contact.name.contains(query, ignoreCase = true) ||
-                    contact.number.contains(query, ignoreCase = true) ||
-                    contact.t9Mapping.contains(query, ignoreCase = true)
-                )
+                if (contact.number.isBlank()) return@filter false
+
+                val normalizedName = java.text.Normalizer.normalize(contact.name, java.text.Normalizer.Form.NFD)
+                    .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+                    .lowercase(java.util.Locale.ROOT)
+                val cleanContactNumber = contact.number.filter { it.isDigit() || it == '+' }
+                val t9 = if (contact.t9Mapping.isNotBlank()) contact.t9Mapping else com.example.util.T9HighlightHelper.nameToT9(contact.name)
+
+                normalizedName.contains(normalizedQuery) ||
+                (cleanQueryDigits.isNotEmpty() && cleanContactNumber.contains(cleanQueryDigits)) ||
+                contact.number.contains(cleanQuery, ignoreCase = true) ||
+                t9.contains(cleanQuery, ignoreCase = true)
             }.distinctBy { it.number }
             .map { contact ->
                 DialpadMatch(
@@ -232,9 +245,18 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             } else {
                 val contactNumbers = matchedContacts.map { it.number }.toSet()
                 val matchedRecents = recents.asSequence().filter { record ->
-                    record.number.isNotBlank() &&
-                    record.number !in contactNumbers &&
-                    (record.name.contains(query, ignoreCase = true) || record.number.contains(query, ignoreCase = true))
+                    if (record.number.isBlank() || record.number in contactNumbers) return@filter false
+
+                    val normalizedName = java.text.Normalizer.normalize(record.name, java.text.Normalizer.Form.NFD)
+                        .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
+                        .lowercase(java.util.Locale.ROOT)
+                    val cleanRecNumber = record.number.filter { it.isDigit() || it == '+' }
+                    val t9 = com.example.util.T9HighlightHelper.nameToT9(record.name)
+
+                    normalizedName.contains(normalizedQuery) ||
+                    (cleanQueryDigits.isNotEmpty() && cleanRecNumber.contains(cleanQueryDigits)) ||
+                    record.number.contains(cleanQuery, ignoreCase = true) ||
+                    t9.contains(cleanQuery, ignoreCase = true)
                 }.distinctBy { it.number }
                 .map { record ->
                     DialpadMatch(
@@ -264,7 +286,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isAmoledMode = mutableStateOf(prefs.getBoolean("is_amoled_mode", false))
     var customColorHex = mutableStateOf(prefs.getString("custom_color_hex", "#68A500") ?: "#68A500")
     var isM3Expressive = mutableStateOf(prefs.getBoolean("is_m3_expressive", true))
-    var avatarShapeType = mutableStateOf(prefs.getString("avatar_shape_type", "circular") ?: "circular")
+    var avatarShapeType = mutableStateOf(prefs.getString("avatar_shape_type", "squircle") ?: "squircle")
     var themeColor = mutableStateOf(prefs.getString("theme_color", "expressive_lime") ?: "expressive_lime")
     var useDynamicColor = mutableStateOf(prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S))
     var defaultTab = mutableIntStateOf(prefs.getInt("default_tab", 0).coerceIn(0, 2))
@@ -319,7 +341,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var flipToSilenceEnabled = mutableStateOf(prefs.getBoolean("flip_to_silence_enabled", false))
     var isHideCallerIdEnabled = mutableStateOf(prefs.getBoolean("is_hide_caller_id_enabled", false))
     var clirPrefix = mutableStateOf(prefs.getString("clir_prefix", "#31#") ?: "#31#")
-    var preferredSim = mutableStateOf("SIM 1")
+
+    // DUAL SIM FIX: Default to "Ask" on first launch so user is never locked out of SIM 2
+    var preferredSim = mutableStateOf(prefs.getString("preferred_sim", "Ask") ?: "Ask")
     var voicemailNumber = mutableStateOf("+1 (555) 011-9988")
 
     val blockedNumbers = mutableStateListOf<String>()
@@ -363,12 +387,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            preferredSim.value = repository.getPreferredSim()
+            val savedSim = repository.getPreferredSim()
+            preferredSim.value = if (savedSim.isNotBlank()) savedSim else "Ask"
             voicemailNumber.value = repository.getVoicemailNumber()
 
             try {
                 val settings = repository.dao.getAllSettingsList().associate { it.key to it.value }
-                // PERF FIX: Batch 25 individual disk commits into a single non-blocking apply transaction
                 val editor = prefs.edit()
 
                 settings["dialpad_tones_enabled"]?.toBooleanStrictOrNull()?.let {
@@ -494,6 +518,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updatePreferredSim(sim: String) {
         preferredSim.value = sim
+        prefs.edit().putString("preferred_sim", sim).apply()
         viewModelScope.launch { repository.savePreferredSim(sim) }
     }
 
@@ -1024,7 +1049,6 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun syncData(force: Boolean = true) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Serialized sync execution to eliminate SQLite database lock contention
                 repository.syncContacts(force)
                 repository.syncCallLogs()
             } catch (_: Exception) {}

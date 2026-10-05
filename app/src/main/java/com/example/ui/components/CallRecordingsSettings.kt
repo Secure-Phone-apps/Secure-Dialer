@@ -55,6 +55,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.model.CallRecording
+import com.example.ui.theme.AppShapes
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.CallAudioRecorder
 import com.example.util.RecordingCompressionProfile
@@ -152,7 +153,7 @@ fun CallRecordingsSettings(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Surface(
-                        shape = CircleShape,
+                        shape = AppShapes.Avatar,
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.size(44.dp)
                     ) {
@@ -270,7 +271,7 @@ fun CallRecordingsSettings(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            shape = CircleShape,
+                            shape = AppShapes.Keypad,
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
                             modifier = Modifier.size(40.dp)
                         ) {
@@ -301,7 +302,7 @@ fun CallRecordingsSettings(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.Card,
                     color = cardBgColor,
                     border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                     modifier = Modifier
@@ -324,7 +325,7 @@ fun CallRecordingsSettings(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Surface(
-                            shape = CircleShape,
+                            shape = AppShapes.Keypad,
                             color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
                             modifier = Modifier.size(40.dp)
                         ) {
@@ -693,7 +694,7 @@ fun CallRecordingsSettings(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Surface(
-                        shape = CircleShape,
+                        shape = AppShapes.Chip,
                         color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
                         modifier = Modifier.size(36.dp)
                     ) {
@@ -791,7 +792,7 @@ fun CallRecordingsSettings(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Surface(
-                        shape = CircleShape,
+                        shape = AppShapes.Avatar,
                         color = MaterialTheme.colorScheme.primaryContainer,
                         modifier = Modifier.size(56.dp)
                     ) {
@@ -831,7 +832,7 @@ fun CallRecordingsSettings(
                                 isVaultUnlocked = true
                             }
                         },
-                        shape = RoundedCornerShape(10.dp)
+                        shape = AppShapes.Keypad
                     ) {
                         Icon(
                             imageVector = Icons.Default.Fingerprint,
@@ -849,7 +850,7 @@ fun CallRecordingsSettings(
                 CallAudioRecorder.getRecordedFiles(context).size
             }
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = AppShapes.Card,
                 color = cardBgColor,
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)),
                 modifier = Modifier
@@ -867,7 +868,7 @@ fun CallRecordingsSettings(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Surface(
-                            shape = CircleShape,
+                            shape = AppShapes.Chip,
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
                             modifier = Modifier.size(36.dp)
                         ) {

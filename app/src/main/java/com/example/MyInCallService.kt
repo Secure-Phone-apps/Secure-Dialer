@@ -12,6 +12,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.PowerManager
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.DisconnectCause
@@ -39,6 +40,29 @@ class MyInCallService : InCallService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val nm by lazy { getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
+    private var wakeLock: PowerManager.WakeLock? = null
+
+    @Synchronized
+    private fun acquireWakeLock() {
+        try {
+            if (wakeLock == null) {
+                val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SecureDialer:InCallWakeLock")?.apply {
+                    setReferenceCounted(false)
+                }
+            }
+            wakeLock?.acquire(15_000L)
+        } catch (_: Exception) {}
+    }
+
+    @Synchronized
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+            }
+        } catch (_: Exception) {}
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -46,6 +70,7 @@ class MyInCallService : InCallService() {
     }
 
     override fun onDestroy() {
+        releaseWakeLock()
         DynamicIslandOverlayManager.stopCallMonitoring()
         FlashLightManager.stopFlashing(this)
         serviceScope.cancel()
@@ -76,6 +101,7 @@ class MyInCallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
+        acquireWakeLock()
         CallManager.inCallService = this
         CallManager.addCall(call)
         DynamicIslandOverlayManager.startCallMonitoring(this)
@@ -123,9 +149,17 @@ class MyInCallService : InCallService() {
         CallManager.removeCall(call)
         FlashLightManager.stopFlashing(this)
         if (CallManager.calls.value.isEmpty()) {
+            releaseWakeLock()
             DynamicIslandOverlayManager.stopCallMonitoring()
             nm.cancel(NOTIFICATION_ID_INCOMING)
             nm.cancel(NOTIFICATION_ID_ACTIVE)
+
+            if (CallAudioRecorder.isRecording.value) {
+                try {
+                    CallAudioRecorder.stopRecording()
+                    CallAudioHelper.restoreAudioState(this, this)
+                } catch (_: Exception) {}
+            }
         }
     }
 

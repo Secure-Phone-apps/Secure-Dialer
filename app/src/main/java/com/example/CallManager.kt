@@ -1,18 +1,6 @@
 /*
  * Copyright (C) 2026 MovStore
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.example
@@ -39,6 +27,7 @@ import com.example.model.CallRecording
 import com.example.ui.components.getCurrentLocale
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
+import com.example.util.MultiSimManager
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.SimCallTracker
 import kotlinx.coroutines.CoroutineScope
@@ -96,11 +85,7 @@ object CallManager {
     var inCallService: InCallService? = null
         set(value) {
             field = value
-            if (value != null) {
-                appContext = value.applicationContext
-            } else {
-                _audioState.value = null
-            }
+            if (value != null) appContext = value.applicationContext else _audioState.value = null
         }
 
     private val callCallback = object : Call.Callback() {
@@ -117,8 +102,8 @@ object CallManager {
                 _callState.value = state
                 if (state == Call.STATE_ACTIVE) {
                     if (_activeStartTimestamp.value == 0L) {
-                        val connectTime = call.details?.connectTimeMillis ?: 0L
-                        _activeStartTimestamp.value = if (connectTime > 0L) connectTime else System.currentTimeMillis()
+                        val connect = call.details?.connectTimeMillis ?: 0L
+                        _activeStartTimestamp.value = if (connect > 0L) connect else System.currentTimeMillis()
                     }
                     autoStartRecordingIfNeeded()
                 }
@@ -178,9 +163,7 @@ object CallManager {
             return
         }
 
-        val target = activeCalls.find {
-            it.children.isNotEmpty() || it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true
-        }
+        val target = activeCalls.find { it.children.isNotEmpty() || it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true }
             ?: activeCalls.find { it.state == Call.STATE_ACTIVE }
             ?: activeCalls.find { it.state in listOf(Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_RINGING) }
             ?: activeCalls.find { it.state == Call.STATE_HOLDING }
@@ -205,9 +188,7 @@ object CallManager {
             }
 
             if (call.state == Call.STATE_HOLDING) {
-                try {
-                    call.unhold()
-                } catch (_: Exception) {}
+                try { call.unhold() } catch (_: Exception) {}
             }
 
             val number = call.details?.handle?.schemeSpecificPart ?: ""
@@ -237,9 +218,7 @@ object CallManager {
             _callerName.value = ""
             _callerCnapName.value = ""
             _activeStartTimestamp.value = 0L
-            if (_calls.value.isEmpty()) {
-                inCallService = null
-            }
+            if (_calls.value.isEmpty()) inCallService = null
         }
     }
 
@@ -247,9 +226,7 @@ object CallManager {
         val ctx = appContext ?: inCallService?.applicationContext ?: return
         scope.launch {
             try {
-                AppDatabase.getDatabase(ctx)
-                    .dialerDao()
-                    .insertSetting(AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
+                AppDatabase.getDatabase(ctx).dialerDao().insertSetting(AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
             } catch (_: Exception) {}
         }
     }
@@ -258,9 +235,7 @@ object CallManager {
         val ctx = appContext ?: inCallService?.applicationContext ?: return
         scope.launch {
             val dbCnap = getSavedCnapName(ctx, number)
-            if (!dbCnap.isNullOrBlank()) {
-                _callerCnapName.value = dbCnap
-            }
+            if (!dbCnap.isNullOrBlank()) _callerCnapName.value = dbCnap
         }
     }
 
@@ -272,11 +247,8 @@ object CallManager {
             val chime = prefs.getBoolean("recording_chime_enabled", false)
             val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
             RecordingFeedbackHelper.triggerRecordingStartFeedback(ctx, chime)
-            if (autoTune) {
-                CallAudioHelper.prepareSpeakerForRecording(ctx, inCallService, _audioState.value)
-            }
-            val num = _callerNumber.value.ifEmpty { "Unknown" }
-            CallAudioRecorder.startRecording(ctx, num)
+            if (autoTune) CallAudioHelper.prepareSpeakerForRecording(ctx, inCallService, _audioState.value)
+            CallAudioRecorder.startRecording(ctx, _callerNumber.value.ifEmpty { "Unknown" })
         }
     }
 
@@ -290,12 +262,7 @@ object CallManager {
 
         val durationSec = result.durationSeconds.coerceAtLeast(1L)
         val number = _callerNumber.value.ifEmpty {
-            file.nameWithoutExtension
-                .removePrefix("REC_")
-                .split("_")
-                .firstOrNull()
-                ?.filter { it.isDigit() }
-                ?.ifEmpty { "Unknown" } ?: "Unknown"
+            file.nameWithoutExtension.removePrefix("REC_").split("_").firstOrNull()?.filter { it.isDigit() }?.ifEmpty { "Unknown" } ?: "Unknown"
         }
         val name = _callerName.value.ifEmpty { number }
         val locale = getCurrentLocale(ctx)
@@ -316,9 +283,7 @@ object CallManager {
                     db.dialerDao().insertCallRecording(recording)
                 }
                 val autoExport = db.dialerDao().getSetting("is_auto_export_recordings_enabled")?.toBooleanStrictOrNull() ?: true
-                if (autoExport) {
-                    CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
-                }
+                if (autoExport) CallAudioRecorder.exportRecordingToPublicDownloads(ctx, file)
             } catch (_: Exception) {}
         }
     }
@@ -329,98 +294,59 @@ object CallManager {
         val held = all.find { it.state == Call.STATE_HOLDING }
 
         if (active != null && held != null) {
-            try {
-                active.conference(held)
-            } catch (_: Exception) {
-                try {
-                    held.conference(active)
-                } catch (_: Exception) {}
-            }
+            try { active.conference(held) } catch (_: Exception) { held.conference(active) }
         } else {
             val current = _currentCall.value
             val other = all.firstOrNull { it != current }
             if (current != null && other != null) {
-                try {
-                    current.conference(other)
-                } catch (_: Exception) {}
+                try { current.conference(other) } catch (_: Exception) {}
             }
         }
     }
 
-    fun updateWaitingCall(call: Call?) {
-        _waitingCall.value = call
-    }
-
-    fun updateAudioState(state: CallAudioState?) {
-        _audioState.value = state
-    }
+    fun updateWaitingCall(call: Call?) { _waitingCall.value = call }
+    fun updateAudioState(state: CallAudioState?) { _audioState.value = state }
 
     fun answer() {
-        try {
-            _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY)
-        } catch (_: Exception) {}
+        try { _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY) } catch (_: Exception) {}
     }
 
     fun disconnect() {
         try {
             val call = _currentCall.value ?: return
-            if (call.state == Call.STATE_RINGING) {
-                call.reject(false, null)
-            } else {
-                call.disconnect()
-            }
-            if (_calls.value.none { it != call && it.state != Call.STATE_DISCONNECTED }) {
-                updateCall(null)
-            }
+            if (call.state == Call.STATE_RINGING) call.reject(false, null) else call.disconnect()
+            if (_calls.value.none { it != call && it.state != Call.STATE_DISCONNECTED }) updateCall(null)
         } catch (_: Exception) {}
     }
 
-    fun setMuted(muted: Boolean) {
-        inCallService?.setMuted(muted)
-    }
-
+    fun setMuted(muted: Boolean) { inCallService?.setMuted(muted) }
     fun setSpeaker(speaker: Boolean) {
         inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else CallAudioState.ROUTE_EARPIECE)
     }
-
     fun setBluetooth(bluetooth: Boolean) {
         inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_EARPIECE)
     }
-
     fun setHold(hold: Boolean) {
-        if (hold) {
-            _currentCall.value?.hold()
-        } else {
-            _currentCall.value?.unhold()
-        }
+        if (hold) _currentCall.value?.hold() else _currentCall.value?.unhold()
     }
 
     fun silenceRinger(context: Context) {
-        try {
-            val tm = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
-            tm?.silenceRinger()
-        } catch (_: Exception) {}
+        (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.silenceRinger()
     }
 
     fun playDtmf(key: Char) {
         val call = _currentCall.value ?: return
         dtmfJob?.cancel()
-        try {
-            call.playDtmfTone(key)
-        } catch (_: Exception) {}
+        try { call.playDtmfTone(key) } catch (_: Exception) {}
         dtmfJob = scope.launch(Dispatchers.Default) {
             delay(150)
-            try {
-                call.stopDtmfTone()
-            } catch (_: Exception) {}
+            try { call.stopDtmfTone() } catch (_: Exception) {}
         }
     }
 
     fun stopDtmf() {
         dtmfJob?.cancel()
-        try {
-            _currentCall.value?.stopDtmfTone()
-        } catch (_: Exception) {}
+        try { _currentCall.value?.stopDtmfTone() } catch (_: Exception) {}
     }
 
     fun formatOutgoingNumberWithClir(number: String, isHideCallerId: Boolean, clirPrefix: String): String {
@@ -429,9 +355,18 @@ object CallManager {
         return if (number.startsWith(clir)) number else "$clir$number"
     }
 
-    private fun isEmergencyNumber(number: String): Boolean {
+    fun isEmergencyNumber(number: String): Boolean {
+        val trimmed = number.trim()
+        if (trimmed.isBlank()) return false
+        val digits = trimmed.filter { it.isDigit() }
+        val standardEmergency = setOf("911", "112", "999", "000", "108", "110", "119", "995", "100", "101", "102")
+        if (digits in standardEmergency) return true
+        if (digits.length > 3 && (digits.startsWith("1") || digits.startsWith("0"))) {
+            val withoutPrefix = digits.substring(1)
+            if (withoutPrefix in standardEmergency) return true
+        }
         return try {
-            PhoneNumberUtils.isEmergencyNumber(number.trim())
+            PhoneNumberUtils.isEmergencyNumber(trimmed)
         } catch (_: Exception) {
             false
         }
@@ -440,24 +375,16 @@ object CallManager {
     @SuppressLint("MissingPermission")
     fun placeCall(context: Context, number: String, preferredSim: String = "Ask") {
         appContext = context.applicationContext
-        try {
-            val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
-            val activity = context as? Activity
-            val windowToken = activity?.currentFocus?.windowToken ?: activity?.window?.decorView?.windowToken
-            if (imm != null && windowToken != null) {
-                imm.hideSoftInputFromWindow(windowToken, 0)
-            }
-        } catch (_: Exception) {}
+        (context.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager)?.let { imm ->
+            (context as? Activity)?.currentFocus?.windowToken?.let { imm.hideSoftInputFromWindow(it, 0) }
+        }
 
         val isEmergency = isEmergencyNumber(number)
         val targetSlot = if (preferredSim.contains("2")) 2 else 1
         _currentSimSlot.value = targetSlot
         SimCallTracker.recordOutgoingCall(context, number, targetSlot)
 
-        val tm = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager ?: return
-        try {
-            _currentCall.value?.takeIf { it.state == Call.STATE_ACTIVE }?.hold()
-        } catch (_: Exception) {}
+        _currentCall.value?.takeIf { it.state == Call.STATE_ACTIVE }?.hold()
 
         val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
         val hideId = prefs.getBoolean("is_hide_caller_id_enabled", false)
@@ -467,36 +394,63 @@ object CallManager {
         val uri = Uri.fromParts("tel", dialedNumber, null)
         val extras = Bundle()
 
-        // Critical safety rule: Emergency numbers must never be constrained to a single SIM
         if (!isEmergency && preferredSim != "Ask") {
-            findPhoneAccountForSlot(context, tm, targetSlot)?.let {
-                extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, it)
+            val matchedAccount = findPhoneAccountForSlot(context, targetSlot, preferredSim)
+            if (matchedAccount?.accountHandle != null) {
+                // Official AOSP Telecom binding
+                extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, matchedAccount.accountHandle)
+
+                // Inject OEM-specific Multi-SIM extras so Samsung, Xiaomi, and MediaTek modems don't drop back to SIM 1
+                extras.putInt("android.telephony.extra.SUBSCRIPTION_INDEX", matchedAccount.subscriptionId)
+                extras.putInt("subscription", matchedAccount.subscriptionId)
+                extras.putInt("phone_subscription", matchedAccount.subscriptionId)
+                extras.putInt("slot", matchedAccount.slotIndex)
+                extras.putInt("simSlot", matchedAccount.slotIndex)
+                extras.putInt("com.android.phone.extra.slot", matchedAccount.slotIndex)
             }
         }
 
-        try {
-            tm.placeCall(uri, extras)
-        } catch (_: Exception) {}
+        val tm = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
+        var placedSuccessfully = false
+        if (tm != null) {
+            try {
+                tm.placeCall(uri, extras)
+                placedSuccessfully = true
+            } catch (_: Exception) {
+                placedSuccessfully = false
+            }
+        }
+
+        if (!placedSuccessfully) {
+            try {
+                val callIntent = Intent(Intent.ACTION_CALL, uri).apply {
+                    if (extras.size() > 0) putExtras(extras)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                context.startActivity(callIntent)
+            } catch (_: Exception) {
+                try {
+                    val dialIntent = Intent(Intent.ACTION_DIAL, uri).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    }
+                    context.startActivity(dialIntent)
+                } catch (_: Exception) {}
+            }
+        }
     }
 
     @SuppressLint("MissingPermission")
-    private fun findPhoneAccountForSlot(context: Context, tm: TelecomManager, slotIndex: Int): PhoneAccountHandle? {
-        return try {
-            val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-            val subInfoList = sm?.activeSubscriptionInfoList
-            val subInfo = subInfoList?.find { it.simSlotIndex == (slotIndex - 1) }
+    private fun findPhoneAccountForSlot(context: Context, slotIndex: Int, preferredSimLabel: String): com.example.util.SimAccountInfo? {
+        val simAccounts = MultiSimManager.getActiveSimAccounts(context)
+        if (simAccounts.isEmpty()) return null
 
-            if (subInfo != null) {
-                tm.callCapablePhoneAccounts.find { handle ->
-                    handle.id.contains(subInfo.subscriptionId.toString()) || 
-                    (subInfo.iccId != null && handle.id.contains(subInfo.iccId))
-                } ?: tm.callCapablePhoneAccounts.getOrNull(slotIndex - 1)
-            } else {
-                tm.callCapablePhoneAccounts.getOrNull(slotIndex - 1)
-            }
-        } catch (_: Exception) {
-            tm.callCapablePhoneAccounts.getOrNull(slotIndex - 1)
+        val matchByLabel = simAccounts.find {
+            it.displayName.equals(preferredSimLabel, ignoreCase = true) ||
+            it.carrierName.equals(preferredSimLabel, ignoreCase = true)
         }
+        if (matchByLabel != null) return matchByLabel
+
+        return simAccounts.find { it.slotIndex == (slotIndex - 1) } ?: simAccounts.firstOrNull()
     }
 
     fun rejectCallWithMessage(context: Context, number: String, textMessage: String) {
@@ -509,10 +463,7 @@ object CallManager {
             } catch (_: Exception) {}
         }
 
-        try {
-            call?.disconnect()
-        } catch (_: Exception) {}
-
+        call?.disconnect()
         try {
             val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:$number")).apply {
                 putExtra("sms_body", textMessage)

@@ -236,7 +236,7 @@ fun MainScreen(
     var pendingCallNumber by remember { mutableStateOf("") }
     var pendingCallName by remember { mutableStateOf("") }
 
-    fun initiateCall(name: String, number: String, label: String = "Mobile") {
+    fun initiateCall(name: String, number: String, label: String = "Mobile", simChoice: String? = null) {
         focusManager.clearFocus()
         keyboardController?.hide()
         if (blockedNumbers.contains(number)) {
@@ -256,7 +256,9 @@ fun MainScreen(
             }
         }
 
-        if (preferredSim == "Ask") {
+        val targetSim = simChoice ?: preferredSim
+        val isEmergency = CallManager.isEmergencyNumber(number)
+        if (targetSim == "Ask" && !isEmergency) {
             pendingCallName = resolvedName
             pendingCallNumber = number
             showSimSelectDialog = true
@@ -273,7 +275,7 @@ fun MainScreen(
             callingContactName = resolvedName
             callingContactNumber = number
             isCallActive = true
-            CallManager.placeCall(context, number, preferredSim)
+            CallManager.placeCall(context, number, if (isEmergency) "Ask" else targetSim)
 
             if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
                 coroutineScope.launch {
@@ -466,6 +468,12 @@ fun MainScreen(
                                     onCallClick = {
                                         if (it.isNotEmpty()) {
                                             initiateCall("Unknown", it)
+                                            viewModel.onDialpadInputChange("")
+                                        }
+                                    },
+                                    onCallWithSim = { num, sim ->
+                                        if (num.isNotEmpty()) {
+                                            initiateCall("Unknown", num, simChoice = sim)
                                             viewModel.onDialpadInputChange("")
                                         }
                                     },
@@ -756,6 +764,13 @@ fun MainScreen(
                     onCallClick = { num ->
                         if (num.isNotEmpty()) {
                             initiateCall("Unknown", num)
+                            viewModel.onDialpadInputChange("")
+                            isDialpadVisible = false
+                        }
+                    },
+                    onCallWithSim = { num, sim ->
+                        if (num.isNotEmpty()) {
+                            initiateCall("Unknown", num, simChoice = sim)
                             viewModel.onDialpadInputChange("")
                             isDialpadVisible = false
                         }

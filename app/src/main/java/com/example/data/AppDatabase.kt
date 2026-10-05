@@ -21,6 +21,9 @@ import android.content.Context
 import androidx.room.*
 import androidx.sqlite.db.SupportSQLiteOpenHelper
 import com.example.model.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import net.sqlcipher.database.SQLiteDatabase
 import net.sqlcipher.database.SupportFactory
 import org.json.JSONArray
@@ -169,12 +172,23 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        fun warmUpAsync(context: Context) {
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                try {
+                    val db = getDatabase(context)
+                    // Trigger database opening and WAL pragma execution in background
+                    db.dialerDao().getContactsCount()
+                } catch (_: Throwable) {}
+            }
+        }
+
         private fun buildDatabase(appContext: Context): AppDatabase {
             return try {
                 SQLiteDatabase.loadLibs(appContext)
                 val dbKey = DatabaseKeyManager.getDatabaseKey(appContext)
-                val factory = SupportFactory(dbKey)
-                ensureDatabaseIntegrity(appContext, factory, dbKey)
+                ensureDatabaseIntegrity(appContext, dbKey)
+                // Disable automatic password clearing so Room connection pool and concurrent readers can reopen connections
+                val factory = SupportFactory(dbKey, null, false)
 
                 Room.databaseBuilder(
                     appContext,
@@ -194,21 +208,21 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        private fun ensureDatabaseIntegrity(appContext: Context, factory: SupportFactory, dbKey: ByteArray) {
+        private fun ensureDatabaseIntegrity(appContext: Context, dbKey: ByteArray) {
             val dbFile = appContext.getDatabasePath(DATABASE_NAME)
             if (!dbFile.exists() || dbFile.length() == 0L) {
                 return
             }
 
-            // 1. Verify if database opens cleanly with the current key via SupportFactory
-            if (canOpenDatabase(appContext, factory)) {
+            // 1. Verify if database opens cleanly with the current key via native SQLCipher open
+            if (canOpenDatabase(dbFile, dbKey)) {
                 return
             }
 
             // 2. If it cannot be opened with the key, check if it's an unencrypted plaintext SQLite database
             if (isPlaintextDatabase(dbFile)) {
                 val migrated = migratePlaintextDatabase(dbFile, dbKey)
-                if (migrated && canOpenDatabase(appContext, factory)) {
+                if (migrated && canOpenDatabase(dbFile, dbKey)) {
                     return
                 }
             }
@@ -218,29 +232,26 @@ abstract class AppDatabase : RoomDatabase() {
             deleteDatabaseFiles(dbFile)
         }
 
-        private fun canOpenDatabase(appContext: Context, factory: SupportFactory): Boolean {
-            var helper: SupportSQLiteOpenHelper? = null
-            var db: androidx.sqlite.db.SupportSQLiteDatabase? = null
+        private fun canOpenDatabase(dbFile: File, dbKey: ByteArray): Boolean {
+            if (!dbFile.exists() || dbFile.length() == 0L) return true
+            var testDb: SQLiteDatabase? = null
             var cursor: android.database.Cursor? = null
             return try {
-                helper = factory.create(
-                    SupportSQLiteOpenHelper.Configuration.builder(appContext)
-                        .name(DATABASE_NAME)
-                        .callback(object : SupportSQLiteOpenHelper.Callback(1) {
-                            override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {}
-                            override fun onUpgrade(db: androidx.sqlite.db.SupportSQLiteDatabase, oldVersion: Int, newVersion: Int) {}
-                        })
-                        .build()
+                testDb = SQLiteDatabase.openDatabase(
+                    dbFile.absolutePath,
+                    dbKey,
+                    null,
+                    SQLiteDatabase.OPEN_READWRITE,
+                    null,
+                    null
                 )
-                db = helper.writableDatabase
-                cursor = db.query("SELECT count(*) FROM sqlite_master;")
+                cursor = testDb?.rawQuery("SELECT count(*) FROM sqlite_master;", null)
                 cursor != null && cursor.moveToFirst()
-            } catch (_: Exception) {
+            } catch (_: Throwable) {
                 false
             } finally {
-                try { cursor?.close() } catch (_: Exception) {}
-                try { db?.close() } catch (_: Exception) {}
-                try { helper?.close() } catch (_: Exception) {}
+                try { cursor?.close() } catch (_: Throwable) {}
+                try { testDb?.close() } catch (_: Throwable) {}
             }
         }
 
@@ -289,11 +300,14 @@ abstract class AppDatabase : RoomDatabase() {
 
         private fun deleteDatabaseFiles(dbFile: File) {
             try {
+                android.database.sqlite.SQLiteDatabase.deleteDatabase(dbFile)
+            } catch (_: Throwable) {}
+            try {
                 dbFile.delete()
                 File("${dbFile.absolutePath}-wal").delete()
                 File("${dbFile.absolutePath}-shm").delete()
                 File("${dbFile.absolutePath}-journal").delete()
-            } catch (_: Exception) {}
+            } catch (_: Throwable) {}
         }
     }
 }

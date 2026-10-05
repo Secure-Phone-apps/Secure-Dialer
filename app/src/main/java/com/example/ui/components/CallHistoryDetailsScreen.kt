@@ -50,6 +50,7 @@ import com.example.R
 import com.example.model.CallRecord
 import com.example.model.Contact
 import com.example.model.getAvatarShape
+import com.example.ui.theme.AppShapes
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 import kotlinx.coroutines.Dispatchers
@@ -237,7 +238,7 @@ fun CallHistoryDetailsScreen(
                     if (primaryRecord.label.isNotEmpty()) {
                         Surface(
                             color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f),
-                            shape = RoundedCornerShape(100.dp),
+                            shape = AppShapes.Chip,
                             modifier = Modifier.padding(top = 6.dp)
                         ) {
                             Text(
@@ -350,7 +351,7 @@ fun CallHistoryDetailsScreen(
                     val noteSdf = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
 
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = AppShapes.Card,
                         color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.25f),
                         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f)),
                         modifier = Modifier
@@ -392,7 +393,7 @@ fun CallHistoryDetailsScreen(
                                         )
                                         if (numberNotes.size > 1) {
                                             Surface(
-                                                shape = RoundedCornerShape(8.dp),
+                                                shape = AppShapes.Small,
                                                 color = MaterialTheme.colorScheme.tertiaryContainer
                                             ) {
                                                 Text(
@@ -484,7 +485,7 @@ fun CallHistoryDetailsScreen(
                                     items(numberNotes, key = { it.id }) { itemNote ->
                                         Card(
                                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                                            shape = RoundedCornerShape(12.dp)
+                                            shape = AppShapes.Card
                                         ) {
                                             Column(modifier = Modifier.padding(12.dp)) {
                                                 Row(
@@ -537,7 +538,7 @@ fun CallHistoryDetailsScreen(
                 item {
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = AppShapes.Card,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 4.dp)
@@ -554,7 +555,7 @@ fun CallHistoryDetailsScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Surface(
-                                shape = RoundedCornerShape(12.dp),
+                                shape = AppShapes.Keypad,
                                 color = MaterialTheme.colorScheme.primaryContainer,
                                 modifier = Modifier.size(40.dp)
                             ) {
@@ -640,7 +641,7 @@ fun CallHistoryDetailsScreen(
                         containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.15f),
                         contentColor = MaterialTheme.colorScheme.onErrorContainer
                     ),
-                    shape = MaterialTheme.shapes.medium,
+                    shape = AppShapes.Card,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 24.dp)

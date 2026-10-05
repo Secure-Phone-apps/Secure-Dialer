@@ -11,13 +11,11 @@ import android.telecom.Connection
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +31,60 @@ import com.example.CallManager
 import com.example.ContactCache
 import com.example.R
 import com.example.model.Contact
+import com.example.ui.theme.AppShapes
+import kotlinx.coroutines.delay
+
+@Composable
+fun CallDurationText(
+    activeStartTimestamp: Long,
+    callState: Int,
+    fallbackFormattedTime: String = "",
+    isFake: Boolean = false,
+    fakeState: String = "RINGING",
+    fakeActiveStartTimestamp: Long = 0L
+) {
+    if (callState != Call.STATE_ACTIVE && callState != Call.STATE_HOLDING) return
+
+    var tick by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(callState, isFake, fakeState) {
+        val isActive = if (isFake) fakeState == "ACTIVE" else callState == Call.STATE_ACTIVE
+        if (isActive) {
+            while (true) {
+                delay(1000)
+                tick++
+            }
+        }
+    }
+
+    val durationSeconds = remember(tick, activeStartTimestamp, callState, isFake, fakeState, fakeActiveStartTimestamp) {
+        if (isFake) {
+            if (fakeState == "ACTIVE" && fakeActiveStartTimestamp > 0L) {
+                ((System.currentTimeMillis() - fakeActiveStartTimestamp) / 1000).coerceAtLeast(0L).toInt()
+            } else 0
+        } else {
+            if (callState == Call.STATE_ACTIVE) {
+                val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
+                ((System.currentTimeMillis() - start) / 1000).coerceAtLeast(0L).toInt()
+            } else 0
+        }
+    }
+
+    val formatted = if (fallbackFormattedTime.isNotBlank() && durationSeconds == 0) {
+        fallbackFormattedTime
+    } else {
+        val mins = durationSeconds / 60
+        val secs = durationSeconds % 60
+        "%02d:%02d".format(mins, secs)
+    }
+
+    Text(
+        text = formatted,
+        style = MaterialTheme.typography.headlineMedium,
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.SemiBold
+    )
+}
 
 @Composable
 fun InCallHeader(
@@ -42,12 +94,16 @@ fun InCallHeader(
     preferredSim: String,
     contactName: String,
     contactNumber: String,
-    formattedTime: String,
+    formattedTime: String = "",
     heldCall: Call?,
     contacts: List<Contact>,
     onMerge: (() -> Unit)? = null,
     isConference: Boolean = false,
-    isRecording: Boolean = false
+    isRecording: Boolean = false,
+    activeStartTimestamp: Long = 0L,
+    isFake: Boolean = false,
+    fakeState: String = "RINGING",
+    fakeActiveStartTimestamp: Long = 0L
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -169,14 +225,14 @@ fun InCallHeader(
                 RecordingBadge()
             }
 
-            if (callState == Call.STATE_ACTIVE || callState == Call.STATE_HOLDING) {
-                Text(
-                    text = formattedTime,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+            CallDurationText(
+                activeStartTimestamp = activeStartTimestamp,
+                callState = callState,
+                fallbackFormattedTime = formattedTime,
+                isFake = isFake,
+                fakeState = fakeState,
+                fakeActiveStartTimestamp = fakeActiveStartTimestamp
+            )
         }
 
         if (heldCall != null) {
@@ -284,7 +340,7 @@ private fun RecordingBadge() {
     )
 
     Surface(
-        shape = RoundedCornerShape(12.dp),
+        shape = AppShapes.Chip,
         color = Color(0xFFB71C1C).copy(alpha = 0.15f),
         modifier = Modifier.padding(end = 8.dp)
     ) {
@@ -297,13 +353,13 @@ private fun RecordingBadge() {
                     modifier = Modifier
                         .size(10.dp)
                         .scale(pulseScale)
-                        .clip(CircleShape)
+                        .clip(AppShapes.Small)
                         .background(Color(0xFFE53935).copy(alpha = pulseAlpha))
                 )
                 Box(
                     modifier = Modifier
                         .size(6.dp)
-                        .clip(CircleShape)
+                        .clip(AppShapes.Small)
                         .background(Color(0xFFE53935))
                 )
             }

@@ -21,7 +21,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -44,6 +43,7 @@ import com.example.R
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.model.getInitials
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
@@ -86,7 +86,7 @@ fun AddToExistingContactSheet(
                 color = if (isAmoled) Color(0xFF444444) else MaterialTheme.colorScheme.outlineVariant
             )
         },
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+        shape = AppShapes.BottomSheet
     ) {
         Column(
             modifier = Modifier
@@ -155,7 +155,7 @@ fun AddToExistingContactSheet(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(16.dp),
+                shape = AppShapes.Card,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = if (isAmoled) Color(0xFF141414) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                     unfocusedContainerColor = if (isAmoled) Color(0xFF141414) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f),
@@ -192,7 +192,7 @@ fun AddToExistingContactSheet(
                         items = filteredContacts,
                         key = { "${it.id}_${it.number}" }
                     ) { contact ->
-                        val avatarShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "circular")
+                        val avatarShape = AppShapes.Avatar
                         Surface(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -200,7 +200,7 @@ fun AddToExistingContactSheet(
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                                     onContactSelected(contact)
                                 },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = AppShapes.Card,
                             color = Color.Transparent
                         ) {
                             ListItem(

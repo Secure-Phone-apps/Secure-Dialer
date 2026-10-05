@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.ui.theme.AppShapes
 import com.example.util.MultiSimManager
 import com.example.util.RichHapticEngine
 
@@ -59,11 +60,7 @@ fun SettingsPreferredSimRow(
         },
         supportingContent = {
             Text(
-                text = if (physicalSimCount <= 1) {
-                    stringResource(R.string.sim_1)
-                } else {
-                    stringResource(R.string.settings_preferred_sim_sub)
-                },
+                text = stringResource(R.string.settings_preferred_sim_sub),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
@@ -74,7 +71,7 @@ fun SettingsPreferredSimRow(
             Box(
                 modifier = Modifier
                     .size(38.dp)
-                    .clip(MaterialTheme.shapes.small)
+                    .clip(AppShapes.Chip)
                     .background(MaterialTheme.colorScheme.tertiaryContainer),
                 contentAlignment = Alignment.Center
             ) {
@@ -95,14 +92,11 @@ fun SettingsPreferredSimRow(
                 val sim1Label = stringResource(R.string.sim_1)
                 val sim2Label = stringResource(R.string.sim_2)
 
-                val options = if (physicalSimCount > 1) {
-                    listOf("SIM 1" to sim1Label, "SIM 2" to sim2Label, "Ask" to askLabel)
-                } else {
-                    listOf("SIM 1" to sim1Label)
-                }
+                // DUAL SIM FIX: Always display all 3 chips without truncating based on transient hardware checks
+                val options = listOf("SIM 1" to sim1Label, "SIM 2" to sim2Label, "Ask" to askLabel)
 
                 options.forEach { (opKey, labelText) ->
-                    val isSelected = preferredSim == opKey || (physicalSimCount <= 1 && opKey == "SIM 1")
+                    val isSelected = preferredSim == opKey
                     FilterChip(
                         selected = isSelected,
                         onClick = {
@@ -116,7 +110,7 @@ fun SettingsPreferredSimRow(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
                         },
-                        shape = RoundedCornerShape(16.dp),
+                        shape = AppShapes.Chip,
                         border = null,
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),

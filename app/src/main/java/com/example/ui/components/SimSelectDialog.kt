@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
+import com.example.ui.theme.AppShapes
 import com.example.util.MultiSimManager
 import com.example.util.RichHapticEngine
+import com.example.util.SimAccountInfo
 
 @Composable
 fun SimSelectDialog(
@@ -50,15 +52,30 @@ fun SimSelectDialog(
 ) {
     val realSimList = remember(context) { MultiSimManager.getActiveSimAccounts(context) }
 
-    // If only 1 SIM exists, auto-select it immediately without forcing user to pick
-    LaunchedEffect(realSimList) {
-        if (realSimList.size == 1) {
-            val sim = realSimList.first()
-            onSimSelected("SIM ${sim.slotIndex + 1}")
+    // DUAL SIM FIX: Always provide slots for SIM 1 and SIM 2 so the user is never locked out
+    val displaySimList = remember(realSimList) {
+        if (realSimList.size >= 2) {
+            realSimList.take(2)
+        } else {
+            val sim1 = realSimList.getOrNull(0) ?: SimAccountInfo(
+                slotIndex = 0,
+                subscriptionId = 1,
+                displayName = "SIM 1",
+                carrierName = "SIM 1",
+                number = "",
+                accountHandle = null
+            )
+            val sim2 = realSimList.getOrNull(1) ?: SimAccountInfo(
+                slotIndex = 1,
+                subscriptionId = 2,
+                displayName = "SIM 2",
+                carrierName = "SIM 2",
+                number = "",
+                accountHandle = null
+            )
+            listOf(sim1, sim2)
         }
     }
-
-    if (realSimList.size <= 1) return
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -76,7 +93,7 @@ fun SimSelectDialog(
                     .fillMaxWidth()
                     .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
                     .padding(16.dp),
-                shape = RoundedCornerShape(24.dp),
+                shape = AppShapes.Dialog,
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 8.dp
             ) {
@@ -91,7 +108,7 @@ fun SimSelectDialog(
                             .size(36.dp, 4.dp)
                             .background(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                                shape = RoundedCornerShape(2.dp)
+                                shape = AppShapes.Small
                             )
                     )
 
@@ -119,14 +136,13 @@ fun SimSelectDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        realSimList.take(2).forEachIndexed { index, sim ->
-                            // FIXED: Use actual hardware slot index (sim.slotIndex + 1)
+                        displaySimList.forEachIndexed { index, sim ->
                             val simLabel = "SIM ${sim.slotIndex + 1}"
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(100.dp)
-                                    .clip(RoundedCornerShape(16.dp))
+                                    .clip(AppShapes.Keypad)
                                     .clickable {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                         onSimSelected(simLabel)
@@ -141,7 +157,7 @@ fun SimSelectDialog(
                                 } else {
                                     MaterialTheme.colorScheme.onSecondaryContainer
                                 },
-                                shape = RoundedCornerShape(16.dp),
+                                shape = AppShapes.Keypad,
                                 tonalElevation = 2.dp
                             ) {
                                 Column(
@@ -188,7 +204,7 @@ fun SimSelectDialog(
                             onDismiss()
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = AppShapes.Keypad
                     ) {
                         Text(
                             text = stringResource(R.string.btn_cancel),

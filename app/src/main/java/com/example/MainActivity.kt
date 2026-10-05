@@ -35,7 +35,6 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
@@ -49,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.ui.MainScreen
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
 
@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.padding(32.dp)
                             ) {
                                 Surface(
-                                    shape = CircleShape,
+                                    shape = AppShapes.Avatar,
                                     color = MaterialTheme.colorScheme.primaryContainer,
                                     tonalElevation = 4.dp,
                                     modifier = Modifier.size(96.dp)

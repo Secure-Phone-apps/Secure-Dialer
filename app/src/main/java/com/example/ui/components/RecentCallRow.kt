@@ -81,6 +81,9 @@ fun RecentCallRow(
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
 
+    // SQUIRCLE ARCHITECTURE: Strictly enforce AppShapes.Avatar (percent = 32)
+    val avatarShape = AppShapes.Avatar
+
     val searchBarColor = if (isAmoled) {
         Color(0xFF0C0C0C)
     } else if (isExpressive) {
@@ -119,7 +122,7 @@ fun RecentCallRow(
                 },
             colors = CardDefaults.cardColors(containerColor = containerColor),
             border = if (isAmoled) BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
-            shape = MaterialTheme.shapes.medium
+            shape = AppShapes.Card
         ) {
             Column {
                 ListItem(
@@ -171,7 +174,7 @@ fun RecentCallRow(
                                 if (physicalSimCount > 1) {
                                     val isSim1 = record.simSlot <= 1
                                     Surface(
-                                        shape = RoundedCornerShape(4.dp),
+                                        shape = AppShapes.Chip,
                                         color = if (isSim1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
                                         border = if (!isSim1) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.6f)) else null
                                     ) {
@@ -188,7 +191,7 @@ fun RecentCallRow(
 
                                 if (record.isVerified) {
                                     Surface(
-                                        shape = RoundedCornerShape(4.dp),
+                                        shape = AppShapes.Chip,
                                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
                                         border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
                                     ) {
@@ -216,7 +219,7 @@ fun RecentCallRow(
 
                                 if (matchingRecordings.isNotEmpty()) {
                                     Surface(
-                                        shape = RoundedCornerShape(4.dp),
+                                        shape = AppShapes.Chip,
                                         color = MaterialTheme.colorScheme.tertiaryContainer,
                                         modifier = Modifier.clickable {
                                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -263,13 +266,12 @@ fun RecentCallRow(
                     },
                     supportingContent = null,
                     leadingContent = {
-                        val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
                         Surface(
                             modifier = Modifier
                                 .offset(x = (-8).dp)
-                                .size(40.dp),
+                                .size(42.dp),
                             shape = avatarShape,
-                            color = record.avatarBg.copy(alpha = 0.8f)
+                            color = record.avatarBg.copy(alpha = 0.85f)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 if (record.photoUri.isNotEmpty()) {
@@ -277,7 +279,7 @@ fun RecentCallRow(
                                         model = ImageRequest.Builder(LocalContext.current)
                                             .data(record.photoUri)
                                             .size(128, 128)
-                                            .crossfade(true)
+                                            .crossfade(false)
                                             .build(),
                                         contentDescription = record.name,
                                         modifier = Modifier.fillMaxSize(),
@@ -523,7 +525,7 @@ fun RecentActionItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .clip(MaterialTheme.shapes.small)
+            .clip(AppShapes.Small)
             .clickable(onClick = onClick)
             .padding(8.dp)
             .width(64.dp)
@@ -598,7 +600,6 @@ fun DirectRecordingPlayerDialog(
             mediaPlayer = mp
             isPlaying = true
         } catch (_: Exception) {
-            // FIXED: Clean release on failure to avoid leaking C++ AudioTrack client
             stopPlayer()
             Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
         }
@@ -674,7 +675,7 @@ fun DirectRecordingPlayerDialog(
 
                 Card(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = AppShapes.Card,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
@@ -708,7 +709,7 @@ fun DirectRecordingPlayerDialog(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(6.dp)
-                                        .clip(RoundedCornerShape(3.dp))
+                                        .clip(AppShapes.Chip)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Row(

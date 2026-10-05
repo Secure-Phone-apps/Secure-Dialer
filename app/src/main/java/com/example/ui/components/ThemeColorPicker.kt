@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.parseHexColor
 import com.example.util.RichHapticEngine
 
@@ -197,7 +198,7 @@ fun ThemeColorPicker(
                                     Box(
                                         modifier = Modifier
                                             .size(22.dp)
-                                            .clip(CircleShape)
+                                            .clip(AppShapes.Chip)
                                             .background(MaterialTheme.colorScheme.primary),
                                         contentAlignment = Alignment.Center
                                     ) {

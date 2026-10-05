@@ -380,10 +380,6 @@
     <string name="privacy_section_3_desc">We do not share your data with any third parties.</string>
 
     <string name="filter_all_contacts">جميع جهات الاتصال</string>
-    <string name="filter_dialed">الصادرة</string>
-    <string name="filter_received">الواردة</string>
-    <string name="delete_all_call_history">حذف كافة سجلات المكالمات</string>
-    <string name="delete_call_log_entry">حذف إدخال سجل المكالمات</string>
     <string name="toast_merged_all_duplicates">تم دمج جميع التكرارات بنجاح</string>
     <string name="toast_merged_duplicates_for">تم دمج التكرارات لـ %1$s</string>
     <string name="toast_deleted_recording">تم حذف التسجيل</string>
@@ -416,13 +412,8 @@
     <string name="backup_restored_success_toast">تمت استعادة النسخة الاحتياطية بنجاح!</string>
     <string name="backup_restore_failed_toast">فشلت استعادة النسخة الاحتياطية. تحقق من كلمة المرور أو البيانات.</string>
     <string name="backup_copied_toast">تم نسخ سلسلة النسخة الاحتياطية إلى الحافظة!</string>
-    <string name="number_copied">تم نسخ الرقم</string>
     <string name="app_version_name">الإصدار 1.5.0</string>
 
-    <string name="send_sms">إرسال رسالة قصيرة</string>
-    <string name="block">حظر</string>
-    <string name="history">السجل</string>
-    <string name="add">إضافة</string>
     <string name="delete">حذف</string>
     <string name="call_details">تفاصيل المكالمة</string>
     <string name="delete_all_history">حذف السجل بالكامل</string>
@@ -430,7 +421,6 @@
     <string name="block_number">حظر الرقم</string>
     <string name="history_timeline">مخطط السجل الزمني</string>
     <string name="calls_count">%1$d مكالمات</string>
-    <string name="clear_history_with_number">مسح السجل الخاص بهذا الرقم</string>
     <string name="select_sim_card">تحديد بطاقة SIM</string>
     <string name="choose_sim_card">اختر بطاقة SIM لإجراء هذه المكالمة إلى %1$s:</string>
     <string name="no_answer">بلا إجابة</string>
@@ -448,9 +438,7 @@
     <string name="summary_range_month_tab">شهر</string>
     <string name="summary_range_year_tab">سنة</string>
     <string name="summary_range_all_tab">الكل</string>
-    <string name="recent_label_format">الأخيرة • %1$s</string>
 
-    <string name="settings_dynamic_color_sub_fallback">نظام ألوان خلفية الشاشة (يتطلب Android 12+)</string>
     <string name="settings_spam_protection">الحماية من الإزعاج دون اتصال</string>
     <string name="settings_spam_protection_sub">استيراد قوائم الحظر وإدارة الأرقام المحظورة محلياً</string>
     <string name="settings_flash_alerts">تنبيهات الفلاش عند الاتصال</string>
@@ -499,7 +487,6 @@
     <string name="unit_day">يوم</string>
     
     <!-- Added missing system keys for Arabic build compilation -->
-    <string name="btn_hangup">إنهاء</string>
     <string name="btn_unlock_dialer">إلغاء قفل لوحة الاتصال</string>
     <string name="no_active_reminders_title">لا توجد تذكيرات نشطة</string>
     <string name="no_active_reminders_desc">اضبط منبهات التذكير مباشرة من تفاصيل المكالمة</string>

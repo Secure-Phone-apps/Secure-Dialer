@@ -50,6 +50,7 @@ import com.example.R
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.model.getInitials
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
@@ -133,7 +134,7 @@ fun ContactRow(
                             )
                             if (allNumbers.size > 1) {
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = AppShapes.Chip,
                                     color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f)
                                 ) {
                                     Text(
@@ -158,12 +159,11 @@ fun ContactRow(
                 },
                 supportingContent = null,
                 leadingContent = {
-                    val avatarShape = getAvatarShape(viewModel.avatarShapeType.value)
                     Surface(
                         modifier = Modifier
                             .offset(x = (-8).dp)
                             .size(42.dp),
-                        shape = avatarShape,
+                        shape = AppShapes.Avatar,
                         color = contact.avatarBg
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -172,7 +172,7 @@ fun ContactRow(
                                     model = ImageRequest.Builder(LocalContext.current)
                                         .data(contact.photoUri)
                                         .size(128, 128)
-                                        .crossfade(true)
+                                        .crossfade(false)
                                         .build(),
                                     contentDescription = contact.name,
                                     modifier = Modifier.fillMaxSize(),
@@ -233,7 +233,7 @@ fun ContactRow(
                     // Phone numbers section
                     allNumbers.forEach { labeledNum ->
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = AppShapes.Chip,
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -323,7 +323,7 @@ fun ContactRow(
                     // Emails section
                     allEmails.forEach { emailItem ->
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = AppShapes.Chip,
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -376,7 +376,7 @@ fun ContactRow(
                     // Physical Addresses section
                     allAddresses.forEach { addrItem ->
                         Surface(
-                            shape = RoundedCornerShape(10.dp),
+                            shape = AppShapes.Chip,
                             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -437,7 +437,7 @@ fun ContactRow(
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 onEditContact(contact)
                             },
-                            shape = RoundedCornerShape(10.dp)
+                            shape = AppShapes.Chip
                         ) {
                             Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
@@ -449,7 +449,7 @@ fun ContactRow(
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                 onDeleteContact(contact)
                             },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = AppShapes.Chip,
                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                         ) {
                             Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))

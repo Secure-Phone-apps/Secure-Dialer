@@ -1,18 +1,6 @@
 /*
  * Copyright (C) 2026 MovStore
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
 package com.example.ui.components
@@ -34,7 +22,6 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
@@ -58,8 +45,9 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.ContactCache
@@ -96,7 +84,8 @@ fun DialpadTabContent(
     speedDialMap: Map<Int, String>,
     dialpadMatches: List<DialpadMatch>,
     onCollapseClick: () -> Unit,
-    viewModel: DialerViewModel? = null
+    viewModel: DialerViewModel? = null,
+    onCallWithSim: ((String, String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
@@ -110,6 +99,9 @@ fun DialpadTabContent(
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
 
+    val keyShape = AppShapes.Keypad
+    val chipShape = AppShapes.Chip
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -117,13 +109,13 @@ fun DialpadTabContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        // T9 Results Preview
+        // T9 Search Match Results (Anchored to Bottom to eliminate empty void)
         if (inputValue.isNotEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
+                    .padding(horizontal = 4.dp, vertical = 2.dp)
             ) {
                 if (dialpadMatches.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -136,7 +128,7 @@ fun DialpadTabContent(
                 } else {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
                     ) {
                         itemsIndexed(
                             items = dialpadMatches,
@@ -148,7 +140,7 @@ fun DialpadTabContent(
                                     .fillMaxWidth()
                                     .clickable { onCallClick(match.number) },
                                 colors = CardDefaults.cardColors(containerColor = dialKeyColor),
-                                shape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "circular")
+                                shape = keyShape
                             ) {
                                 ListItem(
                                     headlineContent = {
@@ -195,16 +187,16 @@ fun DialpadTabContent(
                                     leadingContent = {
                                         Surface(
                                             modifier = Modifier.size(40.dp),
-                                            shape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "circular"),
-                                            color = match.avatarBg.copy(alpha = 0.8f)
+                                            shape = AppShapes.Avatar,
+                                            color = match.avatarBg.copy(alpha = 0.85f)
                                         ) {
                                             Box(contentAlignment = Alignment.Center) {
                                                 if (match.photoUri.isNotEmpty()) {
                                                     AsyncImage(
                                                         model = ImageRequest.Builder(LocalContext.current)
                                                             .data(match.photoUri)
-                                                            .size(256, 256)
-                                                            .crossfade(true)
+                                                            .size(128, 128)
+                                                            .crossfade(false)
                                                             .build(),
                                                         contentDescription = match.name,
                                                         modifier = Modifier.fillMaxSize(),
@@ -259,23 +251,22 @@ fun DialpadTabContent(
             Spacer(modifier = Modifier.weight(1f))
         }
 
-        // PERF FIX: Replaces 100,000 loop scan with O(1) in-memory cache lookup
         val isUnsavedNumber = remember(inputValue) {
             if (inputValue.isBlank()) false
             else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
         }
 
-        val actionButtonShape = getAvatarShape(viewModel?.avatarShapeType?.value ?: "rounded")
         var expandedClipboardMenu by remember { mutableStateOf(false) }
         val clipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
         val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
         val keyboardController = LocalSoftwareKeyboardController.current
 
+        // Action Chips for Unsaved Number (Subtle & compact)
         if (isUnsavedNumber && inputValue.isNotBlank()) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -286,30 +277,28 @@ fun DialpadTabContent(
                         }
                         viewModel?.openAddContactWithNumber(inputValue)
                     },
-                    shape = actionButtonShape,
+                    shape = chipShape,
                     color = dialKeyColor,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .weight(1f)
-                        .height(46.dp)
+                        .height(38.dp)
                         .testTag("dialpad_create_contact_chip")
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.PersonAdd,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = stringResource(R.string.dialpad_create_contact),
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1
                         )
@@ -324,30 +313,28 @@ fun DialpadTabContent(
                         viewModel?.addToExistingPendingNumber?.value = inputValue
                         viewModel?.isAddToExistingSheetVisible?.value = true
                     },
-                    shape = actionButtonShape,
+                    shape = chipShape,
                     color = dialKeyColor,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier
                         .weight(1f)
-                        .height(46.dp)
+                        .height(38.dp)
                         .testTag("dialpad_add_to_existing_chip")
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.GroupAdd,
                             contentDescription = null,
-                            modifier = Modifier.size(18.dp),
+                            modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.secondary
                         )
                         Text(
                             text = stringResource(R.string.dialpad_add_to_existing),
-                            style = MaterialTheme.typography.labelLarge,
+                            style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1
                         )
@@ -356,137 +343,132 @@ fun DialpadTabContent(
             }
         }
 
+        // Dialed Number Container (Locked to AppShapes.Keypad Squircle geometry)
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp)
-                .padding(horizontal = 12.dp),
-            shape = actionButtonShape,
+                .padding(horizontal = 8.dp),
+            shape = keyShape,
             color = Color.Transparent,
             border = BorderStroke(
-                width = if (isAmoled) 1.5.dp else 4.dp,
+                width = if (isAmoled) 1.5.dp else 2.dp,
                 color = if (isAmoled) Color(0xFF242424) else dialKeyColor
             )
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp)
+                    .combinedClickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = {},
+                        onLongClick = { expandedClipboardMenu = true }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                @Suppress("DEPRECATION")
-                CompositionLocalProvider(LocalTextInputService provides null) {
-                    BasicTextField(
-                        value = currentTfv,
-                        onValueChange = { newTfv ->
-                            if (viewModel != null) {
-                                viewModel.onDialpadTextFieldValueChange(newTfv)
-                            } else {
-                                onValueChange(newTfv.text)
+            @Suppress("DEPRECATION")
+            CompositionLocalProvider(LocalTextInputService provides null) {
+                BasicTextField(
+                    value = currentTfv,
+                    onValueChange = { newTfv ->
+                        if (viewModel != null) viewModel.onDialpadTextFieldValueChange(newTfv)
+                        else onValueChange(newTfv.text)
+                    },
+                    textStyle = if (currentTfv.text.isEmpty()) {
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Normal,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        MaterialTheme.typography.displaySmall.copy(
+                            fontSize = when {
+                                currentTfv.text.length > 16 -> 24.sp
+                                currentTfv.text.length > 12 -> 28.sp
+                                else -> 36.sp
+                            },
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+                    },
+                    cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusChanged { if (it.isFocused) keyboardController?.hide() }
+                        .testTag("dialpad_number_field"),
+                    decorationBox = { innerTextField ->
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            if (currentTfv.text.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.dialpad_enter_number),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Normal,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
+                                    textAlign = TextAlign.Center
+                                )
                             }
-                        },
-                        textStyle = if (currentTfv.text.isEmpty()) {
-                            MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Normal,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                textAlign = TextAlign.Center
-                            )
-                        } else {
-                            MaterialTheme.typography.headlineLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
-                            )
-                        },
-                        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged { focusState ->
-                                if (focusState.isFocused) {
-                                    keyboardController?.hide()
+                            innerTextField()
+                        }
+                    }
+                )
+            }
+
+            DropdownMenu(
+                expanded = expandedClipboardMenu,
+                onDismissRequest = { expandedClipboardMenu = false }
+            ) {
+                val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
+                if (hasClipboardText) {
+                    val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                    val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                    if (filteredDigits.isNotEmpty()) {
+                        DropdownMenuItem(
+                            text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
+                            onClick = {
+                                if (viewModel != null) viewModel.insertDialpadDigit(filteredDigits)
+                                else onValueChange(filteredDigits)
+                                expandedClipboardMenu = false
+                            }
+                        )
+                    }
+                }
+                if (inputValue.isNotEmpty()) {
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.dialpad_copy)) },
+                        onClick = {
+                            try {
+                                val clip = ClipData.newPlainText("phone_number", inputValue)
+                                clipboardManager?.setPrimaryClip(clip)
+                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                    Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
                                 }
-                            }
-                            .testTag("dialpad_number_field"),
-                        decorationBox = { innerTextField ->
-                            Box(
-                                modifier = Modifier.fillMaxWidth(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (currentTfv.text.isEmpty()) {
-                                    Text(
-                                        text = stringResource(R.string.dialpad_enter_number),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Normal,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                                innerTextField()
-                            }
+                            } catch (_: Exception) {}
+                            expandedClipboardMenu = false
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.dialpad_clear)) },
+                        onClick = {
+                            if (viewModel != null) viewModel.clearDialpad()
+                            else onValueChange("")
+                            expandedClipboardMenu = false
                         }
                     )
                 }
-
-                DropdownMenu(
-                    expanded = expandedClipboardMenu,
-                    onDismissRequest = { expandedClipboardMenu = false }
-                ) {
-                    val hasClipboardText = clipboardManager?.hasPrimaryClip() == true
-                    if (hasClipboardText) {
-                        val clipText = clipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-                        val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
-                        if (filteredDigits.isNotEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
-                                onClick = {
-                                    if (viewModel != null) {
-                                        viewModel.insertDialpadDigit(filteredDigits)
-                                    } else {
-                                        onValueChange(filteredDigits)
-                                    }
-                                    expandedClipboardMenu = false
-                                }
-                            )
-                        }
-                    }
-                    if (inputValue.isNotEmpty()) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.dialpad_copy)) },
-                            onClick = {
-                                try {
-                                    val clip = ClipData.newPlainText("phone_number", inputValue)
-                                    clipboardManager?.setPrimaryClip(clip)
-                                    // FIXED: Suppress redundant Toast on Android 13+ which has native system clipboard popup
-                                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                        Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
-                                    }
-                                } catch (_: Exception) {}
-                                expandedClipboardMenu = false
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.dialpad_clear)) },
-                            onClick = {
-                                if (viewModel != null) {
-                                    viewModel.clearDialpad()
-                                } else {
-                                    onValueChange("")
-                                }
-                                expandedClipboardMenu = false
-                            }
-                        )
-                    }
-                }
             }
         }
+    }
 
-        // Dialer Grid
+        // Keypad Grid (12 Keys)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+                .padding(horizontal = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             for (i in 0 until 4) {
                 Row(
@@ -505,7 +487,7 @@ fun DialpadTabContent(
                             voicemailNumber = voicemailNumber,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(60.dp),
+                                .height(58.dp),
                             viewModel = viewModel
                         )
                     }
@@ -513,11 +495,11 @@ fun DialpadTabContent(
             }
         }
 
-        // Action Row (Paste, Call, Backspace)
+        // Action Row: Paste | Hero Centered Call Button | Backspace
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp),
+                .padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -530,6 +512,7 @@ fun DialpadTabContent(
                 label = "paste_button_scale"
             )
 
+            // Paste Button
             Surface(
                 onClick = {
                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
@@ -545,7 +528,7 @@ fun DialpadTabContent(
                         }
                     } catch (_: Exception) {}
                 },
-                shape = actionButtonShape,
+                shape = keyShape,
                 color = if (isAmoled) Color(0xFF161616) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
                 contentColor = if (hasClipboardText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                 interactionSource = pasteInteractionSource,
@@ -558,11 +541,12 @@ fun DialpadTabContent(
                     Icon(
                         imageVector = Icons.Default.ContentPaste,
                         contentDescription = stringResource(R.string.dialpad_paste),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
 
+            // Hero Call Button (Clean, balanced 1:1 squircle)
             val callInteractionSource = remember { MutableInteractionSource() }
             val isCallPressed by callInteractionSource.collectIsPressedAsState()
             val callScale by animateFloatAsState(
@@ -578,15 +562,13 @@ fun DialpadTabContent(
                     }
                     if (inputValue.isEmpty()) {
                         val lastNumber = viewModel?.getLastOutgoingNumber() ?: ""
-                        if (lastNumber.isNotBlank()) {
-                            onValueChange(lastNumber)
-                        }
+                        if (lastNumber.isNotBlank()) onValueChange(lastNumber)
                     } else {
                         viewModel?.saveLastOutgoingNumber(inputValue)
                         onCallClick(inputValue)
                     }
                 },
-                shape = actionButtonShape,
+                shape = keyShape,
                 color = getCallGreenColor(),
                 contentColor = getOnCallGreenColor(),
                 interactionSource = callInteractionSource,
@@ -605,6 +587,7 @@ fun DialpadTabContent(
                 }
             }
 
+            // Backspace Button
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -621,13 +604,13 @@ fun DialpadTabContent(
                     )
 
                     Surface(
-                        shape = actionButtonShape,
+                        shape = keyShape,
                         color = if (isAmoled) Color(0xFF161616) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.28f),
                         contentColor = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .fillMaxSize()
                             .scale(backspaceScale)
-                            .clip(actionButtonShape)
+                            .clip(keyShape)
                             .combinedClickable(
                                 interactionSource = backspaceInteractionSource,
                                 indication = ripple(),
@@ -635,21 +618,15 @@ fun DialpadTabContent(
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     }
-                                    if (viewModel != null) {
-                                        viewModel.backspaceDialpad()
-                                    } else {
-                                        onValueChange(inputValue.dropLast(1))
-                                    }
+                                    if (viewModel != null) viewModel.backspaceDialpad()
+                                    else onValueChange(inputValue.dropLast(1))
                                 },
                                 onLongClick = {
                                     if (viewModel?.vibrateOnClickEnabled?.value != false) {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                     }
-                                    if (viewModel != null) {
-                                        viewModel.clearDialpad()
-                                    } else {
-                                        onValueChange("")
-                                    }
+                                    if (viewModel != null) viewModel.clearDialpad()
+                                    else onValueChange("")
                                 }
                             )
                     ) {

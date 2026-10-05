@@ -20,7 +20,6 @@ package com.example.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.ui.theme.AppShapes
 import com.example.util.RichHapticEngine
 
 @Composable
@@ -52,7 +52,7 @@ fun DetailActionItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .widthIn(min = 64.dp, max = 84.dp)
-            .clip(MaterialTheme.shapes.medium)
+            .clip(AppShapes.Small)
             .clickable(
                 role = Role.Button,
                 onClick = {
@@ -65,7 +65,7 @@ fun DetailActionItem(
         Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(containerColor, RoundedCornerShape(16.dp)),
+                .background(containerColor, AppShapes.Keypad),
             contentAlignment = Alignment.Center
         ) {
             Icon(

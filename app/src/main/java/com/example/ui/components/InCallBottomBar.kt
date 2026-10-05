@@ -47,10 +47,10 @@ fun InCallBottomBar(
     onAnswer: () -> Unit,
     onHangUp: () -> Unit,
     onToggleQuickDeclineMenu: () -> Unit,
-    avatarShapeType: String = "circular"
+    avatarShapeType: String = "squircle"
 ) {
     val context = LocalContext.current
-    val buttonShape = getAvatarShape(avatarShapeType)
+    val buttonShape = AppShapes.Keypad
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -75,8 +75,8 @@ fun InCallBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 12.dp, end = 12.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalArrangement = if (isIncoming) Arrangement.SpaceBetween else Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (isIncoming) {
@@ -100,51 +100,38 @@ fun InCallBottomBar(
                     color = getCallGreenColor(),
                     contentColor = getOnCallGreenColor(),
                     shape = buttonShape,
-                    tonalElevation = 0.dp,
-                    shadowElevation = 0.dp,
                     modifier = Modifier
-                        .weight(1f)
-                        .height(64.dp)
+                        .size(width = 84.dp, height = 64.dp)
                         .scale(answerScale)
                         .testTag("answer_button")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.Call,
-                            // FIXED: Localized accessibility description
                             contentDescription = stringResource(R.string.btn_answer),
                             modifier = Modifier.size(28.dp)
                         )
                     }
                 }
 
-                // FIXED: Lightweight Spacer maintains column alignment without dummy Box overhead
-                Spacer(modifier = Modifier.weight(1f))
-
                 HangUpActionCallButton(
                     onHangUp = onHangUp,
                     buttonShape = buttonShape,
                     labelResId = R.string.btn_decline,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.size(width = 84.dp, height = 64.dp)
                 )
             } else {
-                // Outgoing/Active: Symmetrical 3-slot layout with centered Hang Up
-                Spacer(modifier = Modifier.weight(1f))
-
                 HangUpActionCallButton(
                     onHangUp = onHangUp,
                     buttonShape = buttonShape,
                     labelResId = R.string.call_status_ended,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.size(width = 84.dp, height = 64.dp)
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }
 }
 
-// DRY FIX: Unified Hang Up / Decline action button eliminates duplicate styling & animation code
 @Composable
 private fun HangUpActionCallButton(
     onHangUp: () -> Unit,
@@ -173,17 +160,13 @@ private fun HangUpActionCallButton(
         color = getDeclineRedColor(),
         contentColor = getOnDeclineRedColor(),
         shape = buttonShape,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
         modifier = modifier
-            .height(64.dp)
             .scale(hangUpScale)
             .testTag("hangup_button")
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 imageVector = Icons.Default.CallEnd,
-                // FIXED: Localized accessibility description
                 contentDescription = stringResource(labelResId),
                 modifier = Modifier.size(28.dp)
             )

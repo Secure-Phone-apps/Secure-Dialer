@@ -60,7 +60,7 @@ object DatabaseKeyManager {
                     val decrypted = cipher.doFinal(encryptedKey)
 
                     cachedKey = decrypted.copyOf()
-                    return decrypted
+                    return decrypted.copyOf()
                 }
             } catch (_: Exception) {
                 // If hardware key or prefs were corrupted/invalidated, proceed to regenerate fresh key
@@ -87,7 +87,7 @@ object DatabaseKeyManager {
                 .commit() // Commit immediately to ensure durability before opening DB
 
             cachedKey = rawDbKey.copyOf()
-            return rawDbKey
+            return rawDbKey.copyOf()
         } catch (e: Exception) {
             Arrays.fill(rawDbKey, 0.toByte())
             throw IllegalStateException("Hardware-backed master key generation failed.", e)

@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
@@ -106,7 +107,7 @@ fun RecentsTabContent(
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer
                         ),
-                        shape = MaterialTheme.shapes.medium
+                        shape = AppShapes.Card
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp),
@@ -216,7 +217,7 @@ fun RecentsTabContent(
                                     Row(
                                         modifier = Modifier
                                             .weight(1f)
-                                            .clip(RoundedCornerShape(20.dp))
+                                            .clip(AppShapes.Chip)
                                             .background(containerColor)
                                             .clickable {
                                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)

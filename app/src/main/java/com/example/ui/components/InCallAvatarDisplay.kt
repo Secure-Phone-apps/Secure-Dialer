@@ -39,6 +39,7 @@ import com.example.ContactCache
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.model.getInitials
+import com.example.ui.theme.AppShapes
 
 @Composable
 fun InCallAvatarDisplay(
@@ -46,11 +47,10 @@ fun InCallAvatarDisplay(
     contactName: String,
     contactNumber: String,
     contacts: List<Contact>,
-    avatarShapeType: String = "circular"
+    avatarShapeType: String = "squircle"
 ) {
     val context = LocalContext.current
 
-    // FIXED: Multi-number and normalized suffix matching resolves contact photos reliably
     val matchedContact = remember(contactNumber, contacts) {
         if (contactNumber.isNotBlank()) {
             ContactCache.getContact(contactNumber) ?: contacts.find { it.number == contactNumber }
@@ -75,12 +75,12 @@ fun InCallAvatarDisplay(
 
     Surface(
         modifier = Modifier.size(120.dp),
-        shape = getAvatarShape(avatarShapeType),
+        shape = AppShapes.Avatar,
         color = bgColor
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (participants.size > 1) {
-                Text(text = "👥", fontSize = 56.sp)
+                Text(text = "👥", fontSize = 48.sp)
             } else if (matchedContact != null && matchedContact.photoUri.isNotEmpty() && !imageLoadFailed) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -97,7 +97,7 @@ fun InCallAvatarDisplay(
                 if (isSaved) {
                     Text(
                         text = getInitials(pName),
-                        style = MaterialTheme.typography.displayLarge,
+                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 44.sp),
                         color = textColor
                     )
                 } else {
@@ -105,7 +105,7 @@ fun InCallAvatarDisplay(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = textColor,
-                        modifier = Modifier.size(64.dp)
+                        modifier = Modifier.size(60.dp)
                     )
                 }
             }

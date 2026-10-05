@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.example.ui.theme.AppShapes
 import com.example.util.RichHapticEngine
 
 @Composable
@@ -36,7 +37,7 @@ fun FloatingDialpadButton(
     onClick: () -> Unit
 ) {
     val context = LocalContext.current
-    val shape = RoundedCornerShape(16.dp)
+    val shape = AppShapes.Keypad
     FloatingActionButton(
         onClick = {
             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)

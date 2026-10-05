@@ -92,7 +92,6 @@ fun ActiveCallScreen(
 
     val context = LocalContext.current
     val activeStartTimestamp by CallManager.activeStartTimestamp.collectAsStateWithLifecycle()
-    var tickTrigger by remember { mutableIntStateOf(0) }
 
     val audioState by CallManager.audioState.collectAsStateWithLifecycle()
     val waitingCall by CallManager.waitingCall.collectAsStateWithLifecycle()
@@ -167,50 +166,14 @@ fun ActiveCallScreen(
         }
     }
 
-    LaunchedEffect(isFake, fakeState, callState) {
-        if (isFake) {
-            if (fakeState == "ACTIVE") {
-                fakeActiveStartTimestamp = System.currentTimeMillis()
-                if (alwaysRecordEnabled && !CallAudioRecorder.isRecording.value) {
-                    RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
-                    CallAudioRecorder.startRecording(context, contactNumber)
-                }
-                while (true) {
-                    delay(1000)
-                    tickTrigger++
-                }
-            }
-        } else {
-            if (callState == Call.STATE_ACTIVE) {
-                while (true) {
-                    delay(1000)
-                    tickTrigger++
-                }
+    LaunchedEffect(isFake, fakeState) {
+        if (isFake && fakeState == "ACTIVE") {
+            fakeActiveStartTimestamp = System.currentTimeMillis()
+            if (alwaysRecordEnabled && !CallAudioRecorder.isRecording.value) {
+                RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
+                CallAudioRecorder.startRecording(context, contactNumber)
             }
         }
-    }
-
-    val callDuration = remember(activeStartTimestamp, tickTrigger, currentCallState, isFake, fakeActiveStartTimestamp) {
-        if (isFake) {
-            if (fakeState == "ACTIVE" && fakeActiveStartTimestamp > 0L) {
-                ((System.currentTimeMillis() - fakeActiveStartTimestamp) / 1000).coerceAtLeast(0L).toInt()
-            } else {
-                0
-            }
-        } else {
-            if (callState == Call.STATE_ACTIVE) {
-                val start = if (activeStartTimestamp > 0L) activeStartTimestamp else System.currentTimeMillis()
-                ((System.currentTimeMillis() - start) / 1000).coerceAtLeast(0L).toInt()
-            } else {
-                0
-            }
-        }
-    }
-
-    val formattedTime = remember(callDuration) {
-        val mins = callDuration / 60
-        val secs = callDuration % 60
-        "%02d:%02d".format(mins, secs)
     }
 
     val isAmoled = LocalAmoledMode.current
@@ -324,7 +287,6 @@ fun ActiveCallScreen(
                     preferredSim = preferredSim,
                     contactName = contactName,
                     contactNumber = contactNumber,
-                    formattedTime = formattedTime,
                     heldCall = heldCall,
                     contacts = contacts,
                     onMerge = {
@@ -335,7 +297,11 @@ fun ActiveCallScreen(
                         }
                     },
                     isConference = isConference,
-                    isRecording = isRecording
+                    isRecording = isRecording,
+                    activeStartTimestamp = activeStartTimestamp,
+                    isFake = isFake,
+                    fakeState = fakeState,
+                    fakeActiveStartTimestamp = fakeActiveStartTimestamp
                 )
 
                 waitingCall?.let { call ->

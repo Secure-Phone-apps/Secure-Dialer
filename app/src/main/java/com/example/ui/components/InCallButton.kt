@@ -35,8 +35,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.ui.theme.AppShapes
 import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.LocalM3Expressive
 import com.example.util.RichHapticEngine
@@ -48,7 +51,7 @@ fun InCallButton(
     isActive: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    shape: Shape = MaterialTheme.shapes.medium,
+    shape: Shape = AppShapes.Keypad,
     isPulsingRecording: Boolean = false
 ) {
     val context = LocalContext.current
@@ -98,15 +101,13 @@ fun InCallButton(
         label = "incall_button_scale"
     )
 
-    val finalModifier = if (modifier == Modifier) Modifier.size(64.dp) else modifier
-
     Surface(
         onClick = {
             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
             onClick()
         },
         interactionSource = interactionSource,
-        modifier = finalModifier.scale(scale),
+        modifier = modifier.scale(scale),
         shape = shape,
         color = btnColor,
         contentColor = contentColor,
@@ -116,37 +117,41 @@ fun InCallButton(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
-                // PERF FIX: Only runs the 60fps/120fps infinite ticker when recording is actively pulsing
                 if (isPulsingRecording) {
                     RecordingPulseHalo()
                 }
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 2.dp)
             ) {
                 if (isPulsingRecording) {
                     Box(
                         modifier = Modifier
                             .size(6.dp)
-                            .clip(CircleShape)
+                            .clip(AppShapes.Small)
                             .background(Color(0xFFE53935))
                     )
                     Spacer(modifier = Modifier.width(3.dp))
                 }
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                    textAlign = TextAlign.Center,
                     color = contentColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -180,9 +185,9 @@ private fun RecordingPulseHalo() {
 
     Box(
         modifier = Modifier
-            .size(24.dp)
+            .size(26.dp)
             .scale(pulseScale)
-            .clip(CircleShape)
+            .clip(AppShapes.Keypad)
             .background(Color(0xFFE53935).copy(alpha = pulseAlpha))
     )
 }
