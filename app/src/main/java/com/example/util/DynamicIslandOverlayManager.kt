@@ -193,14 +193,20 @@ object DynamicIslandOverlayManager {
                     MyApplicationTheme(darkTheme = true) {
                         val callerName by CallManager.callerName.collectAsStateWithLifecycle()
                         val callerNumber by CallManager.callerNumber.collectAsStateWithLifecycle()
+                        val callerPhotoUri by CallManager.callerPhotoUri.collectAsStateWithLifecycle()
+                        val callerLabel by CallManager.callerLabel.collectAsStateWithLifecycle()
                         val callState by CallManager.callState.collectAsStateWithLifecycle()
                         val audioState by CallManager.audioState.collectAsStateWithLifecycle()
+                        val currentSimSlot by CallManager.currentSimSlot.collectAsStateWithLifecycle()
 
                         DynamicIslandPill(
                             callerName = callerName,
                             callerNumber = callerNumber,
                             callState = callState,
                             audioState = audioState,
+                            photoUri = callerPhotoUri,
+                            callerLabel = callerLabel,
+                            simSlot = currentSimSlot,
                             onExpandToFullScreen = {
                                 // FIXED: Align intent extras with MainActivity contracts
                                 val intent = Intent(context, MainActivity::class.java).apply {

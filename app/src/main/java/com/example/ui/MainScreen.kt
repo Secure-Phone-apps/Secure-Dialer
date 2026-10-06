@@ -212,6 +212,9 @@ fun MainScreen(
     LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, systemCallerCnapName) {
         if (systemActiveCall != null) {
             isCallActive = true
+            if (systemCallState == android.telecom.Call.STATE_RINGING) {
+                isCallMinimized = false
+            }
             if (systemCallerNumber.isNotEmpty()) {
                 callingContactNumber = systemCallerNumber
                 val contactName = getContactNameFromNumber(context, systemCallerNumber)
@@ -223,6 +226,7 @@ fun MainScreen(
                     val savedCnap = getSavedCnapName(context, systemCallerNumber)
                     callingContactName = savedCnap ?: systemCallerNumber
                 }
+                CallManager.setCallerName(callingContactName)
             }
         } else {
             if (isCallActive) {
@@ -275,6 +279,7 @@ fun MainScreen(
             callingContactName = resolvedName
             callingContactNumber = number
             isCallActive = true
+            CallManager.setCallerName(resolvedName)
             CallManager.placeCall(context, number, if (isEmergency) "Ask" else targetSim)
 
             if (resolvedName == "Unknown" || resolvedName.isEmpty() || resolvedName == number) {
@@ -282,6 +287,7 @@ fun MainScreen(
                     val savedCnap = getSavedCnapName(context, number)
                     if (!savedCnap.isNullOrBlank()) {
                         callingContactName = savedCnap
+                        CallManager.setCallerName(savedCnap)
                     }
                 }
             }
@@ -369,9 +375,7 @@ fun MainScreen(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
-                if (!isDefaultDialer) {
-                    DefaultDialerWarningCard(onShowRestrictedSettings = onShowRestrictedSettings)
-                }
+                CallSystemPermissionsCard(viewModel = viewModel)
 
                 val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
 
@@ -500,6 +504,9 @@ fun MainScreen(
                             callerNumber = callingContactNumber,
                             callState = systemCallState,
                             audioState = systemAudioState,
+                            photoUri = CallManager.callerPhotoUri.value,
+                            callerLabel = CallManager.callerLabel.value,
+                            simSlot = CallManager.currentSimSlot.value,
                             onExpandToFullScreen = { isCallMinimized = false },
                             onHangUp = {
                                 CallManager.disconnect()

@@ -628,4 +628,16 @@
     <string name="settings_clir_prefix_japan">Japan (1831)</string>
     <string name="settings_clir_prefix_custom">Custom Prefix</string>
     <string name="settings_clir_custom_label">Enter custom CLIR carrier prefix code</string>
+
+    <!-- Calling & Lockscreen Permissions Setup -->
+    <string name="btn_grant">Grant</string>
+    <string name="btn_configure">Configure</string>
+    <string name="btn_set_default">Set Default</string>
+    <string name="status_granted">Granted</string>
+    <string name="status_enabled">Enabled</string>
+    <string name="settings_lockscreen_calling_title">Full Screen Calls on Lock Screen</string>
+    <string name="settings_lockscreen_calling_sub">Display full-screen incoming call UI instantly when device is locked or screen is off</string>
+    <string name="settings_full_screen_intent_warning">Full-screen incoming call alerts restricted by system</string>
+    <string name="settings_overlay_permission_warning">Overlay permission needed to float Dynamic Island over other apps</string>
+    <string name="settings_all_call_permissions_good">All calling &amp; lock screen features fully configured</string>
 </resources>

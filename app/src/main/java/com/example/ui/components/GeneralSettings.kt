@@ -308,31 +308,9 @@ fun GeneralSettings(
             }
         } else {
             // Standard category cards
-            if (!isDefaultDialer) {
-                item {
-                    DefaultDialerWarningCard(
-                        onShowRestrictedSettings = {
-                            try {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                    val rm = context.getSystemService(Context.ROLE_SERVICE) as? RoleManager
-                                    if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_DIALER)) {
-                                        val roleIntent = rm.createRequestRoleIntent(RoleManager.ROLE_DIALER).apply {
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                        }
-                                        context.startActivity(roleIntent)
-                                    }
-                                } else {
-                                    @Suppress("DEPRECATION")
-                                    val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                                        putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
-                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                    }
-                                    context.startActivity(intent)
-                                }
-                            } catch (_: Exception) {}
-                        }
-                    )
-                }
+            // System & Calling permissions
+            item {
+                CallSystemPermissionsCard(viewModel = viewModel)
             }
 
             // 1. Appearance

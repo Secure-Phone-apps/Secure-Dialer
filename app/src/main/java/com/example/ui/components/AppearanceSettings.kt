@@ -231,61 +231,52 @@ fun AppearanceSettings(
                         )
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            val canOverlay = Settings.canDrawOverlays(context)
-                            if (!canOverlay) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(horizontal = 16.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-                                )
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = stringResource(R.string.settings_dynamic_island_floating_permission),
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.settings_dynamic_island_floating_permission_sub),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(8.dp))
+                            val canOverlay = com.example.util.CallScreenPermissionHelper.canDrawOverlays(context)
+                            HorizontalDivider(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.settings_dynamic_island_floating_permission),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.settings_dynamic_island_floating_permission_sub),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(8.dp))
+                                if (!canOverlay) {
                                     FilledTonalButton(
                                         onClick = {
                                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                            // FIXED: Triple-fallback intent pattern guarantees overlay settings open on all OEM builds
-                                            try {
-                                                val intent = Intent(
-                                                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                                    Uri.parse("package:${context.packageName}")
-                                                ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
-                                                context.startActivity(intent)
-                                            } catch (_: Exception) {
-                                                try {
-                                                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION).apply {
-                                                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                                    }
-                                                    context.startActivity(intent)
-                                                } catch (_: Exception) {
-                                                    try {
-                                                        val intent = Intent(
-                                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                                            Uri.parse("package:${context.packageName}")
-                                                        ).apply { flags = Intent.FLAG_ACTIVITY_NEW_TASK }
-                                                        context.startActivity(intent)
-                                                    } catch (_: Exception) {}
-                                                }
-                                            }
+                                            com.example.util.CallScreenPermissionHelper.requestOverlayPermission(context)
                                         }
                                     ) {
-                                        Text(stringResource(R.string.enable_contacts_perm))
+                                        Text(stringResource(R.string.btn_grant))
+                                    }
+                                } else {
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.status_granted),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                        )
                                     }
                                 }
                             }

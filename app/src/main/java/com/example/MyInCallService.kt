@@ -10,9 +10,16 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.media.Ringtone
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.DisconnectCause
@@ -41,18 +48,109 @@ class MyInCallService : InCallService() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val nm by lazy { getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
     private var wakeLock: PowerManager.WakeLock? = null
+    private var ringtone: Ringtone? = null
+    private var vibrator: Vibrator? = null
+
+    @Synchronized
+    private fun startRinging() {
+        try {
+            val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            val ringerMode = audioManager?.ringerMode ?: AudioManager.RINGER_MODE_NORMAL
+            if (ringerMode == AudioManager.RINGER_MODE_SILENT) return
+
+            // 1. Native AOSP ringtone player
+            if (ringerMode == AudioManager.RINGER_MODE_NORMAL) {
+                if (ringtone == null) {
+                    val uri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+                        ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                    ringtone = RingtoneManager.getRingtone(this, uri)?.apply {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            audioAttributes = AudioAttributes.Builder()
+                                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                                .setLegacyStreamType(AudioManager.STREAM_RING)
+                                .build()
+                        } else {
+                            @Suppress("DEPRECATION")
+                            streamType = AudioManager.STREAM_RING
+                        }
+                    }
+                }
+                if (ringtone?.isPlaying == false) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ringtone?.isLooping = true
+                    }
+                    ringtone?.play()
+                }
+            }
+
+            // 2. Native hardware vibration
+            if (ringerMode == AudioManager.RINGER_MODE_NORMAL || ringerMode == AudioManager.RINGER_MODE_VIBRATE) {
+                if (vibrator == null) {
+                    vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        (getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
+                    } else {
+                        @Suppress("DEPRECATION")
+                        getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+                    }
+                }
+                val pattern = longArrayOf(0, 1000, 1000, 1000)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    val effect = VibrationEffect.createWaveform(pattern, 0)
+                    val audioAttrs = AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setLegacyStreamType(AudioManager.STREAM_RING)
+                        .build()
+                    vibrator?.vibrate(effect, audioAttrs)
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator?.vibrate(pattern, 0)
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    @Synchronized
+    private fun stopRinging() {
+        try {
+            if (ringtone?.isPlaying == true) {
+                ringtone?.stop()
+            }
+            ringtone = null
+        } catch (_: Exception) {}
+
+        try {
+            vibrator?.cancel()
+            vibrator = null
+        } catch (_: Exception) {}
+    }
 
     @Synchronized
     private fun acquireWakeLock() {
         try {
             if (wakeLock == null) {
                 val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
-                wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SecureDialer:InCallWakeLock")?.apply {
+                @Suppress("DEPRECATION")
+                val flags = PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                        PowerManager.ON_AFTER_RELEASE
+                wakeLock = pm?.newWakeLock(flags, "SecureDialer:InCallScreenWakeLock")?.apply {
                     setReferenceCounted(false)
                 }
             }
-            wakeLock?.acquire(15_000L)
-        } catch (_: Exception) {}
+            wakeLock?.acquire(30_000L)
+        } catch (_: Exception) {
+            try {
+                if (wakeLock == null) {
+                    val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                    wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SecureDialer:InCallCpuWakeLock")?.apply {
+                        setReferenceCounted(false)
+                    }
+                }
+                wakeLock?.acquire(30_000L)
+            } catch (_: Exception) {}
+        }
     }
 
     @Synchronized
@@ -70,6 +168,7 @@ class MyInCallService : InCallService() {
     }
 
     override fun onDestroy() {
+        stopRinging()
         releaseWakeLock()
         DynamicIslandOverlayManager.stopCallMonitoring()
         FlashLightManager.stopFlashing(this)
@@ -79,8 +178,12 @@ class MyInCallService : InCallService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_HANG_UP, ACTION_DECLINE -> CallManager.disconnect()
+            ACTION_HANG_UP, ACTION_DECLINE -> {
+                stopRinging()
+                CallManager.disconnect()
+            }
             ACTION_ANSWER -> {
+                stopRinging()
                 CallManager.answer()
                 launchCallScreen(answerOnLaunch = true)
             }
@@ -104,6 +207,11 @@ class MyInCallService : InCallService() {
         acquireWakeLock()
         CallManager.inCallService = this
         CallManager.addCall(call)
+        val num = call.details?.handle?.schemeSpecificPart ?: ""
+        val resolvedName = resolveCallerDisplayName(call, num)
+        if (resolvedName.isNotBlank() && resolvedName != num && resolvedName != "Unknown") {
+            CallManager.setCallerName(resolvedName)
+        }
         DynamicIslandOverlayManager.startCallMonitoring(this)
 
         persistCnapIfPresent(call)
@@ -117,15 +225,18 @@ class MyInCallService : InCallService() {
                 if (state == Call.STATE_RINGING) wasRinging = true
 
                 if (state == Call.STATE_ACTIVE || state == Call.STATE_DISCONNECTED) {
+                    stopRinging()
                     nm.cancel(NOTIFICATION_ID_INCOMING)
                     FlashLightManager.stopFlashing(this@MyInCallService)
                 }
 
                 if (state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {
+                    stopRinging()
                     showActiveCallNotification(c)
                 }
 
                 if (state == Call.STATE_DISCONNECTED) {
+                    stopRinging()
                     nm.cancel(NOTIFICATION_ID_ACTIVE)
                     if (wasRinging) {
                         val cause = c.details?.disconnectCause?.code
@@ -146,6 +257,7 @@ class MyInCallService : InCallService() {
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
+        stopRinging()
         CallManager.removeCall(call)
         FlashLightManager.stopFlashing(this)
         if (CallManager.calls.value.isEmpty()) {
@@ -173,9 +285,12 @@ class MyInCallService : InCallService() {
         when (call.state) {
             Call.STATE_RINGING -> {
                 FlashLightManager.startFlashing(this)
+                startRinging()
                 showIncomingCallNotification(call)
+                launchCallScreen(answerOnLaunch = false)
             }
             Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING -> {
+                stopRinging()
                 FlashLightManager.stopFlashing(this)
                 showActiveCallNotification(call)
                 launchCallScreen(answerOnLaunch = false)
@@ -225,6 +340,8 @@ class MyInCallService : InCallService() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
+            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
+            .setVibrate(longArrayOf(0, 1000, 1000, 1000))
             .setFullScreenIntent(fullScreenPendingIntent, true)
             .setContentIntent(fullScreenPendingIntent)
             .build()
@@ -408,7 +525,11 @@ class MyInCallService : InCallService() {
     private fun launchCallScreen(answerOnLaunch: Boolean) {
         try {
             val intent = Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                action = if (answerOnLaunch) ACTION_ANSWER else ACTION_INCOMING_CALL
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 putExtra(EXTRA_SHOW_CALL, true)
                 if (answerOnLaunch) putExtra(EXTRA_ANSWER, true)
             }
@@ -418,12 +539,27 @@ class MyInCallService : InCallService() {
 
     private fun initNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            val audioAttrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setLegacyStreamType(AudioManager.STREAM_RING)
+                .build()
+
+            try { nm.deleteNotificationChannel("incoming_call_channel_v2") } catch (_: Exception) {}
+
+            val incomingChannel = NotificationChannel(CHANNEL_INCOMING, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH).apply {
+                description = "Incoming call alerts and full screen notifications"
+                setSound(ringtoneUri, audioAttrs)
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 1000, 1000, 1000)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                setBypassDnd(true)
+            }
+
             nm.createNotificationChannels(listOf(
-                NotificationChannel(CHANNEL_INCOMING, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH).apply {
-                    description = "Incoming call alerts"
-                    setSound(null, null)
-                    enableVibration(false)
-                },
+                incomingChannel,
                 NotificationChannel(CHANNEL_ACTIVE, "Active Calls", NotificationManager.IMPORTANCE_LOW).apply {
                     description = "Ongoing call controls"
                     setShowBadge(false)
@@ -436,7 +572,7 @@ class MyInCallService : InCallService() {
     }
 
     companion object {
-        const val CHANNEL_INCOMING = "incoming_call_channel_v2"
+        const val CHANNEL_INCOMING = "incoming_call_channel_v3"
         const val CHANNEL_ACTIVE = "active_call_channel"
         const val CHANNEL_MISSED = "missed_call_channel"
 

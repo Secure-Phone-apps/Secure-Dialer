@@ -236,4 +236,24 @@ class AlwaysOnAndDynamicIslandDeepTest {
 
         assertTrue("CallManager operations from Dynamic Island action buttons must execute cleanly", true)
     }
+
+    @Test
+    fun `test dynamic island caller name and contact details resolution`() {
+        // Test that CallManager holds and propagates contact name and details to Dynamic Island
+        CallManager.setCallerDetails(
+            name = "Sarah Connor",
+            photoUri = "content://com.android.contacts/display_photo/1",
+            label = "Mobile"
+        )
+
+        assertEquals("Sarah Connor", CallManager.callerName.value)
+        assertEquals("content://com.android.contacts/display_photo/1", CallManager.callerPhotoUri.value)
+        assertEquals("Mobile", CallManager.callerLabel.value)
+
+        // Test fallback when disconnected
+        CallManager.updateCall(null)
+        assertEquals("", CallManager.callerName.value)
+        assertEquals("", CallManager.callerPhotoUri.value)
+        assertEquals("", CallManager.callerLabel.value)
+    }
 }

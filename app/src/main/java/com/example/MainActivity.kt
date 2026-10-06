@@ -372,15 +372,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun updateDefaultDialerStatus(context: Context) {
-        try {
-            viewModel.isDefaultDialer.value = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                (context.getSystemService(Context.ROLE_SERVICE) as? RoleManager)?.isRoleHeld(RoleManager.ROLE_DIALER) == true
-            } else {
-                (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.defaultDialerPackage == context.packageName
-            }
-        } catch (_: Exception) {
-            viewModel.isDefaultDialer.value = false
-        }
+        viewModel.isDefaultDialer.value = com.example.util.CallScreenPermissionHelper.isDefaultDialer(context)
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,10 +49,13 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.CallManager
 import com.example.R
 import com.example.data.AppDatabase
 import com.example.model.CallRecording
+import com.example.model.getInitials
 import com.example.ui.theme.AppShapes
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
@@ -74,7 +78,10 @@ fun DynamicIslandPill(
     audioState: CallAudioState?,
     onExpandToFullScreen: () -> Unit,
     onHangUp: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    photoUri: String = "",
+    callerLabel: String = "",
+    simSlot: Int = 1
 ) {
     var isExpanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -204,33 +211,51 @@ fun DynamicIslandPill(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .background(
-                                            when {
-                                                isSpeakerOn -> Color(0xFF00E5FF).copy(alpha = 0.25f)
-                                                isMuted -> Color(0xFFFF5252).copy(alpha = 0.25f)
-                                                else -> Color(0xFF00E676).copy(alpha = 0.25f)
+                                if (photoUri.isNotBlank()) {
+                                    Surface(
+                                        modifier = Modifier.size(28.dp),
+                                        shape = AppShapes.Chip,
+                                        color = Color(0xFF26262D)
+                                    ) {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(context)
+                                                .data(photoUri)
+                                                .crossfade(true)
+                                                .build(),
+                                            contentDescription = displayName,
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(28.dp)
+                                            .background(
+                                                when {
+                                                    isSpeakerOn -> Color(0xFF00E5FF).copy(alpha = 0.25f)
+                                                    isMuted -> Color(0xFFFF5252).copy(alpha = 0.25f)
+                                                    else -> Color(0xFF00E676).copy(alpha = 0.25f)
+                                                },
+                                                AppShapes.Chip
+                                            ),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = when {
+                                                isSpeakerOn -> Icons.AutoMirrored.Filled.VolumeUp
+                                                isMuted -> Icons.Default.MicOff
+                                                else -> Icons.Default.Call
                                             },
-                                            AppShapes.Chip
-                                        ),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = when {
-                                            isSpeakerOn -> Icons.AutoMirrored.Filled.VolumeUp
-                                            isMuted -> Icons.Default.MicOff
-                                            else -> Icons.Default.Call
-                                        },
-                                        contentDescription = null,
-                                        tint = when {
-                                            isSpeakerOn -> Color(0xFF00E5FF)
-                                            isMuted -> Color(0xFFFF5252)
-                                            else -> Color(0xFF00E676)
-                                        },
-                                        modifier = Modifier.size(15.dp)
-                                    )
+                                            contentDescription = null,
+                                            tint = when {
+                                                isSpeakerOn -> Color(0xFF00E5FF)
+                                                isMuted -> Color(0xFFFF5252)
+                                                else -> Color(0xFF00E676)
+                                            },
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    }
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
@@ -240,7 +265,7 @@ fun DynamicIslandPill(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     color = Color.White,
-                                    modifier = Modifier.widthIn(max = 120.dp)
+                                    modifier = Modifier.widthIn(max = 140.dp)
                                 )
                             }
 
@@ -290,27 +315,44 @@ fun DynamicIslandPill(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .background(
-                                                when {
-                                                    isSpeakerOn -> Color(0xFF00E5FF).copy(alpha = 0.2f)
-                                                    else -> Color(0xFF00E676).copy(alpha = 0.2f)
-                                                },
-                                                AppShapes.Avatar
-                                            ),
-                                        contentAlignment = Alignment.Center
+                                    Surface(
+                                        modifier = Modifier.size(44.dp),
+                                        shape = AppShapes.Avatar,
+                                        color = when {
+                                            isSpeakerOn -> Color(0xFF00E5FF).copy(alpha = 0.2f)
+                                            else -> Color(0xFF00E676).copy(alpha = 0.2f)
+                                        }
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676),
-                                            modifier = Modifier.size(24.dp)
-                                        )
+                                        Box(contentAlignment = Alignment.Center) {
+                                            if (photoUri.isNotBlank()) {
+                                                AsyncImage(
+                                                    model = ImageRequest.Builder(context)
+                                                        .data(photoUri)
+                                                        .crossfade(true)
+                                                        .build(),
+                                                    contentDescription = displayName,
+                                                    modifier = Modifier.fillMaxSize(),
+                                                    contentScale = ContentScale.Crop
+                                                )
+                                            } else if (displayName != callerNumber && displayName != stringResource(R.string.unknown)) {
+                                                Text(
+                                                    text = getInitials(displayName),
+                                                    style = MaterialTheme.typography.titleMedium,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
+                                                )
+                                            } else {
+                                                Icon(
+                                                    imageVector = Icons.Default.Person,
+                                                    contentDescription = null,
+                                                    tint = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676),
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        }
                                     }
                                     Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
+                                    Column(modifier = Modifier.weight(1f, fill = false)) {
                                         Text(
                                             text = displayName,
                                             style = MaterialTheme.typography.titleMedium,
@@ -319,9 +361,19 @@ fun DynamicIslandPill(
                                             overflow = TextOverflow.Ellipsis,
                                             color = Color.White
                                         )
+                                        if (displayName != callerNumber && callerNumber.isNotBlank()) {
+                                            Text(
+                                                text = if (callerLabel.isNotBlank()) "$callerLabel • $callerNumber" else callerNumber,
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = Color.White.copy(alpha = 0.7f),
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                            modifier = Modifier.padding(top = 2.dp)
                                         ) {
                                             Text(
                                                 text = if (callState == Call.STATE_ACTIVE) formattedDuration else stringResource(R.string.call_status_hold),
@@ -329,6 +381,21 @@ fun DynamicIslandPill(
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
                                             )
+                                            if (simSlot > 0) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = Color.White.copy(alpha = 0.15f)
+                                                ) {
+                                                    Text(
+                                                        text = "SIM $simSlot",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Medium,
+                                                        color = Color.White.copy(alpha = 0.9f),
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
                                             if (isSpeakerOn) {
                                                 Surface(
                                                     shape = RoundedCornerShape(4.dp),
@@ -350,6 +417,21 @@ fun DynamicIslandPill(
                                                 ) {
                                                     Text(
                                                         text = "REC",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color(0xFFFF5252),
+                                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                    )
+                                                }
+                                            }
+                                            if (isMuted) {
+                                                Surface(
+                                                    shape = RoundedCornerShape(4.dp),
+                                                    color = Color(0xFFFF5252).copy(alpha = 0.25f)
+                                                ) {
+                                                    Text(
+                                                        text = stringResource(R.string.dynamic_island_muted).uppercase(),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,

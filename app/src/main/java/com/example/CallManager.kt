@@ -73,6 +73,24 @@ object CallManager {
     private val _callerCnapName = MutableStateFlow("")
     val callerCnapName: StateFlow<String> = _callerCnapName.asStateFlow()
 
+    private val _callerPhotoUri = MutableStateFlow("")
+    val callerPhotoUri: StateFlow<String> = _callerPhotoUri.asStateFlow()
+
+    private val _callerLabel = MutableStateFlow("")
+    val callerLabel: StateFlow<String> = _callerLabel.asStateFlow()
+
+    fun setCallerName(name: String) {
+        if (name.isNotBlank()) {
+            _callerName.value = name
+        }
+    }
+
+    fun setCallerDetails(name: String, photoUri: String = "", label: String = "") {
+        if (name.isNotBlank()) _callerName.value = name
+        if (photoUri.isNotBlank()) _callerPhotoUri.value = photoUri
+        if (label.isNotBlank()) _callerLabel.value = label
+    }
+
     private val _activeStartTimestamp = MutableStateFlow(0L)
     val activeStartTimestamp: StateFlow<Long> = _activeStartTimestamp.asStateFlow()
 
@@ -193,8 +211,37 @@ object CallManager {
 
             val number = call.details?.handle?.schemeSpecificPart ?: ""
             _callerNumber.value = number
-            _callerName.value = ""
             val cnap = call.details?.callerDisplayName ?: ""
+
+            // 1. Immediate resolution from in-memory ContactCache
+            val cachedContact = if (number.isNotEmpty()) ContactCache.getContact(number) else null
+            if (cachedContact != null && cachedContact.name.isNotBlank()) {
+                _callerName.value = cachedContact.name
+                _callerPhotoUri.value = cachedContact.photoUri
+                _callerLabel.value = cachedContact.label
+            } else if (cnap.isNotBlank()) {
+                _callerName.value = cnap
+                _callerPhotoUri.value = ""
+                _callerLabel.value = ""
+            } else {
+                val cachedCnap = if (number.isNotEmpty()) ContactCache.getCnapName(number) else null
+                _callerName.value = cachedCnap ?: ""
+                _callerPhotoUri.value = ""
+                _callerLabel.value = ""
+            }
+
+            // SIM Slot resolution
+            val accountHandle = call.details?.accountHandle
+            val ctx = appContext ?: inCallService?.applicationContext
+            if (accountHandle != null && ctx != null) {
+                try {
+                    val activeSims = MultiSimManager.getActiveSimAccounts(ctx)
+                    val matchedSim = activeSims.find { it.accountHandle == accountHandle }
+                    if (matchedSim != null) {
+                        _currentSimSlot.value = matchedSim.slotIndex + 1
+                    }
+                } catch (_: Exception) {}
+            }
 
             if (cnap.isNotBlank() && number.isNotEmpty()) {
                 ContactCache.putCnapName(number, cnap)
@@ -210,6 +257,11 @@ object CallManager {
             } else {
                 _callerCnapName.value = ""
             }
+
+            // 2. Asynchronous contact resolution via system ContactsProvider if needed
+            if (number.isNotEmpty() && (_callerName.value.isEmpty() || _callerName.value == number)) {
+                resolveCallerDetailsAsync(number, cnap)
+            }
         } else {
             autoStopRecordingIfNeeded()
             stopDtmf()
@@ -217,8 +269,34 @@ object CallManager {
             _callerNumber.value = ""
             _callerName.value = ""
             _callerCnapName.value = ""
+            _callerPhotoUri.value = ""
+            _callerLabel.value = ""
             _activeStartTimestamp.value = 0L
             if (_calls.value.isEmpty()) inCallService = null
+        }
+    }
+
+    private fun resolveCallerDetailsAsync(number: String, cnap: String) {
+        val ctx = appContext ?: inCallService?.applicationContext ?: return
+        scope.launch {
+            val resolvedName = getContactNameFromNumber(ctx, number)
+            if (!resolvedName.isNullOrBlank()) {
+                _callerName.value = resolvedName
+                val contact = ContactCache.getContact(number)
+                if (contact != null) {
+                    if (contact.photoUri.isNotBlank()) _callerPhotoUri.value = contact.photoUri
+                    if (contact.label.isNotBlank()) _callerLabel.value = contact.label
+                }
+                return@launch
+            }
+            if (cnap.isNotBlank()) {
+                _callerName.value = cnap
+                return@launch
+            }
+            val dbCnap = getSavedCnapName(ctx, number)
+            if (!dbCnap.isNullOrBlank()) {
+                _callerName.value = dbCnap
+            }
         }
     }
 
