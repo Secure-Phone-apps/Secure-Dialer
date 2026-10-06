@@ -197,6 +197,8 @@ class MyInCallService : InCallService() {
         releaseWakeLock()
         DynamicIslandOverlayManager.stopCallMonitoring()
         FlashLightManager.stopFlashing(this)
+        nm.cancel(NOTIFICATION_ID_INCOMING)
+        nm.cancel(NOTIFICATION_ID_ACTIVE)
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -206,6 +208,8 @@ class MyInCallService : InCallService() {
             ACTION_HANG_UP, ACTION_DECLINE -> {
                 stopRinging()
                 CallManager.disconnect()
+                nm.cancel(NOTIFICATION_ID_INCOMING)
+                nm.cancel(NOTIFICATION_ID_ACTIVE)
             }
             ACTION_ANSWER -> {
                 stopRinging()
@@ -215,12 +219,22 @@ class MyInCallService : InCallService() {
             ACTION_TOGGLE_MUTE -> {
                 val isMuted = CallManager.audioState.value?.isMuted ?: false
                 CallManager.setMuted(!isMuted)
-                CallManager.currentCall.value?.let { showActiveCallNotification(it) }
+                val activeCall = CallManager.currentCall.value
+                if (activeCall != null && activeCall.state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {
+                    showActiveCallNotification(activeCall)
+                } else {
+                    nm.cancel(NOTIFICATION_ID_ACTIVE)
+                }
             }
             ACTION_TOGGLE_SPEAKER -> {
                 val isSpeaker = (CallManager.audioState.value?.route ?: CallAudioState.ROUTE_EARPIECE) == CallAudioState.ROUTE_SPEAKER
                 CallManager.setSpeaker(!isSpeaker)
-                CallManager.currentCall.value?.let { showActiveCallNotification(it) }
+                val activeCall = CallManager.currentCall.value
+                if (activeCall != null && activeCall.state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {
+                    showActiveCallNotification(activeCall)
+                } else {
+                    nm.cancel(NOTIFICATION_ID_ACTIVE)
+                }
             }
             ACTION_TOGGLE_RECORD -> toggleCallRecordingFromNotification()
         }
@@ -285,10 +299,12 @@ class MyInCallService : InCallService() {
         stopRinging()
         CallManager.removeCall(call)
         FlashLightManager.stopFlashing(this)
-        if (CallManager.calls.value.isEmpty()) {
+        nm.cancel(NOTIFICATION_ID_INCOMING)
+
+        val remainingActiveCalls = CallManager.calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        if (remainingActiveCalls.isEmpty()) {
             releaseWakeLock()
             DynamicIslandOverlayManager.stopCallMonitoring()
-            nm.cancel(NOTIFICATION_ID_INCOMING)
             nm.cancel(NOTIFICATION_ID_ACTIVE)
 
             if (CallAudioRecorder.isRecording.value) {
@@ -297,13 +313,25 @@ class MyInCallService : InCallService() {
                     CallAudioHelper.restoreAudioState(this, this)
                 } catch (_: Exception) {}
             }
+        } else {
+            val nextCall = remainingActiveCalls.firstOrNull()
+            if (nextCall != null) {
+                showActiveCallNotification(nextCall)
+            } else {
+                nm.cancel(NOTIFICATION_ID_ACTIVE)
+            }
         }
     }
 
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         super.onCallAudioStateChanged(audioState)
         CallManager.updateAudioState(audioState)
-        CallManager.currentCall.value?.let { showActiveCallNotification(it) }
+        val activeCall = CallManager.currentCall.value
+        if (activeCall != null && activeCall.state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {
+            showActiveCallNotification(activeCall)
+        } else {
+            nm.cancel(NOTIFICATION_ID_ACTIVE)
+        }
     }
 
     private fun handleCallState(call: Call) {
@@ -395,6 +423,10 @@ class MyInCallService : InCallService() {
     }
 
     private fun showActiveCallNotification(call: Call) {
+        if (call.state == Call.STATE_DISCONNECTED || CallManager.calls.value.none { it == call && it.state != Call.STATE_DISCONNECTED }) {
+            nm.cancel(NOTIFICATION_ID_ACTIVE)
+            return
+        }
         val number = call.details?.handle?.schemeSpecificPart ?: ""
         val displayName = resolveCallerDisplayName(call, number)
 
