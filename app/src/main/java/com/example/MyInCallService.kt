@@ -14,6 +14,7 @@ import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.media.ToneGenerator
 import android.net.Uri
 import android.os.Build
 import android.os.PowerManager
@@ -35,6 +36,7 @@ import com.example.util.CallAudioRecorder
 import com.example.util.DynamicIslandOverlayManager
 import com.example.util.FlashLightManager
 import com.example.util.RecordingFeedbackHelper
+import com.example.util.RichHapticEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -50,6 +52,27 @@ class MyInCallService : InCallService() {
     private var wakeLock: PowerManager.WakeLock? = null
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
+    private var callWaitingToneGenerator: ToneGenerator? = null
+
+    @Synchronized
+    private fun playCallWaitingTone() {
+        try {
+            if (callWaitingToneGenerator == null) {
+                callWaitingToneGenerator = ToneGenerator(AudioManager.STREAM_VOICE_CALL, 75)
+            }
+            callWaitingToneGenerator?.startTone(ToneGenerator.TONE_SUP_CALL_WAITING, 400)
+            RichHapticEngine.performHaptic(this, RichHapticEngine.HapticStyle.DOUBLE_TICK)
+        } catch (_: Exception) {}
+    }
+
+    @Synchronized
+    private fun stopCallWaitingTone() {
+        try {
+            callWaitingToneGenerator?.stopTone()
+            callWaitingToneGenerator?.release()
+            callWaitingToneGenerator = null
+        } catch (_: Exception) {}
+    }
 
     @Synchronized
     private fun startRinging() {
@@ -124,6 +147,8 @@ class MyInCallService : InCallService() {
             vibrator?.cancel()
             vibrator = null
         } catch (_: Exception) {}
+
+        stopCallWaitingTone()
     }
 
     @Synchronized
@@ -284,13 +309,24 @@ class MyInCallService : InCallService() {
     private fun handleCallState(call: Call) {
         when (call.state) {
             Call.STATE_RINGING -> {
-                FlashLightManager.startFlashing(this)
-                startRinging()
-                showIncomingCallNotification(call)
-                launchCallScreen(answerOnLaunch = false)
+                val hasExistingActiveCall = CallManager.calls.value.any {
+                    it != call && (it.state == Call.STATE_ACTIVE || it.state == Call.STATE_HOLDING || it.state == Call.STATE_DIALING)
+                }
+                if (hasExistingActiveCall) {
+                    // Call Waiting: Suppress full speaker ringtone and camera flashlight to protect user's hearing
+                    CallManager.updateWaitingCall(call)
+                    playCallWaitingTone()
+                    showIncomingCallNotification(call, isCallWaiting = true)
+                } else {
+                    FlashLightManager.startFlashing(this)
+                    startRinging()
+                    showIncomingCallNotification(call, isCallWaiting = false)
+                    launchCallScreen(answerOnLaunch = false)
+                }
             }
             Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING -> {
                 stopRinging()
+                stopCallWaitingTone()
                 FlashLightManager.stopFlashing(this)
                 showActiveCallNotification(call)
                 launchCallScreen(answerOnLaunch = false)
@@ -298,19 +334,24 @@ class MyInCallService : InCallService() {
         }
     }
 
-    private fun showIncomingCallNotification(call: Call) {
+    private fun showIncomingCallNotification(call: Call, isCallWaiting: Boolean = false) {
         val number = call.details?.handle?.schemeSpecificPart ?: ""
         val displayName = resolveCallerDisplayName(call, number)
 
-        val fullScreenPendingIntent = PendingIntent.getActivity(
-            this, 101,
-            Intent(this, MainActivity::class.java).apply {
-                action = ACTION_INCOMING_CALL
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                putExtra(EXTRA_SHOW_CALL, true)
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val fullScreenPendingIntent = if (!isCallWaiting) {
+            PendingIntent.getActivity(
+                this, 101,
+                Intent(this, MainActivity::class.java).apply {
+                    action = ACTION_INCOMING_CALL
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra(EXTRA_SHOW_CALL, true)
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else null
 
         val declinePendingIntent = PendingIntent.getService(
             this, 102,
@@ -322,7 +363,10 @@ class MyInCallService : InCallService() {
             this, 103,
             Intent(this, MainActivity::class.java).apply {
                 action = ACTION_ANSWER
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
                 putExtra(EXTRA_SHOW_CALL, true)
                 putExtra(EXTRA_ANSWER, true)
             },
@@ -332,7 +376,7 @@ class MyInCallService : InCallService() {
         val caller = Person.Builder().setName(displayName).setKey(number).build()
         val style = NotificationCompat.CallStyle.forIncomingCall(caller, declinePendingIntent, answerPendingIntent)
 
-        val notification = NotificationCompat.Builder(this, CHANNEL_INCOMING)
+        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_INCOMING)
             .setSmallIcon(android.R.drawable.sym_call_incoming)
             .setStyle(style)
             .setPriority(NotificationCompat.PRIORITY_MAX)
@@ -340,13 +384,14 @@ class MyInCallService : InCallService() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
-            .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE))
-            .setVibrate(longArrayOf(0, 1000, 1000, 1000))
-            .setFullScreenIntent(fullScreenPendingIntent, true)
-            .setContentIntent(fullScreenPendingIntent)
-            .build()
+            // Single Audio Source: startRinging() handles audio and vibration cleanly to prevent dual-playback echo
+            .setContentIntent(answerPendingIntent)
 
-        nm.notify(NOTIFICATION_ID_INCOMING, notification)
+        if (fullScreenPendingIntent != null) {
+            notificationBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
+        }
+
+        nm.notify(NOTIFICATION_ID_INCOMING, notificationBuilder.build())
     }
 
     private fun showActiveCallNotification(call: Call) {
@@ -539,21 +584,13 @@ class MyInCallService : InCallService() {
 
     private fun initNotificationChannels() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val ringtoneUri = RingtoneManager.getActualDefaultRingtoneUri(this, RingtoneManager.TYPE_RINGTONE)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-            val audioAttrs = AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                .setLegacyStreamType(AudioManager.STREAM_RING)
-                .build()
-
             try { nm.deleteNotificationChannel("incoming_call_channel_v2") } catch (_: Exception) {}
+            try { nm.deleteNotificationChannel("incoming_call_channel_v3") } catch (_: Exception) {}
 
             val incomingChannel = NotificationChannel(CHANNEL_INCOMING, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH).apply {
                 description = "Incoming call alerts and full screen notifications"
-                setSound(ringtoneUri, audioAttrs)
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 1000, 1000, 1000)
+                setSound(null, null)
+                enableVibration(false)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
                 setBypassDnd(true)
             }
@@ -572,7 +609,7 @@ class MyInCallService : InCallService() {
     }
 
     companion object {
-        const val CHANNEL_INCOMING = "incoming_call_channel_v3"
+        const val CHANNEL_INCOMING = "incoming_call_channel_v4"
         const val CHANNEL_ACTIVE = "active_call_channel"
         const val CHANNEL_MISSED = "missed_call_channel"
 

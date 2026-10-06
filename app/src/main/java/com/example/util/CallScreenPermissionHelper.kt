@@ -17,16 +17,28 @@
 
 package com.example.util
 
+import android.app.Activity
 import android.app.NotificationManager
 import android.app.role.RoleManager
 import android.content.Context
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.telecom.TelecomManager
+import androidx.activity.result.ActivityResultLauncher
 
 object CallScreenPermissionHelper {
+
+    fun findActivity(context: Context): Activity? {
+        var ctx = context
+        while (ctx is ContextWrapper) {
+            if (ctx is Activity) return ctx
+            ctx = ctx.baseContext
+        }
+        return null
+    }
 
     fun isDefaultDialer(context: Context): Boolean {
         return try {
@@ -59,25 +71,48 @@ object CallScreenPermissionHelper {
         }
     }
 
-    fun requestDefaultDialer(context: Context) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val rm = context.getSystemService(Context.ROLE_SERVICE) as? RoleManager
-                if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_DIALER)) {
-                    val intent = rm.createRequestRoleIntent(RoleManager.ROLE_DIALER).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    }
+    fun getDefaultDialerIntent(context: Context): Intent? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val rm = context.getSystemService(Context.ROLE_SERVICE) as? RoleManager
+            if (rm != null && rm.isRoleAvailable(RoleManager.ROLE_DIALER)) {
+                return rm.createRequestRoleIntent(RoleManager.ROLE_DIALER)
+            }
+        }
+        @Suppress("DEPRECATION")
+        return Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
+            putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
+        }
+    }
+
+    fun requestDefaultDialer(context: Context, launcher: ActivityResultLauncher<Intent>? = null) {
+        val intent = getDefaultDialerIntent(context)
+        if (intent != null) {
+            try {
+                if (launcher != null) {
+                    launcher.launch(intent)
+                    return
+                }
+                val activity = findActivity(context)
+                if (activity != null) {
+                    activity.startActivity(intent)
+                    return
+                } else {
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
                     return
                 }
+            } catch (_: Exception) {}
+        }
+
+        // Fallback for restricted OEMs (HyperOS, ColorOS, Nothing OS): open Default Apps system settings
+        try {
+            val defaultAppsIntent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS).apply {
+                if (findActivity(context) == null) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            @Suppress("DEPRECATION")
-            val intent = Intent(TelecomManager.ACTION_CHANGE_DEFAULT_DIALER).apply {
-                putExtra(TelecomManager.EXTRA_CHANGE_DEFAULT_DIALER_PACKAGE_NAME, context.packageName)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            }
-            context.startActivity(intent)
-        } catch (_: Exception) {}
+            context.startActivity(defaultAppsIntent)
+        } catch (_: Exception) {
+            openAppDetailsSettings(context)
+        }
     }
 
     fun requestOverlayPermission(context: Context) {
@@ -120,7 +155,7 @@ object CallScreenPermissionHelper {
             try {
                 val intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).apply {
                     putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                    putExtra(Settings.EXTRA_CHANNEL_ID, "incoming_call_channel_v3")
+                    putExtra(Settings.EXTRA_CHANNEL_ID, "incoming_call_channel_v4")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK
                 }
                 context.startActivity(intent)
