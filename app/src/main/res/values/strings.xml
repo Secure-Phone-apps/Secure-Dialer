@@ -1,9 +1,15 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright (C) 2026 MovStore
-  ~ SPDX-License-Identifier: GPL-3.0-or-later
+  ~
+  ~ This program is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ (at your option) any later version.
   -->
 <resources>
+
+    <!-- Application Identity -->
     <string name="app_name">Secure Dialer</string>
 
     <!-- Navigation Tabs -->
@@ -16,152 +22,133 @@
     <string name="tab_scheduled_reminders">Scheduled Reminders</string>
     <string name="tab_fake_call_sim">Fake Call Simulator</string>
     <string name="tab_call_notes">Call Notes</string>
+    <string name="tab_slot_left">Left Slot</string>
+    <string name="tab_slot_middle">Middle Slot</string>
+    <string name="tab_slot_right">Right Slot</string>
 
-    <!-- Search & General -->
+    <!-- Search & General UI -->
     <string name="search_placeholder">Search contacts &amp; numbers</string>
     <string name="search_settings_placeholder">Search settings...</string>
     <string name="search_clear">Clear</string>
-    <string name="settings_title">Settings</string>
-    <string name="default_dialer_warning">Set as default dialer to enable all features.</string>
-    <string name="warning">Warning</string>
-    <string name="unknown">Unknown</string>
-    <string name="close">Close</string>
-    <string name="unblock">Unblock</string>
-    <string name="block">Block</string>
-    <string name="history">History</string>
-    <string name="add">Add</string>
-    <string name="edit">Edit</string>
-
-    <!-- Permissions -->
-    <string name="permissions_required">Permissions Required</string>
-    <string name="contacts_perm_desc">To access, load, edit, and call real contacts on your device, please enable the Contacts Permission.</string>
-    <string name="enable_contacts_perm">Enable Phone Contacts</string>
-    <string name="call_log_perm_desc">To access, load, and call real call history on your device, please enable the Call Log Permission.</string>
-    <string name="enable_call_log_perm">Enable Call Log</string>
-
-    <!-- Contacts Management -->
-    <string name="contacts_header">Contacts</string>
-    <string name="add_new_contact">Add New</string>
-    <string name="contact_source_label">Save to Account</string>
-    <string name="contact_source_phone">Phone storage</string>
-    <string name="contact_source_select">Select Account</string>
-    <string name="account_filter_all">All Accounts</string>
-    <string name="no_contacts_title">No contacts found</string>
-    <string name="no_contacts_subtitle">Tap \'Add New\' to create a contact</string>
-    <string name="add_contact_dialog_title">Add Contact</string>
-    <string name="edit_contact_dialog_title">Edit Contact</string>
-    <string name="label_name">Name</string>
-    <string name="label_phone_number">Phone Number</string>
-    <string name="label_type">Type</string>
-    <string name="label_email">Email</string>
-    <string name="label_mobile">Mobile</string>
-    <string name="label_work">Work</string>
-    <string name="label_home">Home</string>
-    <string name="label_other">Other</string>
-    <string name="label_address">Address</string>
-    <string name="label_notes">Notes</string>
-    <string name="label_add_number">+ Add Phone Number</string>
-    <string name="label_add_email">+ Add Email Address</string>
-    <string name="btn_save">Save</string>
-    <string name="btn_cancel">Cancel</string>
-    <string name="btn_delete">Delete</string>
-    <string name="btn_edit">Edit</string>
-    <string name="contact_multiple_numbers">%1$d numbers</string>
-    <string name="saved_in_account">Saved in %1$s</string>
-    <string name="action_open_map">Open in Maps</string>
-    <string name="action_send_email">Send Email</string>
-    <string name="contact_storage_badge_google">Google</string>
-    <string name="contact_storage_badge_phone">Phone</string>
-    <string name="contact_storage_badge_sim">SIM</string>
-
-    <!-- Recents & Call History -->
-    <string name="recents_header">Recents</string>
+    <string name="search_results_count">Search results (%1$d)</string>
+    <string name="no_matching_settings">No matching settings</string>
+    <string name="no_matching_settings_desc">Try searching for terms like Dark mode, SIM, Blocking, or Recording.</string>
+    <string name="no_results_title">No results found</string>
+    <string name="no_results_subtitle">No matching calls found</string>
     <string name="filter_all">All</string>
     <string name="filter_missed">Missed</string>
     <string name="filter_dialed">Dialed</string>
     <string name="filter_received">Received</string>
+    <string name="default_dialer_warning">Set as default dialer to enable all features.</string>
+
+    <!-- Permissions -->
+    <string name="enable_contacts_perm">Enable Phone Contacts</string>
+    <string name="enable_call_log_perm">Enable Call Log</string>
+    <string name="contacts_perm_desc">To access, load, edit, and call real contacts on your device, please enable the Contacts Permission.</string>
+    <string name="call_log_perm_desc">To access, load, and call real call history on your device, please enable the Call Log Permission.</string>
+
+    <!-- Contacts Management & Details -->
+    <string name="contacts_header">Contacts</string>
+    <string name="no_contacts_title">No contacts found</string>
+    <string name="no_contacts_subtitle">Tap \'Add New\' to create a contact</string>
+    <string name="action_add_contact">Add Contact</string>
+    <string name="label_name">Name</string>
+    <string name="label_phone_number">Phone Number</string>
+    <string name="label_first_name">First Name</string>
+    <string name="label_last_name">Last Name</string>
+    <string name="label_email">Email</string>
+    <string name="label_type">Type</string>
+    <string name="label_mobile">Mobile</string>
+    <string name="label_home">Home</string>
+    <string name="label_work">Work</string>
+    <string name="label_other">Other</string>
+    <string name="label_notes">Notes</string>
+    <string name="label_address">Address</string>
+    <string name="label_add_number">+ Add Phone Number</string>
+    <string name="label_add_email">+ Add Email Address</string>
+    <string name="contact_storage_badge_phone">Phone</string>
+    <string name="contact_storage_badge_sim">SIM</string>
+    <string name="contact_storage_badge_google">Google</string>
+    <string name="contact_source_select">Select Account</string>
+    <string name="contact_source_phone">Phone storage</string>
+    <string name="contact_source_label">Save to Account</string>
+    <string name="saved_in_account">Saved in %1$s</string>
+    <string name="add_contact_dialog_title">Add Contact</string>
+    <string name="edit_contact_dialog_title">Edit Contact</string>
+    <string name="contact_multiple_numbers">%1$d numbers</string>
+
+    <!-- Recents & Call History -->
+    <string name="recents_header">Recents</string>
     <string name="no_call_log_title">Your call log is empty</string>
     <string name="no_call_log_subtitle">Recent calls will show up here</string>
-    <string name="no_results_title">No results found</string>
-    <string name="no_results_subtitle">No matching calls found</string>
-    <string name="no_matching_calls_for">No matching calls for \"%1$s\"</string>
-    <string name="showing_last_5_calls">Showing last 5 calls</string>
-    <string name="delete_all_call_history">Delete All Call History</string>
-    <string name="call_type_missed">Missed call</string>
-    <string name="call_type_outgoing">Outgoing call</string>
-    <string name="call_type_incoming">Incoming call</string>
-    <string name="delete_call_log_entry">Delete call log entry</string>
-    <string name="error_open_messages">Could not open messaging app</string>
-    <string name="sim_1">SIM 1</string>
-    <string name="sim_2">SIM 2</string>
-    <string name="caller_verified">Verified</string>
-    <string name="clear_history_with_number">Clear History with this Number</string>
     <string name="clear_call_log_confirm_title">Clear call history?</string>
     <string name="clear_call_log_confirm_desc">This will permanently delete all call records from this device and other dialers. This action cannot be undone.</string>
+    <string name="clear_history_with_number">Clear History with this Number</string>
+    <string name="delete_call_log_entry">Delete call log entry</string>
+    <string name="delete_all_call_history">Delete All Call History</string>
+    <string name="call_type_incoming">Incoming call</string>
+    <string name="call_type_outgoing">Outgoing call</string>
+    <string name="call_type_missed">Missed call</string>
+    <string name="unknown">Unknown</string>
     <string name="recent_label_format">Recent • %1$s</string>
+    <string name="calls_count">%1$d calls</string>
+    <string name="call_count_label">Call Count:</string>
+    <string name="showing_last_5_calls">Showing last 5 calls</string>
+    <string name="call_summary_prefix">%1$s Call Summary</string>
+    <string name="today_call_summary">Today\'s Call Summary</string>
 
-    <!-- Dialpad -->
+    <!-- Dialpad & T9 Search -->
     <string name="dialpad_enter_number">Enter Number</string>
-    <string name="dialpad_no_matches">No matching contacts</string>
-    <string name="dialpad_paste">Paste</string>
-    <string name="dialpad_copy">Copy Number</string>
-    <string name="dialpad_clear">Clear</string>
     <string name="dialpad_create_contact">Create Contact</string>
     <string name="dialpad_add_to_existing">Add to Existing</string>
     <string name="dialpad_select_contact_title">Select Contact</string>
     <string name="dialpad_search_contact_hint">Search contacts...</string>
     <string name="dialpad_no_contacts_found">No contacts matching search</string>
+    <string name="dialpad_no_matches">No matching contacts</string>
+    <string name="dialpad_clear">Clear</string>
+    <string name="dialpad_paste">Paste</string>
+    <string name="dialpad_copy">Copy Number</string>
 
     <!-- In-Call Actions & States -->
-    <string name="call_blocked_toast">🚫 Call Blocked</string>
-    <string name="call_status_hold">Call on hold</string>
+    <string name="btn_answer">Answer</string>
+    <string name="btn_decline">Decline</string>
+    <string name="btn_hangup">Hang up</string>
+    <string name="btn_swap">Swap</string>
+    <string name="btn_answer_hold">Answer &amp; Hold</string>
+    <string name="call_status_ongoing">Ongoing call</string>
     <string name="call_status_dialing">Dialing...</string>
     <string name="call_status_ringing">Incoming call...</string>
     <string name="call_status_connecting">Connecting...</string>
-    <string name="call_status_conference">Conference call</string>
-    <string name="call_status_ongoing">Ongoing call</string>
+    <string name="call_status_hold">Call on hold</string>
     <string name="call_status_ended">Call ended</string>
-    <string name="on_hold_prefix">On Hold:</string>
-    <string name="btn_swap">Swap</string>
-    <string name="call_waiting_title">Call Waiting</string>
-    <string name="call_waiting_incoming_from">Incoming call from:</string>
-    <string name="call_waiting_notice">Answering will put your current call on hold.</string>
-    <string name="btn_answer_hold">Answer &amp; Hold</string>
-    <string name="btn_decline">Decline</string>
-    <string name="quick_responses">Quick Responses</string>
-    <string name="sms_sent">SMS Sent</string>
-    <string name="sms_failed">Failed to send SMS</string>
-    <string name="add_call">Add Call</string>
-    <string name="add_call_search_hint">Search contact or enter number</string>
-    <string name="btn_add_merge">Add &amp; Merge</string>
-    <string name="keypad">Keypad</string>
+    <string name="call_status_conference">Conference call</string>
     <string name="mute">Mute</string>
     <string name="speaker">Speaker</string>
-    <string name="hold">Hold</string>
     <string name="bluetooth">Bluetooth</string>
+    <string name="hold">Hold</string>
+    <string name="keypad">Keypad</string>
     <string name="record">Record</string>
     <string name="recording">Recording</string>
-    <string name="call_note">Call Note</string>
-    <string name="send_quick_response">💬 Send Quick Response</string>
-    <string name="btn_answer">Answer</string>
-    <string name="btn_hangup">Hang up</string>
-    <string name="jot_call_note_title">Jot Call Note</string>
-    <string name="note_placeholder">Enter important details...</string>
-    <string name="btn_save_note">Save Note</string>
-    <string name="btn_discard">Discard</string>
-    <string name="note_saved">Note saved securely</string>
     <string name="recording_saved">Saved recording securely</string>
     <string name="recording_started">⏺️ Call Recording Started</string>
-    <string name="btn_call_back">Call Back</string>
     <string name="action_call">Call</string>
     <string name="action_message">Message</string>
-    <string name="action_add_contact">Add Contact</string>
-    <string name="send_sms">Send SMS</string>
     <string name="action_swipe_call">Call</string>
     <string name="action_swipe_message">Message</string>
     <string name="action_copy_number">Copy number</string>
+    <string name="action_send_email">Send Email</string>
+    <string name="action_open_map">Open in Maps</string>
     <string name="toast_number_copied">Number copied to clipboard</string>
+    <string name="number_copied">Number copied</string>
+    <string name="send_sms">Send SMS</string>
+    <string name="sms_sent">SMS Sent</string>
+    <string name="sms_failed">Failed to send SMS</string>
+    <string name="call_waiting_title">Call Waiting</string>
+    <string name="call_waiting_notice">Answering will put your current call on hold.</string>
+    <string name="call_waiting_incoming_from">Incoming call from:</string>
     <string name="conference">Conference (%1$d)</string>
+    <string name="caller_verified">Verified</string>
+    <string name="no_answer">No Answer</string>
 
     <!-- Favorites & Voicemail -->
     <string name="favorites_header">Favorites</string>
@@ -171,69 +158,52 @@
     <string name="no_voicemails_title">No voicemails</string>
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
     <string name="voicemail_settings">Voicemail Settings</string>
-    <string name="voicemail_setup_desc">Set the phone number to trigger when you long-press key \'1\' on the dialpad.</string>
     <string name="voicemail_directory_number">Voicemail Directory Number</string>
-    <string name="save_voicemail_number">Save Voicemail Number</string>
     <string name="voicemail_sample_transcript">Transcript: \"Hey, just calling to catch up. Let me know when you\'re free this evening!\"</string>
 
     <!-- Settings Categories -->
+    <string name="cat_sound_gestures">Sound &amp; Gestures</string>
+    <string name="cat_calling_accounts">SIM &amp; Calling</string>
+    <string name="cat_speed_dial_quick_responses">Speed Dial &amp; Quick Reply</string>
+    <string name="cat_call_blocking">Spam &amp; Call Block</string>
+    <string name="cat_voicemail_tools">Voicemail &amp; Recording</string>
+    <string name="cat_contacts_data">Contacts &amp; Data</string>
+    <string name="cat_advanced_features">Advanced Tools</string>
+    <string name="cat_privacy_security_about">Privacy &amp; About</string>
     <string name="cat_appearance_color">Appearance</string>
     <string name="cat_appearance_color_sub">Dynamic, dark mode &amp; colors</string>
-    <string name="cat_sound_gestures">Sound &amp; Gestures</string>
     <string name="cat_sound_gestures_sub">Ringtones, tones &amp; gestures</string>
-    <string name="cat_calling_accounts">SIM &amp; Calling</string>
     <string name="cat_calling_accounts_sub">SIM cards, waiting &amp; voicemail</string>
-    <string name="cat_speed_dial_quick_responses">Speed Dial &amp; Quick Reply</string>
     <string name="cat_speed_dial_quick_responses_sub">Speed Dial &amp; quick replies</string>
-    <string name="cat_call_blocking">Spam &amp; Call Block</string>
     <string name="cat_call_blocking_sub">Blocked numbers &amp; caller ID</string>
-    <string name="cat_voicemail_tools">Voicemail &amp; Recording</string>
     <string name="cat_voicemail_tools_sub">Carrier voicemail directory &amp; high-fidelity call recording</string>
-    <string name="cat_contacts_data">Contacts &amp; Data</string>
     <string name="cat_contacts_data_sub">Sync, import &amp; backup</string>
-    <string name="cat_advanced_features">Advanced Tools</string>
     <string name="cat_advanced_features_sub">Call Record, Note, Fake Call &amp; Call Back</string>
-    <string name="cat_privacy_security_about">Privacy &amp; About</string>
     <string name="cat_privacy_security_about_sub">App lock, safety &amp; app info</string>
-
-    <string name="feature_disabled_hint">Feature is disabled</string>
-    <string name="feature_enable_prompt">Toggle the switch above to activate</string>
-    <string name="btn_enable_feature">Enable Feature</string>
-    <string name="state_enabled">Enabled</string>
-    <string name="state_disabled">Disabled</string>
+    <string name="settings_title">Settings</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_info_utilities">Information &amp; Utilities</string>
 
     <!-- Settings Headers -->
-    <string name="header_theme_styling">THEME &amp; STYLING</string>
-    <string name="header_sound_haptics">SOUND &amp; HAPTICS</string>
-    <string name="header_navigation_layout">NAVIGATION &amp; LAYOUT</string>
     <string name="header_sim_carrier">SIM &amp; CARRIER CONFIGURATION</string>
-    <string name="header_dialing_shortcuts">DIALING SHORTCUTS</string>
     <string name="header_incoming_alerts">INCOMING CALL ALERTS</string>
-    <string name="header_call_blocker">CALL BLOCKER &amp; FILTERS</string>
     <string name="header_threat_intelligence">THREAT INTELLIGENCE</string>
+    <string name="header_call_blocker">CALL BLOCKER &amp; FILTERS</string>
+    <string name="header_dialing_shortcuts">DIALING SHORTCUTS</string>
     <string name="header_call_decline_messages">CALL DECLINE MESSAGES</string>
     <string name="header_carrier_voicemail">CARRIER VOICEMAIL</string>
-    <string name="header_call_recording">CALL RECORDING</string>
-    <string name="header_productivity_notes">PRODUCTIVITY &amp; NOTES</string>
-    <string name="header_privacy_protection">PRIVACY PROTECTION</string>
     <string name="header_contacts_management">CONTACTS MANAGEMENT</string>
     <string name="header_data_backup">DATA &amp; BACKUP</string>
+    <string name="header_privacy_protection">PRIVACY PROTECTION</string>
+    <string name="header_call_recording">CALL RECORDING</string>
     <string name="header_app_specs">APP SPECIFICATIONS</string>
+    <string name="header_navigation_layout">NAVIGATION &amp; LAYOUT</string>
     <string name="header_community">COMMUNITY</string>
 
-    <!-- Settings Items & Subtitles -->
+    <!-- Settings - General & Appearance -->
     <string name="settings_carrier_call_settings">Carrier Call Settings</string>
     <string name="settings_carrier_call_settings_sub">Call waiting, call forwarding &amp; supplementary phone services</string>
-    <string name="spam_db_check_updates">Check for Database Updates</string>
-    <string name="spam_db_checking">Checking local threat definitions...</string>
-    <string name="spam_db_up_to_date">Offline Spam Database is up to date (Definitions v2.4)</string>
-    
     <string name="settings_appearance">Appearance</string>
-    <string name="settings_contact_preferences">Contact Preferences</string>
-    <string name="settings_contacts_to_display">Contacts to Display</string>
-    <string name="settings_contacts_to_display_sub">Filter contacts by account source (e.g. Google, Phone, SIM)</string>
-    <string name="settings_default_account_for_new">Default Account for New Contacts</string>
-    <string name="settings_default_account_for_new_sub">Pre-selected account when creating new contacts</string>
     <string name="settings_dark_theme">Dark Theme</string>
     <string name="settings_dark_theme_sub">Apply dark visual theme to the interface</string>
     <string name="settings_dynamic_color">Dynamic Color</string>
@@ -242,7 +212,21 @@
     <string name="settings_m3_expressive">Material 3 Expressive</string>
     <string name="settings_m3_expressive_sub">Vibrant colors, extra rounded squircle shapes, and dynamic styling</string>
     <string name="settings_accent_color">Accent Color</string>
-    
+    <string name="theme_accent_color">Theme Accent Color</string>
+    <string name="theme_custom_title">Custom Theme Seed Color</string>
+    <string name="theme_custom_desc">Enter any HEX color code (e.g. #FF5722 or #00E676) to dynamically generate an M3 color scheme.</string>
+    <string name="theme_hex_code_label">HEX Color Code</string>
+    <string name="theme_hex_code_chip">Hex Code</string>
+    <string name="theme_apply">Apply Theme</string>
+    <string name="settings_pure_black">Pure AMOLED Pitch Black</string>
+    <string name="settings_pure_black_sub">Deep black surfaces for true OLED battery savings and high contrast</string>
+    <string name="settings_pure_black_sub_disabled_dark">True #000000 pitch black for maximum OLED battery savings (activates Dark Theme)</string>
+    <string name="settings_tab_layout">Custom Tab Layout (Left, Middle, Right)</string>
+    <string name="settings_tab_layout_sub">Assign individual screens to each navigation slot. Selection automatically swaps duplicates.</string>
+    <string name="settings_startup_options">Startup Options</string>
+    <string name="settings_default_startup_tab">Default Startup Tab</string>
+
+    <!-- Settings - Sound, Vibration & Gestures -->
     <string name="settings_sound_haptics">Sound &amp; Haptics</string>
     <string name="settings_dialpad_tones">Dialpad Tones</string>
     <string name="settings_dialpad_tones_sub">Play sounds when dialing keys</string>
@@ -252,100 +236,48 @@
     <string name="settings_flip_to_silence_sub">Silence incoming call ringer by turning phone face down</string>
     <string name="settings_swipe_actions">Swipe Row to Call / Message</string>
     <string name="settings_swipe_actions_sub">Swipe right to Call, left to Message on call logs. Disables tab drag to prevent gesture conflict.</string>
+    <string name="settings_flash_alerts">Flash Alerts on Call</string>
+    <string name="settings_flash_alerts_sub">Blinks the camera flash on incoming ringing calls</string>
+    <string name="settings_auto_tune_volume">Auto-tune speaker volume for recording</string>
+    <string name="settings_auto_tune_volume_sub">Automatically balances speaker volume at 55% during recording for clear two-way acoustic capture.</string>
+    <string name="header_theme_styling">THEME &amp; STYLING</string>
+    <string name="header_sound_haptics">SOUND &amp; HAPTICS</string>
 
-    <string name="settings_calls_blocking">Calls &amp; Blocking</string>
-    <string name="settings_speed_dial">Speed Dial</string>
-    <string name="settings_speed_dial_sub">Assign fast call keys 1-9</string>
-    <string name="speed_dial">Speed Dial</string>
-    <string name="settings_blocked_numbers">Blocked Numbers</string>
-    <string name="settings_blocked_numbers_sub">Manage restricted incoming callers</string>
-    <string name="settings_quick_responses">Quick Responses</string>
-    <string name="settings_quick_responses_sub">Edit SMS decline templates</string>
-
-    <string name="settings_sim_voicemail">SIM &amp; Voicemail</string>
-    <string name="settings_preferred_sim">Preferred SIM</string>
-    <string name="settings_preferred_sim_sub">Select SIM card for outgoing calls</string>
-    <string name="settings_voicemail_num">Voicemail Number</string>
-    <string name="settings_voicemail_num_sub">Configure speed dial 1 target</string>
-
-    <string name="settings_data_utilities">Data &amp; Utilities</string>
-    <string name="settings_dedup">Deduplication Utility</string>
-    <string name="settings_dedup_sub">Merge duplicate contacts automatically</string>
-    <string name="settings_recordings">Saved Recordings</string>
-    <string name="settings_recordings_sub">Access locally stored call audio</string>
-    <string name="settings_app_updates">In-App Updates</string>
-    <string name="settings_app_updates_sub">Check version status &amp; changelog</string>
-
-    <string name="settings_about_privacy">About &amp; Privacy</string>
-    <string name="settings_about">About Secure Dialer</string>
-    <string name="settings_about_sub">Version info, licenses, and core tech</string>
-    <string name="settings_privacy">Privacy Policy</string>
-    <string name="settings_privacy_sub">Zero data collection notice</string>
-    <string name="settings_back">Back</string>
-
-    <string name="settings_block_list_title">Block List</string>
-    <string name="settings_quick_resp_title">Quick Responses</string>
-    <string name="settings_voicemail_setup_title">Voicemail Setup</string>
-    <string name="settings_dedup_title">Deduplication Utility</string>
-    <string name="settings_updates_title">In-App Updates</string>
-    <string name="settings_recordings_title">Saved Recordings</string>
-
-    <string name="settings_startup_options">Startup Options</string>
-    <string name="settings_default_startup_tab">Default Startup Tab</string>
-    <string name="sim_ask">Ask</string>
-    <string name="not_set">Not set</string>
-    
+    <!-- Settings - Calling Accounts, SIM & Telephony -->
     <string name="settings_calling_features">Calling Features</string>
     <string name="settings_call_waiting">Call Waiting</string>
     <string name="settings_call_waiting_sub">Notify of incoming calls during an active call</string>
-    <string name="settings_call_recording">Call Recording</string>
-    <string name="settings_call_recording_sub">Enable in-call recording controls &amp; save locally</string>
-    <string name="settings_auto_tune_volume">Auto-tune speaker volume for recording</string>
-    <string name="settings_auto_tune_volume_sub">Automatically balances speaker volume at 55% during recording for clear two-way acoustic capture.</string>
-    <string name="settings_recording_chime">Recording audio chime &amp; haptics</string>
-    <string name="settings_recording_chime_sub">Play subtle audio tone and tactile feedback when call recording starts or stops</string>
-    
-    <string name="share_recording_title">Share &amp; Export Recording</string>
-    <string name="share_via_apps">Share via Apps</string>
-    <string name="share_via_apps_sub">Send audio file to messaging, cloud, or external apps</string>
-    <string name="save_to_downloads">Save to Downloads</string>
-    <string name="save_to_downloads_sub">Export a copy directly into device Downloads directory</string>
-    <string name="recording_details">Recording Details</string>
-    <string name="headset_recording_warning">Headphones connected: Only your voice will be recorded unless switched to Speaker.</string>
-    <string name="settings_view_saved_recordings">View Saved Recordings</string>
-    <string name="settings_view_saved_recordings_sub">Listen to and manage your call recordings</string>
-    
-    <string name="settings_security_protection">Security &amp; Protection</string>
-    <string name="settings_biometric_lock">App Lock</string>
-    <string name="settings_biometric_lock_sub">Require device lock (PIN/Pattern/Biometric) to open the app</string>
-    <string name="settings_pocket_protection">Pocket Touch Protection</string>
-    <string name="settings_pocket_protection_sub">Block touch input during calls when proximity sensor detects proximity (e.g., in pocket)</string>
-    
-    <string name="settings_info_utilities">Information &amp; Utilities</string>
-    <string name="settings_all_call_notes">Call Notes</string>
-    <string name="settings_all_call_notes_sub">View and manage saved call notes</string>
-    <string name="no_notes_title">No Call Notes</string>
-    <string name="no_notes_desc">Notes added during calls will appear here</string>
-    <string name="search_notes_placeholder">Search notes or numbers...</string>
-    <string name="edit_note_title">Edit Call Note</string>
-    <string name="delete_note_confirm">Delete call note for %1$s?</string>
-    <string name="note_deleted_toast">Call note deleted</string>
-    <string name="call_note_card_title">Call Note</string>
-    <string name="add_call_note_btn">Add Call Note</string>
-    
-    <string name="settings_check_updates">Check for Updates</string>
-    <string name="settings_check_updates_sub">Ensure app is up to date &amp; secure</string>
-    <string name="settings_contribution">Contribution</string>
-    <string name="settings_support_title">Support Secure Dialer</string>
-    <string name="settings_support_desc" formatted="false">Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.</string>
-    <string name="settings_contribute_github">Contribute on GitHub</string>
-    
-    <string name="enter_number_to_block">Enter Number to Block</string>
-    <string name="block_this_number">Block This Number</string>
-    <string name="blocked_callers_header">BLOCKED CALLERS</string>
-    <string name="no_blocked_numbers_title">No Blocked Numbers</string>
-    <string name="no_blocked_numbers_desc">Numbers you block will appear here. They won\'t be able to call you.</string>
-    
+    <string name="settings_sim_voicemail">SIM &amp; Voicemail</string>
+    <string name="settings_preferred_sim">Preferred SIM</string>
+    <string name="settings_preferred_sim_sub">Select SIM card for outgoing calls</string>
+    <string name="sim_1">SIM 1</string>
+    <string name="sim_2">SIM 2</string>
+    <string name="sim_ask">Ask</string>
+    <string name="select_sim_card">Select SIM Card</string>
+    <string name="choose_sim_card">Choose which SIM card to make this call to %1$s:</string>
+
+    <!-- Settings - Outgoing Caller ID, Privacy & CLIR -->
+    <string name="header_caller_id_privacy">Outgoing Caller ID &amp; Privacy (CLIR)</string>
+    <string name="settings_hide_caller_id">Hide Caller ID</string>
+    <string name="settings_hide_caller_id_sub">Prefix outgoing calls with carrier privacy code to mask your number</string>
+    <string name="settings_clir_prefix">Carrier Prefix</string>
+    <string name="settings_clir_prefix_sub">Active code: %1$s</string>
+    <string name="settings_clir_warning_title">Carrier &amp; Regulatory Notice</string>
+    <string name="settings_clir_warning_desc">CLIR support varies by carrier and region. Emergency numbers are never masked.</string>
+    <string name="settings_system_sim_caller_id">System SIM Settings</string>
+    <string name="settings_system_sim_caller_id_sub">Open Android system telephony caller ID preferences</string>
+    <string name="settings_clir_prefix_dialog_title">Select CLIR Prefix</string>
+    <string name="settings_clir_prefix_gsm">GSM Standard (#31#)</string>
+    <string name="settings_clir_prefix_us">North America (*67)</string>
+    <string name="settings_clir_prefix_uk">United Kingdom (141)</string>
+    <string name="settings_clir_prefix_japan">Japan (1831)</string>
+    <string name="settings_clir_prefix_custom">Custom Prefix</string>
+    <string name="settings_clir_custom_label">Enter custom CLIR carrier prefix code</string>
+
+    <!-- Settings - Speed Dial & Quick Responses -->
+    <string name="settings_speed_dial">Speed Dial</string>
+    <string name="settings_speed_dial_sub">Assign fast call keys 1-9</string>
+    <string name="speed_dial">Speed Dial</string>
     <string name="speed_dial_desc">Hold keys 1-9 on the dialpad to quickly call assigned numbers.</string>
     <string name="assign_speed_dial_key">Assign Speed Dial Key %1$d</string>
     <string name="assign_key">Assign Key</string>
@@ -353,54 +285,144 @@
     <string name="press_and_hold_dialpad">Press &amp; hold %1$d on Dialpad</string>
     <string name="edit_key">Edit Key %1$d</string>
     <string name="delete_key">Delete Key %1$d</string>
-    
+    <string name="settings_quick_responses">Quick Responses</string>
+    <string name="settings_quick_responses_sub">Edit SMS decline templates</string>
+    <string name="settings_quick_resp_title">Quick Responses</string>
+    <string name="quick_responses">Quick Responses</string>
+    <string name="quick_decline_messages">QUICK DECLINE MESSAGES</string>
     <string name="create_custom_reply">Create Custom Reply</string>
     <string name="add_message_template">Add Message Template</string>
-    <string name="quick_decline_messages">QUICK DECLINE MESSAGES</string>
     <string name="no_responses_saved_title">No Responses Saved</string>
     <string name="no_responses_saved_desc">Add custom message templates to quickly send when rejecting incoming calls.</string>
     <string name="delete_response">Delete response</string>
-    
-    <string name="dedup_desc">The system scans your local database for duplicate entries sharing the same phone number, allowing you to merge them instantly.</string>
-    <string name="no_duplicates_title">No Duplicates Found</string>
-    <string name="no_duplicates_desc">Your contacts list is completely clean! No duplicate numbers detected.</string>
-    <string name="merge_all_duplicates">Merge All Detected Duplicates (%1$d groups)</string>
-    <string name="merge_group">Merge Group</string>
-    
-    <string name="check_updates_desc">Check and update Secure Dialer directly from official F-Droid or stable mirrors.</string>
-    <string name="checking_mirrors">Checking secure mirrors...</string>
-    <string name="app_up_to_date_desc">You are using the latest official cryptographic build of Secure Dialer.</string>
-    <string name="check_for_updates_now">Check for Updates Now</string>
-    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.5.0 (Stable Release)</string>
-    
+    <string name="send_quick_response">💬 Send Quick Response</string>
+
+    <!-- Settings - Carrier Voicemail & Preferences -->
+    <string name="settings_voicemail_num">Voicemail Number</string>
+    <string name="settings_voicemail_num_sub">Configure speed dial 1 target</string>
+    <string name="settings_voicemail_setup_title">Voicemail Setup</string>
+    <string name="voicemail_setup_desc">Set the phone number to trigger when you long-press key \'1\' on the dialpad.</string>
+    <string name="save_voicemail_number">Save Voicemail Number</string>
+
+    <!-- Settings - Call Blocking, Spam Database & Offline Protection -->
+    <string name="settings_calls_blocking">Calls &amp; Blocking</string>
+    <string name="settings_blocked_numbers">Blocked Numbers</string>
+    <string name="settings_blocked_numbers_sub">Manage restricted incoming callers</string>
+    <string name="settings_block_list_title">Block List</string>
+    <string name="enter_number_to_block">Enter Number to Block</string>
+    <string name="block_this_number">Block This Number</string>
+    <string name="blocked_callers_header">BLOCKED CALLERS</string>
+    <string name="no_blocked_numbers_title">No Blocked Numbers</string>
+    <string name="no_blocked_numbers_desc">Numbers you block will appear here. They won\'t be able to call you.</string>
+    <string name="block">Block</string>
+    <string name="unblock">Unblock</string>
+    <string name="block_number">Block number</string>
+    <string name="unblock_number">Unblock number</string>
+    <string name="call_blocked_toast">🚫 Call Blocked</string>
+    <string name="settings_spam_protection">Offline Spam Protection</string>
+    <string name="settings_spam_protection_sub">Import CSV blocklists and manage blocked numbers locally</string>
+    <string name="local_offline_protection">Local Offline Protection</string>
+    <string name="local_offline_protection_sub">Zero network calls. Completely offline.</string>
+    <string name="spam_entries_label">Spam Entries</string>
+    <string name="spam_numbers_blocked">%1$d numbers blocked</string>
+    <string name="add_spam_manually_title">Add Spam Number Manually</string>
+    <string name="label_phone_number_hint">Phone Number</string>
+    <string name="label_spam_label_hint">Label</string>
+    <string name="btn_add_to_offline_db">Add to Offline Database</string>
+    <string name="blocklist_empty_title">Blocklist is empty</string>
+    <string name="blocklist_empty_desc">Import a CSV blocklist or add numbers manually to block telemarketers and scammers locally.</string>
+    <string name="blocked_offline_numbers_title">Blocked Offline Numbers</string>
+    <string name="btn_clear_all">Clear All</string>
+    <string name="import_csv_dialog_title">Import CSV Blocklist</string>
+    <string name="import_csv_dialog_desc">Format: \'number,label\' (one per line). Paste your CSV blocklist content below:</string>
+    <string name="load_sample_dataset">Or load a sample offline dataset:</string>
+    <string name="btn_load_sample_list">Load Sample List</string>
+    <string name="spam_csv_placeholder">18005550199,Spam Telemarketer\n18885550122,Scam Caller</string>
+    <string name="btn_csv_import">CSV Import</string>
+    <string name="spam_db_check_updates">Check for Database Updates</string>
+    <string name="spam_db_checking">Checking local threat definitions...</string>
+    <string name="spam_db_up_to_date">Offline Spam Database is up to date (Definitions v2.4)</string>
+    <string name="blocklist_file_action_title">File Backup &amp; Migration</string>
+    <string name="blocklist_file_action_desc">Export your blocked callers to a .txt/.csv file or import numbers from external community blocklists.</string>
+    <string name="btn_export_blocklist">Export Blocklist</string>
+    <string name="btn_import_blocklist">Import File</string>
+    <string name="btn_export_spam_csv">Export CSV</string>
+    <string name="btn_import_spam_file">Import File</string>
+    <string name="blocklist_import_count_success">Imported %1$d blocked numbers!</string>
+    <string name="spam_import_count_success">Imported %1$d spam entries!</string>
+
+    <!-- Settings - Call Recording Vault, Audio & Compression -->
+    <string name="settings_call_recording">Call Recording</string>
+    <string name="settings_call_recording_sub">Enable in-call recording controls &amp; save locally</string>
+    <string name="settings_recordings">Saved Recordings</string>
+    <string name="settings_recordings_sub">Access locally stored call audio</string>
+    <string name="settings_recordings_title">Saved Recordings</string>
+    <string name="settings_view_saved_recordings">View Saved Recordings</string>
+    <string name="settings_view_saved_recordings_sub">Listen to and manage your call recordings</string>
     <string name="secure_local_recordings">SECURE LOCAL RECORDINGS</string>
     <string name="recordings_privacy_notice">Recordings are stored securely inside the app\'s sandboxed private database and not shared with external servers.</string>
     <string name="no_recordings_title">No Recordings Found</string>
     <string name="no_recordings_desc">Enable Call Recording and tap the record button during any active call.</string>
     <string name="share_recording">Share</string>
     <string name="delete_recording">Delete</string>
-    
-    <string name="theme_accent_color">Theme Accent Color</string>
-    <string name="about_mission_title">Our Mission</string>
-    <string name="about_mission_desc">To provide a simple, reliable, and secure dialer experience without compromising user privacy.</string>
-    <string name="about_app_desc">Secure Dialer is a privacy-focused communication tool designed to put you in control of your data. All functions occur exclusively on your device.</string>
-    
-    <string name="privacy_policy_title">Privacy Policy</string>
-    <string name="privacy_intro">At Secure Dialer, we prioritize your privacy.</string>
-    <string name="privacy_section_1_title">1. Local Data Processing</string>
-    <string name="privacy_section_1_desc">Your contacts, call logs, and personal history are never transmitted to our servers.</string>
-    <string name="privacy_section_2_title">2. Data Usage</string>
-    <string name="privacy_section_2_desc">Information is used only for core dialer functions: Contacts mapping, Call history display, and Microphone access during calls.</string>
-    <string name="privacy_section_3_title">3. Data Sharing</string>
-    <string name="privacy_section_3_desc">We do not share your data with any third parties.</string>
+    <string name="toast_deleted_recording">Deleted recording</string>
+    <string name="settings_recording_chime">Recording audio chime &amp; haptics</string>
+    <string name="settings_recording_chime_sub">Play subtle audio tone and tactile feedback when call recording starts or stops</string>
+    <string name="share_recording_title">Share &amp; Export Recording</string>
+    <string name="share_via_apps">Share via Apps</string>
+    <string name="share_via_apps_sub">Send audio file to messaging, cloud, or external apps</string>
+    <string name="save_to_downloads">Save to Downloads</string>
+    <string name="save_to_downloads_sub">Export a copy directly into device Downloads directory</string>
+    <string name="recording_details">Recording Details</string>
+    <string name="headset_recording_warning">Headphones connected: Only your voice will be recorded unless switched to Speaker.</string>
+    <string name="settings_recordings_always_on">Always Record Calls</string>
+    <string name="settings_recordings_always_on_sub">Automatically start recording every incoming and outgoing call as soon as it connects</string>
+    <string name="settings_recordings_biometric_lock">Lock Recordings with Biometrics</string>
+    <string name="settings_recordings_biometric_lock_sub">Require fingerprint or device credential to view and play audio evidence</string>
+    <string name="settings_recordings_auto_export">Auto-Export to Downloads</string>
+    <string name="settings_recordings_auto_export_sub">Automatically copy every completed call recording to Downloads/SecureDialer for immediate file manager access</string>
+    <string name="settings_recordings_compression_title">Audio Compression &amp; Quality</string>
+    <string name="settings_recordings_compression_sub">Optimize audio codec bitrate and sampling rate to balance fidelity with device storage footprint</string>
+    <string name="settings_recordings_cleanup_empty">Clean Empty/Silent Stubs</string>
+    <string name="vault_locked_title">Recording Vault Locked</string>
+    <string name="vault_locked_desc">Biometric authentication is required to access confidential call recordings.</string>
+    <string name="btn_unlock_vault">Unlock Vault</string>
 
-    <string name="filter_all_contacts">All Contacts</string>
+    <!-- Settings - Dynamic Island Call Capsule -->
+    <string name="settings_dynamic_island_title">Dynamic Island Call Capsule</string>
+    <string name="settings_dynamic_island_sub">Show a floating interactive call pill around the camera cutout for ongoing calls</string>
+    <string name="settings_dynamic_island_speaker_only">Show Only When On Speaker</string>
+    <string name="settings_dynamic_island_speaker_only_sub">Display the Dynamic Island exclusively when speakerphone mode is active</string>
+    <string name="settings_dynamic_island_floating_permission">Floating Overlay Permission</string>
+    <string name="settings_dynamic_island_floating_permission_sub">Allow floating capsule over other apps (OnePlus, Xiaomi, Vivo, Samsung support)</string>
+    <string name="dynamic_island_speaker_on">Speaker ON</string>
+    <string name="dynamic_island_muted">Muted</string>
+    <string name="dynamic_island_recording">REC</string>
+    <string name="dynamic_island_tap_to_expand">Tap to expand call controls</string>
+
+    <!-- Settings - Contacts, Deduplication & Storage -->
+    <string name="settings_contact_preferences">Contact Preferences</string>
+    <string name="settings_contacts_to_display">Contacts to Display</string>
+    <string name="settings_contacts_to_display_sub">Filter contacts by account source (e.g. Google, Phone, SIM)</string>
+    <string name="settings_default_account_for_new">Default Account for New Contacts</string>
+    <string name="settings_default_account_for_new_sub">Pre-selected account when creating new contacts</string>
+    <string name="settings_dedup">Deduplication Utility</string>
+    <string name="settings_dedup_sub">Merge duplicate contacts automatically</string>
+    <string name="settings_dedup_title">Deduplication Utility</string>
+    <string name="dedup_desc">The system scans your local database for duplicate entries sharing the same phone number, allowing you to merge them instantly.</string>
+    <string name="no_duplicates_title">No Duplicates Found</string>
+    <string name="no_duplicates_desc">Your contacts list is completely clean! No duplicate numbers detected.</string>
+    <string name="merge_all_duplicates">Merge All Detected Duplicates (%1$d groups)</string>
+    <string name="merge_group">Merge Group</string>
+    <string name="btn_add_merge">Add &amp; Merge</string>
     <string name="toast_merged_all_duplicates">All duplicates merged successfully</string>
     <string name="toast_merged_duplicates_for">Merged duplicates for %1$s</string>
-    <string name="toast_deleted_recording">Deleted recording</string>
-    <string name="label_first_name">First Name</string>
-    <string name="label_last_name">Last Name</string>
-    
+    <string name="settings_merge_duplicate_contacts">merge duplicate contacts</string>
+    <string name="settings_merge_duplicate_contacts_sub">Scan and clean duplicate contact entries</string>
+
+    <!-- Settings - Backup, Restore & Encrypted Migration -->
+    <string name="settings_data_utilities">Data &amp; Utilities</string>
+    <string name="settings_backup_restore_sub">Restore call logs and settings from encrypted JSON file</string>
     <string name="backup_service_health_title">Data &amp; Backup</string>
     <string name="backup_service_health_sub">Encrypted local JSON backup, restore &amp; watchdog status</string>
     <string name="service_health_header">Call Blocker Service Health</string>
@@ -408,7 +430,6 @@
     <string name="service_health_action_req">Action Required / Role Missing</string>
     <string name="service_health_role_granted">Screening Role: Granted</string>
     <string name="service_health_role_not_granted">Screening Role: Not Granted</string>
-    
     <string name="backup_export_title">Encrypted Local Backup</string>
     <string name="backup_export_desc">Export blocklists, call notes, speed dials, and quick responses into an encrypted AES-256 JSON backup string.</string>
     <string name="backup_export_password_label">Encryption Password (Optional)</string>
@@ -427,22 +448,53 @@
     <string name="backup_restored_success_toast">Backup restored successfully!</string>
     <string name="backup_restore_failed_toast">Failed to restore backup. Check password or data string.</string>
     <string name="backup_copied_toast">Copied backup string to clipboard!</string>
-    <string name="number_copied">Number copied</string>
-    <string name="app_version_name">Version 1.5.0</string>
+    <string name="vcf_migration_title">vCard (VCF) Contacts Migration</string>
+    <string name="vcf_migration_desc">Export your local contacts as a standard vCard (.vcf) file or import contacts from an existing vCard file.</string>
+    <string name="btn_export_vcf">Export VCF</string>
+    <string name="btn_import_vcf">Import VCF</string>
+    <string name="vcf_exported_title">vCard (VCF) Contacts Exported</string>
+    <string name="vcf_exported_desc">Your contacts have been exported to standard vCard format. Copy this text and save it to a .vcf file to import into other devices.</string>
+    <string name="vcf_import_title">Import Contacts from vCard</string>
+    <string name="vcf_import_desc">Paste the content of a standard .vcf (vCard) file below to import the contacts into your system database.</string>
+    <string name="vcf_content_label">vCard (VCF) Content</string>
+    <string name="btn_import_contacts">Import Contacts</string>
+    <string name="header_contacts_import_export">CONTACTS IMPORT &amp; EXPORT</string>
+    <string name="settings_export_contacts_vcard">Export Contacts (vCard)</string>
+    <string name="settings_import_contacts_vcard">Import Contacts (vCard)</string>
+    <string name="settings_import_contacts_vcard_sub">Restore contacts from standard .vcf card file</string>
+    <string name="vcf_import_count_success">Imported contacts successfully!</string>
+    <string name="btn_save_file">Save to File</string>
+    <string name="btn_open_file">Choose File</string>
+    <string name="btn_save_backup_file">Save Backup File</string>
+    <string name="btn_restore_backup_file">Restore from File</string>
+    <string name="btn_save_vcf_file">Save .VCF File</string>
+    <string name="btn_choose_vcf_file">Choose .VCF File</string>
+    <string name="file_saved_success">File saved successfully!</string>
+    <string name="file_save_failed">Failed to save file</string>
+    <string name="file_read_failed">Failed to read selected file</string>
 
-    <string name="delete">Delete</string>
+    <!-- Settings - Security, Biometrics, PIN & App Lock -->
+    <string name="settings_security_protection">Security &amp; Protection</string>
+    <string name="settings_biometric_lock">App Lock</string>
+    <string name="settings_biometric_lock_sub">Require device lock (PIN/Pattern/Biometric) to open the app</string>
+    <string name="settings_pocket_protection">Pocket Touch Protection</string>
+    <string name="settings_pocket_protection_sub">Block touch input during calls when proximity sensor detects proximity (e.g., in pocket)</string>
+    <string name="pocket_lock_active">Pocket Lock Active</string>
+    <string name="pocket_lock_desc">Keep proximity sensor clear to unlock</string>
+    <string name="app_locked_title">Secure Dialer Locked</string>
+    <string name="app_locked_desc">This app is secured to protect your privacy. Please authenticate with your device lock to continue.</string>
+    <string name="btn_unlock_dialer">Unlock Dialer</string>
+    <string name="device_auth_title">Secure Dialer</string>
+    <string name="device_auth_subtitle">Authenticate to open Secure Dialer</string>
+    <string name="restricted_settings_title">Restricted Settings</string>
+    <string name="restricted_settings_desc">To use this app as your default dialer, you may need to manually enable it. Go to System Settings &gt; Apps &gt; [Our App Name] &gt; Advanced &gt; Allow Restricted Settings, then try again.</string>
+    <string name="btn_open_settings">Open Settings</string>
+
+    <!-- Settings - Call Analytics, Dashboard & Call Notes -->
+    <string name="history_timeline">History Timeline</string>
     <string name="call_details">Call Details</string>
     <string name="delete_all_history">Delete all history</string>
-    <string name="unblock_number">Unblock number</string>
-    <string name="block_number">Block number</string>
-    <string name="history_timeline">History Timeline</string>
-    <string name="calls_count">%1$d calls</string>
-    <string name="select_sim_card">Select SIM Card</string>
-    <string name="choose_sim_card">Choose which SIM card to make this call to %1$s:</string>
-    <string name="no_answer">No Answer</string>
-    
-    <string name="call_summary_prefix">%1$s Call Summary</string>
-    <string name="today_call_summary">Today\'s Call Summary</string>
+    <string name="no_matching_calls_for">No matching calls for \"%1$s\"</string>
     <string name="summary_missed_and_time">Missed: %1$d • Time: %2$s</string>
     <string name="summary_range_today">Today</string>
     <string name="summary_range_this_week">This Week</string>
@@ -454,35 +506,34 @@
     <string name="summary_range_month_tab">Month</string>
     <string name="summary_range_year_tab">Year</string>
     <string name="summary_range_all_tab">All</string>
+    <string name="settings_dashboard_style">Call Log Dashboard Style</string>
+    <string name="settings_dashboard_style_sub">Choose between full statistics dashboard or compact filter bar only</string>
+    <string name="settings_call_log_dashboard">Call Log Summary Dashboard</string>
+    <string name="settings_call_log_dashboard_sub">Show overview statistics and talk time for recent calls</string>
+    <string name="settings_call_log_filters">Call Log Quick Filters</string>
+    <string name="settings_call_log_filters_sub">Show quick filter chips (All, Missed, Received, Dialed) above call logs</string>
+    <string name="settings_all_call_notes">Call Notes</string>
+    <string name="settings_all_call_notes_sub">View and manage saved call notes</string>
+    <string name="no_notes_title">No Call Notes</string>
+    <string name="no_notes_desc">Notes added during calls will appear here</string>
+    <string name="search_notes_placeholder">Search notes or numbers...</string>
+    <string name="edit_note_title">Edit Call Note</string>
+    <string name="delete_note_confirm">Delete call note for %1$s?</string>
+    <string name="note_deleted_toast">Call note deleted</string>
+    <string name="call_note_card_title">Call Note</string>
+    <string name="add_call_note_btn">Add Call Note</string>
+    <string name="call_notes_count_title">Call Notes (%1$d)</string>
+    <string name="call_notes_count_badge">%1$d notes</string>
+    <string name="jot_call_note_title">Jot Call Note</string>
+    <string name="call_note">Call Note</string>
+    <string name="note_saved">Note saved securely</string>
+    <string name="note_placeholder">Enter important details...</string>
+    <string name="btn_save_note">Save Note</string>
+    <string name="header_productivity_notes">PRODUCTIVITY &amp; NOTES</string>
 
-    <string name="settings_spam_protection">Offline Spam Protection</string>
-    <string name="settings_spam_protection_sub">Import CSV blocklists and manage blocked numbers locally</string>
-    <string name="settings_flash_alerts">Flash Alerts on Call</string>
-    <string name="settings_flash_alerts_sub">Blinks the camera flash on incoming ringing calls</string>
+    <!-- Settings - Fake Call Simulator & Reminders -->
     <string name="settings_fake_call_sim">Fake Call Simulator</string>
     <string name="settings_fake_call_sim_sub">Schedule simulated incoming calls</string>
-    <string name="settings_callback_reminders">Callback Reminders</string>
-    <string name="settings_callback_reminders_sub">Manage pending callback alarms</string>
-
-    <string name="local_offline_protection">Local Offline Protection</string>
-    <string name="local_offline_protection_sub">Zero network calls. Completely offline.</string>
-    <string name="spam_entries_label">Spam Entries</string>
-    <string name="spam_numbers_blocked">%1$d numbers blocked</string>
-    <string name="btn_csv_import">CSV Import</string>
-    <string name="add_spam_manually_title">Add Spam Number Manually</string>
-    <string name="label_phone_number_hint">Phone Number</string>
-    <string name="label_spam_label_hint">Label</string>
-    <string name="btn_add_to_offline_db">Add to Offline Database</string>
-    <string name="blocklist_empty_title">Blocklist is empty</string>
-    <string name="blocklist_empty_desc">Import a CSV blocklist or add numbers manually to block telemarketers and scammers locally.</string>
-    <string name="blocked_offline_numbers_title">Blocked Offline Numbers</string>
-    <string name="btn_clear_all">Clear All</string>
-    <string name="import_csv_dialog_title">Import CSV Blocklist</string>
-    <string name="import_csv_dialog_desc">Format: \'number,label\' (one per line). Paste your CSV blocklist content below:</string>
-    <string name="load_sample_dataset">Or load a sample offline dataset:</string>
-    <string name="btn_load_sample_list">Load Sample List</string>
-    <string name="btn_import">Import</string>
-
     <string name="fake_call_sim_title">Fake Call Simulator</string>
     <string name="fake_call_sim_explanation">A fully simulated high-fidelity incoming call screen will trigger after your chosen timer. Answering the call behaves like a real call with local elapsed timers and interactive keypad modules.</string>
     <string name="caller_identity">Caller Identity</string>
@@ -491,7 +542,6 @@
     <string name="duration_label">Duration</string>
     <string name="sequential_multi_call_title">Sequential Multi-Call Options</string>
     <string name="sequential_multi_call_desc">Trigger consecutive incoming calls</string>
-    <string name="call_count_label">Call Count:</string>
     <string name="repeat_interval_label">Repeat Interval</string>
     <string name="multi_call_note">Interval applies when count &gt; 1</string>
     <string name="schedule_sequential_calls">Schedule %1$d Calls</string>
@@ -501,7 +551,8 @@
     <string name="unit_min">min</string>
     <string name="unit_hour">hour</string>
     <string name="unit_day">day</string>
-
+    <string name="callback_reminders_title">Callback Reminders</string>
+    <string name="callback_reminders_stats">%1$d active, %2$d completed</string>
     <string name="active_reminders_title">Active Reminders</string>
     <string name="no_active_reminders_title">No Active Reminders</string>
     <string name="no_active_reminders_desc">Set callback alarms directly from call details</string>
@@ -512,124 +563,11 @@
     <string name="schedule_callback_reminder_sub">Get notified with a direct-call alarm</string>
     <string name="remind_call_back_prompt">Remind you to call back %1$s in:</string>
     <string name="optional_note_label">Optional Note</string>
+    <string name="settings_callback_reminders">Callback Reminders</string>
+    <string name="settings_callback_reminders_sub">Manage pending callback alarms</string>
+    <string name="btn_call_back">Call Back</string>
 
-    <string name="app_locked_title">Secure Dialer Locked</string>
-    <string name="app_locked_desc">This app is secured to protect your privacy. Please authenticate with your device lock to continue.</string>
-    <string name="btn_unlock_dialer">Unlock Dialer</string>
-    <string name="device_auth_title">Secure Dialer</string>
-    <string name="device_auth_subtitle">Authenticate to open Secure Dialer</string>
-    <string name="restricted_settings_title">Restricted Settings</string>
-    <string name="restricted_settings_desc">To use this app as your default dialer, you may need to manually enable it. Go to System Settings &gt; Apps &gt; [Our App Name] &gt; Advanced &gt; Allow Restricted Settings, then try again.</string>
-    <string name="btn_open_settings">Open Settings</string>
-
-    <string name="vcf_migration_title">vCard (VCF) Contacts Migration</string>
-    <string name="vcf_migration_desc">Export your local contacts as a standard vCard (.vcf) file or import contacts from an existing vCard file.</string>
-    <string name="btn_export_vcf">Export VCF</string>
-    <string name="btn_import_vcf">Import VCF</string>
-    <string name="vcf_exported_title">vCard (VCF) Contacts Exported</string>
-    <string name="vcf_exported_desc">Your contacts have been exported to standard vCard format. Copy this text and save it to a .vcf file to import into other devices.</string>
-    <string name="vcf_import_title">Import Contacts from vCard</string>
-    <string name="vcf_import_desc">Paste the content of a standard .vcf (vCard) file below to import the contacts into your system database.</string>
-    <string name="vcf_content_label">vCard (VCF) Content</string>
-    <string name="btn_import_contacts">Import Contacts</string>
-
-    <string name="settings_pure_black">Pure AMOLED Pitch Black</string>
-    <string name="settings_pure_black_sub">Deep black surfaces for true OLED battery savings and high contrast</string>
-    <string name="settings_pure_black_sub_disabled_dark">True #000000 pitch black for maximum OLED battery savings (activates Dark Theme)</string>
-    <string name="settings_dashboard_style">Call Log Dashboard Style</string>
-    <string name="settings_dashboard_style_sub">Choose between full statistics dashboard or compact filter bar only</string>
-    <string name="settings_call_log_dashboard">Call Log Summary Dashboard</string>
-    <string name="settings_call_log_dashboard_sub">Show overview statistics and talk time for recent calls</string>
-    <string name="settings_call_log_filters">Call Log Quick Filters</string>
-    <string name="settings_call_log_filters_sub">Show quick filter chips (All, Missed, Received, Dialed) above call logs</string>
-    <string name="settings_tab_layout">Custom Tab Layout (Left, Middle, Right)</string>
-    <string name="settings_tab_layout_sub">Assign individual screens to each navigation slot. Selection automatically swaps duplicates.</string>
-    <string name="theme_custom_title">Custom Theme Seed Color</string>
-    <string name="theme_custom_desc">Enter any HEX color code (e.g. #FF5722 or #00E676) to dynamically generate an M3 color scheme.</string>
-    <string name="theme_hex_code_label">HEX Color Code</string>
-    <string name="theme_hex_code_chip">Hex Code</string>
-    <string name="theme_apply">Apply Theme</string>
-    <string name="pocket_lock_active">Pocket Lock Active</string>
-    <string name="pocket_lock_desc">Keep proximity sensor clear to unlock</string>
-    <string name="call_notes_count_title">Call Notes (%1$d)</string>
-    <string name="call_notes_count_badge">%1$d notes</string>
-    <string name="spam_csv_placeholder">18005550199,Spam Telemarketer\n18885550122,Scam Caller</string>
-    <string name="btn_save_file">Save to File</string>
-    <string name="btn_open_file">Choose File</string>
-    <string name="btn_export_blocklist">Export Blocklist</string>
-    <string name="btn_import_blocklist">Import File</string>
-    <string name="btn_export_spam_csv">Export CSV</string>
-    <string name="btn_import_spam_file">Import File</string>
-    <string name="btn_save_backup_file">Save Backup File</string>
-    <string name="btn_restore_backup_file">Restore from File</string>
-    <string name="btn_save_vcf_file">Save .VCF File</string>
-    <string name="btn_choose_vcf_file">Choose .VCF File</string>
-    <string name="file_saved_success">File saved successfully!</string>
-    <string name="file_save_failed">Failed to save file</string>
-    <string name="file_read_failed">Failed to read selected file</string>
-    <string name="blocklist_import_count_success">Imported %1$d blocked numbers!</string>
-    <string name="spam_import_count_success">Imported %1$d spam entries!</string>
-    <string name="vcf_import_count_success">Imported contacts successfully!</string>
-    <string name="blocklist_file_action_title">File Backup &amp; Migration</string>
-    <string name="blocklist_file_action_desc">Export your blocked callers to a .txt/.csv file or import numbers from external community blocklists.</string>
-    <string name="header_contacts_import_export">CONTACTS IMPORT &amp; EXPORT</string>
-    <string name="settings_export_contacts_vcard">Export Contacts (vCard)</string>
-    <string name="settings_import_contacts_vcard">Import Contacts (vCard)</string>
-    <string name="settings_import_contacts_vcard_sub">Restore contacts from standard .vcf card file</string>
-    <string name="settings_backup_restore_sub">Restore call logs and settings from encrypted JSON file</string>
-    <string name="tab_slot_left">Left Slot</string>
-    <string name="tab_slot_middle">Middle Slot</string>
-    <string name="tab_slot_right">Right Slot</string>
-    <string name="settings_merge_duplicate_contacts">merge duplicate contacts</string>
-    <string name="settings_merge_duplicate_contacts_sub">Scan and clean duplicate contact entries</string>
-    <string name="search_results_count">Search results (%1$d)</string>
-    <string name="no_matching_settings">No matching settings</string>
-    <string name="no_matching_settings_desc">Try searching for terms like Dark mode, SIM, Blocking, or Recording.</string>
-    <string name="settings_recordings_always_on">Always Record Calls</string>
-    <string name="settings_recordings_always_on_sub">Automatically start recording every incoming and outgoing call as soon as it connects</string>
-    <string name="settings_recordings_biometric_lock">Lock Recordings with Biometrics</string>
-    <string name="settings_recordings_biometric_lock_sub">Require fingerprint or device credential to view and play audio evidence</string>
-    <string name="settings_recordings_auto_export">Auto-Export to Downloads</string>
-    <string name="settings_recordings_auto_export_sub">Automatically copy every completed call recording to Downloads/SecureDialer for immediate file manager access</string>
-    <string name="settings_recordings_compression_title">Audio Compression &amp; Quality</string>
-    <string name="settings_recordings_compression_sub">Optimize audio codec bitrate and sampling rate to balance fidelity with device storage footprint</string>
-    <string name="settings_recordings_cleanup_empty">Clean Empty/Silent Stubs</string>
-    <string name="vault_locked_title">Recording Vault Locked</string>
-    <string name="vault_locked_desc">Biometric authentication is required to access confidential call recordings.</string>
-    <string name="btn_unlock_vault">Unlock Vault</string>
-    <string name="settings_dynamic_island_title">Dynamic Island Call Capsule</string>
-    <string name="settings_dynamic_island_sub">Show a floating interactive call pill around the camera cutout for ongoing calls</string>
-    <string name="settings_dynamic_island_speaker_only">Show Only When On Speaker</string>
-    <string name="settings_dynamic_island_speaker_only_sub">Display the Dynamic Island exclusively when speakerphone mode is active</string>
-    <string name="settings_dynamic_island_floating_permission">Floating Overlay Permission</string>
-    <string name="settings_dynamic_island_floating_permission_sub">Allow floating capsule over other apps (OnePlus, Xiaomi, Vivo, Samsung support)</string>
-    <string name="dynamic_island_speaker_on">Speaker ON</string>
-    <string name="dynamic_island_muted">Muted</string>
-    <string name="dynamic_island_recording">REC</string>
-    <string name="dynamic_island_tap_to_expand">Tap to expand call controls</string>
-    
-    <!-- Added missing keys required by compiled components -->
-    <string name="callback_reminders_title">Callback Reminders</string>
-    <string name="callback_reminders_stats">%1$d active, %2$d completed</string>
-
-    <string name="header_caller_id_privacy">Outgoing Caller ID &amp; Privacy (CLIR)</string>
-    <string name="settings_hide_caller_id">Hide Caller ID</string>
-    <string name="settings_hide_caller_id_sub">Prefix outgoing calls with carrier privacy code to mask your number</string>
-    <string name="settings_clir_prefix">Carrier Prefix</string>
-    <string name="settings_clir_prefix_sub">Active code: %1$s</string>
-    <string name="settings_clir_warning_title">Carrier &amp; Regulatory Notice</string>
-    <string name="settings_clir_warning_desc">CLIR support varies by carrier and region. Emergency numbers are never masked.</string>
-    <string name="settings_system_sim_caller_id">System SIM Settings</string>
-    <string name="settings_system_sim_caller_id_sub">Open Android system telephony caller ID preferences</string>
-    <string name="settings_clir_prefix_dialog_title">Select CLIR Prefix</string>
-    <string name="settings_clir_prefix_gsm">GSM Standard (#31#)</string>
-    <string name="settings_clir_prefix_us">North America (*67)</string>
-    <string name="settings_clir_prefix_uk">United Kingdom (141)</string>
-    <string name="settings_clir_prefix_japan">Japan (1831)</string>
-    <string name="settings_clir_prefix_custom">Custom Prefix</string>
-    <string name="settings_clir_custom_label">Enter custom CLIR carrier prefix code</string>
-
-    <!-- Calling & Lockscreen Permissions Setup -->
+    <!-- Settings - System Calling & Lock Screen Permissions -->
     <string name="btn_grant">Grant</string>
     <string name="btn_configure">Configure</string>
     <string name="btn_set_default">Set Default</string>
@@ -640,4 +578,65 @@
     <string name="settings_full_screen_intent_warning">Full-screen incoming call alerts restricted by system</string>
     <string name="settings_overlay_permission_warning">Overlay permission needed to float Dynamic Island over other apps</string>
     <string name="settings_all_call_permissions_good">All calling &amp; lock screen features fully configured</string>
+    <string name="state_enabled">Enabled</string>
+    <string name="state_disabled">Disabled</string>
+    <string name="feature_enable_prompt">Toggle the switch above to activate</string>
+    <string name="feature_disabled_hint">Feature is disabled</string>
+    <string name="btn_enable_feature">Enable Feature</string>
+    <string name="permissions_required">Permissions Required</string>
+
+    <!-- Settings - About, Privacy Policy & Community Support -->
+    <string name="settings_about">About Secure Dialer</string>
+    <string name="settings_about_sub">Version info, licenses, and core tech</string>
+    <string name="settings_privacy">Privacy Policy</string>
+    <string name="settings_privacy_sub">Zero data collection notice</string>
+    <string name="settings_about_privacy">About &amp; Privacy</string>
+    <string name="about_mission_title">Our Mission</string>
+    <string name="about_mission_desc">To provide a simple, reliable, and secure dialer experience without compromising user privacy.</string>
+    <string name="about_app_desc">Secure Dialer is a privacy-focused communication tool designed to put you in control of your data. All functions occur exclusively on your device.</string>
+    <string name="privacy_policy_title">Privacy Policy</string>
+    <string name="privacy_intro">At Secure Dialer, we prioritize your privacy.</string>
+    <string name="privacy_section_1_title">1. Local Data Processing</string>
+    <string name="privacy_section_1_desc">Your contacts, call logs, and personal history are never transmitted to our servers.</string>
+    <string name="privacy_section_2_title">2. Data Usage</string>
+    <string name="privacy_section_2_desc">Information is used only for core dialer functions: Contacts mapping, Call history display, and Microphone access during calls.</string>
+    <string name="privacy_section_3_title">3. Data Sharing</string>
+    <string name="privacy_section_3_desc">We do not share your data with any third parties.</string>
+    <string name="settings_check_updates">Check for Updates</string>
+    <string name="settings_check_updates_sub">Ensure app is up to date &amp; secure</string>
+    <string name="check_updates_desc">Check and update Secure Dialer directly from official F-Droid or stable mirrors.</string>
+    <string name="checking_mirrors">Checking secure mirrors...</string>
+    <string name="app_up_to_date_desc">You are using the latest official cryptographic build of Secure Dialer.</string>
+    <string name="check_for_updates_now">Check for Updates Now</string>
+    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.5.0 (Stable Release)</string>
+    <string name="settings_app_updates">In-App Updates</string>
+    <string name="settings_app_updates_sub">Check version status &amp; changelog</string>
+    <string name="settings_updates_title">In-App Updates</string>
+    <string name="settings_contribution">Contribution</string>
+    <string name="settings_support_title">Support Secure Dialer</string>
+    <string name="settings_support_desc" formatted="false">Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.</string>
+    <string name="settings_contribute_github">Contribute on GitHub</string>
+    <string name="app_version_name">Version 1.5.0</string>
+
+    <!-- General Buttons, Common Utilities & Common Dialogs -->
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_save">Save</string>
+    <string name="btn_delete">Delete</string>
+    <string name="btn_edit">Edit</string>
+    <string name="btn_discard">Discard</string>
+    <string name="btn_import">Import</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="close">Close</string>
+    <string name="add">Add</string>
+    <string name="add_new_contact">Add New</string>
+    <string name="add_call">Add Call</string>
+    <string name="add_call_search_hint">Search contact or enter number</string>
+    <string name="filter_all_contacts">All Contacts</string>
+    <string name="account_filter_all">All Accounts</string>
+    <string name="not_set">Not set</string>
+    <string name="on_hold_prefix">On Hold:</string>
+    <string name="warning">Warning</string>
+    <string name="error_open_messages">Could not open messaging app</string>
+    <string name="history">History</string>
 </resources>
