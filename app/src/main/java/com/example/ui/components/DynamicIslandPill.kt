@@ -121,7 +121,9 @@ fun DynamicIslandPill(
 
     val isSpeakerOn = audioState?.route == CallAudioState.ROUTE_SPEAKER
     val isMuted = audioState?.isMuted == true
-    val displayName = if (callerName.isNotBlank()) callerName else callerNumber.ifEmpty { stringResource(R.string.unknown) }
+    val isConference by CallManager.isConferenceActive.collectAsStateWithLifecycle()
+    val baseName = if (callerName.isNotBlank()) callerName else callerNumber.ifEmpty { stringResource(R.string.unknown) }
+    val displayName = if (isConference) "👥 $baseName" else baseName
 
     Box(
         modifier = modifier

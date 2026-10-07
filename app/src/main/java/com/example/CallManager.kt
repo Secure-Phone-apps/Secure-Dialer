@@ -97,6 +97,29 @@ object CallManager {
     private val _currentSimSlot = MutableStateFlow(1)
     val currentSimSlot: StateFlow<Int> = _currentSimSlot.asStateFlow()
 
+    private val _isConferenceActive = MutableStateFlow(false)
+    val isConferenceActive: StateFlow<Boolean> = _isConferenceActive.asStateFlow()
+
+    fun isConference(call: Call?): Boolean {
+        if (call == null) return false
+        if (call.children.isNotEmpty() || call.parent != null) return true
+        val details = call.details ?: return false
+        val properties = details.callProperties
+        val hasConferenceProperty = (properties and Call.Details.PROPERTY_CONFERENCE != 0) ||
+                (properties and Call.Details.PROPERTY_GENERIC_CONFERENCE != 0) ||
+                details.hasProperty(Call.Details.PROPERTY_CONFERENCE) ||
+                details.hasProperty(Call.Details.PROPERTY_GENERIC_CONFERENCE)
+        val capabilities = details.callCapabilities
+        val hasConferenceCapability = (capabilities and Call.Details.CAPABILITY_SWAP_CONFERENCE != 0) ||
+                (capabilities and Call.Details.CAPABILITY_MERGE_CONFERENCE != 0) ||
+                (capabilities and Call.Details.CAPABILITY_MANAGE_CONFERENCE != 0) ||
+                (capabilities and Call.Details.CAPABILITY_SEPARATE_FROM_CONFERENCE != 0) ||
+                (capabilities and Call.Details.CAPABILITY_DISCONNECT_FROM_CONFERENCE != 0)
+        val hasConferenceExtra = details.extras?.getBoolean("android.telecom.extra.IS_CONFERENCE", false) == true ||
+                details.extras?.containsKey("android.telecom.extra.CONFERENCE_PARTICIPANTS") == true
+        return hasConferenceProperty || hasConferenceCapability || hasConferenceExtra
+    }
+
     @Volatile
     var appContext: Context? = null
 
@@ -131,6 +154,12 @@ object CallManager {
             autoSelectCurrentCall()
         }
 
+        override fun onParentChanged(call: Call, parent: Call?) {
+            super.onParentChanged(call, parent)
+            notifyCallsChanged()
+            autoSelectCurrentCall()
+        }
+
         override fun onChildrenChanged(call: Call, children: List<Call>) {
             super.onChildrenChanged(call, children)
             notifyCallsChanged()
@@ -142,10 +171,24 @@ object CallManager {
             notifyCallsChanged()
             autoSelectCurrentCall()
         }
+
+        override fun onConferenceableCallsChanged(call: Call, conferenceableCalls: List<Call>) {
+            super.onConferenceableCallsChanged(call, conferenceableCalls)
+            notifyCallsChanged()
+        }
+
+        override fun onConnectionEvent(call: Call, event: String, extras: Bundle?) {
+            super.onConnectionEvent(call, event, extras)
+            notifyCallsChanged()
+            autoSelectCurrentCall()
+        }
     }
 
     private fun notifyCallsChanged() {
-        _calls.value = ArrayList(_calls.value)
+        val currentList = ArrayList(_calls.value)
+        _calls.value = currentList
+        _isConferenceActive.value = currentList.any { it.state != Call.STATE_DISCONNECTED && isConference(it) } ||
+                isConference(_currentCall.value)
     }
 
     fun addCall(call: Call) {
@@ -153,6 +196,7 @@ object CallManager {
             _calls.value = _calls.value + call
             call.registerCallback(callCallback)
         }
+        notifyCallsChanged()
         if (call.state == Call.STATE_RINGING && _currentCall.value != null && _currentCall.value != call) {
             updateWaitingCall(call)
         } else {
@@ -165,6 +209,7 @@ object CallManager {
             _calls.value = _calls.value - call
             call.unregisterCallback(callCallback)
         }
+        notifyCallsChanged()
         if (_currentCall.value == call) {
             autoStopRecordingIfNeeded()
         }
@@ -181,7 +226,7 @@ object CallManager {
             return
         }
 
-        val target = activeCalls.find { it.children.isNotEmpty() || it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true }
+        val target = activeCalls.find { it.children.isNotEmpty() || isConference(it) }
             ?: activeCalls.find { it.state == Call.STATE_ACTIVE }
             ?: activeCalls.find { it.state in listOf(Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_RINGING) }
             ?: activeCalls.find { it.state == Call.STATE_HOLDING }
@@ -189,6 +234,9 @@ object CallManager {
 
         if (_currentCall.value != target) {
             updateCall(target)
+        } else {
+            // Re-evaluate conference status
+            _isConferenceActive.value = activeCalls.any { isConference(it) } || isConference(target)
         }
     }
 
@@ -196,6 +244,7 @@ object CallManager {
         _currentCall.value = call
         if (call != null) {
             _callState.value = call.state
+            _isConferenceActive.value = _calls.value.any { it.state != Call.STATE_DISCONNECTED && isConference(it) } || isConference(call)
             if (call.state == Call.STATE_ACTIVE) {
                 if (_activeStartTimestamp.value == 0L) {
                     val connect = call.details?.connectTimeMillis ?: 0L
@@ -272,6 +321,7 @@ object CallManager {
             _callerPhotoUri.value = ""
             _callerLabel.value = ""
             _activeStartTimestamp.value = 0L
+            _isConferenceActive.value = false
             if (_calls.value.isEmpty()) inCallService = null
         }
     }

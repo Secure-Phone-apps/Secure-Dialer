@@ -125,6 +125,29 @@ fun InCallHeader(
             else -> "${stringResource(R.string.call_status_ongoing)} • $simDisplay"
         }
 
+        if (isConference || participants.size > 1) {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shadowElevation = 2.dp,
+                modifier = Modifier.padding(bottom = 6.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text("👥", fontSize = 14.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = stringResource(R.string.call_status_conference),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+            }
+        }
+
         Text(
             text = displayHeader,
             style = MaterialTheme.typography.labelLarge,
@@ -136,8 +159,10 @@ fun InCallHeader(
         val displayName = if (isConference || participants.size > 1) {
             if (participants.size >= 2) {
                 "${participants[0].first.ifEmpty { participants[0].second }} & ${participants[1].first.ifEmpty { participants[1].second }}"
-            } else if (participants.size == 1 && participants[0].first.isNotEmpty()) {
-                participants[0].first
+            } else if (participants.size == 1 && participants[0].first.isNotEmpty() && participants[0].first != participants[0].second) {
+                "${participants[0].first} (${stringResource(R.string.call_status_conference)})"
+            } else if (contactName.isNotEmpty() && contactName != contactNumber) {
+                "$contactName (${stringResource(R.string.call_status_conference)})"
             } else {
                 stringResource(R.string.call_status_conference)
             }
@@ -165,8 +190,10 @@ fun InCallHeader(
                 "${participants[0].second} • ${participants[1].second}"
             } else if (participants.size == 1 && participants[0].second.isNotEmpty()) {
                 participants[0].second
+            } else if (contactNumber.isNotEmpty()) {
+                contactNumber
             } else {
-                ""
+                stringResource(R.string.call_status_conference)
             }
         } else {
             if (contactName.isNotEmpty() && contactNumber.isNotEmpty() && contactName != contactNumber) contactNumber else ""

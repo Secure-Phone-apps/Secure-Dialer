@@ -47,7 +47,8 @@ fun InCallAvatarDisplay(
     contactName: String,
     contactNumber: String,
     contacts: List<Contact>,
-    avatarShapeType: String = "squircle"
+    avatarShapeType: String = "squircle",
+    isConference: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -61,14 +62,16 @@ fun InCallAvatarDisplay(
     val isSaved = matchedContact != null || (pName != contactNumber && pName != "Unknown" && pName.isNotBlank() && pName.any { it.isLetter() })
     var imageLoadFailed by remember(matchedContact?.photoUri) { mutableStateOf(false) }
 
+    val isMultiParty = isConference || participants.size > 1
+
     val bgColor = when {
-        participants.size > 1 -> MaterialTheme.colorScheme.primaryContainer
+        isMultiParty -> MaterialTheme.colorScheme.primaryContainer
         matchedContact != null -> matchedContact.avatarBg
         else -> MaterialTheme.colorScheme.surfaceVariant
     }
 
     val textColor = when {
-        participants.size > 1 -> MaterialTheme.colorScheme.onPrimaryContainer
+        isMultiParty -> MaterialTheme.colorScheme.onPrimaryContainer
         matchedContact != null -> matchedContact.avatarTextColor
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
@@ -79,7 +82,7 @@ fun InCallAvatarDisplay(
         color = bgColor
     ) {
         Box(contentAlignment = Alignment.Center) {
-            if (participants.size > 1) {
+            if (isMultiParty) {
                 Text(text = "👥", fontSize = 48.sp)
             } else if (matchedContact != null && matchedContact.photoUri.isNotEmpty() && !imageLoadFailed) {
                 AsyncImage(

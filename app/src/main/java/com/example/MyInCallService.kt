@@ -466,15 +466,20 @@ class MyInCallService : InCallService() {
         val isMuted = CallManager.audioState.value?.isMuted ?: false
         val isSpeaker = (CallManager.audioState.value?.route ?: CallAudioState.ROUTE_EARPIECE) == CallAudioState.ROUTE_SPEAKER
         val isRecording = CallAudioRecorder.isRecording.value
+        val isConference = CallManager.isConference(call) || CallManager.isConferenceActive.value
 
         val recordTitle = if (isRecording) "■ Stop Rec" else "● Record"
         val speakerTitle = if (isSpeaker) "Earpiece" else "Speaker"
         val muteTitle = if (isMuted) "Unmute" else "Mute"
 
+        val titlePrefix = if (isConference) getString(R.string.call_status_conference) else "Ongoing Call"
+        val contentTitle = if (isRecording) "$titlePrefix • [REC]" else titlePrefix
+        val contentText = if (isConference) "Conference call with $displayName is active" else "Call with $displayName is active"
+
         val notification = NotificationCompat.Builder(this, CHANNEL_ACTIVE)
             .setSmallIcon(android.R.drawable.sym_action_call)
-            .setContentTitle(if (isRecording) "Ongoing Call • [REC]" else "Ongoing Call")
-            .setContentText("Call with $displayName is active")
+            .setContentTitle(contentTitle)
+            .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(contentPendingIntent)

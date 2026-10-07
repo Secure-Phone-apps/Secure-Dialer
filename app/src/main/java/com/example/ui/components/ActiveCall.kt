@@ -210,13 +210,14 @@ fun ActiveCallScreen(
         }
     }
 
-    val isConference = remember(isFake, fakeParticipants, currentCall, allCalls) {
+    val isConferenceActiveFlow by CallManager.isConferenceActive.collectAsStateWithLifecycle()
+    val isConference = remember(isFake, fakeParticipants, currentCall, allCalls, isConferenceActiveFlow) {
         if (isFake) {
             fakeParticipants.size > 1
         } else {
-            allCalls.any {
-                it.state != Call.STATE_DISCONNECTED && (it.children.isNotEmpty() || it.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true)
-            } || currentCall?.details?.hasProperty(Call.Details.PROPERTY_CONFERENCE) == true
+            isConferenceActiveFlow || CallManager.isConference(currentCall) || allCalls.any {
+                it.state != Call.STATE_DISCONNECTED && CallManager.isConference(it)
+            }
         }
     }
 
@@ -330,7 +331,8 @@ fun ActiveCallScreen(
                         contactName = contactName,
                         contactNumber = contactNumber,
                         contacts = contacts,
-                        avatarShapeType = avatarShapeType
+                        avatarShapeType = avatarShapeType,
+                        isConference = isConference
                     )
                 }
 
