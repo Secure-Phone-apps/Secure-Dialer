@@ -57,6 +57,8 @@ import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 
+private enum class NumberPickerAction { CALL, MESSAGE }
+
 @Composable
 fun ContactRow(
     contact: Contact,
@@ -68,6 +70,7 @@ fun ContactRow(
 ) {
     val context = LocalContext.current
     var isExpanded by remember { mutableStateOf(false) }
+    var numberPickerAction by remember { mutableStateOf<NumberPickerAction?>(null) }
 
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
@@ -109,14 +112,15 @@ fun ContactRow(
             },
         colors = CardDefaults.cardColors(containerColor = containerColor),
         border = if (isAmoled) BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
-        shape = MaterialTheme.shapes.medium
+        shape = AppShapes.Card
     ) {
         Column {
             ListItem(
+                modifier = Modifier.padding(vertical = 0.dp),
                 headlineContent = {
                     Column(
                         modifier = Modifier.offset(x = (-8).dp),
-                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
                         Text(
                             text = contact.name,
@@ -237,7 +241,10 @@ fun ContactRow(
                         color = MaterialTheme.colorScheme.outlineVariant
                     )
 
-                    // Phone numbers section
+                    val primaryNumber = allNumbers.firstOrNull()?.number ?: contact.number
+                    val primaryLabel = allNumbers.firstOrNull()?.label ?: contact.label
+
+                    // 1. Phone numbers section placed FIRST (Above action buttons)
                     allNumbers.forEach { labeledNum ->
                         Surface(
                             shape = AppShapes.Chip,
@@ -247,11 +254,18 @@ fun ContactRow(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                                    .padding(horizontal = 12.dp, vertical = 7.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Column(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                            onCallClick(contact.copy(number = labeledNum.number, label = labeledNum.label))
+                                        }
+                                ) {
                                     Text(
                                         text = localizeContactLabel(labeledNum.label),
                                         style = MaterialTheme.typography.labelSmall,
@@ -265,69 +279,31 @@ fun ContactRow(
                                     )
                                 }
 
-                                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-                                    IconButton(
-                                        onClick = {
-                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                                            onCallClick(contact.copy(number = labeledNum.number, label = labeledNum.label))
-                                        },
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Call,
-                                            contentDescription = stringResource(R.string.call_status_ongoing),
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            try {
-                                                val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                                    data = Uri.parse("smsto:${labeledNum.number}")
-                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                                }
-                                                context.startActivity(intent)
-                                            } catch (_: Exception) {
-                                                Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                IconButton(
+                                    onClick = {
+                                        try {
+                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                            val clip = ClipData.newPlainText("Phone Number", labeledNum.number)
+                                            clipboard?.setPrimaryClip(clip)
+                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                                Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
                                             }
-                                        },
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Email,
-                                            contentDescription = stringResource(R.string.sms_sent),
-                                            tint = MaterialTheme.colorScheme.secondary,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            try {
-                                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                                val clip = ClipData.newPlainText("Phone Number", labeledNum.number)
-                                                clipboard?.setPrimaryClip(clip)
-                                                // FIXED: Suppress redundant Toast on Android 13+ which has native system clipboard preview
-                                                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                                    Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
-                                                }
-                                            } catch (_: Exception) {}
-                                        },
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Share,
-                                            contentDescription = stringResource(R.string.dialpad_copy),
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
+                                        } catch (_: Exception) {}
+                                    },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = stringResource(R.string.dialpad_copy),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(17.dp)
+                                    )
                                 }
                             }
                         }
                     }
 
-                    // Emails section
+                    // 2. Emails section (if any)
                     allEmails.forEach { emailItem ->
                         Surface(
                             shape = AppShapes.Chip,
@@ -367,20 +343,20 @@ fun ContactRow(
                                             Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                                         }
                                     },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(34.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Email,
                                         contentDescription = emailItem.email,
                                         tint = MaterialTheme.colorScheme.tertiary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                         }
                     }
 
-                    // Physical Addresses section
+                    // 3. Physical Addresses section (if any)
                     allAddresses.forEach { addrItem ->
                         Surface(
                             shape = AppShapes.Chip,
@@ -418,55 +394,197 @@ fun ContactRow(
                                             context.startActivity(intent)
                                         } catch (_: Exception) {}
                                     },
-                                    modifier = Modifier.size(36.dp)
+                                    modifier = Modifier.size(34.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.LocationOn,
                                         contentDescription = addrItem.address,
                                         tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                         }
                     }
 
-                    // Action buttons (Edit & Delete)
+                    // 4. Hero Quick-Action Row (Call, Message, Edit, Delete placed LOWER than numbers)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.End,
+                            .padding(top = 2.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
+                        DetailActionItem(
+                            icon = Icons.Default.Call,
+                            label = stringResource(R.string.action_call),
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                             onClick = {
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                if (allNumbers.size > 1) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    numberPickerAction = NumberPickerAction.CALL
+                                } else {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    onCallClick(contact.copy(number = primaryNumber, label = primaryLabel))
+                                }
+                            }
+                        )
+
+                        DetailActionItem(
+                            icon = Icons.Default.Message,
+                            label = stringResource(R.string.action_message),
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            onClick = {
+                                if (allNumbers.size > 1) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    numberPickerAction = NumberPickerAction.MESSAGE
+                                } else {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("smsto:$primaryNumber")
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        )
+
+                        DetailActionItem(
+                            icon = Icons.Default.Edit,
+                            label = stringResource(R.string.btn_edit),
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            onClick = {
                                 onEditContact(contact)
-                            },
-                            shape = AppShapes.Chip
-                        ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.btn_edit))
-                        }
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TextButton(
+                            }
+                        )
+
+                        DetailActionItem(
+                            icon = Icons.Default.Delete,
+                            label = stringResource(R.string.btn_delete),
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
+                            contentColor = MaterialTheme.colorScheme.error,
                             onClick = {
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                 onDeleteContact(contact)
-                            },
-                            shape = AppShapes.Chip,
-                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
-                        ) {
-                            Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(stringResource(R.string.btn_delete))
-                        }
+                            }
+                        )
                     }
                 }
             }
         }
+    }
+
+    if (numberPickerAction != null) {
+        val currentAction = numberPickerAction
+        AlertDialog(
+            onDismissRequest = { numberPickerAction = null },
+            shape = AppShapes.Dialog,
+            icon = {
+                Icon(
+                    imageVector = if (currentAction == NumberPickerAction.CALL) Icons.Default.Call else Icons.Default.Message,
+                    contentDescription = null,
+                    tint = if (currentAction == NumberPickerAction.CALL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(
+                        if (currentAction == NumberPickerAction.CALL) R.string.dialog_call_contact else R.string.dialog_message_contact,
+                        contact.name
+                    ),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (currentAction == NumberPickerAction.CALL) R.string.select_number_to_call else R.string.select_number_to_message
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    allNumbers.forEach { labeledNum ->
+                        Surface(
+                            shape = AppShapes.Card,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    val isCall = currentAction == NumberPickerAction.CALL
+                                    numberPickerAction = null
+                                    if (isCall) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                        onCallClick(contact.copy(number = labeledNum.number, label = labeledNum.label))
+                                    } else {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                data = Uri.parse("smsto:${labeledNum.number}")
+                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                            }
+                                            context.startActivity(intent)
+                                        } catch (_: Exception) {
+                                            Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Surface(
+                                    shape = AppShapes.Keypad,
+                                    color = if (currentAction == NumberPickerAction.CALL) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                                    modifier = Modifier.size(40.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = if (currentAction == NumberPickerAction.CALL) Icons.Default.Call else Icons.Default.Message,
+                                            contentDescription = null,
+                                            tint = if (currentAction == NumberPickerAction.CALL) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = localizeContactLabel(labeledNum.label),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = labeledNum.number,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { numberPickerAction = null }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }
 

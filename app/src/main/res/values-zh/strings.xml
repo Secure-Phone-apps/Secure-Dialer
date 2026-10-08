@@ -76,6 +76,10 @@
     <string name="add_contact_dialog_title">添加联系人</string>
     <string name="edit_contact_dialog_title">编辑联系人</string>
     <string name="contact_multiple_numbers">%1$d 个号码</string>
+    <string name="select_number_to_call">选择要拨打的号码</string>
+    <string name="select_number_to_message">选择要发送信息的号码</string>
+    <string name="dialog_call_contact">呼叫 %1$s</string>
+    <string name="dialog_message_contact">给 %1$s 发送信息</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">最近</string>

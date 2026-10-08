@@ -76,6 +76,10 @@
     <string name="add_contact_dialog_title">Kontakt hinzufügen</string>
     <string name="edit_contact_dialog_title">Kontakt bearbeiten</string>
     <string name="contact_multiple_numbers">%1$d Nummern</string>
+    <string name="select_number_to_call">Nummer zum Anrufen auswählen</string>
+    <string name="select_number_to_message">Nummer für Nachricht auswählen</string>
+    <string name="dialog_call_contact">%1$s anrufen</string>
+    <string name="dialog_message_contact">Nachricht an %1$s</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">Anrufliste</string>

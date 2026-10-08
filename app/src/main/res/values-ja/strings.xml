@@ -76,6 +76,10 @@
     <string name="add_contact_dialog_title">連絡先を追加</string>
     <string name="edit_contact_dialog_title">連絡先を編集</string>
     <string name="contact_multiple_numbers">%1$d件の電話番号</string>
+    <string name="select_number_to_call">発信する電話番号を選択</string>
+    <string name="select_number_to_message">メッセージを送信する電話番号を選択</string>
+    <string name="dialog_call_contact">%1$s に発信</string>
+    <string name="dialog_message_contact">%1$s にメッセージを送信</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">履歴</string>

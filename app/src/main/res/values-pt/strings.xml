@@ -76,6 +76,10 @@
     <string name="add_contact_dialog_title">Adicionar contato</string>
     <string name="edit_contact_dialog_title">Editar contato</string>
     <string name="contact_multiple_numbers">%1$d números</string>
+    <string name="select_number_to_call">Selecione um número para ligar</string>
+    <string name="select_number_to_message">Selecione um número para enviar mensagem</string>
+    <string name="dialog_call_contact">Ligar para %1$s</string>
+    <string name="dialog_message_contact">Enviar mensagem para %1$s</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">Recentes</string>

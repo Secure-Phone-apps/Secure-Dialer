@@ -76,6 +76,10 @@
     <string name="add_contact_dialog_title">Add Contact</string>
     <string name="edit_contact_dialog_title">Edit Contact</string>
     <string name="contact_multiple_numbers">%1$d numbers</string>
+    <string name="select_number_to_call">Select a number to call</string>
+    <string name="select_number_to_message">Select a number to message</string>
+    <string name="dialog_call_contact">Call %1$s</string>
+    <string name="dialog_message_contact">Message %1$s</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">Recents</string>

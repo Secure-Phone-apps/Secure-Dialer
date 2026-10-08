@@ -76,6 +76,10 @@
     <string name="add_contact_dialog_title">إضافة جهة اتصال</string>
     <string name="edit_contact_dialog_title">تعديل جهة الاتصال</string>
     <string name="contact_multiple_numbers">%1$d أرقام</string>
+    <string name="select_number_to_call">حدد رقمًا للاتصال</string>
+    <string name="select_number_to_message">حدد رقمًا للمراسلة</string>
+    <string name="dialog_call_contact">الاتصال بـ %1$s</string>
+    <string name="dialog_message_contact">مراسلة %1$s</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">السجل</string>
