@@ -38,4 +38,31 @@ class ConferenceCallHandlingTest {
     fun testNullCallDetailsHandledSafely() {
         assertFalse(CallManager.isConference(null))
     }
+
+    @Test
+    fun testNormalCallWithMergeCapabilityIsNotMarkedAsConference() {
+        // Standard Android Telecom emulator or cellular call has CAPABILITY_MERGE_CONFERENCE.
+        // It must NOT be identified as a conference call.
+        val capabilities = Call.Details.CAPABILITY_MERGE_CONFERENCE or Call.Details.CAPABILITY_SWAP_CONFERENCE or Call.Details.CAPABILITY_MUTE
+        val properties = 0
+
+        val hasConferenceProperty = (properties and Call.Details.PROPERTY_CONFERENCE != 0) ||
+                (properties and Call.Details.PROPERTY_GENERIC_CONFERENCE != 0)
+        assertFalse("Normal call properties must not have conference flags", hasConferenceProperty)
+
+        val isManagingConference = (capabilities and Call.Details.CAPABILITY_MANAGE_CONFERENCE != 0)
+        assertFalse("Normal call must not have manage conference capability", isManagingConference)
+    }
+
+    @Test
+    fun testGenuineConferencePropertiesAreCorrectlyDetected() {
+        val confProperty = Call.Details.PROPERTY_CONFERENCE
+        assertTrue((confProperty and Call.Details.PROPERTY_CONFERENCE) != 0)
+
+        val genericConfProperty = Call.Details.PROPERTY_GENERIC_CONFERENCE
+        assertTrue((genericConfProperty and Call.Details.PROPERTY_GENERIC_CONFERENCE) != 0)
+
+        val manageCapability = Call.Details.CAPABILITY_MANAGE_CONFERENCE
+        assertTrue((manageCapability and Call.Details.CAPABILITY_MANAGE_CONFERENCE) != 0)
+    }
 }

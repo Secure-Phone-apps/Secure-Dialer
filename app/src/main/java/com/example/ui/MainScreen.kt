@@ -498,22 +498,7 @@ fun MainScreen(
                     val speakerOnly = viewModel.isDynamicIslandSpeakerOnly.value
                     val isSpeakerOn = systemAudioState?.route == android.telecom.CallAudioState.ROUTE_SPEAKER
 
-                    if (isDynamicIsland && (!speakerOnly || isSpeakerOn)) {
-                        DynamicIslandPill(
-                            callerName = callingContactName,
-                            callerNumber = callingContactNumber,
-                            callState = systemCallState,
-                            audioState = systemAudioState,
-                            photoUri = CallManager.callerPhotoUri.value,
-                            callerLabel = CallManager.callerLabel.value,
-                            simSlot = CallManager.currentSimSlot.value,
-                            onExpandToFullScreen = { isCallMinimized = false },
-                            onHangUp = {
-                                CallManager.disconnect()
-                                isCallActive = false
-                            }
-                        )
-                    } else {
+                    if (!isDynamicIsland || (speakerOnly && !isSpeakerOn)) {
                         MinimizedCallBanner(
                             contactName = callingContactName,
                             contactNumber = callingContactNumber,
@@ -537,6 +522,40 @@ fun MainScreen(
                             }
                         },
                         tabSlots = tabSlots
+                    )
+                }
+            }
+
+            // TOP-FLOATING DYNAMIC ISLAND (Framed around camera cutout at the top of the display)
+            val isDynamicIsland = viewModel.isDynamicIslandEnabled.value
+            val speakerOnly = viewModel.isDynamicIslandSpeakerOnly.value
+            val isSpeakerOn = systemAudioState?.route == android.telecom.CallAudioState.ROUTE_SPEAKER
+            val isPlacedOrAnswered = systemCallState == android.telecom.Call.STATE_ACTIVE ||
+                    systemCallState == android.telecom.Call.STATE_DIALING ||
+                    systemCallState == android.telecom.Call.STATE_CONNECTING ||
+                    systemCallState == android.telecom.Call.STATE_HOLDING
+
+            if (isCallActive && isCallMinimized && isDynamicIsland && isPlacedOrAnswered && (!speakerOnly || isSpeakerOn)) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .padding(top = 8.dp)
+                        .align(Alignment.TopCenter)
+                ) {
+                    DynamicIslandPill(
+                        callerName = callingContactName,
+                        callerNumber = callingContactNumber,
+                        callState = systemCallState,
+                        audioState = systemAudioState,
+                        photoUri = CallManager.callerPhotoUri.value,
+                        callerLabel = CallManager.callerLabel.value,
+                        simSlot = CallManager.currentSimSlot.value,
+                        onExpandToFullScreen = { isCallMinimized = false },
+                        onHangUp = {
+                            CallManager.disconnect()
+                            isCallActive = false
+                        }
                     )
                 }
             }

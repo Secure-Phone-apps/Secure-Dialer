@@ -19,6 +19,7 @@ class DialerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.example.util.DynamicIslandOverlayManager.startCallMonitoring(this)
         // Fast-path non-blocking database and security warm-up
         appScope.launch {
             try {

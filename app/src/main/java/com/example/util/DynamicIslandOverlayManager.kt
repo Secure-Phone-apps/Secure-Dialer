@@ -42,6 +42,7 @@ import com.example.ui.components.DynamicIslandPill
 import com.example.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlin.math.abs
 import kotlin.math.hypot
 
@@ -50,6 +51,13 @@ object DynamicIslandOverlayManager {
     private var overlayLifecycleOwner: OverlayLifecycleOwner? = null
     private var monitorJob: Job? = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    private data class MonitorState(
+        val call: android.telecom.Call?,
+        val callState: Int,
+        val inForeground: Boolean,
+        val audioRoute: Int?
+    )
 
     fun canDrawOverlay(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -62,8 +70,26 @@ object DynamicIslandOverlayManager {
     fun startCallMonitoring(context: Context) {
         monitorJob?.cancel()
         monitorJob = scope.launch {
-            CallManager.currentCall.collectLatest { call ->
-                if (call != null) {
+            combine(
+                CallManager.currentCall,
+                CallManager.callState,
+                CallManager.isAppInForeground,
+                CallManager.audioState
+            ) { call, state, inForeground, audio ->
+                MonitorState(call, state, inForeground, audio?.route)
+            }.collectLatest { state ->
+                val call = state.call
+                val callState = state.callState
+                val inForeground = state.inForeground
+
+                val isCallPlacedOrAnswered = call != null && (
+                    callState == android.telecom.Call.STATE_ACTIVE ||
+                    callState == android.telecom.Call.STATE_DIALING ||
+                    callState == android.telecom.Call.STATE_CONNECTING ||
+                    callState == android.telecom.Call.STATE_HOLDING
+                )
+
+                if (isCallPlacedOrAnswered) {
                     val appContext = context.applicationContext
                     val prefs = appContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
                     val isEnabled = prefs.getBoolean("is_dynamic_island_enabled", true)
@@ -73,8 +99,8 @@ object DynamicIslandOverlayManager {
                     val km = appContext.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
                     val isLocked = km?.isKeyguardLocked == true
 
-                    if (isEnabled && canDrawOverlay(appContext) && !CallManager.isAppInForeground && !isLocked) {
-                        val isSpeaker = CallManager.audioState.value?.route == CallAudioState.ROUTE_SPEAKER
+                    if (isEnabled && canDrawOverlay(appContext) && !inForeground && !isLocked) {
+                        val isSpeaker = state.audioRoute == CallAudioState.ROUTE_SPEAKER
                         if (!speakerOnly || isSpeaker) {
                             showOverlay(appContext)
                         } else {
@@ -102,6 +128,31 @@ object DynamicIslandOverlayManager {
         try {
             val wm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager ?: return
 
+            val density = context.resources.displayMetrics.density
+            val resourceId = context.resources.getIdentifier("status_bar_height", "dimen", "android")
+            var statusBarHeight = if (resourceId > 0) {
+                context.resources.getDimensionPixelSize(resourceId)
+            } else {
+                (36 * density).toInt()
+            }
+
+            // On modern Android (API 30+), ensure we measure the display cutout (camera hole)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                try {
+                    val insets = wm.currentWindowMetrics.windowInsets.getInsets(
+                        android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.displayCutout()
+                    )
+                    if (insets.top > statusBarHeight) {
+                        statusBarHeight = insets.top
+                    }
+                } catch (_: Exception) {}
+            }
+
+            // Position cleanly BELOW status bar, notification bar, and camera punch hole
+            val marginBelowCutout = (8 * density).toInt()
+            val compactY = statusBarHeight + marginBelowCutout
+            val expandedY = statusBarHeight + marginBelowCutout
+
             val layoutParams = WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -112,12 +163,11 @@ object DynamicIslandOverlayManager {
                     WindowManager.LayoutParams.TYPE_PHONE
                 },
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
                 PixelFormat.TRANSLUCENT
             ).apply {
                 gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
-                y = 12
+                y = compactY
             }
 
             val lifecycleOwner = OverlayLifecycleOwner().apply {
@@ -131,63 +181,6 @@ object DynamicIslandOverlayManager {
                 setViewTreeLifecycleOwner(lifecycleOwner)
                 setViewTreeSavedStateRegistryOwner(lifecycleOwner)
                 setViewTreeViewModelStoreOwner(lifecycleOwner)
-
-                var initialX = 0
-                var initialY = 0
-                var initialTouchX = 0f
-                var initialTouchY = 0f
-                var isDraggingWindow = false
-                var lastUpdateX = 0
-                var lastUpdateY = 0
-
-                setOnTouchListener { _, event ->
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            initialX = layoutParams.x
-                            initialY = layoutParams.y
-                            initialTouchX = event.rawX
-                            initialTouchY = event.rawY
-                            lastUpdateX = initialX
-                            lastUpdateY = initialY
-                            isDraggingWindow = false
-                            false
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            val dx = event.rawX - initialTouchX
-                            val dy = event.rawY - initialTouchY
-                            if (hypot(dx.toDouble(), dy.toDouble()) > 20) {
-                                isDraggingWindow = true
-                                val newX = initialX + dx.toInt()
-                                val newY = (initialY + dy.toInt()).coerceAtLeast(10)
-
-                                // BINDER PERF FIX: Gate IPC updates to minimum 8px deltas to protect 120Hz frame rates
-                                if (abs(newX - lastUpdateX) > 8 || abs(newY - lastUpdateY) > 8) {
-                                    layoutParams.x = newX
-                                    layoutParams.y = newY
-                                    lastUpdateX = newX
-                                    lastUpdateY = newY
-                                    try { wm.updateViewLayout(this, layoutParams) } catch (_: Exception) {}
-                                }
-                            }
-                            false
-                        }
-                        MotionEvent.ACTION_UP -> {
-                            if (isDraggingWindow) {
-                                val metrics = context.resources.displayMetrics
-                                val halfScreen = metrics.widthPixels / 2
-                                val targetX = when {
-                                    layoutParams.x < -halfScreen / 3 -> -halfScreen + 160
-                                    layoutParams.x > halfScreen / 3 -> halfScreen - 160
-                                    else -> 0
-                                }
-                                layoutParams.x = targetX
-                                try { wm.updateViewLayout(this, layoutParams) } catch (_: Exception) {}
-                            }
-                            false
-                        }
-                        else -> false
-                    }
-                }
 
                 setContent {
                     MyApplicationTheme(darkTheme = true) {
@@ -207,6 +200,23 @@ object DynamicIslandOverlayManager {
                             photoUri = callerPhotoUri,
                             callerLabel = callerLabel,
                             simSlot = currentSimSlot,
+                            onExpandedChange = { expanded ->
+                                val currentWm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                                if (currentWm != null && overlayComposeView != null) {
+                                    if (expanded) {
+                                        layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+                                        layoutParams.x = 0
+                                        layoutParams.y = expandedY
+                                    } else {
+                                        layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
+                                        layoutParams.x = 0
+                                        layoutParams.y = compactY
+                                    }
+                                    try {
+                                        currentWm.updateViewLayout(this@apply, layoutParams)
+                                    } catch (_: Exception) {}
+                                }
+                            },
                             onExpandToFullScreen = {
                                 // FIXED: Align intent extras with MainActivity contracts
                                 val intent = Intent(context, MainActivity::class.java).apply {

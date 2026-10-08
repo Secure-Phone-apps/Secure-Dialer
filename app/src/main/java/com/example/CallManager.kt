@@ -46,8 +46,18 @@ object CallManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var dtmfJob: Job? = null
 
-    @Volatile
-    var isAppInForeground: Boolean = false
+    private val _isAppInForeground = MutableStateFlow(false)
+    val isAppInForeground: StateFlow<Boolean> = _isAppInForeground.asStateFlow()
+
+    fun setAppInForeground(inForeground: Boolean) {
+        _isAppInForeground.value = inForeground
+    }
+
+    var isAppInForegroundValue: Boolean
+        get() = _isAppInForeground.value
+        set(value) {
+            _isAppInForeground.value = value
+        }
 
     private val _currentCall = MutableStateFlow<Call?>(null)
     val currentCall: StateFlow<Call?> = _currentCall.asStateFlow()
@@ -102,22 +112,32 @@ object CallManager {
 
     fun isConference(call: Call?): Boolean {
         if (call == null) return false
+        // 1. Telecom Call Hierarchy: Has children (conference host) or has parent (merged participant)
         if (call.children.isNotEmpty() || call.parent != null) return true
         val details = call.details ?: return false
         val properties = details.callProperties
+        // 2. Official Telecom Call Properties: PROPERTY_CONFERENCE or PROPERTY_GENERIC_CONFERENCE
         val hasConferenceProperty = (properties and Call.Details.PROPERTY_CONFERENCE != 0) ||
                 (properties and Call.Details.PROPERTY_GENERIC_CONFERENCE != 0) ||
                 details.hasProperty(Call.Details.PROPERTY_CONFERENCE) ||
                 details.hasProperty(Call.Details.PROPERTY_GENERIC_CONFERENCE)
+        if (hasConferenceProperty) return true
+
+        // 3. Conference Management Capabilities (Active conference participant management)
+        // NOTE: CAPABILITY_MERGE_CONFERENCE and CAPABILITY_SWAP_CONFERENCE must NOT be checked here
+        // because Telecom assigns them to normal 1-on-1 calls to indicate they CAN be merged in future!
         val capabilities = details.callCapabilities
-        val hasConferenceCapability = (capabilities and Call.Details.CAPABILITY_SWAP_CONFERENCE != 0) ||
-                (capabilities and Call.Details.CAPABILITY_MERGE_CONFERENCE != 0) ||
-                (capabilities and Call.Details.CAPABILITY_MANAGE_CONFERENCE != 0) ||
-                (capabilities and Call.Details.CAPABILITY_SEPARATE_FROM_CONFERENCE != 0) ||
-                (capabilities and Call.Details.CAPABILITY_DISCONNECT_FROM_CONFERENCE != 0)
-        val hasConferenceExtra = details.extras?.getBoolean("android.telecom.extra.IS_CONFERENCE", false) == true ||
-                details.extras?.containsKey("android.telecom.extra.CONFERENCE_PARTICIPANTS") == true
-        return hasConferenceProperty || hasConferenceCapability || hasConferenceExtra
+        val isManagingConference = (capabilities and Call.Details.CAPABILITY_MANAGE_CONFERENCE != 0)
+        if (isManagingConference) return true
+
+        // 4. Extras signaling active multi-party conference
+        val extras = details.extras
+        if (extras != null) {
+            if (extras.getBoolean("android.telecom.extra.IS_CONFERENCE", false)) return true
+            val participants = extras.getParcelableArrayList<android.net.Uri>("android.telecom.extra.CONFERENCE_PARTICIPANTS")
+            if (participants != null && participants.size > 1) return true
+        }
+        return false
     }
 
     @Volatile

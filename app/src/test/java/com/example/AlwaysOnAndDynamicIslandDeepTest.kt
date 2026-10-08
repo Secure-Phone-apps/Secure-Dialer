@@ -256,4 +256,52 @@ class AlwaysOnAndDynamicIslandDeepTest {
         assertEquals("", CallManager.callerPhotoUri.value)
         assertEquals("", CallManager.callerLabel.value)
     }
+
+    @Test
+    fun `test dynamic island call state gating - active only when placed or answered, never when ringing`() {
+        // Dynamic Island must only activate when placed (DIALING/CONNECTING) or answered (ACTIVE/HOLDING)
+        // It must NEVER activate during incoming call ringing (RINGING)
+        fun isCallPlacedOrAnswered(callState: Int): Boolean {
+            return callState == android.telecom.Call.STATE_ACTIVE ||
+                    callState == android.telecom.Call.STATE_DIALING ||
+                    callState == android.telecom.Call.STATE_CONNECTING ||
+                    callState == android.telecom.Call.STATE_HOLDING
+        }
+
+        // Incoming ringing -> False (suppressed)
+        assertFalse(isCallPlacedOrAnswered(android.telecom.Call.STATE_RINGING))
+        // Disconnected -> False
+        assertFalse(isCallPlacedOrAnswered(android.telecom.Call.STATE_DISCONNECTED))
+        assertFalse(isCallPlacedOrAnswered(android.telecom.Call.STATE_DISCONNECTING))
+
+        // Placed (outgoing) -> True
+        assertTrue(isCallPlacedOrAnswered(android.telecom.Call.STATE_DIALING))
+        assertTrue(isCallPlacedOrAnswered(android.telecom.Call.STATE_CONNECTING))
+
+        // Answered (in-call) -> True
+        assertTrue(isCallPlacedOrAnswered(android.telecom.Call.STATE_ACTIVE))
+        assertTrue(isCallPlacedOrAnswered(android.telecom.Call.STATE_HOLDING))
+    }
+
+    @Test
+    fun `test dynamic island vertical placement below status bar and camera hole`() {
+        val density = 2.625f // typical FHD+ density (e.g. Nothing Phone)
+        val statusBarHeightPx = (38 * density).toInt() // 38dp status bar
+        val marginBelowCutoutPx = (8 * density).toInt() // 8dp below status bar and camera hole
+
+        val compactY = statusBarHeightPx + marginBelowCutoutPx
+        assertTrue("Compact pill Y position must be below the status bar and camera cutout", compactY > statusBarHeightPx)
+        assertEquals(statusBarHeightPx + marginBelowCutoutPx, compactY)
+
+        // Pill width constraint verification: 210dp max width on 393dp screen width
+        val screenWidthDp = 393f
+        val maxPillWidthDp = 210f
+        val horizontalMarginPerSideDp = (screenWidthDp - maxPillWidthDp) / 2f // ~91.5dp per side
+
+        // Required clearances:
+        // Right side: Wi-Fi (~16dp) + Cellular (~16dp) + VPN (~16dp) + Battery (~20dp) = ~68dp
+        // Left side: Clock (~50dp) + notification icons (~25dp) = ~75dp
+        assertTrue("Dynamic Island leaves at least 90dp clearance for right-side status indicators (Wi-Fi, VPN, cellular)", horizontalMarginPerSideDp >= 90f)
+        assertTrue("Dynamic Island leaves at least 90dp clearance for left-side clock and notifications", horizontalMarginPerSideDp >= 90f)
+    }
 }

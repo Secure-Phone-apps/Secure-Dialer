@@ -259,16 +259,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        CallManager.setAppInForeground(false)
+    }
+
     override fun onStop() {
         super.onStop()
-        CallManager.isAppInForeground = false
+        CallManager.setAppInForeground(false)
         isAppStopped = true
     }
 
     override fun onResume() {
         super.onResume()
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
-        CallManager.isAppInForeground = true
+        CallManager.setAppInForeground(true)
+        updateDefaultDialerStatus(this)
         viewModel.hasRecordAudioPermission.value = ContextCompat.checkSelfPermission(
             this,
             android.Manifest.permission.RECORD_AUDIO
@@ -278,7 +284,7 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
-        CallManager.isAppInForeground = true
+        CallManager.setAppInForeground(true)
         val hasRealCall = CallManager.currentCall.value != null ||
                 CallManager.calls.value.isNotEmpty() ||
                 viewModel.isFakeCallActive.value
