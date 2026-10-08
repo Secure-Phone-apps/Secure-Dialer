@@ -266,42 +266,41 @@ fun RecentCallRow(
                     },
                     supportingContent = null,
                     leadingContent = {
-                        Surface(
+                        Box(
                             modifier = Modifier
                                 .offset(x = (-8).dp)
-                                .size(42.dp),
-                            shape = avatarShape,
-                            color = record.avatarBg.copy(alpha = 0.85f)
+                                .size(42.dp)
+                                .clip(avatarShape)
+                                .background(record.avatarBg.copy(alpha = 0.85f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                if (record.photoUri.isNotEmpty()) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(record.photoUri)
-                                            .size(128, 128)
-                                            .crossfade(false)
-                                            .build(),
-                                        contentDescription = record.name,
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
+                            if (record.photoUri.isNotEmpty()) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(record.photoUri)
+                                        .size(128, 128)
+                                        .crossfade(false)
+                                        .build(),
+                                    contentDescription = record.name,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
+                                if (isSaved) {
+                                    Text(
+                                        text = record.avatarText,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = record.avatarTextColor,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 } else {
-                                    val isSaved = record.name != record.number && record.name != "Unknown" && record.name.isNotBlank()
-                                    if (isSaved) {
-                                        Text(
-                                            text = record.avatarText,
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = record.avatarTextColor,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Default.Person,
-                                            contentDescription = null,
-                                            tint = record.avatarTextColor,
-                                            modifier = Modifier.size(22.dp)
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = null,
+                                        tint = record.avatarTextColor,
+                                        modifier = Modifier.size(22.dp)
+                                    )
                                 }
                             }
                         }
@@ -352,10 +351,11 @@ fun RecentCallRow(
                         ) {
                             val isContact = record.name != record.number
 
-                            RecentActionItem(
+                            DetailActionItem(
                                 icon = Icons.Default.Message,
                                 label = stringResource(R.string.send_sms),
-                                tint = MaterialTheme.colorScheme.primary,
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                                 onClick = {
                                     try {
                                         val intent = Intent(Intent.ACTION_SENDTO).apply {
@@ -369,10 +369,11 @@ fun RecentCallRow(
                                 }
                             )
 
-                            RecentActionItem(
+                            DetailActionItem(
                                 icon = Icons.Default.Block,
                                 label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
-                                tint = if (isBlocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                                containerColor = if (isBlocked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
+                                contentColor = if (isBlocked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error,
                                 onClick = {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     if (isBlocked) {
@@ -383,20 +384,22 @@ fun RecentCallRow(
                                 }
                             )
 
-                            RecentActionItem(
+                            DetailActionItem(
                                 icon = Icons.Default.History,
                                 label = stringResource(R.string.history),
-                                tint = MaterialTheme.colorScheme.secondary,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 onClick = {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     onHistoryClick(record.number)
                                 }
                             )
 
-                            RecentActionItem(
-                                icon = if (isContact) Icons.Default.Person else Icons.Default.PersonAdd,
+                            DetailActionItem(
+                                icon = if (isContact) Icons.Default.Edit else Icons.Default.PersonAdd,
                                 label = if (isContact) stringResource(R.string.btn_edit) else stringResource(R.string.action_add_contact),
-                                tint = MaterialTheme.colorScheme.tertiary,
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                                 onClick = {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     if (isContact) {
@@ -424,10 +427,11 @@ fun RecentCallRow(
                             )
 
                             if (matchingRecordings.isNotEmpty()) {
-                                RecentActionItem(
+                                DetailActionItem(
                                     icon = Icons.Default.Mic,
                                     label = stringResource(R.string.recording),
-                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                                     onClick = {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                         showPlaybackDialog = true
