@@ -136,7 +136,7 @@ object SimCallTracker {
     fun isMultiSimActive(context: Context): Boolean {
         return try {
             val subManager = context.applicationContext.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-            val count = subManager?.activeSubscriptionInfoList?.size ?: 0
+            val count = (subManager?.activeSubscriptionInfoList ?: emptyList()).size
             count > 1
         } catch (_: Exception) {
             false

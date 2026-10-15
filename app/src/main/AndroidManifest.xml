@@ -34,6 +34,11 @@
     <!-- Exact Alarms for Call Reminders and Fake Calls (API 31+) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
+    <!-- Foreground Service permissions for Android 14+ (API 34+) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+
     <!-- Allow installation on devices without native telephony (tablets, Chromebooks, Wi-Fi calling) -->
     <uses-feature
         android:name="android.hardware.telephony"
@@ -103,6 +108,7 @@
         <service
             android:name=".MyInCallService"
             android:permission="android.permission.BIND_INCALL_SERVICE"
+            android:foregroundServiceType="phoneCall|microphone"
             android:exported="true">
             <meta-data
                 android:name="android.telecom.IN_CALL_SERVICE_UI"

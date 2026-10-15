@@ -92,18 +92,18 @@ class DialerRepository(rawContext: Context) {
     // --- Sync Logic ---
 
     private var contentObserver: ContentObserver? = null
-    private var lastSyncTimestamp = 0L
+    private val debounceHandler = Handler(Looper.getMainLooper())
+    private var debounceRunnable: Runnable? = null
 
     fun startObservingChanges(onChanged: () -> Unit) {
         if (contentObserver != null) return
         try {
-            val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            val observer = object : ContentObserver(debounceHandler) {
                 override fun onChange(selfChange: Boolean) {
-                    val now = System.currentTimeMillis()
-                    if (now - lastSyncTimestamp > 1500) {
-                        lastSyncTimestamp = now
-                        onChanged()
-                    }
+                    debounceRunnable?.let { debounceHandler.removeCallbacks(it) }
+                    val runnable = Runnable { onChanged() }
+                    debounceRunnable = runnable
+                    debounceHandler.postDelayed(runnable, 400L)
                 }
             }
             contentObserver = observer
@@ -113,6 +113,8 @@ class DialerRepository(rawContext: Context) {
     }
 
     fun stopObservingChanges() {
+        debounceRunnable?.let { debounceHandler.removeCallbacks(it) }
+        debounceRunnable = null
         contentObserver?.let { observer ->
             try {
                 context.contentResolver.unregisterContentObserver(observer)

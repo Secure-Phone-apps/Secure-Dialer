@@ -45,6 +45,8 @@ import java.util.Date
 object CallManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var dtmfJob: Job? = null
+    private var resolveDetailsJob: Job? = null
+    private var resolveCnapJob: Job? = null
 
     private val _isAppInForeground = MutableStateFlow(false)
     val isAppInForeground: StateFlow<Boolean> = _isAppInForeground.asStateFlow()
@@ -334,6 +336,10 @@ object CallManager {
         } else {
             autoStopRecordingIfNeeded()
             stopDtmf()
+            resolveDetailsJob?.cancel()
+            resolveDetailsJob = null
+            resolveCnapJob?.cancel()
+            resolveCnapJob = null
             _callState.value = Call.STATE_DISCONNECTED
             _callerNumber.value = ""
             _callerName.value = ""
@@ -348,7 +354,8 @@ object CallManager {
 
     private fun resolveCallerDetailsAsync(number: String, cnap: String) {
         val ctx = appContext ?: inCallService?.applicationContext ?: return
-        scope.launch {
+        resolveDetailsJob?.cancel()
+        resolveDetailsJob = scope.launch {
             val resolvedName = getContactNameFromNumber(ctx, number)
             if (!resolvedName.isNullOrBlank()) {
                 _callerName.value = resolvedName
@@ -381,7 +388,8 @@ object CallManager {
 
     private fun resolveCnapAsync(number: String) {
         val ctx = appContext ?: inCallService?.applicationContext ?: return
-        scope.launch {
+        resolveCnapJob?.cancel()
+        resolveCnapJob = scope.launch {
             val dbCnap = getSavedCnapName(ctx, number)
             if (!dbCnap.isNullOrBlank()) _callerCnapName.value = dbCnap
         }
@@ -461,6 +469,11 @@ object CallManager {
 
     fun disconnect() {
         try {
+            stopDtmf()
+            resolveDetailsJob?.cancel()
+            resolveDetailsJob = null
+            resolveCnapJob?.cancel()
+            resolveCnapJob = null
             val call = _currentCall.value ?: return
             if (call.state == Call.STATE_RINGING) call.reject(false, null) else call.disconnect()
             if (_calls.value.none { it != call && it.state != Call.STATE_DISCONNECTED }) updateCall(null)

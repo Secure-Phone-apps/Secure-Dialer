@@ -182,4 +182,58 @@ object CallScreenPermissionHelper {
             context.startActivity(intent)
         } catch (_: Exception) {}
     }
+
+    fun openOemPermissionSettings(context: Context): Boolean {
+        // 1. Xiaomi / HyperOS / MIUI Permission Editor
+        try {
+            val miuiIntent = Intent("miui.intent.action.APP_PERM_EDITOR").apply {
+                setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity")
+                putExtra("extra_pkgname", context.packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            if (context.packageManager.resolveActivity(miuiIntent, 0) != null) {
+                context.startActivity(miuiIntent)
+                return true
+            }
+        } catch (_: Exception) {}
+
+        try {
+            val miuiIntentAlt = Intent("miui.intent.action.APP_PERM_EDITOR").apply {
+                putExtra("extra_pkgname", context.packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            if (context.packageManager.resolveActivity(miuiIntentAlt, 0) != null) {
+                context.startActivity(miuiIntentAlt)
+                return true
+            }
+        } catch (_: Exception) {}
+
+        // 2. Vivo / iManager Autostart & Pop-up window permissions
+        try {
+            val vivoIntent = Intent().apply {
+                setClassName("com.iqoo.secure", "com.iqoo.secure.ui.phoneoptimize.AddWhiteListActivity")
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            if (context.packageManager.resolveActivity(vivoIntent, 0) != null) {
+                context.startActivity(vivoIntent)
+                return true
+            }
+        } catch (_: Exception) {}
+
+        try {
+            val vivoIntent2 = Intent().apply {
+                setClassName("com.vivo.permissionmanager", "com.vivo.permissionmanager.activity.PurviewTabActivity")
+                putExtra("packagename", context.packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            if (context.packageManager.resolveActivity(vivoIntent2, 0) != null) {
+                context.startActivity(vivoIntent2)
+                return true
+            }
+        } catch (_: Exception) {}
+
+        // Standard App Details Settings fallback
+        openAppDetailsSettings(context)
+        return false
+    }
 }

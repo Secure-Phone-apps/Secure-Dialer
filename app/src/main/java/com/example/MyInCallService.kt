@@ -43,6 +43,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -365,8 +366,32 @@ class MyInCallService : InCallService() {
         }
     }
 
+    private var lastAudioRoute = CallAudioState.ROUTE_EARPIECE
+
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         super.onCallAudioStateChanged(audioState)
+        val currentRoute = audioState?.route ?: CallAudioState.ROUTE_EARPIECE
+        if (lastAudioRoute == CallAudioState.ROUTE_BLUETOOTH && currentRoute != CallAudioState.ROUTE_BLUETOOTH) {
+            // Defensive fallback retry to ROUTE_EARPIECE upon Bluetooth disconnect events
+            if (currentRoute != CallAudioState.ROUTE_SPEAKER && currentRoute != CallAudioState.ROUTE_WIRED_HEADSET) {
+                try {
+                    setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                } catch (_: Exception) {}
+                serviceScope.launch {
+                    delay(250)
+                    try {
+                        val stateNow = CallManager.audioState.value
+                        if (stateNow != null && stateNow.route != CallAudioState.ROUTE_SPEAKER &&
+                            stateNow.route != CallAudioState.ROUTE_WIRED_HEADSET &&
+                            stateNow.route != CallAudioState.ROUTE_EARPIECE) {
+                            setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                        }
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        lastAudioRoute = currentRoute
+
         CallManager.updateAudioState(audioState)
         val activeCall = CallManager.currentCall.value
         if (activeCall != null && activeCall.state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {

@@ -277,7 +277,8 @@ fun ActiveCallScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
-                    .padding(24.dp),
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp, vertical = 12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
@@ -304,6 +305,8 @@ fun ActiveCallScreen(
                     fakeState = fakeState,
                     fakeActiveStartTimestamp = fakeActiveStartTimestamp
                 )
+
+                Spacer(modifier = Modifier.weight(1f, fill = false))
 
                 waitingCall?.let { call ->
                     InCallWaitingCallDialog(
@@ -335,6 +338,8 @@ fun ActiveCallScreen(
                         isConference = isConference
                     )
                 }
+
+                Spacer(modifier = Modifier.weight(1f, fill = false))
 
                 if (isAddCallDialogOpen) {
                     InCallAddCallDialog(

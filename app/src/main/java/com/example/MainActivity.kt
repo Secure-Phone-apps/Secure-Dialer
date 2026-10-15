@@ -163,11 +163,7 @@ class MainActivity : ComponentActivity() {
                     onDismiss = { showRestrictedSettingsDialog = false },
                     onOpenSettings = {
                         showRestrictedSettingsDialog = false
-                        try {
-                            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", packageName, null)
-                            })
-                        } catch (_: Exception) {}
+                        com.example.util.CallScreenPermissionHelper.openOemPermissionSettings(this@MainActivity)
                     }
                 )
             }

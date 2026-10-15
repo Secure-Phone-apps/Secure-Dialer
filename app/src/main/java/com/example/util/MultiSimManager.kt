@@ -185,7 +185,7 @@ object MultiSimManager {
         return try {
             val sm = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
             val subCount = try {
-                sm?.activeSubscriptionInfoList?.size ?: 0
+                (sm?.activeSubscriptionInfoList ?: emptyList()).size
             } catch (_: SecurityException) { 0 } catch (_: Exception) { 0 }
             if (subCount > 0) return subCount
 

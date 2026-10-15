@@ -349,7 +349,8 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
     val subIdToSlotMap = mutableMapOf<String, Int>()
     try {
         val subManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-        subManager?.activeSubscriptionInfoList?.let { subList ->
+        val subList = subManager?.activeSubscriptionInfoList ?: emptyList()
+        if (subList.isNotEmpty()) {
             if (subList.size == 1) {
                 val subInfo = subList[0]
                 val slot = subInfo.simSlotIndex + 1
