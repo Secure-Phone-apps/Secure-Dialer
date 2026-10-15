@@ -479,7 +479,12 @@ object CallManager {
     }
 
     fun silenceRinger(context: Context) {
-        (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.silenceRinger()
+        try {
+            (context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager)?.silenceRinger()
+        } catch (_: Exception) {}
+        try {
+            (inCallService as? MyInCallService)?.silence()
+        } catch (_: Exception) {}
     }
 
     fun playDtmf(key: Char) {

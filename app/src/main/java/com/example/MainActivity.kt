@@ -26,7 +26,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.telecom.Call
 import android.telecom.TelecomManager
+import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -454,5 +456,25 @@ class MainActivity : ComponentActivity() {
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.btn_cancel)) }
             }
         )
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val isVolumeKey = event.keyCode == KeyEvent.KEYCODE_VOLUME_DOWN ||
+                    event.keyCode == KeyEvent.KEYCODE_VOLUME_UP
+            val isRinging = CallManager.currentCall.value?.state == Call.STATE_RINGING ||
+                    CallManager.calls.value.any { it.state == Call.STATE_RINGING } ||
+                    CallManager.waitingCall.value != null ||
+                    (viewModel.isFakeCallActive.value && viewModel.fakeCallState.value == "RINGING")
+
+            if (isVolumeKey && isRinging) {
+                CallManager.silenceRinger(this)
+                if (viewModel.isFakeCallActive.value) {
+                    viewModel.fakeCallState.value = "SILENCED"
+                }
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 }

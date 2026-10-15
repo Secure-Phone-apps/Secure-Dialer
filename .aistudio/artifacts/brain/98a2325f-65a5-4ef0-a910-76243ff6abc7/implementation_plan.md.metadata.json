@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan for silencing incoming call ringer, vibration, flashlight, and call-waiting tones via Volume and Lock/Power buttons, conforming to Google Phone and Samsung One UI standards.",
+  "updatedAt": "2026-10-15T03:33:07.542770488Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

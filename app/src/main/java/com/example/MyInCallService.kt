@@ -8,8 +8,10 @@ package com.example
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.Ringtone
@@ -53,6 +55,32 @@ class MyInCallService : InCallService() {
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
     private var callWaitingToneGenerator: ToneGenerator? = null
+    private var isScreenOffReceiverRegistered = false
+    private val screenOffReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == Intent.ACTION_SCREEN_OFF) {
+                silence()
+            }
+        }
+    }
+
+    private fun registerScreenOffReceiver() {
+        if (!isScreenOffReceiverRegistered) {
+            try {
+                registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+                isScreenOffReceiverRegistered = true
+            } catch (_: Exception) {}
+        }
+    }
+
+    private fun unregisterScreenOffReceiver() {
+        if (isScreenOffReceiverRegistered) {
+            try {
+                unregisterReceiver(screenOffReceiver)
+            } catch (_: Exception) {}
+            isScreenOffReceiverRegistered = false
+        }
+    }
 
     @Synchronized
     private fun playCallWaitingTone() {
@@ -135,6 +163,18 @@ class MyInCallService : InCallService() {
     }
 
     @Synchronized
+    fun silence() {
+        stopRinging()
+        FlashLightManager.stopFlashing(this)
+        unregisterScreenOffReceiver()
+    }
+
+    override fun onSilenceRinger() {
+        super.onSilenceRinger()
+        silence()
+    }
+
+    @Synchronized
     private fun stopRinging() {
         try {
             if (ringtone?.isPlaying == true) {
@@ -193,6 +233,7 @@ class MyInCallService : InCallService() {
     }
 
     override fun onDestroy() {
+        unregisterScreenOffReceiver()
         stopRinging()
         releaseWakeLock()
         DynamicIslandOverlayManager.stopCallMonitoring()
@@ -264,6 +305,7 @@ class MyInCallService : InCallService() {
                 if (state == Call.STATE_RINGING) wasRinging = true
 
                 if (state == Call.STATE_ACTIVE || state == Call.STATE_DISCONNECTED) {
+                    unregisterScreenOffReceiver()
                     stopRinging()
                     nm.cancel(NOTIFICATION_ID_INCOMING)
                     FlashLightManager.stopFlashing(this@MyInCallService)
@@ -337,6 +379,7 @@ class MyInCallService : InCallService() {
     private fun handleCallState(call: Call) {
         when (call.state) {
             Call.STATE_RINGING -> {
+                registerScreenOffReceiver()
                 val hasExistingActiveCall = CallManager.calls.value.any {
                     it != call && (it.state == Call.STATE_ACTIVE || it.state == Call.STATE_HOLDING || it.state == Call.STATE_DIALING)
                 }
@@ -353,6 +396,7 @@ class MyInCallService : InCallService() {
                 }
             }
             Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING -> {
+                unregisterScreenOffReceiver()
                 stopRinging()
                 stopCallWaitingTone()
                 FlashLightManager.stopFlashing(this)
