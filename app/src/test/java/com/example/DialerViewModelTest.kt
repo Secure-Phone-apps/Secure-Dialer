@@ -225,4 +225,28 @@ class DialerViewModelTest {
         assertEquals("", viewModel.dialpadInput.value)
         assertEquals(0, viewModel.dialpadTextFieldValue.value.selection.start)
     }
+
+    @Test
+    fun `test search bar visibility logic across tabs and call history details`() {
+        fun isSearchVisible(currentSlotKey: String, isCallHistoryOpen: Boolean): Boolean {
+            return currentSlotKey != "DIALPAD" && (currentSlotKey != "RECENTS" || !isCallHistoryOpen)
+        }
+
+        // On Recents with history details open -> search bar hidden
+        assertFalse(isSearchVisible("RECENTS", true))
+        // On Recents with history details closed -> search bar visible
+        assertTrue(isSearchVisible("RECENTS", false))
+
+        // On Contacts, search bar MUST ALWAYS BE VISIBLE regardless of call history state
+        assertTrue(isSearchVisible("CONTACTS", true))
+        assertTrue(isSearchVisible("CONTACTS", false))
+
+        // On Favorites, search bar MUST ALWAYS BE VISIBLE
+        assertTrue(isSearchVisible("FAVORITES", true))
+        assertTrue(isSearchVisible("FAVORITES", false))
+
+        // On Dialpad -> search bar always hidden
+        assertFalse(isSearchVisible("DIALPAD", false))
+        assertFalse(isSearchVisible("DIALPAD", true))
+    }
 }

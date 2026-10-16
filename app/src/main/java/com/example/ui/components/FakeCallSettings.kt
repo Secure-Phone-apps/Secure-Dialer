@@ -17,19 +17,28 @@
 
 package com.example.ui.components
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.net.Uri
+import android.provider.OpenableColumns
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
-import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,14 +47,24 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.model.ScheduledFakeCall
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.FakeCallManager
 import com.example.util.FakeCallReceiver
+import com.example.util.FakeCallVoicePlayer
 import com.example.util.RichHapticEngine
+import java.text.SimpleDateFormat
+import java.util.*
 
 private enum class FakeCallDelayUnit(val key: String, val multiplier: Int) {
     SEC("sec", 1),
     MIN("min", 60),
     HOUR("hour", 3600)
+}
+
+private enum class ScheduleMode {
+    TIMER_DELAY,
+    DATE_TIME
 }
 
 @Composable
@@ -58,6 +77,10 @@ fun FakeCallSettings(
     var fakeName by remember { mutableStateOf("Boss") }
     var fakeNumber by remember { mutableStateOf("+1 (555) 492-0192") }
 
+    // Schedule Mode: Timer delay vs Specific Date & Time
+    var scheduleMode by remember { mutableStateOf(ScheduleMode.TIMER_DELAY) }
+
+    // Mode A: Timer Delay
     var delayValue by remember { mutableStateOf("10") }
     var selectedDelayUnit by remember { mutableStateOf(FakeCallDelayUnit.SEC) }
 
@@ -66,6 +89,24 @@ fun FakeCallSettings(
         (value * selectedDelayUnit.multiplier).coerceAtLeast(0)
     }
 
+    // Mode B: Specific Date & Time
+    val now = remember { Calendar.getInstance() }
+    var targetCalendar by remember {
+        mutableStateOf(Calendar.getInstance().apply {
+            add(Calendar.MINUTE, 15)
+        })
+    }
+
+    val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
+    val dateFormatter = remember { SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault()) }
+    val fullDateTimeFormatter = remember { SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()) }
+
+    val computedDelayFromDateTime = remember(targetCalendar) {
+        val diff = (targetCalendar.timeInMillis - System.currentTimeMillis()) / 1000
+        diff.coerceAtLeast(1).toInt()
+    }
+
+    // Sequential repeat options
     var repeatCount by remember { mutableIntStateOf(1) }
     var intervalValue by remember { mutableStateOf("1") }
     var selectedIntervalUnit by remember { mutableStateOf(FakeCallDelayUnit.MIN) }
@@ -75,7 +116,52 @@ fun FakeCallSettings(
         (value * selectedIntervalUnit.multiplier).coerceAtLeast(0)
     }
 
-    val isValidConfig = finalDelaySeconds >= 1 && fakeNumber.trim().isNotEmpty()
+    // Voice Audio on Answer Options
+    var selectedVoiceType by remember { mutableStateOf("OFFICE") }
+    var customAudioUri by remember { mutableStateOf<String?>(null) }
+    var customAudioName by remember { mutableStateOf<String?>(null) }
+    var isVoicePreviewPlaying by remember { mutableStateOf(false) }
+
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            customAudioUri = uri.toString()
+            var displayName = "Custom Audio File"
+            try {
+                context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1 && cursor.moveToFirst()) {
+                        displayName = cursor.getString(nameIndex) ?: displayName
+                    }
+                }
+            } catch (_: Exception) {}
+            customAudioName = displayName
+            selectedVoiceType = "CUSTOM"
+            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+        }
+    }
+
+    // Stop voice preview when leaving screen
+    DisposableEffect(Unit) {
+        onDispose {
+            FakeCallVoicePlayer.stop()
+        }
+    }
+
+    // Scheduled calls list refresh state
+    var scheduledCallsVersion by remember { mutableIntStateOf(0) }
+    val scheduledCalls = remember(scheduledCallsVersion) {
+        FakeCallManager.getScheduledCalls(context)
+    }
+
+    val effectiveDelaySeconds = if (scheduleMode == ScheduleMode.TIMER_DELAY) {
+        finalDelaySeconds
+    } else {
+        computedDelayFromDateTime
+    }
+
+    val isValidConfig = effectiveDelaySeconds >= 1 && fakeNumber.trim().isNotEmpty()
 
     Column(
         modifier = Modifier
@@ -83,7 +169,7 @@ fun FakeCallSettings(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Configuration Inputs
+        // Configuration Inputs: Caller Identity
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
@@ -136,7 +222,6 @@ fun FakeCallSettings(
                     }
                 }
 
-                // FIXED: Numerical keyboard for phone number entry
                 OutlinedTextField(
                     value = fakeNumber,
                     onValueChange = { fakeNumber = it },
@@ -149,7 +234,7 @@ fun FakeCallSettings(
             }
         }
 
-        // Delay timer Selection
+        // Timing Selection: Mode Selector (Timer Delay vs Date & Time)
         Card(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             shape = RoundedCornerShape(16.dp),
@@ -168,35 +253,290 @@ fun FakeCallSettings(
                     overflow = TextOverflow.Ellipsis
                 )
 
+                // Tab Switcher between Timer Delay and Date/Time
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    OutlinedTextField(
-                        value = delayValue,
-                        onValueChange = { newValue ->
-                            if (newValue.all { it.isDigit() } && newValue.length <= 4) {
-                                delayValue = newValue
-                            }
+                    FilterChip(
+                        selected = scheduleMode == ScheduleMode.TIMER_DELAY,
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            scheduleMode = ScheduleMode.TIMER_DELAY
                         },
-                        label = { Text(stringResource(R.string.duration_label)) },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        label = { Text(stringResource(R.string.fake_call_mode_timer), maxLines = 1) },
+                        leadingIcon = {
+                            Icon(Icons.Default.HourglassBottom, contentDescription = null, modifier = Modifier.size(16.dp))
+                        },
+                        modifier = Modifier.weight(1f)
                     )
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        FakeCallDelayUnit.entries.forEach { unit ->
+                    FilterChip(
+                        selected = scheduleMode == ScheduleMode.DATE_TIME,
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            scheduleMode = ScheduleMode.DATE_TIME
+                        },
+                        label = { Text(stringResource(R.string.fake_call_mode_datetime), maxLines = 1) },
+                        leadingIcon = {
+                            Icon(Icons.Default.CalendarToday, contentDescription = null, modifier = Modifier.size(16.dp))
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+                if (scheduleMode == ScheduleMode.TIMER_DELAY) {
+                    // Quick duration presets
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        val quickTimers = listOf(
+                            "10s" to ("10" to FakeCallDelayUnit.SEC),
+                            "30s" to ("30" to FakeCallDelayUnit.SEC),
+                            "1m" to ("1" to FakeCallDelayUnit.MIN),
+                            "5m" to ("5" to FakeCallDelayUnit.MIN),
+                            "15m" to ("15" to FakeCallDelayUnit.MIN)
+                        )
+                        items(quickTimers) { (label, config) ->
                             FilterChip(
-                                selected = selectedDelayUnit == unit,
+                                selected = delayValue == config.first && selectedDelayUnit == config.second,
                                 onClick = {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    selectedDelayUnit = unit
+                                    delayValue = config.first
+                                    selectedDelayUnit = config.second
                                 },
-                                label = { Text(unit.key, maxLines = 1) }
+                                label = { Text(label, maxLines = 1) }
                             )
                         }
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = delayValue,
+                            onValueChange = { newValue ->
+                                if (newValue.all { it.isDigit() } && newValue.length <= 4) {
+                                    delayValue = newValue
+                                }
+                            },
+                            label = { Text(stringResource(R.string.duration_label)) },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            FakeCallDelayUnit.entries.forEach { unit ->
+                                FilterChip(
+                                    selected = selectedDelayUnit == unit,
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        selectedDelayUnit = unit
+                                    },
+                                    label = { Text(unit.key, maxLines = 1) }
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Date & Time picker buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                val year = targetCalendar.get(Calendar.YEAR)
+                                val month = targetCalendar.get(Calendar.MONTH)
+                                val day = targetCalendar.get(Calendar.DAY_OF_MONTH)
+
+                                DatePickerDialog(
+                                    context,
+                                    { _, y, m, d ->
+                                        val newCal = (targetCalendar.clone() as Calendar).apply {
+                                            set(Calendar.YEAR, y)
+                                            set(Calendar.MONTH, m)
+                                            set(Calendar.DAY_OF_MONTH, d)
+                                        }
+                                        targetCalendar = newCal
+                                    },
+                                    year,
+                                    month,
+                                    day
+                                ).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(dateFormatter.format(targetCalendar.time), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                val hour = targetCalendar.get(Calendar.HOUR_OF_DAY)
+                                val minute = targetCalendar.get(Calendar.MINUTE)
+
+                                TimePickerDialog(
+                                    context,
+                                    { _, h, m ->
+                                        val newCal = (targetCalendar.clone() as Calendar).apply {
+                                            set(Calendar.HOUR_OF_DAY, h)
+                                            set(Calendar.MINUTE, m)
+                                            set(Calendar.SECOND, 0)
+                                        }
+                                        targetCalendar = newCal
+                                    },
+                                    hour,
+                                    minute,
+                                    false
+                                ).show()
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(timeFormatter.format(targetCalendar.time), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+
+                    val minutesUntil = (computedDelayFromDateTime / 60)
+                    val triggerHint = if (minutesUntil > 60) {
+                        "${minutesUntil / 60}h ${minutesUntil % 60}m"
+                    } else if (minutesUntil > 0) {
+                        "${minutesUntil}m"
+                    } else {
+                        "${computedDelayFromDateTime}s"
+                    }
+
+                    Text(
+                        text = stringResource(R.string.fake_call_triggers_in, triggerHint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+        }
+
+        // Voice Audio on Answer Options Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.fake_call_voice_audio_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Text(
+                    text = stringResource(R.string.fake_call_voice_audio_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                // Voice preset chips
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    val voices = listOf(
+                        "OFFICE" to R.string.fake_call_voice_office,
+                        "FAMILY" to R.string.fake_call_voice_family,
+                        "FRIEND" to R.string.fake_call_voice_friend,
+                        "NONE" to R.string.fake_call_voice_none,
+                        "CUSTOM" to R.string.fake_call_voice_custom
+                    )
+                    items(voices) { (key, resId) ->
+                        FilterChip(
+                            selected = selectedVoiceType == key,
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                FakeCallVoicePlayer.stop()
+                                isVoicePreviewPlaying = false
+                                selectedVoiceType = key
+                                if (key == "CUSTOM" && customAudioUri == null) {
+                                    audioPickerLauncher.launch("audio/*")
+                                }
+                            },
+                            label = { Text(stringResource(resId), maxLines = 1) }
+                        )
+                    }
+                }
+
+                if (selectedVoiceType == "CUSTOM") {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                audioPickerLauncher.launch("audio/*")
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(Icons.Default.AudioFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                text = customAudioName ?: stringResource(R.string.fake_call_voice_choose_file),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+
+                // Voice Preview Button
+                if (selectedVoiceType != "NONE") {
+                    OutlinedButton(
+                        onClick = {
+                            if (isVoicePreviewPlaying) {
+                                FakeCallVoicePlayer.stop()
+                                isVoicePreviewPlaying = false
+                            } else {
+                                isVoicePreviewPlaying = true
+                                FakeCallVoicePlayer.playVoice(
+                                    context = context,
+                                    voiceType = selectedVoiceType,
+                                    customAudioUri = customAudioUri,
+                                    isSpeakerOn = true,
+                                    onPlaybackCompleted = {
+                                        isVoicePreviewPlaying = false
+                                    }
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        val icon = if (isVoicePreviewPlaying) Icons.Default.Stop else Icons.AutoMirrored.Filled.VolumeUp
+                        Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        val text = if (isVoicePreviewPlaying) {
+                            stringResource(R.string.fake_call_voice_stop)
+                        } else {
+                            stringResource(R.string.fake_call_voice_preview)
+                        }
+                        Text(text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -288,38 +628,30 @@ fun FakeCallSettings(
                         }
                     }
                 }
-
-                if (repeatCount == 1) {
-                    Text(
-                        text = stringResource(R.string.multi_call_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
             }
         }
 
-        // Action Buttons
+        // Action Buttons: Schedule and Cancel
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Button(
-                // FIXED: Enforce valid minimum delay to prevent zero-millisecond Doze dropouts
                 enabled = isValidConfig,
                 onClick = {
                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                     FakeCallReceiver.scheduleFakeCall(
-                        context,
-                        fakeName.trim(),
-                        fakeNumber.trim(),
-                        finalDelaySeconds,
-                        repeatCount,
-                        finalIntervalSeconds
+                        context = context,
+                        name = fakeName.trim(),
+                        number = fakeNumber.trim(),
+                        delaySeconds = effectiveDelaySeconds,
+                        repeatCount = repeatCount,
+                        repeatIntervalSeconds = finalIntervalSeconds,
+                        audioUri = customAudioUri,
+                        audioVoiceType = selectedVoiceType
                     )
-                    Toast.makeText(context, context.getString(R.string.schedule_callback_reminder_title), Toast.LENGTH_SHORT).show()
+                    scheduledCallsVersion++
+                    Toast.makeText(context, context.getString(R.string.fake_call_scheduled_success), Toast.LENGTH_SHORT).show()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
@@ -329,24 +661,130 @@ fun FakeCallSettings(
                 Spacer(Modifier.width(8.dp))
                 val btnText = if (repeatCount > 1) {
                     stringResource(R.string.schedule_sequential_calls, repeatCount)
+                } else if (scheduleMode == ScheduleMode.TIMER_DELAY) {
+                    stringResource(R.string.schedule_escape_call, effectiveDelaySeconds)
                 } else {
-                    stringResource(R.string.schedule_escape_call, finalDelaySeconds)
+                    stringResource(R.string.schedule_call_btn)
                 }
                 Text(btnText, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
 
-            OutlinedButton(
-                onClick = {
-                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
-                    FakeCallReceiver.cancelFakeCall(context)
-                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
-                },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(14.dp)
+            if (scheduledCalls.isNotEmpty()) {
+                OutlinedButton(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                        FakeCallManager.cancelAll(context)
+                        scheduledCallsVersion++
+                        Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(14.dp)
+                ) {
+                    Icon(Icons.Default.Cancel, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.btn_cancel_scheduled_escape_calls), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
+
+        // Upcoming Scheduled Calls Section
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Icon(Icons.Default.Cancel, contentDescription = null)
-                Spacer(Modifier.width(8.dp))
-                Text(stringResource(R.string.btn_cancel_scheduled_escape_calls), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.fake_call_upcoming_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    if (scheduledCalls.size > 1) {
+                        TextButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                FakeCallManager.cancelAll(context)
+                                scheduledCallsVersion++
+                            }
+                        ) {
+                            Text(stringResource(R.string.fake_call_cancel_all), color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+
+                if (scheduledCalls.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.fake_call_no_upcoming),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        scheduledCalls.forEach { call ->
+                            val triggerDate = Date(call.triggerTimeMillis)
+                            val formattedTime = fullDateTimeFormatter.format(triggerDate)
+                            val voiceTag = when (call.audioVoiceType) {
+                                "OFFICE" -> "Office"
+                                "FAMILY" -> "Family"
+                                "FRIEND" -> "Friend"
+                                "CUSTOM" -> "Custom"
+                                else -> "Silent"
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = call.name.ifEmpty { call.number },
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = "$formattedTime • $voiceTag",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        FakeCallManager.cancelCall(context, call.id)
+                                        scheduledCallsVersion++
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Cancel call",
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

@@ -62,6 +62,7 @@ import com.example.model.CallRecording
 import com.example.model.CallType
 import com.example.ui.components.*
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.FakeCallVoicePlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -380,7 +381,7 @@ fun MainScreen(
                 val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
 
                 AnimatedVisibility(
-                    visible = currentSlotKey != "DIALPAD" && !isCallHistoryDetailsOpen,
+                    visible = currentSlotKey != "DIALPAD" && (currentSlotKey != "RECENTS" || !isCallHistoryDetailsOpen),
                     enter = expandVertically(
                         animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
                     ) + fadeIn(animationSpec = tween(120)),
@@ -428,7 +429,8 @@ fun MainScreen(
                                     onDeleteRecord = { id -> viewModel.deleteCallLog(id) },
                                     hasPermission = hasCallLogPermission,
                                     isLoading = isLoadingPermissions,
-                                    onRequestPermission = { showProminentDisclosure = true }
+                                    onRequestPermission = { showProminentDisclosure = true },
+                                    isTabActive = (currentSlotKey == "RECENTS")
                                 )
                             }
                             "CONTACTS" -> {
@@ -598,6 +600,7 @@ fun MainScreen(
                     quickResponses = quickResponses,
                     onHangUp = {
                         if (isFakeCallActive) {
+                            FakeCallVoicePlayer.stop()
                             try {
                                 (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                             } catch (_: Exception) {}
@@ -618,6 +621,7 @@ fun MainScreen(
                     onAnswer = { CallManager.answer() },
                     onQuickDecline = {
                         if (isFakeCallActive) {
+                            FakeCallVoicePlayer.stop()
                             try {
                                 (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                             } catch (_: Exception) {}
@@ -659,6 +663,8 @@ fun MainScreen(
                     isPocketProtectionEnabled = viewModel.isPocketProtectionEnabled.value,
                     isFake = isFakeCallActive,
                     fakeState = fakeCallState,
+                    fakeAudioUri = viewModel.fakeCallAudioUri.value,
+                    fakeVoiceType = viewModel.fakeCallVoiceType.value,
                     onFakeAnswer = {
                         try {
                             (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
@@ -667,6 +673,7 @@ fun MainScreen(
                         viewModel.fakeCallState.value = "ACTIVE"
                     },
                     onFakeHangUp = {
+                        FakeCallVoicePlayer.stop()
                         try {
                             (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
                         } catch (_: Exception) {}

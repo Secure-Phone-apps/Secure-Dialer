@@ -334,6 +334,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isFakeCallActive = mutableStateOf(false)
     var fakeCallerName = mutableStateOf("Unknown")
     var fakeCallerNumber = mutableStateOf("Unknown")
+    var fakeCallAudioUri = mutableStateOf<String?>(null)
+    var fakeCallVoiceType = mutableStateOf("NONE")
     var fakeCallState = mutableStateOf("RINGING")
     var fakeCallStartTimestamp = 0L
     var dialpadTonesEnabled = mutableStateOf(prefs.getBoolean("dialpad_tones_enabled", true))

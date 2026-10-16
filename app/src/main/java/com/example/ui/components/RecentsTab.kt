@@ -65,19 +65,29 @@ fun RecentsTabContent(
     onDeleteRecord: (Int) -> Unit,
     hasPermission: Boolean = true,
     isLoading: Boolean = false,
-    onRequestPermission: () -> Unit = {}
+    onRequestPermission: () -> Unit = {},
+    isTabActive: Boolean = true
 ) {
     val context = LocalContext.current
     var currentFilter by remember { mutableStateOf(RecentsFilter.ALL) }
     var selectedHistoryNumber by remember { mutableStateOf<String?>(null) }
 
-    // FIXED: Intercept Android back gesture to exit call history details back to recents list
-    BackHandler(enabled = selectedHistoryNumber != null) {
+    // Intercept Android back gesture only when Recents tab is actively focused
+    BackHandler(enabled = isTabActive && selectedHistoryNumber != null) {
         selectedHistoryNumber = null
+        viewModel.isCallHistoryDetailsOpen.value = false
     }
 
     LaunchedEffect(selectedHistoryNumber) {
         viewModel.isCallHistoryDetailsOpen.value = (selectedHistoryNumber != null)
+    }
+
+    // Cleanly exit individual history view when user navigates away from Recents tab
+    LaunchedEffect(isTabActive) {
+        if (!isTabActive && selectedHistoryNumber != null) {
+            selectedHistoryNumber = null
+            viewModel.isCallHistoryDetailsOpen.value = false
+        }
     }
 
     if (selectedHistoryNumber != null) {
@@ -89,7 +99,10 @@ fun RecentsTabContent(
             logs = filteredLogs,
             viewModel = viewModel,
             onCallClick = onCallClick,
-            onBack = { selectedHistoryNumber = null }
+            onBack = {
+                selectedHistoryNumber = null
+                viewModel.isCallHistoryDetailsOpen.value = false
+            }
         )
     } else {
         Box(modifier = Modifier.fillMaxSize()) {

@@ -55,6 +55,7 @@ import com.example.ui.theme.LocalAmoledMode
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.CallGestureSensorManager
+import com.example.util.FakeCallVoicePlayer
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.RichHapticEngine
 import kotlinx.coroutines.delay
@@ -83,6 +84,8 @@ fun ActiveCallScreen(
     isPocketProtectionEnabled: Boolean = false,
     isFake: Boolean = false,
     fakeState: String = "RINGING",
+    fakeAudioUri: String? = null,
+    fakeVoiceType: String = "NONE",
     onFakeAnswer: () -> Unit = {},
     onFakeHangUp: () -> Unit = {}
 ) {
@@ -153,6 +156,7 @@ fun ActiveCallScreen(
 
     DisposableEffect(Unit) {
         onDispose {
+            FakeCallVoicePlayer.stop()
             if (currentIsRecording || CallAudioRecorder.isRecording.value) {
                 val result = CallAudioRecorder.stopRecording()
                 CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
@@ -169,10 +173,28 @@ fun ActiveCallScreen(
     LaunchedEffect(isFake, fakeState) {
         if (isFake && fakeState == "ACTIVE") {
             fakeActiveStartTimestamp = System.currentTimeMillis()
+            FakeCallVoicePlayer.playVoice(
+                context = context,
+                voiceType = fakeVoiceType,
+                customAudioUri = fakeAudioUri,
+                isSpeakerOn = isSpeakerOn
+            )
             if (alwaysRecordEnabled && !CallAudioRecorder.isRecording.value) {
                 RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
                 CallAudioRecorder.startRecording(context, contactNumber)
             }
+        }
+    }
+
+    LaunchedEffect(isSpeakerOn, isFake, fakeState) {
+        if (isFake && fakeState == "ACTIVE") {
+            FakeCallVoicePlayer.setSpeaker(context, isSpeakerOn)
+        }
+    }
+
+    LaunchedEffect(isMuted, isFake, fakeState) {
+        if (isFake && fakeState == "ACTIVE") {
+            FakeCallVoicePlayer.setMute(isMuted)
         }
     }
 
@@ -293,7 +315,7 @@ fun ActiveCallScreen(
                     contacts = contacts,
                     onMerge = {
                         if (isFake) {
-                            Toast.makeText(context, "📞 Merged call (Simulation)", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "📞 Call merged", Toast.LENGTH_SHORT).show()
                         } else {
                             CallManager.mergeCalls()
                         }

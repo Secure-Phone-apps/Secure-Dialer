@@ -393,6 +393,8 @@ class MainActivity : ComponentActivity() {
                 viewModel.isFakeCallActive.value = true
                 viewModel.fakeCallerName.value = intent.getStringExtra("FAKE_CALLER_NAME") ?: "Unknown"
                 viewModel.fakeCallerNumber.value = intent.getStringExtra("FAKE_CALLER_NUMBER") ?: "Unknown"
+                viewModel.fakeCallAudioUri.value = intent.getStringExtra("FAKE_CALL_AUDIO_URI")
+                viewModel.fakeCallVoiceType.value = intent.getStringExtra("FAKE_CALL_VOICE_TYPE") ?: "NONE"
                 viewModel.fakeCallState.value = "RINGING"
                 viewModel.isSettingsVisible.value = false
                 viewModel.isCallMinimized.value = false

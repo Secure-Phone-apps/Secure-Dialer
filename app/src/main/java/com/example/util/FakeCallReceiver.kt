@@ -30,6 +30,7 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
+import com.example.model.ScheduledFakeCall
 
 class FakeCallReceiver : BroadcastReceiver() {
 
@@ -39,8 +40,14 @@ class FakeCallReceiver : BroadcastReceiver() {
         val prefs = appContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
         if (!prefs.getBoolean("is_fake_call_simulator_enabled", true)) return
 
+        val callId = intent.getStringExtra("call_id")
         val name = intent.getStringExtra("caller_name") ?: "Unknown"
         val number = intent.getStringExtra("caller_number") ?: "Unknown"
+        val audioUri = intent.getStringExtra("audio_uri")
+        val audioVoiceType = intent.getStringExtra("audio_voice_type") ?: "NONE"
+
+        // Mark triggered in manager so pending list updates accurately
+        FakeCallManager.onCallTriggered(appContext, callId)
 
         try {
             val mainIntent = Intent(appContext, MainActivity::class.java).apply {
@@ -49,9 +56,10 @@ class FakeCallReceiver : BroadcastReceiver() {
                 putExtra("TRIGGER_FAKE_CALL", true)
                 putExtra("FAKE_CALLER_NAME", name)
                 putExtra("FAKE_CALLER_NUMBER", number)
+                putExtra("FAKE_CALL_AUDIO_URI", audioUri)
+                putExtra("FAKE_CALL_VOICE_TYPE", audioVoiceType)
             }
 
-            // Android 10+ compliant FullScreenIntent wakes screen legally without deprecated WakeLock hacks
             val fullScreenPendingIntent = PendingIntent.getActivity(
                 appContext,
                 NOTIFICATION_ID,
@@ -60,15 +68,20 @@ class FakeCallReceiver : BroadcastReceiver() {
             )
 
             val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            val channelId = "fake_call_simulation_channel"
+            val channelId = "incoming_calls_channel"
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                // Delete obsolete legacy channel name to eradicate any traces of "Fake Call Simulation"
+                try {
+                    nm.deleteNotificationChannel("fake_call_simulation_channel")
+                } catch (_: Exception) {}
+
                 val channel = NotificationChannel(
                     channelId,
-                    "Fake Call Simulation",
+                    "Incoming Calls",
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "Interactive incoming fake calls"
+                    description = "Incoming call alerts"
                     enableVibration(true)
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                     setSound(
@@ -82,6 +95,7 @@ class FakeCallReceiver : BroadcastReceiver() {
                 nm.createNotificationChannel(channel)
             }
 
+            // Authentic incoming call appearance: zero "fake" branding on lockscreen or status bar
             val notification = NotificationCompat.Builder(appContext, channelId)
                 .setSmallIcon(android.R.drawable.sym_action_call)
                 .setContentTitle(name)
@@ -99,7 +113,7 @@ class FakeCallReceiver : BroadcastReceiver() {
     }
 
     companion object {
-        private const val NOTIFICATION_ID = 9999
+        const val NOTIFICATION_ID = 9999
 
         fun scheduleFakeCall(
             context: Context,
@@ -107,83 +121,28 @@ class FakeCallReceiver : BroadcastReceiver() {
             number: String,
             delaySeconds: Int,
             repeatCount: Int = 1,
-            repeatIntervalSeconds: Int = 0
+            repeatIntervalSeconds: Int = 0,
+            audioUri: String? = null,
+            audioVoiceType: String = "NONE"
         ) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-            cancelFakeCall(context)
-
             val safeRepeatCount = repeatCount.coerceIn(1, 16)
             val baseTriggerTime = System.currentTimeMillis() + (delaySeconds * 1000L)
 
-            val canScheduleExact = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                alarmManager.canScheduleExactAlarms()
-            } else {
-                true
-            }
-
             for (i in 0 until safeRepeatCount) {
-                val intent = Intent(context, FakeCallReceiver::class.java).apply {
-                    setPackage(context.packageName)
-                    putExtra("caller_name", name)
-                    putExtra("caller_number", number)
-                }
-
-                val requestCode = NOTIFICATION_ID + i
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    requestCode,
-                    intent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                )
-
                 val triggerTime = baseTriggerTime + (i * repeatIntervalSeconds * 1000L)
-
-                try {
-                    if (canScheduleExact) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        } else {
-                            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        }
-                    } else {
-                        // FIXED: Wakes phone during Doze mode even if exact alarm permission is denied
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        } else {
-                            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                        }
-                    }
-                } catch (_: SecurityException) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                    } else {
-                        alarmManager.set(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
-                    }
-                } catch (_: Exception) {}
+                val call = ScheduledFakeCall(
+                    name = name,
+                    number = number,
+                    triggerTimeMillis = triggerTime,
+                    audioUri = audioUri,
+                    audioVoiceType = audioVoiceType
+                )
+                FakeCallManager.scheduleCall(context, call)
             }
         }
 
         fun cancelFakeCall(context: Context) {
-            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-            val intent = Intent(context, FakeCallReceiver::class.java).apply {
-                setPackage(context.packageName)
-            }
-
-            for (i in 0..15) {
-                val requestCode = NOTIFICATION_ID + i
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    requestCode,
-                    intent,
-                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_NO_CREATE
-                )
-                if (pendingIntent != null) {
-                    try {
-                        alarmManager.cancel(pendingIntent)
-                        pendingIntent.cancel()
-                    } catch (_: Exception) {}
-                }
-            }
+            FakeCallManager.cancelAll(context)
         }
     }
 }
