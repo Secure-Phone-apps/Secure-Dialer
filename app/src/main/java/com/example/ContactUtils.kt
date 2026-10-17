@@ -173,3 +173,45 @@ fun getSavedCnapNameSync(context: Context, number: String): String? {
     // FIXED: Non-blocking in-memory resolution only on synchronous Telephony path
     return ContactCache.getCnapName(number)
 }
+
+enum class ContactNameFormat(val key: String) {
+    FIRST_NAME_FIRST("FIRST_NAME_FIRST"),
+    LAST_NAME_FIRST("LAST_NAME_FIRST")
+}
+
+fun formatContactName(rawName: String, format: ContactNameFormat): String {
+    val trimmed = rawName.trim()
+    if (trimmed.isEmpty()) return ""
+
+    // If already comma-separated like "Smith, John"
+    if (trimmed.contains(",")) {
+        val parts = trimmed.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+        if (parts.size >= 2) {
+            val lastName = parts[0]
+            val firstName = parts.drop(1).joinToString(" ")
+            return when (format) {
+                ContactNameFormat.FIRST_NAME_FIRST -> "$firstName $lastName"
+                ContactNameFormat.LAST_NAME_FIRST -> "$lastName, $firstName"
+            }
+        }
+        return trimmed
+    }
+
+    // Space-separated like "John Smith" or "John Michael Smith"
+    val parts = trimmed.split(Regex("\\s+")).filter { it.isNotEmpty() }
+    if (parts.size <= 1) return trimmed
+
+    val firstName = parts.dropLast(1).joinToString(" ")
+    val lastName = parts.last()
+
+    return when (format) {
+        ContactNameFormat.FIRST_NAME_FIRST -> "$firstName $lastName"
+        ContactNameFormat.LAST_NAME_FIRST -> "$lastName, $firstName"
+    }
+}
+
+fun getContactSortKey(rawName: String, format: ContactNameFormat): String {
+    val trimmed = rawName.trim()
+    if (trimmed.isEmpty()) return ""
+    return formatContactName(trimmed, format).uppercase(java.util.Locale.ROOT)
+}

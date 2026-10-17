@@ -83,8 +83,8 @@ fun RecentsTabContent(
     }
 
     // Cleanly exit individual history view when user navigates away from Recents tab
-    LaunchedEffect(isTabActive) {
-        if (!isTabActive && selectedHistoryNumber != null) {
+    LaunchedEffect(isTabActive, viewModel.isCallHistoryDetailsOpen.value) {
+        if ((!isTabActive || !viewModel.isCallHistoryDetailsOpen.value) && selectedHistoryNumber != null) {
             selectedHistoryNumber = null
             viewModel.isCallHistoryDetailsOpen.value = false
         }

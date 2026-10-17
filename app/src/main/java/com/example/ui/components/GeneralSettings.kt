@@ -172,6 +172,7 @@ fun GeneralSettings(
 
             // 6. CONTACTS & DATA
             SettingsSearchItem("Contacts & Data Settings", "Account filters, vCard import/export & database backup", "Contacts & Data", 6, Icons.Default.Contacts),
+            SettingsSearchItem("Name format & sort order", "Sort contacts by first name or last name and format display names", "Contacts & Data", 6, Icons.Default.SortByAlpha),
             SettingsSearchItem("Account Display Filters", "Choose which account contacts to display (Google, Phone, SIM)", "Contacts & Data", 6, Icons.Default.FilterList),
             SettingsSearchItem("Default Save Account", "Set default account location for saving newly created contacts", "Contacts & Data", 6, Icons.Default.AccountBox),
             SettingsSearchItem("Export Contacts (vCard / .vcf)", "Export all contacts to a standard .vcf backup file", "Contacts & Data", 6, Icons.Default.Upload),

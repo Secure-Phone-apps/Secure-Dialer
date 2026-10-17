@@ -21,8 +21,10 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import com.example.ContactNameFormat
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -53,6 +55,7 @@ fun ContactsAndDataSettings(
 
     var showContactsToDisplayDialog by remember { mutableStateOf(false) }
     var showDefaultAccountDialog by remember { mutableStateOf(false) }
+    var showNameFormatDialog by remember { mutableStateOf(false) }
 
     var showExportPasswordDialog by remember { mutableStateOf(false) }
     var exportPasswordInput by remember { mutableStateOf("") }
@@ -201,6 +204,35 @@ fun ContactsAndDataSettings(
                     icon = Icons.Default.PersonAdd,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.secondary
+                )
+            }
+        }
+
+        // Name format & sort order Card
+        item {
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Name format & sort order", highlightedTitle) ||
+                        isMatchTitle("Sort contacts", highlightedTitle) ||
+                        isMatchTitle("Name Format", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                val currentFormat = viewModel.contactNameFormat.value
+                val formatSub = if (currentFormat == ContactNameFormat.FIRST_NAME_FIRST) {
+                    stringResource(R.string.name_format_first_name_first)
+                } else {
+                    stringResource(R.string.name_format_last_name_first)
+                }
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_name_format_title),
+                    subtitle = formatSub,
+                    onClick = { showNameFormatDialog = true },
+                    icon = Icons.Default.SortByAlpha,
+                    iconBgColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.tertiary
                 )
             }
         }
@@ -459,6 +491,67 @@ fun ContactsAndDataSettings(
             },
             confirmButton = {
                 TextButton(onClick = { showDefaultAccountDialog = false }) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        )
+    }
+
+    if (showNameFormatDialog) {
+        val currentFormat = viewModel.contactNameFormat.value
+        AlertDialog(
+            onDismissRequest = { showNameFormatDialog = false },
+            title = { Text(stringResource(R.string.settings_name_format_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.setContactNameFormat(ContactNameFormat.FIRST_NAME_FIRST)
+                                showNameFormatDialog = false
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentFormat == ContactNameFormat.FIRST_NAME_FIRST,
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.setContactNameFormat(ContactNameFormat.FIRST_NAME_FIRST)
+                                showNameFormatDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.name_format_first_name_first))
+                    }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.setContactNameFormat(ContactNameFormat.LAST_NAME_FIRST)
+                                showNameFormatDialog = false
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentFormat == ContactNameFormat.LAST_NAME_FIRST,
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.setContactNameFormat(ContactNameFormat.LAST_NAME_FIRST)
+                                showNameFormatDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.name_format_last_name_first))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showNameFormatDialog = false }) {
                     Text(stringResource(R.string.close))
                 }
             }

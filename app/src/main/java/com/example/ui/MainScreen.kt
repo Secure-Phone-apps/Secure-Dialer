@@ -380,22 +380,6 @@ fun MainScreen(
 
                 val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
 
-                AnimatedVisibility(
-                    visible = currentSlotKey != "DIALPAD" && (currentSlotKey != "RECENTS" || !isCallHistoryDetailsOpen),
-                    enter = expandVertically(
-                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
-                    ) + fadeIn(animationSpec = tween(120)),
-                    exit = shrinkVertically(
-                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
-                    ) + fadeOut(animationSpec = tween(120))
-                ) {
-                    HeaderSearchBar(
-                        searchQuery = searchQuery,
-                        onQueryChange = { viewModel.onSearchQueryChange(it) },
-                        onSettingsClick = { isSettingsVisible = true }
-                    )
-                }
-
                 // FIXED: Standard, accessible 3-page pager eliminates infinite carousel jumps and TalkBack bugs
                 val pagerState = rememberPagerState(initialPage = selectedTab.coerceIn(0, tabSlots.size - 1)) { tabSlots.size }
 
@@ -409,6 +393,35 @@ fun MainScreen(
                     if (pagerState.currentPage != selectedTab) {
                         pagerState.animateScrollToPage(selectedTab)
                     }
+                }
+
+                val currentPagerSlot = tabSlots.getOrElse(pagerState.currentPage) { "RECENTS" }
+                val isSearchVisible = remember(currentSlotKey, currentPagerSlot, isCallHistoryDetailsOpen) {
+                    if (currentSlotKey == "CONTACTS" || currentPagerSlot == "CONTACTS") {
+                        true
+                    } else if (currentSlotKey == "RECENTS" && currentPagerSlot == "RECENTS") {
+                        !isCallHistoryDetailsOpen
+                    } else if (currentSlotKey != "DIALPAD" && currentPagerSlot != "DIALPAD") {
+                        true
+                    } else {
+                        false
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = isSearchVisible,
+                    enter = expandVertically(
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
+                    ) + fadeIn(animationSpec = tween(120)),
+                    exit = shrinkVertically(
+                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
+                    ) + fadeOut(animationSpec = tween(120))
+                ) {
+                    HeaderSearchBar(
+                        searchQuery = searchQuery,
+                        onQueryChange = { viewModel.onSearchQueryChange(it) },
+                        onSettingsClick = { isSettingsVisible = true }
+                    )
                 }
 
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
@@ -430,7 +443,7 @@ fun MainScreen(
                                     hasPermission = hasCallLogPermission,
                                     isLoading = isLoadingPermissions,
                                     onRequestPermission = { showProminentDisclosure = true },
-                                    isTabActive = (currentSlotKey == "RECENTS")
+                                    isTabActive = (currentSlotKey == "RECENTS" && currentPagerSlot == "RECENTS")
                                 )
                             }
                             "CONTACTS" -> {
@@ -518,6 +531,9 @@ fun MainScreen(
                     BottomNavBar(
                         selectedTab = selectedTab,
                         onTabSelected = { targetTab ->
+                            if (viewModel.isCallHistoryDetailsOpen.value) {
+                                viewModel.isCallHistoryDetailsOpen.value = false
+                            }
                             selectedTab = targetTab
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(targetTab)

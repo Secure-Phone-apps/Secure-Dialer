@@ -65,20 +65,20 @@ class DialerRepository(rawContext: Context) {
 
     // --- Paging & Flows ---
 
-    fun getContactsPaged(query: String, accountName: String = ""): Flow<PagingData<Contact>> {
+    fun getContactsPaged(query: String, accountName: String = "", isLastNameFirst: Boolean = false): Flow<PagingData<Contact>> {
         val sanitizedQuery = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         return Pager(
             config = PagingConfig(pageSize = 50, enablePlaceholders = false),
             pagingSourceFactory = {
-                if (query.isEmpty()) dao.getContactsPaged(accountName)
-                else dao.searchContacts("%$sanitizedQuery%", accountName)
+                if (query.isEmpty()) dao.getContactsPaged(accountName, isLastNameFirst)
+                else dao.searchContacts("%$sanitizedQuery%", accountName, isLastNameFirst)
             }
         ).flow
     }
 
-    fun getFavoriteContacts(): Flow<List<Contact>> = dao.getFavoriteContacts()
+    fun getFavoriteContacts(isLastNameFirst: Boolean = false): Flow<List<Contact>> = dao.getFavoriteContacts(isLastNameFirst)
 
-    fun getAllContactsFlow(): Flow<List<Contact>> = dao.getAllContactsFlow()
+    fun getAllContactsFlow(isLastNameFirst: Boolean = false): Flow<List<Contact>> = dao.getAllContactsFlow(isLastNameFirst)
 
     fun getCallHistoryPaged(): Flow<PagingData<CallRecord>> {
         return Pager(

@@ -221,7 +221,7 @@ fun CallHistoryDetailsScreen(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = if (primaryRecord.name == "Unknown") stringResource(R.string.unknown) else primaryRecord.name,
+                        text = if (primaryRecord.name == "Unknown") stringResource(R.string.unknown) else com.example.formatContactName(primaryRecord.name, viewModel.contactNameFormat.value),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,

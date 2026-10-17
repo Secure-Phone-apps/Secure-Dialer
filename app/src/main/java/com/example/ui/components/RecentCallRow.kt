@@ -136,7 +136,7 @@ fun RecentCallRow(
                                     text = if (record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3")) {
                                         stringResource(R.string.unknown)
                                     } else {
-                                        record.name
+                                        com.example.formatContactName(record.name, viewModel.contactNameFormat.value)
                                     },
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,

@@ -179,20 +179,46 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         isEditContactDialogVisible.value = true
     }
 
+    val contactNameFormat = mutableStateOf(
+        try {
+            ContactNameFormat.valueOf(prefs.getString("contact_name_format", ContactNameFormat.FIRST_NAME_FIRST.name) ?: ContactNameFormat.FIRST_NAME_FIRST.name)
+        } catch (_: Exception) {
+            ContactNameFormat.FIRST_NAME_FIRST
+        }
+    )
+    private val _contactNameFormatFlow = MutableStateFlow(contactNameFormat.value)
+
+    fun setContactNameFormat(format: ContactNameFormat) {
+        contactNameFormat.value = format
+        _contactNameFormatFlow.value = format
+        viewModelScope.launch(Dispatchers.IO) {
+            prefs.edit().putString("contact_name_format", format.name).apply()
+            repository.dao.insertSetting(AppSetting("contact_name_format", format.name))
+        }
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val contactsPaged: Flow<PagingData<Contact>> = combine(_searchQueryFlow.debounce(100), _selectedAccountFilterFlow) { query, account ->
-        Pair(query, account)
-    }.flatMapLatest { (query, account) ->
-        repository.getContactsPaged(query, account)
+    val contactsPaged: Flow<PagingData<Contact>> = combine(
+        _searchQueryFlow.debounce(100), 
+        _selectedAccountFilterFlow,
+        _contactNameFormatFlow
+    ) { query, account, format ->
+        Triple(query, account, format == ContactNameFormat.LAST_NAME_FIRST)
+    }.flatMapLatest { (query, account, isLastNameFirst) ->
+        repository.getContactsPaged(query, account, isLastNameFirst)
     }.cachedIn(viewModelScope)
 
     val callHistoryPaged: Flow<PagingData<CallRecord>> = repository.getCallHistoryPaged().cachedIn(viewModelScope)
 
-    val favoriteContacts: StateFlow<List<Contact>> = repository.getFavoriteContacts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val favoriteContacts: StateFlow<List<Contact>> = _contactNameFormatFlow.flatMapLatest { format ->
+        repository.getFavoriteContacts(format == ContactNameFormat.LAST_NAME_FIRST)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val allContactsFlow: StateFlow<List<Contact>> = repository.getAllContactsFlow()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val allContactsFlow: StateFlow<List<Contact>> = _contactNameFormatFlow.flatMapLatest { format ->
+        repository.getAllContactsFlow(format == ContactNameFormat.LAST_NAME_FIRST)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val allCallHistoryFlow: StateFlow<List<CallRecord>> = repository.getAllCallHistoryFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -201,8 +227,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val dialpadMatches: StateFlow<List<DialpadMatch>> = combine(
         allContactsFlow,
         allCallHistoryFlow,
-        _dialpadInputFlow.debounce(100)
-    ) { contacts, recents, query ->
+        _dialpadInputFlow.debounce(100),
+        _contactNameFormatFlow
+    ) { contacts, recents, query, nameFormat ->
         if (query.isBlank()) {
             emptyList()
         } else {
@@ -229,7 +256,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
             .map { contact ->
                 DialpadMatch(
                     number = contact.number,
-                    name = contact.name,
+                    name = formatContactName(contact.name, nameFormat),
                     label = contact.label,
                     avatarText = contact.avatarText,
                     avatarBgValue = contact.avatarBgValue,
@@ -261,7 +288,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 .map { record ->
                     DialpadMatch(
                         number = record.number,
-                        name = record.name,
+                        name = if (record.name == "Unknown" || record.name.isBlank()) record.name else formatContactName(record.name, nameFormat),
                         label = "Recent • ${record.label}",
                         avatarText = record.avatarText,
                         avatarBgValue = record.avatarBgValue,

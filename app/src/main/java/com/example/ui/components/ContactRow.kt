@@ -70,6 +70,7 @@ fun ContactRow(
     viewModel: DialerViewModel
 ) {
     val context = LocalContext.current
+    val nameFormat by viewModel.contactNameFormat
     var isExpanded by remember { mutableStateOf(false) }
     var numberPickerAction by remember { mutableStateOf<NumberPickerAction?>(null) }
 
@@ -124,7 +125,7 @@ fun ContactRow(
                         verticalArrangement = Arrangement.spacedBy(1.dp)
                     ) {
                         Text(
-                            text = contact.name,
+                            text = com.example.formatContactName(contact.name, nameFormat),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
                             lineHeight = 18.sp,

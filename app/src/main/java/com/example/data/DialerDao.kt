@@ -32,12 +32,23 @@ interface DialerDao {
         WHERE (:accountName = '' 
            OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE)) 
            OR accountName = :accountName COLLATE NOCASE) 
-        ORDER BY name COLLATE NOCASE ASC
+        ORDER BY 
+            CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
+                 THEN substr(name, instr(name, ' ') + 1) 
+                 ELSE name 
+            END COLLATE NOCASE ASC
     """)
-    fun getContactsPaged(accountName: String = ""): PagingSource<Int, Contact>
+    fun getContactsPaged(accountName: String = "", isLastNameFirst: Boolean = false): PagingSource<Int, Contact>
 
-    @Query("SELECT * FROM contacts ORDER BY name COLLATE NOCASE ASC")
-    fun getAllContactsFlow(): Flow<List<Contact>>
+    @Query("""
+        SELECT * FROM contacts 
+        ORDER BY 
+            CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
+                 THEN substr(name, instr(name, ' ') + 1) 
+                 ELSE name 
+            END COLLATE NOCASE ASC
+    """)
+    fun getAllContactsFlow(isLastNameFirst: Boolean = false): Flow<List<Contact>>
 
     @Query("SELECT * FROM contacts")
     suspend fun getAllContactsList(): List<Contact>
@@ -45,8 +56,15 @@ interface DialerDao {
     @Query("SELECT COUNT(*) FROM contacts")
     suspend fun getContactsCount(): Int
 
-    @Query("SELECT * FROM contacts WHERE favorite = 1 ORDER BY name COLLATE NOCASE ASC")
-    fun getFavoriteContacts(): Flow<List<Contact>>
+    @Query("""
+        SELECT * FROM contacts WHERE favorite = 1 
+        ORDER BY 
+            CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
+                 THEN substr(name, instr(name, ' ') + 1) 
+                 ELSE name 
+            END COLLATE NOCASE ASC
+    """)
+    fun getFavoriteContacts(isLastNameFirst: Boolean = false): Flow<List<Contact>>
 
     @Query("""
         SELECT * FROM contacts 
@@ -54,9 +72,13 @@ interface DialerDao {
            OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE)) 
            OR accountName = :accountName COLLATE NOCASE) 
           AND (name LIKE :query ESCAPE '\' OR number LIKE :query ESCAPE '\' OR t9Mapping LIKE :query ESCAPE '\') 
-        ORDER BY name COLLATE NOCASE ASC
+        ORDER BY 
+            CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
+                 THEN substr(name, instr(name, ' ') + 1) 
+                 ELSE name 
+            END COLLATE NOCASE ASC
     """)
-    fun searchContacts(query: String, accountName: String = ""): PagingSource<Int, Contact>
+    fun searchContacts(query: String, accountName: String = "", isLastNameFirst: Boolean = false): PagingSource<Int, Contact>
 
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)

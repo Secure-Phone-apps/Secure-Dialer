@@ -410,6 +410,10 @@
     <string name="settings_contacts_to_display_sub">Filter contacts by account source (e.g. Google, Phone, SIM)</string>
     <string name="settings_default_account_for_new">Default Account for New Contacts</string>
     <string name="settings_default_account_for_new_sub">Pre-selected account when creating new contacts</string>
+    <string name="settings_name_format_title">Name format &amp; sort order</string>
+    <string name="settings_name_format_sub">Sort contacts and display names</string>
+    <string name="name_format_first_name_first">First name first (John Smith)</string>
+    <string name="name_format_last_name_first">Last name first (Smith, John)</string>
     <string name="settings_dedup">Deduplication Utility</string>
     <string name="settings_dedup_sub">Merge duplicate contacts automatically</string>
     <string name="settings_dedup_title">Deduplication Utility</string>

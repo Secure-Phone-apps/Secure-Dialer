@@ -75,11 +75,14 @@ fun ContactsTabContent(
     val allContacts by viewModel.allContactsFlow.collectAsState()
     val selectedAccountFilter by viewModel.selectedAccountFilter
     var showOnlyFavorites by remember { mutableStateOf(false) }
-    val sortedFavorites = remember(favoriteContacts) { favoriteContacts.sortedBy { it.name.uppercase(Locale.ROOT) } }
+    val nameFormat by viewModel.contactNameFormat
+    val sortedFavorites = remember(favoriteContacts, nameFormat) { 
+        favoriteContacts.sortedBy { com.example.getContactSortKey(it.name, nameFormat) } 
+    }
 
     // Unified contacts pipeline eliminates duplicate filtering
-    val activeContactsList = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter) {
-        if (showOnlyFavorites) {
+    val activeContactsList = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter, nameFormat) {
+        val baseList = if (showOnlyFavorites) {
             sortedFavorites
         } else if (selectedAccountFilter.isBlank()) {
             allContacts
@@ -90,11 +93,12 @@ fun ContactsTabContent(
         } else {
             allContacts.filter { it.accountName == selectedAccountFilter }
         }
+        baseList.sortedBy { com.example.getContactSortKey(it.name, nameFormat) }
     }
 
-    val alphabet = remember(activeContactsList) {
+    val alphabet = remember(activeContactsList, nameFormat) {
         val uniqueLetters = activeContactsList.asSequence()
-            .map { it.name.trim() }
+            .map { com.example.formatContactName(it.name, nameFormat).trim() }
             .filter { it.isNotEmpty() }
             .map { it.first().uppercaseChar() }
             .distinct()
@@ -112,11 +116,12 @@ fun ContactsTabContent(
         if (result.size <= 1) ('A'..'Z').toList() + '#' else result
     }
 
-    val letterToIndex = remember(activeContactsList) {
+    val letterToIndex = remember(activeContactsList, nameFormat) {
         val map = HashMap<Char, Int>()
         for (i in activeContactsList.indices) {
             val contact = activeContactsList[i]
-            val firstChar = contact.name.trim().firstOrNull()?.uppercaseChar() ?: '#'
+            val formatted = com.example.formatContactName(contact.name, nameFormat).trim()
+            val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
             val key = if (firstChar.isLetter()) firstChar else '#'
             if (!map.containsKey(key)) {
                 map[key] = i
@@ -125,13 +130,14 @@ fun ContactsTabContent(
         map
     }
 
-    val activeLetter = remember(listState, alphabet, showOnlyFavorites, sortedFavorites, contactsPaged) {
+    val activeLetter = remember(listState, alphabet, showOnlyFavorites, sortedFavorites, contactsPaged, nameFormat) {
         derivedStateOf {
             val firstVisibleIndex = listState.firstVisibleItemIndex
             if (showOnlyFavorites) {
                 if (firstVisibleIndex < sortedFavorites.size) {
                     val contact = sortedFavorites.getOrNull(firstVisibleIndex)
-                    val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
+                    val formatted = if (contact != null) com.example.formatContactName(contact.name, nameFormat).trim() else ""
+                    val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
                     if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
                 } else {
                     alphabet.firstOrNull() ?: '#'
@@ -139,7 +145,8 @@ fun ContactsTabContent(
             } else {
                 if (firstVisibleIndex < contactsPaged.itemCount) {
                     val contact = contactsPaged.peek(firstVisibleIndex)
-                    val firstChar = contact?.name?.trim()?.firstOrNull()?.uppercaseChar() ?: '#'
+                    val formatted = if (contact != null) com.example.formatContactName(contact.name, nameFormat).trim() else ""
+                    val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
                     if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
                 } else {
                     alphabet.firstOrNull() ?: '#'
@@ -276,9 +283,11 @@ fun ContactsTabContent(
                             items = sortedFavorites,
                             key = { _, contact -> "${contact.id}_${contact.number}" }
                         ) { index, contact ->
-                            val firstLetter = contact.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
+                            val currentDisplayName = com.example.formatContactName(contact.name, nameFormat).trim()
+                            val firstLetter = currentDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
                             val prevContact = if (index > 0) sortedFavorites[index - 1] else null
-                            val prevLetter = prevContact?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: ""
+                            val prevDisplayName = if (prevContact != null) com.example.formatContactName(prevContact.name, nameFormat).trim() else ""
+                            val prevLetter = prevDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: ""
 
                             if (firstLetter != prevLetter) {
                                 Text(
@@ -306,9 +315,11 @@ fun ContactsTabContent(
                         ) { index ->
                             val contact = contactsPaged[index]
                             if (contact != null) {
-                                val firstLetter = contact.name.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
+                                val currentDisplayName = com.example.formatContactName(contact.name, nameFormat).trim()
+                                val firstLetter = currentDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
                                 val prevContact = if (index > 0) contactsPaged[index - 1] else null
-                                val prevLetter = prevContact?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: ""
+                                val prevDisplayName = if (prevContact != null) com.example.formatContactName(prevContact.name, nameFormat).trim() else ""
+                                val prevLetter = prevDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: ""
 
                                 if (firstLetter != prevLetter) {
                                     Text(
