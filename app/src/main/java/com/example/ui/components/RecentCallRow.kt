@@ -17,6 +17,8 @@
 
 package com.example.ui.components
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.media.MediaPlayer
@@ -24,8 +26,10 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -64,7 +68,7 @@ import kotlinx.coroutines.delay
 import java.io.File
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun RecentCallRow(
     group: CallGroup,
@@ -116,10 +120,19 @@ fun RecentCallRow(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable {
-                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                    isExpanded = !isExpanded
-                },
+                .combinedClickable(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        isExpanded = !isExpanded
+                    },
+                    onLongClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                        val clip = ClipData.newPlainText("Phone Number", record.number)
+                        clipboard?.setPrimaryClip(clip)
+                        Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                    }
+                ),
             colors = CardDefaults.cardColors(containerColor = containerColor),
             border = if (isAmoled) BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
             shape = AppShapes.Card

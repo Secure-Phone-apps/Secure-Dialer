@@ -17,6 +17,8 @@
 
 package com.example.ui.components
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -126,6 +128,23 @@ fun CallHistoryDetailsScreen(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.action_copy_number)) },
+                            onClick = {
+                                showMenu = false
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                val clip = ClipData.newPlainText("Phone Number", number)
+                                clipboard?.setPrimaryClip(clip)
+                                Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = null
+                                )
+                            }
+                        )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.delete_all_history)) },
                             onClick = {
