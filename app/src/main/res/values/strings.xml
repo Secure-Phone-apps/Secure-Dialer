@@ -669,4 +669,9 @@
     <string name="warning">Warning</string>
     <string name="error_open_messages">Could not open messaging app</string>
     <string name="history">History</string>
+    <string name="permissions_dialog_title">Permissions &amp; Local Data Privacy</string>
+    <string name="permissions_dialog_desc">Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.</string>
+    <string name="btn_continue">Continue</string>
+    <string name="btn_not_now">Not Now</string>
+    <string name="about_version_label">Secure Dialer v1.5.0</string>
 </resources>

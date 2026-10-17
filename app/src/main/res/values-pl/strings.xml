@@ -1,18 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (C) 2026 MovStore
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  -->
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-
-    <!-- Application Identity -->
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Navigation Tabs -->
     <string name="tab_favorites">Ulubione</string>
     <string name="tab_recents">Ostatnie</string>
     <string name="tab_contacts">Kontakty</string>
@@ -25,8 +13,6 @@
     <string name="tab_slot_left">Lewa karta</string>
     <string name="tab_slot_middle">Środkowa karta</string>
     <string name="tab_slot_right">Prawa karta</string>
-
-    <!-- Search & General UI -->
     <string name="search_placeholder">Wyszukaj kontakty i numery</string>
     <string name="search_settings_placeholder">Szukaj w ustawieniach...</string>
     <string name="search_clear">Wyczyść</string>
@@ -40,14 +26,10 @@
     <string name="filter_dialed">Wychodzące</string>
     <string name="filter_received">Odebrane</string>
     <string name="default_dialer_warning">Ustaw jako domyślną aplikację do dzwonienia, aby włączyć wszystkie funkcje.</string>
-
-    <!-- Permissions -->
     <string name="enable_contacts_perm">Włącz dostęp do kontaktów</string>
     <string name="enable_call_log_perm">Włącz dostęp do rejestru połączeń</string>
     <string name="contacts_perm_desc">Aby uzyskiwać dostęp, ładować, edytować i dzwonić do rzeczywistych kontaktów na swoim urządzeniu, włącz uprawnienie do Kontaktów.</string>
     <string name="call_log_perm_desc">Aby uzyskiwać dostęp, ładować i dzwonić do numerów z rzeczywistej historii połączeń na swoim urządzeniu, włącz uprawnienie do Rejestru połączeń.</string>
-
-    <!-- Contacts Management & Details -->
     <string name="contacts_header">Kontakty</string>
     <string name="no_contacts_title">Nie znaleziono kontaktów</string>
     <string name="no_contacts_subtitle">Dotknij „Dodaj nowy”, aby utworzyć kontakt</string>
@@ -80,8 +62,6 @@
     <string name="select_number_to_message">Wybierz numer, aby wysłać wiadomość</string>
     <string name="dialog_call_contact">Zadzwoń do %1$s</string>
     <string name="dialog_message_contact">Wyślij wiadomość do %1$s</string>
-
-    <!-- Recents & Call History -->
     <string name="recents_header">Ostatnie</string>
     <string name="no_call_log_title">Twój rejestr połączeń jest pusty</string>
     <string name="no_call_log_subtitle">Tutaj pojawią się ostatnie połączenia</string>
@@ -100,8 +80,6 @@
     <string name="showing_last_5_calls">Wyświetlanie ostatnich 5 połączeń</string>
     <string name="call_summary_prefix">Podsumowanie połączeń: %1$s</string>
     <string name="today_call_summary">Dzisiejsze podsumowanie połączeń</string>
-
-    <!-- Dialpad & T9 Search -->
     <string name="dialpad_enter_number">Wprowadź numer</string>
     <string name="dialpad_create_contact">Utwórz kontakt</string>
     <string name="dialpad_add_to_existing">Dodaj do istniejącego</string>
@@ -112,8 +90,6 @@
     <string name="dialpad_clear">Wyczyść</string>
     <string name="dialpad_paste">Wklej</string>
     <string name="dialpad_copy">Kopiuj numer</string>
-
-    <!-- In-Call Actions & States -->
     <string name="btn_answer">Odbierz</string>
     <string name="btn_decline">Odrzuć</string>
     <string name="btn_hangup">Rozłącz się</string>
@@ -153,8 +129,6 @@
     <string name="conference">Konferencja (%1$d)</string>
     <string name="caller_verified">Zweryfikowany</string>
     <string name="no_answer">Brak odpowiedzi</string>
-
-    <!-- Favorites & Voicemail -->
     <string name="favorites_header">Ulubione</string>
     <string name="no_favorites_title">Brak ulubionych</string>
     <string name="no_favorites_subtitle">Oznacz kontakty gwiazdką, aby łatwo je znaleźć</string>
@@ -164,8 +138,6 @@
     <string name="voicemail_settings">Ustawienia poczty głosowej</string>
     <string name="voicemail_directory_number">Numer dostępowy poczty głosowej</string>
     <string name="voicemail_sample_transcript">Transkrypcja: „Cześć, dzwonię, żeby pogadać. Daj znać, kiedy znajdziesz chwilę wolnego czasu wieczorem!”</string>
-
-    <!-- Settings Categories -->
     <string name="cat_sound_gestures">Dźwięk i gesty</string>
     <string name="cat_calling_accounts">Karty SIM i połączenia</string>
     <string name="cat_speed_dial_quick_responses">Szybkie wybieranie i odpowiedzi</string>
@@ -187,8 +159,6 @@
     <string name="settings_title">Ustawienia</string>
     <string name="settings_back">Wstecz</string>
     <string name="settings_info_utilities">Informacje i narzędzia</string>
-
-    <!-- Settings Headers -->
     <string name="header_sim_carrier">KONFIGURACJA SIM I OPERATORA</string>
     <string name="header_incoming_alerts">ALERTY POŁĄCZEŃ PRZYCHODZĄCYCH</string>
     <string name="header_threat_intelligence">IDENTYFIKACJA ZAGROŻEŃ</string>
@@ -203,8 +173,6 @@
     <string name="header_app_specs">SPECYFIKACJA APLIKACJI</string>
     <string name="header_navigation_layout">NAWIGACJA I UKŁAD</string>
     <string name="header_community">SPOŁECZNOŚĆ</string>
-
-    <!-- Settings - General & Appearance -->
     <string name="settings_carrier_call_settings">Ustawienia połączeń operatora</string>
     <string name="settings_carrier_call_settings_sub">Połączenia oczekujące, przekazywanie połączeń i dodatkowe usługi telefoniczne</string>
     <string name="settings_appearance">Wygląd</string>
@@ -229,8 +197,6 @@
     <string name="settings_tab_layout_sub">Przypisz poszczególne ekrany do każdego miejsca nawigacji. Wybór automatycznie zamienia duplikaty miejscami.</string>
     <string name="settings_startup_options">Opcje uruchamiania</string>
     <string name="settings_default_startup_tab">Domyślna karta startowa</string>
-
-    <!-- Settings - Sound, Vibration & Gestures -->
     <string name="settings_sound_haptics">Dźwięk i wibracje</string>
     <string name="settings_dialpad_tones">Tony klawiatury</string>
     <string name="settings_dialpad_tones_sub">Odtwarzaj dźwięki podczas wybierania numeru</string>
@@ -246,8 +212,6 @@
     <string name="settings_auto_tune_volume_sub">Automatycznie bilansuje głośność głośnika na poziomie 55% podczas nagrywania, zapewniając czyste, dwukierunkowe przechwytywanie akustyczne.</string>
     <string name="header_theme_styling">MOTYW I STYL</string>
     <string name="header_sound_haptics">DŹWIĘK I WIBRACJE</string>
-
-    <!-- Settings - Calling Accounts, SIM & Telephony -->
     <string name="settings_calling_features">Funkcje połączeń</string>
     <string name="settings_call_waiting">Połączenie oczekujące</string>
     <string name="settings_call_waiting_sub">Powiadamiaj o połączeniach przychodzących podczas aktywnej rozmowy</string>
@@ -259,8 +223,6 @@
     <string name="sim_ask">Zawsze pytaj</string>
     <string name="select_sim_card">Wybierz kartę SIM</string>
     <string name="choose_sim_card">Wybierz kartę SIM, z której chcesz wykonać połączenie do: %1$s</string>
-
-    <!-- Settings - Outgoing Caller ID, Privacy & CLIR -->
     <string name="header_caller_id_privacy">Identyfikacja numeru i prywatność (CLIR)</string>
     <string name="settings_hide_caller_id">Ukrywaj identyfikator rozmówcy</string>
     <string name="settings_hide_caller_id_sub">Dodawaj kod prywatności operatora na początku połączeń, aby zamaskować swój numer</string>
@@ -277,8 +239,6 @@
     <string name="settings_clir_prefix_japan">Japonia (1831)</string>
     <string name="settings_clir_prefix_custom">Własny prefiks</string>
     <string name="settings_clir_custom_label">Wprowadź własny kod prefiksu CLIR operatora</string>
-
-    <!-- Settings - Speed Dial & Quick Responses -->
     <string name="settings_speed_dial">Szybkie wybieranie</string>
     <string name="settings_speed_dial_sub">Przypisz klawisze szybkiego wyboru 1-9</string>
     <string name="speed_dial">Szybkie wybieranie</string>
@@ -300,15 +260,11 @@
     <string name="no_responses_saved_desc">Dodaj własne szablony wiadomości, aby szybko wysyłać je podczas odrzucania połączeń przychodzących.</string>
     <string name="delete_response">Usuń odpowiedź</string>
     <string name="send_quick_response">Wyślij szybką odpowiedź</string>
-
-    <!-- Settings - Carrier Voicemail & Preferences -->
     <string name="settings_voicemail_num">Numer poczty głosowej</string>
     <string name="settings_voicemail_num_sub">Skonfiguruj cel dla klawisza szybkiego wybierania nr 1</string>
     <string name="settings_voicemail_setup_title">Konfiguracja poczty głosowej</string>
     <string name="voicemail_setup_desc">Ustaw numer telefonu, który zostanie wybrany po długim naciśnięciu klawisza „1” na klawiaturze numerycznej.</string>
     <string name="save_voicemail_number">Zapisz numer poczty głosowej</string>
-
-    <!-- Settings - Call Blocking, Spam Database & Offline Protection -->
     <string name="settings_calls_blocking">Połączenia i blokowanie</string>
     <string name="settings_blocked_numbers">Zablokowane numery</string>
     <string name="settings_blocked_numbers_sub">Zarządzaj zastrzeżonymi połączeniami przychodzącymi</string>
@@ -354,8 +310,6 @@
     <string name="btn_import_spam_file">Importuj plik</string>
     <string name="blocklist_import_count_success">Zaimportowano zablokowane numery: %1$d!</string>
     <string name="spam_import_count_success">Zaimportowano wpisy spamu: %1$d!</string>
-
-    <!-- Settings - Call Recording Vault, Audio & Compression -->
     <string name="settings_call_recording">Nagrywanie rozmów</string>
     <string name="settings_call_recording_sub">Włącz sterowanie nagrywaniem podczas rozmowy i zapisuj lokalnie</string>
     <string name="settings_recordings">Zapisane nagrania</string>
@@ -391,8 +345,6 @@
     <string name="vault_locked_title">Sejf nagrań zablokowany</string>
     <string name="vault_locked_desc">Weryfikacja biometryczna jest wymagana, aby uzyskać dostęp do poufnych nagrań rozmów.</string>
     <string name="btn_unlock_vault">Odblokuj sejf</string>
-
-    <!-- Settings - Dynamic Island Call Capsule -->
     <string name="settings_dynamic_island_title">Kapsuła połączeń Dynamic Island</string>
     <string name="settings_dynamic_island_sub">Wyświetlaj pływającą, interaktywną pigułkę połączenia wokół wycięcia na aparat podczas trwających rozmów</string>
     <string name="settings_dynamic_island_speaker_only">Pokazuj tylko w trybie głośnomówiącym</string>
@@ -403,13 +355,15 @@
     <string name="dynamic_island_muted">Wyciszony</string>
     <string name="dynamic_island_recording">NAGR</string>
     <string name="dynamic_island_tap_to_expand">Stuknij, aby rozwinąć kontrolki połączenia</string>
-
-    <!-- Settings - Contacts, Deduplication & Storage -->
     <string name="settings_contact_preferences">Preferencje kontaktów</string>
     <string name="settings_contacts_to_display">Kontakty do wyświetlenia</string>
     <string name="settings_contacts_to_display_sub">Filtruj kontakty według źródła konta (np. Google, telefon, SIM)</string>
     <string name="settings_default_account_for_new">Domyślne konto dla nowych kontaktów</string>
     <string name="settings_default_account_for_new_sub">Konto automatycznie wybierane przy tworzeniu nowych kontaktów</string>
+    <string name="settings_name_format_title">Name format &amp; sort order</string>
+    <string name="settings_name_format_sub">Sort contacts and display names</string>
+    <string name="name_format_first_name_first">First name first (John Smith)</string>
+    <string name="name_format_last_name_first">Last name first (Smith, John)</string>
     <string name="settings_dedup">Narzędzie do usuwania duplikatów</string>
     <string name="settings_dedup_sub">Automatycznie scalaj powtarzające się kontakty</string>
     <string name="settings_dedup_title">Usuwanie duplikatów</string>
@@ -423,8 +377,6 @@
     <string name="toast_merged_duplicates_for">Scalono duplikaty dla: %1$s</string>
     <string name="settings_merge_duplicate_contacts">Scal duplikaty kontaktów</string>
     <string name="settings_merge_duplicate_contacts_sub">Skanuj i usuwaj zduplikowane wpisy kontaktów</string>
-
-    <!-- Settings - Backup, Restore & Encrypted Migration -->
     <string name="settings_data_utilities">Dane i narzędzia</string>
     <string name="settings_backup_restore_sub">Przywróć rejestry połączeń i ustawienia z zaszyfrowanego pliku JSON</string>
     <string name="backup_service_health_title">Dane i kopia zapasowa</string>
@@ -476,8 +428,6 @@
     <string name="file_saved_success">Plik został pomyślnie zapisany!</string>
     <string name="file_save_failed">Nie udało się zapisać pliku</string>
     <string name="file_read_failed">Nie udało się odczytać wybranego pliku</string>
-
-    <!-- Settings - Security, Biometrics, PIN & App Lock -->
     <string name="settings_security_protection">Bezpieczeństwo i ochrona</string>
     <string name="settings_biometric_lock">Blokada aplikacji</string>
     <string name="settings_biometric_lock_sub">Wymagaj blokady urządzenia (kod PIN/wzór/biometria) do otwarcia aplikacji</string>
@@ -491,10 +441,8 @@
     <string name="device_auth_title">Secure Dialer</string>
     <string name="device_auth_subtitle">Potwierdź tożsamość, aby otworzyć Secure Dialer</string>
     <string name="restricted_settings_title">Ustawienia ograniczone</string>
-    <string name="restricted_settings_desc">Aby używać tej aplikacji jako domyślnej do dzwonienia, konieczne może być jej ręczne włączenie. Przejdź do: Ustawienia systemowe > Aplikacje > [Nazwa naszej aplikacji] > Zaawansowane > Dopuść ustawienia ograniczone, a następnie spróbuj ponownie.</string>
+    <string name="restricted_settings_desc">Aby używać tej aplikacji jako domyślnej do dzwonienia, konieczne może być jej ręczne włączenie. Przejdź do: Ustawienia systemowe &gt; Aplikacje &gt; [Nazwa naszej aplikacji] &gt; Zaawansowane &gt; Dopuść ustawienia ograniczone, a następnie spróbuj ponownie.</string>
     <string name="btn_open_settings">Otwórz Ustawienia</string>
-
-    <!-- Settings - Call Analytics, Dashboard & Call Notes -->
     <string name="history_timeline">Oś czasu historii</string>
     <string name="call_details">Szczegóły połączenia</string>
     <string name="delete_all_history">Usuń całą historię</string>
@@ -534,8 +482,6 @@
     <string name="note_placeholder">Wpisz ważne informacje...</string>
     <string name="btn_save_note">Zapisz notatkę</string>
     <string name="header_productivity_notes">PRODUKTYWNOŚĆ I NOTATKI</string>
-
-    <!-- Settings - Fake Call Simulator & Reminders -->
     <string name="settings_fake_call_sim">Symulator fałszywego połączenia</string>
     <string name="settings_fake_call_sim_sub">Zaplanuj symulowane połączenie przychodzące, aby wyjść z niezręcznej sytuacji</string>
     <string name="fake_call_sim_title">Symulator fałszywego połączenia</string>
@@ -550,7 +496,29 @@
     <string name="multi_call_note">Uwaga: Interwał powtarzania ma zastosowanie, gdy liczba połączeń wynosi 2 lub więcej.</string>
     <string name="schedule_sequential_calls">Zaplanuj %1$d sekwencyjnych połączeń</string>
     <string name="schedule_escape_call">Zaplanuj połączenie ratunkowe (%1$d s)</string>
+    <string name="schedule_call_btn">Schedule Call</string>
     <string name="btn_cancel_scheduled_escape_calls">Anuluj zaplanowane połączenia ratunkowe</string>
+    <string name="fake_call_mode_timer">Timer Delay</string>
+    <string name="fake_call_mode_datetime">Date &amp; Time</string>
+    <string name="fake_call_select_time">Select Time</string>
+    <string name="fake_call_select_date">Select Date</string>
+    <string name="fake_call_scheduled_for">Scheduled for: %1$s</string>
+    <string name="fake_call_triggers_in">Triggers in %1$s</string>
+    <string name="fake_call_voice_audio_title">Voice Audio on Answer</string>
+    <string name="fake_call_voice_audio_desc">Plays realistic speech through the earpiece when the call is answered</string>
+    <string name="fake_call_voice_none">Silent</string>
+    <string name="fake_call_voice_office">Office Emergency</string>
+    <string name="fake_call_voice_family">Family Check-in</string>
+    <string name="fake_call_voice_friend">Friend Rescue</string>
+    <string name="fake_call_voice_custom">Custom Audio</string>
+    <string name="fake_call_voice_choose_file">Pick Audio File (.mp3, .wav, .m4a)</string>
+    <string name="fake_call_voice_preview">Preview Voice</string>
+    <string name="fake_call_voice_stop">Stop Audio</string>
+    <string name="fake_call_upcoming_title">Upcoming Scheduled Calls</string>
+    <string name="fake_call_no_upcoming">No upcoming simulated calls scheduled</string>
+    <string name="fake_call_cancel_all">Cancel All</string>
+    <string name="fake_call_scheduled_success">Call scheduled successfully</string>
+    <string name="notification_incoming_call_title">Incoming call</string>
     <string name="unit_sec">s</string>
     <string name="unit_min">min</string>
     <string name="unit_hour">godz.</string>
@@ -570,8 +538,6 @@
     <string name="settings_callback_reminders">Panel przypomnień o oddzwonieniu</string>
     <string name="settings_callback_reminders_sub">Przeglądaj i anuluj oczekujące przypomnienia o połączeniach</string>
     <string name="btn_call_back">Oddzwoń</string>
-
-    <!-- Settings - System Calling & Lock Screen Permissions -->
     <string name="btn_grant">Przyznaj</string>
     <string name="btn_configure">Konfiguruj</string>
     <string name="btn_set_default">Ustaw jako domyślną</string>
@@ -588,8 +554,6 @@
     <string name="feature_disabled_hint">Funkcja jest wyłączona</string>
     <string name="btn_enable_feature">Włącz funkcję</string>
     <string name="permissions_required">Wymagane uprawnienie</string>
-
-    <!-- Settings - About, Privacy Policy & Community Support -->
     <string name="settings_about">O aplikacji Secure Dialer</string>
     <string name="settings_about_sub">Informacje o wersji, licencje i technologia bazowa</string>
     <string name="settings_privacy">Polityka prywatności</string>
@@ -618,11 +582,9 @@
     <string name="settings_updates_title">Aktualizacje aplikacji</string>
     <string name="settings_contribution">Wsparcie projektu</string>
     <string name="settings_support_title">Wesprzyj Secure Dialer</string>
-    <string name="settings_support_desc" formatted="false">Secure Dialer jest w 100% darmowy, otwartoźródłowy (open-source), wolny od reklam i stawia prywatność na pierwszym miejscu. Jeśli uważasz tę aplikację za przydatną, rozważ współtworzenie kodu, nadsyłanie tłumaczeń lub wsparcie rozwoju darmowych i bezpiecznych narzędzi.</string>
+    <string name="settings_support_desc">Secure Dialer jest w 100% darmowy, otwartoźródłowy (open-source), wolny od reklam i stawia prywatność na pierwszym miejscu. Jeśli uważasz tę aplikację za przydatną, rozważ współtworzenie kodu, nadsyłanie tłumaczeń lub wsparcie rozwoju darmowych i bezpiecznych narzędzi.</string>
     <string name="settings_contribute_github">Współtwórz projekt na GitHubie</string>
     <string name="app_version_name">Wersja 1.5.0</string>
-
-    <!-- General Buttons, Common Utilities & Common Dialogs -->
     <string name="btn_cancel">Anuluj</string>
     <string name="btn_save">Zapisz</string>
     <string name="btn_delete">Usuń</string>
@@ -643,4 +605,9 @@
     <string name="warning">Ostrzeżenie</string>
     <string name="error_open_messages">Nie można otworzyć aplikacji do wiadomości</string>
     <string name="history">Historia</string>
+    <string name="permissions_dialog_title">Permissions &amp; Local Data Privacy</string>
+    <string name="permissions_dialog_desc">Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.</string>
+    <string name="btn_continue">Continue</string>
+    <string name="btn_not_now">Not Now</string>
+    <string name="about_version_label">Secure Dialer v1.5.0</string>
 </resources>

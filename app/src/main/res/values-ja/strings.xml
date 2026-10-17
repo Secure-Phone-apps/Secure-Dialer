@@ -1,18 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (C) 2026 MovStore
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  -->
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-
-    <!-- Application Identity -->
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Navigation Tabs -->
     <string name="tab_favorites">お気に入り</string>
     <string name="tab_recents">履歴</string>
     <string name="tab_contacts">連絡先</string>
@@ -25,8 +13,6 @@
     <string name="tab_slot_left">左スロット</string>
     <string name="tab_slot_middle">中央スロット</string>
     <string name="tab_slot_right">右スロット</string>
-
-    <!-- Search & General UI -->
     <string name="search_placeholder">連絡先や番号を検索</string>
     <string name="search_settings_placeholder">設定を検索...</string>
     <string name="search_clear">クリア</string>
@@ -40,14 +26,10 @@
     <string name="filter_dialed">発信</string>
     <string name="filter_received">着信</string>
     <string name="default_dialer_warning">すべての機能を使用するにはデフォルトの通話アプリに設定してください。</string>
-
-    <!-- Permissions -->
     <string name="enable_contacts_perm">連絡先の権限を許可</string>
     <string name="enable_call_log_perm">通話履歴の権限を許可</string>
     <string name="contacts_perm_desc">電話帳の連絡先を表示・編集・発信するのには、連絡先へのアクセス権限を許可してください。</string>
     <string name="call_log_perm_desc">通話履歴を表示・発信するのには、通話履歴へのアクセス権限を許可してください。</string>
-
-    <!-- Contacts Management & Details -->
     <string name="contacts_header">連絡先</string>
     <string name="no_contacts_title">連絡先が見つかりません</string>
     <string name="no_contacts_subtitle">「新規追加」をタップして作成します</string>
@@ -80,8 +62,6 @@
     <string name="select_number_to_message">メッセージを送信する電話番号を選択</string>
     <string name="dialog_call_contact">%1$s に発信</string>
     <string name="dialog_message_contact">%1$s にメッセージを送信</string>
-
-    <!-- Recents & Call History -->
     <string name="recents_header">履歴</string>
     <string name="no_call_log_title">通話履歴はありません</string>
     <string name="no_call_log_subtitle">最近の通話がここに表示されます</string>
@@ -100,8 +80,6 @@
     <string name="showing_last_5_calls">直近5件の通話を表示</string>
     <string name="call_summary_prefix">%1$s の通話要約</string>
     <string name="today_call_summary">今日の通話要約</string>
-
-    <!-- Dialpad & T9 Search -->
     <string name="dialpad_enter_number">番号を入力</string>
     <string name="dialpad_create_contact">連絡先を作成</string>
     <string name="dialpad_add_to_existing">既存の連絡先に追加</string>
@@ -112,8 +90,6 @@
     <string name="dialpad_clear">クリア</string>
     <string name="dialpad_paste">貼り付け</string>
     <string name="dialpad_copy">番号をコピー</string>
-
-    <!-- In-Call Actions & States -->
     <string name="btn_answer">応答</string>
     <string name="btn_decline">拒否</string>
     <string name="btn_hangup">切断</string>
@@ -153,8 +129,6 @@
     <string name="conference">会議通話 (%1$d)</string>
     <string name="caller_verified">認証済み</string>
     <string name="no_answer">応答なし</string>
-
-    <!-- Favorites & Voicemail -->
     <string name="favorites_header">お気に入り</string>
     <string name="no_favorites_title">お気に入りはまだありません</string>
     <string name="no_favorites_subtitle">星マークをタップして追加します</string>
@@ -164,8 +138,6 @@
     <string name="voicemail_settings">留守番電話設定</string>
     <string name="voicemail_directory_number">留守番電話番号</string>
     <string name="voicemail_sample_transcript">文字起こし: 「こんにちは！近況報告で電話しました。今晩時間がある時に連絡してね！」</string>
-
-    <!-- Settings Categories -->
     <string name="cat_sound_gestures">音とジェスチャー</string>
     <string name="cat_calling_accounts">SIMと通話アカウント</string>
     <string name="cat_speed_dial_quick_responses">スピードダイヤルとクイック返信</string>
@@ -187,8 +159,6 @@
     <string name="settings_title">設定</string>
     <string name="settings_back">戻る</string>
     <string name="settings_info_utilities">情報とユーティリティ</string>
-
-    <!-- Settings Headers -->
     <string name="header_sim_carrier">SIMとキャリア設定</string>
     <string name="header_incoming_alerts">着信通知アラート</string>
     <string name="header_threat_intelligence">脅威検知</string>
@@ -203,8 +173,6 @@
     <string name="header_app_specs">アプリの仕様</string>
     <string name="header_navigation_layout">ナビゲーションとレイアウト</string>
     <string name="header_community">コミュニティ</string>
-
-    <!-- Settings - General & Appearance -->
     <string name="settings_carrier_call_settings">キャリア通話設定</string>
     <string name="settings_carrier_call_settings_sub">割り込み通話、転送電話、付加サービス</string>
     <string name="settings_appearance">外観</string>
@@ -229,8 +197,6 @@
     <string name="settings_tab_layout_sub">各スロットに画面を割り当てます。選択すると重複が自動的に入れ替わります。</string>
     <string name="settings_startup_options">起動オプション</string>
     <string name="settings_default_startup_tab">デフォルトの起動タブ</string>
-
-    <!-- Settings - Sound, Vibration & Gestures -->
     <string name="settings_sound_haptics">音とバイブレーション</string>
     <string name="settings_dialpad_tones">ダイヤル音</string>
     <string name="settings_dialpad_tones_sub">キー押下時に音を鳴らす</string>
@@ -246,8 +212,6 @@
     <string name="settings_auto_tune_volume_sub">録音中はスピーカー音量を自動で55%に調整し、明瞭な双方向音声を記録します。</string>
     <string name="header_theme_styling">テーマとスタイル</string>
     <string name="header_sound_haptics">音と振動</string>
-
-    <!-- Settings - Calling Accounts, SIM & Telephony -->
     <string name="settings_calling_features">通話機能</string>
     <string name="settings_call_waiting">キャッチホン</string>
     <string name="settings_call_waiting_sub">通話中に着信をお知らせ</string>
@@ -259,8 +223,6 @@
     <string name="sim_ask">確認する</string>
     <string name="select_sim_card">SIMカードを選択</string>
     <string name="choose_sim_card">%1$s への発信に使用するSIMカードを選択してください：</string>
-
-    <!-- Settings - Outgoing Caller ID, Privacy & CLIR -->
     <string name="header_caller_id_privacy">発信者番号とプライバシー (CLIR)</string>
     <string name="settings_hide_caller_id">発信者番号を非通知</string>
     <string name="settings_hide_caller_id_sub">キャリアのプレフィックス番号を付加して番号を非通知にします</string>
@@ -277,8 +239,6 @@
     <string name="settings_clir_prefix_japan">日本 (1831)</string>
     <string name="settings_clir_prefix_custom">カスタムプレフィックス</string>
     <string name="settings_clir_custom_label">カスタムキャリアCLIRコードを入力</string>
-
-    <!-- Settings - Speed Dial & Quick Responses -->
     <string name="settings_speed_dial">スピードダイヤル</string>
     <string name="settings_speed_dial_sub">短縮キー1-9を割り当てる</string>
     <string name="speed_dial">短縮ダイヤル</string>
@@ -300,15 +260,11 @@
     <string name="no_responses_saved_desc">通話拒否時に送信するカスタムテンプレートメッセージを追加できます。</string>
     <string name="delete_response">返信を削除</string>
     <string name="send_quick_response">💬 クイック返信を送信</string>
-
-    <!-- Settings - Carrier Voicemail & Preferences -->
     <string name="settings_voicemail_num">留守電番号</string>
     <string name="settings_voicemail_num_sub">スピードダイヤル1番の設定</string>
     <string name="settings_voicemail_setup_title">留守電設定</string>
     <string name="voicemail_setup_desc">ダイヤルパッドの「1」を長押しした時の発信先番号を設定します。</string>
     <string name="save_voicemail_number">留守電番号を保存</string>
-
-    <!-- Settings - Call Blocking, Spam Database & Offline Protection -->
     <string name="settings_calls_blocking">通話と着信拒否</string>
     <string name="settings_blocked_numbers">着信拒否番号</string>
     <string name="settings_blocked_numbers_sub">拒否リストの管理</string>
@@ -354,8 +310,6 @@
     <string name="btn_import_spam_file">ファイルをインポート</string>
     <string name="blocklist_import_count_success">%1$d 件の拒否番号をインポートしました！</string>
     <string name="spam_import_count_success">%1$d 件のスパム項目をインポートしました！</string>
-
-    <!-- Settings - Call Recording Vault, Audio & Compression -->
     <string name="settings_call_recording">通話録音</string>
     <string name="settings_call_recording_sub">通話中の録音コントロールを有効化してローカルに保存</string>
     <string name="settings_recordings">保存された録音</string>
@@ -391,8 +345,6 @@
     <string name="vault_locked_title">録音保管庫はロックされています</string>
     <string name="vault_locked_desc">機密通話録音にアクセスするには生体認証が必要です。</string>
     <string name="btn_unlock_vault">保管庫のロック解除</string>
-
-    <!-- Settings - Dynamic Island Call Capsule -->
     <string name="settings_dynamic_island_title">ダイナミックアイランド通話カプセル</string>
     <string name="settings_dynamic_island_sub">通話中、カメラ周囲に対話型の通話ピルを表示</string>
     <string name="settings_dynamic_island_speaker_only">スピーカー時のみ表示</string>
@@ -403,13 +355,15 @@
     <string name="dynamic_island_muted">ミュート中</string>
     <string name="dynamic_island_recording">録音中</string>
     <string name="dynamic_island_tap_to_expand">タップして通話操作を展開</string>
-
-    <!-- Settings - Contacts, Deduplication & Storage -->
     <string name="settings_contact_preferences">連絡先の設定</string>
     <string name="settings_contacts_to_display">表示する連絡先</string>
     <string name="settings_contacts_to_display_sub">アカウントソース（Google、電話、SIMなど）でフィルター</string>
     <string name="settings_default_account_for_new">新規連絡先のデフォルトアカウント</string>
     <string name="settings_default_account_for_new_sub">新規連絡先作成時にあらかじめ選択されるアカウント</string>
+    <string name="settings_name_format_title">Name format &amp; sort order</string>
+    <string name="settings_name_format_sub">Sort contacts and display names</string>
+    <string name="name_format_first_name_first">First name first (John Smith)</string>
+    <string name="name_format_last_name_first">Last name first (Smith, John)</string>
     <string name="settings_dedup">重複統合</string>
     <string name="settings_dedup_sub">重複する連絡先を自動で統合</string>
     <string name="settings_dedup_title">重複統合</string>
@@ -423,8 +377,6 @@
     <string name="toast_merged_duplicates_for">%1$s の重複を結合しました</string>
     <string name="settings_merge_duplicate_contacts">重複連絡先を統合</string>
     <string name="settings_merge_duplicate_contacts_sub">重複した連絡先エントリーをスキャンして整理</string>
-
-    <!-- Settings - Backup, Restore & Encrypted Migration -->
     <string name="settings_data_utilities">データとユーティリティ</string>
     <string name="settings_backup_restore_sub">暗号化された JSON ファイルから通話履歴と設定を復元</string>
     <string name="backup_service_health_title">バックアップとサービス状態</string>
@@ -476,8 +428,6 @@
     <string name="file_saved_success">ファイルを正常に保存しました！</string>
     <string name="file_save_failed">ファイルの保存に失敗しました</string>
     <string name="file_read_failed">選択したファイルの読み込みに失敗しました</string>
-
-    <!-- Settings - Security, Biometrics, PIN & App Lock -->
     <string name="settings_security_protection">セキュリティと保護</string>
     <string name="settings_biometric_lock">アプリのロック</string>
     <string name="settings_biometric_lock_sub">アプリ起動時に端末のロック (PIN/パターン/生体認証) を要求する</string>
@@ -493,8 +443,6 @@
     <string name="restricted_settings_title">制限された設定</string>
     <string name="restricted_settings_desc">デフォルトの電話アプリとして設定するには、端末の設定から許可してください。</string>
     <string name="btn_open_settings">設定を開く</string>
-
-    <!-- Settings - Call Analytics, Dashboard & Call Notes -->
     <string name="history_timeline">履歴のタイムライン</string>
     <string name="call_details">通話の詳細</string>
     <string name="delete_all_history">履歴をすべて削除</string>
@@ -534,8 +482,6 @@
     <string name="note_placeholder">メモを入力...</string>
     <string name="btn_save_note">メモを保存</string>
     <string name="header_productivity_notes">生産性とメモ</string>
-
-    <!-- Settings - Fake Call Simulator & Reminders -->
     <string name="settings_fake_call_sim">偽着信シミュレーター</string>
     <string name="settings_fake_call_sim_sub">気まずい場面から抜け出すための偽着信をスケジュールする</string>
     <string name="fake_call_sim_title">偽着信シミュレーター</string>
@@ -550,7 +496,29 @@
     <string name="multi_call_note">注: 繰り返し間隔は着信回数が2回以上の場合に適用されます。</string>
     <string name="schedule_sequential_calls">%1$d 回の連続着信をスケジュール</string>
     <string name="schedule_escape_call">偽着信をスケジュール (%1$d 秒)</string>
+    <string name="schedule_call_btn">Schedule Call</string>
     <string name="btn_cancel_scheduled_escape_calls">予約済み偽着信をキャンセル</string>
+    <string name="fake_call_mode_timer">Timer Delay</string>
+    <string name="fake_call_mode_datetime">Date &amp; Time</string>
+    <string name="fake_call_select_time">Select Time</string>
+    <string name="fake_call_select_date">Select Date</string>
+    <string name="fake_call_scheduled_for">Scheduled for: %1$s</string>
+    <string name="fake_call_triggers_in">Triggers in %1$s</string>
+    <string name="fake_call_voice_audio_title">Voice Audio on Answer</string>
+    <string name="fake_call_voice_audio_desc">Plays realistic speech through the earpiece when the call is answered</string>
+    <string name="fake_call_voice_none">Silent</string>
+    <string name="fake_call_voice_office">Office Emergency</string>
+    <string name="fake_call_voice_family">Family Check-in</string>
+    <string name="fake_call_voice_friend">Friend Rescue</string>
+    <string name="fake_call_voice_custom">Custom Audio</string>
+    <string name="fake_call_voice_choose_file">Pick Audio File (.mp3, .wav, .m4a)</string>
+    <string name="fake_call_voice_preview">Preview Voice</string>
+    <string name="fake_call_voice_stop">Stop Audio</string>
+    <string name="fake_call_upcoming_title">Upcoming Scheduled Calls</string>
+    <string name="fake_call_no_upcoming">No upcoming simulated calls scheduled</string>
+    <string name="fake_call_cancel_all">Cancel All</string>
+    <string name="fake_call_scheduled_success">Call scheduled successfully</string>
+    <string name="notification_incoming_call_title">Incoming call</string>
     <string name="unit_sec">秒</string>
     <string name="unit_min">分</string>
     <string name="unit_hour">時間</string>
@@ -570,8 +538,6 @@
     <string name="settings_callback_reminders">折り返しリマインダーダッシュボード</string>
     <string name="settings_callback_reminders_sub">保留中の折り返しアラームの確認・キャンセル</string>
     <string name="btn_call_back">折り返し電話</string>
-
-    <!-- Settings - System Calling & Lock Screen Permissions -->
     <string name="btn_grant">許可</string>
     <string name="btn_configure">設定</string>
     <string name="btn_set_default">デフォルトに設定</string>
@@ -588,8 +554,6 @@
     <string name="feature_disabled_hint">機能は無効です</string>
     <string name="btn_enable_feature">機能を有効化</string>
     <string name="permissions_required">必要な権限</string>
-
-    <!-- Settings - About, Privacy Policy & Community Support -->
     <string name="settings_about">Secure Dialerについて</string>
     <string name="settings_about_sub">バージョン情報とライセンス</string>
     <string name="settings_privacy">プライバシーポリシー</string>
@@ -618,11 +582,9 @@
     <string name="settings_updates_title">アップデート</string>
     <string name="settings_contribution">貢献・寄付</string>
     <string name="settings_support_title">Secure Dialerをサポート</string>
-    <string name="settings_support_desc" formatted="false">Secure Dialerは100%無料、オープンソース、広告なし、プライバシー重視です。コードや翻訳の貢献を歓迎します。</string>
+    <string name="settings_support_desc">Secure Dialerは100%無料、オープンソース、広告なし、プライバシー重視です。コードや翻訳の貢献を歓迎します。</string>
     <string name="settings_contribute_github">GitHubで貢献する</string>
     <string name="app_version_name">バージョン 1.5.0</string>
-
-    <!-- General Buttons, Common Utilities & Common Dialogs -->
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_save">保存</string>
     <string name="btn_delete">削除</string>
@@ -643,4 +605,9 @@
     <string name="warning">警告</string>
     <string name="error_open_messages">メッセージを開けませんでした</string>
     <string name="history">履歴</string>
+    <string name="permissions_dialog_title">Permissions &amp; Local Data Privacy</string>
+    <string name="permissions_dialog_desc">Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.</string>
+    <string name="btn_continue">Continue</string>
+    <string name="btn_not_now">Not Now</string>
+    <string name="about_version_label">Secure Dialer v1.5.0</string>
 </resources>

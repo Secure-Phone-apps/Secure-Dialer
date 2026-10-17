@@ -1,18 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (C) 2026 MovStore
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  -->
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-
-    <!-- Application Identity -->
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Navigation Tabs -->
     <string name="tab_favorites">收藏</string>
     <string name="tab_recents">最近</string>
     <string name="tab_contacts">联系人</string>
@@ -25,8 +13,6 @@
     <string name="tab_slot_left">左侧位置</string>
     <string name="tab_slot_middle">中间位置</string>
     <string name="tab_slot_right">右侧位置</string>
-
-    <!-- Search & General UI -->
     <string name="search_placeholder">搜索联系人和号码</string>
     <string name="search_settings_placeholder">搜索设置...</string>
     <string name="search_clear">清除</string>
@@ -40,14 +26,10 @@
     <string name="filter_dialed">已拨</string>
     <string name="filter_received">已接</string>
     <string name="default_dialer_warning">设为默认拨号应用即可启用全部功能。</string>
-
-    <!-- Permissions -->
     <string name="enable_contacts_perm">启用手机联系人</string>
     <string name="enable_call_log_perm">启用通话记录</string>
     <string name="contacts_perm_desc">若要访问、加载、编辑手机上的真实联系人并拨打电话，请授予联系人权限。</string>
     <string name="call_log_perm_desc">若要访问、加载手机上的真实通话记录并拨打电话，请授予通话记录权限。</string>
-
-    <!-- Contacts Management & Details -->
     <string name="contacts_header">联系人</string>
     <string name="no_contacts_title">未找到联系人</string>
     <string name="no_contacts_subtitle">点按“新建”以创建联系人</string>
@@ -80,8 +62,6 @@
     <string name="select_number_to_message">选择要发送信息的号码</string>
     <string name="dialog_call_contact">呼叫 %1$s</string>
     <string name="dialog_message_contact">给 %1$s 发送信息</string>
-
-    <!-- Recents & Call History -->
     <string name="recents_header">最近</string>
     <string name="no_call_log_title">通话记录为空</string>
     <string name="no_call_log_subtitle">最近的通话将显示在这里</string>
@@ -100,8 +80,6 @@
     <string name="showing_last_5_calls">仅显示最近 5 条通话</string>
     <string name="call_summary_prefix">%1$s通话摘要</string>
     <string name="today_call_summary">今日通话摘要</string>
-
-    <!-- Dialpad & T9 Search -->
     <string name="dialpad_enter_number">输入号码</string>
     <string name="dialpad_create_contact">新建联系人</string>
     <string name="dialpad_add_to_existing">添加到现有联系人</string>
@@ -112,8 +90,6 @@
     <string name="dialpad_clear">清除</string>
     <string name="dialpad_paste">粘贴</string>
     <string name="dialpad_copy">复制号码</string>
-
-    <!-- In-Call Actions & States -->
     <string name="btn_answer">接听</string>
     <string name="btn_decline">拒接</string>
     <string name="btn_hangup">挂断</string>
@@ -153,8 +129,6 @@
     <string name="conference">多方通话（%1$d）</string>
     <string name="caller_verified">已验证</string>
     <string name="no_answer">无人接听</string>
-
-    <!-- Favorites & Voicemail -->
     <string name="favorites_header">收藏</string>
     <string name="no_favorites_title">暂无收藏</string>
     <string name="no_favorites_subtitle">为联系人加星标，方便快速找到</string>
@@ -164,8 +138,6 @@
     <string name="voicemail_settings">语音信箱设置</string>
     <string name="voicemail_directory_number">语音信箱号码</string>
     <string name="voicemail_sample_transcript">转录：“嘿，就是打个电话问候一下。今晚有空的话告诉我一声！”</string>
-
-    <!-- Settings Categories -->
     <string name="cat_sound_gestures">声音与手势</string>
     <string name="cat_calling_accounts">SIM 卡与通话</string>
     <string name="cat_speed_dial_quick_responses">快速拨号与快捷回复</string>
@@ -187,8 +159,6 @@
     <string name="settings_title">设置</string>
     <string name="settings_back">返回</string>
     <string name="settings_info_utilities">信息与工具</string>
-
-    <!-- Settings Headers -->
     <string name="header_sim_carrier">SIM 卡与运营商配置</string>
     <string name="header_incoming_alerts">来电提醒</string>
     <string name="header_threat_intelligence">威胁情报</string>
@@ -203,8 +173,6 @@
     <string name="header_app_specs">应用规格</string>
     <string name="header_navigation_layout">导航与布局</string>
     <string name="header_community">社区</string>
-
-    <!-- Settings - General & Appearance -->
     <string name="settings_carrier_call_settings">运营商通话设置</string>
     <string name="settings_carrier_call_settings_sub">呼叫等待、呼叫转移及其他补充电话服务</string>
     <string name="settings_appearance">外观</string>
@@ -229,8 +197,6 @@
     <string name="settings_tab_layout_sub">为每个导航位置指定单独的界面。选择重复项时会自动交换。</string>
     <string name="settings_startup_options">启动选项</string>
     <string name="settings_default_startup_tab">默认启动标签页</string>
-
-    <!-- Settings - Sound, Vibration & Gestures -->
     <string name="settings_sound_haptics">声音与触感</string>
     <string name="settings_dialpad_tones">拨号盘按键音</string>
     <string name="settings_dialpad_tones_sub">按下拨号按键时播放声音</string>
@@ -246,8 +212,6 @@
     <string name="settings_auto_tune_volume_sub">录音时自动将扬声器音量平衡在 55%，以获得清晰的双向声音采集。</string>
     <string name="header_theme_styling">主题与样式</string>
     <string name="header_sound_haptics">声音与触感</string>
-
-    <!-- Settings - Calling Accounts, SIM & Telephony -->
     <string name="settings_calling_features">通话功能</string>
     <string name="settings_call_waiting">呼叫等待</string>
     <string name="settings_call_waiting_sub">通话中收到来电时通知</string>
@@ -259,8 +223,6 @@
     <string name="sim_ask">每次询问</string>
     <string name="select_sim_card">选择 SIM 卡</string>
     <string name="choose_sim_card">选择用于拨打 %1$s 的 SIM 卡：</string>
-
-    <!-- Settings - Outgoing Caller ID, Privacy & CLIR -->
     <string name="header_caller_id_privacy">去电主叫号码与隐私 (CLIR)</string>
     <string name="settings_hide_caller_id">隐藏主叫号码</string>
     <string name="settings_hide_caller_id_sub">在去电号码前添加运营商隐私前缀以隐藏您的手机号</string>
@@ -277,8 +239,6 @@
     <string name="settings_clir_prefix_japan">日本 (1831)</string>
     <string name="settings_clir_prefix_custom">自定义前缀</string>
     <string name="settings_clir_custom_label">输入自定义运营商 CLIR 代码</string>
-
-    <!-- Settings - Speed Dial & Quick Responses -->
     <string name="settings_speed_dial">快速拨号</string>
     <string name="settings_speed_dial_sub">为 1-9 号按键分配快速拨号</string>
     <string name="speed_dial">快速拨号</string>
@@ -300,15 +260,11 @@
     <string name="no_responses_saved_desc">添加自定义短信模板，以便在拒接来电时快速发送。</string>
     <string name="delete_response">删除回复</string>
     <string name="send_quick_response">💬 发送快捷回复</string>
-
-    <!-- Settings - Carrier Voicemail & Preferences -->
     <string name="settings_voicemail_num">语音信箱号码</string>
     <string name="settings_voicemail_num_sub">配置快速拨号 1 的目标号码</string>
     <string name="settings_voicemail_setup_title">语音信箱设置</string>
     <string name="voicemail_setup_desc">设置长按拨号盘上的“1”键时拨出的电话号码。</string>
     <string name="save_voicemail_number">保存语音信箱号码</string>
-
-    <!-- Settings - Call Blocking, Spam Database & Offline Protection -->
     <string name="settings_calls_blocking">通话与拦截</string>
     <string name="settings_blocked_numbers">已拦截号码</string>
     <string name="settings_blocked_numbers_sub">管理被限制的来电号码</string>
@@ -354,8 +310,6 @@
     <string name="btn_import_spam_file">导入文件</string>
     <string name="blocklist_import_count_success">已导入 %1$d 个拦截号码！</string>
     <string name="spam_import_count_success">已导入 %1$d 条骚扰条目！</string>
-
-    <!-- Settings - Call Recording Vault, Audio & Compression -->
     <string name="settings_call_recording">通话录音</string>
     <string name="settings_call_recording_sub">启用通话中的录音控制并保存到本地</string>
     <string name="settings_recordings">已保存的录音</string>
@@ -391,8 +345,6 @@
     <string name="vault_locked_title">录音保险箱已锁定</string>
     <string name="vault_locked_desc">需通过生物识别验证方可访问机密通话录音。</string>
     <string name="btn_unlock_vault">解锁保险箱</string>
-
-    <!-- Settings - Dynamic Island Call Capsule -->
     <string name="settings_dynamic_island_title">灵动岛通话胶囊</string>
     <string name="settings_dynamic_island_sub">通话进行时在屏幕前置摄像头周围悬浮交互式通话胶囊</string>
     <string name="settings_dynamic_island_speaker_only">仅在免提扬声器时显示</string>
@@ -403,13 +355,15 @@
     <string name="dynamic_island_muted">已静音</string>
     <string name="dynamic_island_recording">录音中</string>
     <string name="dynamic_island_tap_to_expand">轻触展开通话控制</string>
-
-    <!-- Settings - Contacts, Deduplication & Storage -->
     <string name="settings_contact_preferences">联系人偏好设置</string>
     <string name="settings_contacts_to_display">显示的联系人</string>
     <string name="settings_contacts_to_display_sub">按账户来源筛选联系人（如 Google、手机、SIM 卡）</string>
     <string name="settings_default_account_for_new">新联系人的默认账户</string>
     <string name="settings_default_account_for_new_sub">创建新联系人时预先选中的账户</string>
+    <string name="settings_name_format_title">Name format &amp; sort order</string>
+    <string name="settings_name_format_sub">Sort contacts and display names</string>
+    <string name="name_format_first_name_first">First name first (John Smith)</string>
+    <string name="name_format_last_name_first">Last name first (Smith, John)</string>
     <string name="settings_dedup">去重工具</string>
     <string name="settings_dedup_sub">自动合并重复的联系人</string>
     <string name="settings_dedup_title">去重工具</string>
@@ -423,8 +377,6 @@
     <string name="toast_merged_duplicates_for">已合并 %1$s 的重复项</string>
     <string name="settings_merge_duplicate_contacts">合并重复联系人</string>
     <string name="settings_merge_duplicate_contacts_sub">扫描并清理重复联系人条目</string>
-
-    <!-- Settings - Backup, Restore & Encrypted Migration -->
     <string name="settings_data_utilities">数据与工具</string>
     <string name="settings_backup_restore_sub">从加密的 JSON 文件恢复通话记录和设置</string>
     <string name="backup_service_health_title">数据与备份</string>
@@ -476,8 +428,6 @@
     <string name="file_saved_success">文件保存成功！</string>
     <string name="file_save_failed">文件保存失败</string>
     <string name="file_read_failed">读取所选文件失败</string>
-
-    <!-- Settings - Security, Biometrics, PIN & App Lock -->
     <string name="settings_security_protection">安全与保护</string>
     <string name="settings_biometric_lock">应用锁</string>
     <string name="settings_biometric_lock_sub">需要设备锁（PIN/图案/生物识别）才能打开应用</string>
@@ -491,10 +441,8 @@
     <string name="device_auth_title">Secure Dialer</string>
     <string name="device_auth_subtitle">验证身份以打开 Secure Dialer</string>
     <string name="restricted_settings_title">受限设置</string>
-    <string name="restricted_settings_desc">若要将此应用用作默认拨号应用，您可能需要手动启用它。请前往系统设置 > 应用 > [我们的应用名称] > 高级 > 允许受限设置，然后重试。</string>
+    <string name="restricted_settings_desc">若要将此应用用作默认拨号应用，您可能需要手动启用它。请前往系统设置 &gt; 应用 &gt; [我们的应用名称] &gt; 高级 &gt; 允许受限设置，然后重试。</string>
     <string name="btn_open_settings">打开设置</string>
-
-    <!-- Settings - Call Analytics, Dashboard & Call Notes -->
     <string name="history_timeline">历史时间线</string>
     <string name="call_details">通话详情</string>
     <string name="delete_all_history">删除所有历史记录</string>
@@ -534,8 +482,6 @@
     <string name="note_placeholder">输入重要信息...</string>
     <string name="btn_save_note">保存备注</string>
     <string name="header_productivity_notes">效率与备注</string>
-
-    <!-- Settings - Fake Call Simulator & Reminders -->
     <string name="settings_fake_call_sim">模拟来电</string>
     <string name="settings_fake_call_sim_sub">预约模拟的来电</string>
     <string name="fake_call_sim_title">模拟来电</string>
@@ -550,7 +496,29 @@
     <string name="multi_call_note">仅当次数大于 1 时才会应用间隔</string>
     <string name="schedule_sequential_calls">预约 %1$d 次来电</string>
     <string name="schedule_escape_call">预约来电 (%1$d 秒)</string>
+    <string name="schedule_call_btn">Schedule Call</string>
     <string name="btn_cancel_scheduled_escape_calls">取消已预约的来电</string>
+    <string name="fake_call_mode_timer">Timer Delay</string>
+    <string name="fake_call_mode_datetime">Date &amp; Time</string>
+    <string name="fake_call_select_time">Select Time</string>
+    <string name="fake_call_select_date">Select Date</string>
+    <string name="fake_call_scheduled_for">Scheduled for: %1$s</string>
+    <string name="fake_call_triggers_in">Triggers in %1$s</string>
+    <string name="fake_call_voice_audio_title">Voice Audio on Answer</string>
+    <string name="fake_call_voice_audio_desc">Plays realistic speech through the earpiece when the call is answered</string>
+    <string name="fake_call_voice_none">Silent</string>
+    <string name="fake_call_voice_office">Office Emergency</string>
+    <string name="fake_call_voice_family">Family Check-in</string>
+    <string name="fake_call_voice_friend">Friend Rescue</string>
+    <string name="fake_call_voice_custom">Custom Audio</string>
+    <string name="fake_call_voice_choose_file">Pick Audio File (.mp3, .wav, .m4a)</string>
+    <string name="fake_call_voice_preview">Preview Voice</string>
+    <string name="fake_call_voice_stop">Stop Audio</string>
+    <string name="fake_call_upcoming_title">Upcoming Scheduled Calls</string>
+    <string name="fake_call_no_upcoming">No upcoming simulated calls scheduled</string>
+    <string name="fake_call_cancel_all">Cancel All</string>
+    <string name="fake_call_scheduled_success">Call scheduled successfully</string>
+    <string name="notification_incoming_call_title">Incoming call</string>
     <string name="unit_sec">秒</string>
     <string name="unit_min">分钟</string>
     <string name="unit_hour">小时</string>
@@ -570,8 +538,6 @@
     <string name="settings_callback_reminders">回拨提醒</string>
     <string name="settings_callback_reminders_sub">管理待触发的回拨闹钟</string>
     <string name="btn_call_back">回拨</string>
-
-    <!-- Settings - System Calling & Lock Screen Permissions -->
     <string name="btn_grant">授予</string>
     <string name="btn_configure">配置</string>
     <string name="btn_set_default">设为默认</string>
@@ -588,8 +554,6 @@
     <string name="feature_disabled_hint">功能已停用</string>
     <string name="btn_enable_feature">启用功能</string>
     <string name="permissions_required">需要授予权限</string>
-
-    <!-- Settings - About, Privacy Policy & Community Support -->
     <string name="settings_about">关于 Secure Dialer</string>
     <string name="settings_about_sub">版本信息、许可与核心技术</string>
     <string name="settings_privacy">隐私政策</string>
@@ -618,11 +582,9 @@
     <string name="settings_updates_title">应用内更新</string>
     <string name="settings_contribution">贡献</string>
     <string name="settings_support_title">支持 Secure Dialer</string>
-    <string name="settings_support_desc" formatted="false">Secure Dialer 100% 免费、开源、无广告，并始终以隐私为先。如果您觉得这款应用对您有帮助，欢迎贡献代码、提交翻译，或支持自由且安全的工具的开发。</string>
+    <string name="settings_support_desc">Secure Dialer 100% 免费、开源、无广告，并始终以隐私为先。如果您觉得这款应用对您有帮助，欢迎贡献代码、提交翻译，或支持自由且安全的工具的开发。</string>
     <string name="settings_contribute_github">在 GitHub 上贡献</string>
     <string name="app_version_name">版本 1.5.0</string>
-
-    <!-- General Buttons, Common Utilities & Common Dialogs -->
     <string name="btn_cancel">取消</string>
     <string name="btn_save">保存</string>
     <string name="btn_delete">删除</string>
@@ -643,4 +605,9 @@
     <string name="warning">警告</string>
     <string name="error_open_messages">无法打开信息应用</string>
     <string name="history">历史记录</string>
+    <string name="permissions_dialog_title">Permissions &amp; Local Data Privacy</string>
+    <string name="permissions_dialog_desc">Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.</string>
+    <string name="btn_continue">Continue</string>
+    <string name="btn_not_now">Not Now</string>
+    <string name="about_version_label">Secure Dialer v1.5.0</string>
 </resources>

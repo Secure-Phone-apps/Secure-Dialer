@@ -54,7 +54,13 @@ fun InCallAvatarDisplay(
 
     val matchedContact = remember(contactNumber, contacts) {
         if (contactNumber.isNotBlank()) {
-            ContactCache.getContact(contactNumber) ?: contacts.find { it.number == contactNumber }
+            ContactCache.getContact(contactNumber) 
+                ?: contacts.find { 
+                    val cleanContactNum = it.number.filter { c -> c.isDigit() }
+                    val cleanTarget = contactNumber.filter { c -> c.isDigit() }
+                    cleanContactNum.isNotEmpty() && cleanTarget.isNotEmpty() && 
+                        (cleanContactNum == cleanTarget || cleanContactNum.takeLast(10) == cleanTarget.takeLast(10))
+                }
         } else null
     }
 

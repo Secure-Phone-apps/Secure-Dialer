@@ -325,10 +325,10 @@ fun MainScreen(
             if (showProminentDisclosure) {
                 AlertDialog(
                     onDismissRequest = { showProminentDisclosure = false },
-                    title = { Text("Permissions & Local Data Privacy", fontWeight = FontWeight.Bold) },
+                    title = { Text(stringResource(R.string.permissions_dialog_title), fontWeight = FontWeight.Bold) },
                     text = {
                         Text(
-                            "Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.",
+                            stringResource(R.string.permissions_dialog_desc),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     },
@@ -349,12 +349,12 @@ fun MainScreen(
                                 permissionLauncher.launch(perms.toTypedArray())
                             }
                         ) {
-                            Text("Continue")
+                            Text(stringResource(R.string.btn_continue))
                         }
                     },
                     dismissButton = {
                         TextButton(onClick = { showProminentDisclosure = false }) {
-                            Text("Not Now")
+                            Text(stringResource(R.string.btn_not_now))
                         }
                     }
                 )

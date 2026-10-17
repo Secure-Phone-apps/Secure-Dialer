@@ -31,17 +31,23 @@ import java.util.concurrent.ConcurrentHashMap
 object ContactCache {
     private val fullNumMap = ConcurrentHashMap<String, Contact>()
     private val suffix10Map = ConcurrentHashMap<String, Contact>()
+    private val suffix9Map = ConcurrentHashMap<String, Contact>()
     private val suffix8Map = ConcurrentHashMap<String, Contact>()
     private val suffix7Map = ConcurrentHashMap<String, Contact>()
 
     private val cnapMap = ConcurrentHashMap<String, String>()
     private val cnapSuffix10Map = ConcurrentHashMap<String, String>()
+    private val cnapSuffix9Map = ConcurrentHashMap<String, String>()
     private val cnapSuffix8Map = ConcurrentHashMap<String, String>()
     private val cnapSuffix7Map = ConcurrentHashMap<String, String>()
+
+    // LruCache for persistent photo uri memory caching & bitmap acceleration
+    private val photoMemoryCache = android.util.LruCache<String, String>(100)
 
     fun init(contacts: List<Contact>, settings: List<AppSetting>) {
         fullNumMap.clear()
         suffix10Map.clear()
+        suffix9Map.clear()
         suffix8Map.clear()
         suffix7Map.clear()
 
@@ -52,6 +58,7 @@ object ContactCache {
                 fullNumMap[clean] = contact
                 val len = clean.length
                 if (len >= 10) suffix10Map[clean.takeLast(10)] = contact
+                if (len >= 9) suffix9Map[clean.takeLast(9)] = contact
                 if (len >= 8) suffix8Map[clean.takeLast(8)] = contact
                 if (len >= 7) suffix7Map[clean.takeLast(7)] = contact
             }
@@ -62,6 +69,7 @@ object ContactCache {
     fun initCnapFromSettings(settings: List<AppSetting>) {
         cnapMap.clear()
         cnapSuffix10Map.clear()
+        cnapSuffix9Map.clear()
         cnapSuffix8Map.clear()
         cnapSuffix7Map.clear()
         val prefix = "cnap_"
@@ -74,6 +82,7 @@ object ContactCache {
                     cnapMap[cleanKey] = name
                     val len = cleanKey.length
                     if (len >= 10) cnapSuffix10Map[cleanKey.takeLast(10)] = name
+                    if (len >= 9) cnapSuffix9Map[cleanKey.takeLast(9)] = name
                     if (len >= 8) cnapSuffix8Map[cleanKey.takeLast(8)] = name
                     if (len >= 7) cnapSuffix7Map[cleanKey.takeLast(7)] = name
                 }
@@ -88,6 +97,7 @@ object ContactCache {
         cnapMap[clean] = cnapName
         val len = clean.length
         if (len >= 10) cnapSuffix10Map[clean.takeLast(10)] = cnapName
+        if (len >= 9) cnapSuffix9Map[clean.takeLast(9)] = cnapName
         if (len >= 8) cnapSuffix8Map[clean.takeLast(8)] = cnapName
         if (len >= 7) cnapSuffix7Map[clean.takeLast(7)] = cnapName
     }
@@ -97,9 +107,10 @@ object ContactCache {
         if (clean.isEmpty()) return null
         val len = clean.length
 
-        // FIXED: Resilient cascading fallback (does not short-circuit on null 10-digit matches)
+        // Universal cascading suffix matching across 10, 9, 8, 7 digits
         return fullNumMap[clean]
             ?: (if (len >= 10) suffix10Map[clean.takeLast(10)] else null)
+            ?: (if (len >= 9) suffix9Map[clean.takeLast(9)] else null)
             ?: (if (len >= 8) suffix8Map[clean.takeLast(8)] else null)
             ?: (if (len >= 7) suffix7Map[clean.takeLast(7)] else null)
     }
