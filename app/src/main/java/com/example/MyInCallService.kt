@@ -435,24 +435,26 @@ class MyInCallService : InCallService() {
         val number = call.details?.handle?.schemeSpecificPart ?: ""
         val displayName = resolveCallerDisplayName(call, number)
 
-        val fullScreenPendingIntent = if (!isCallWaiting) {
-            PendingIntent.getActivity(
-                this, 101,
-                Intent(this, MainActivity::class.java).apply {
-                    action = ACTION_INCOMING_CALL
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                    putExtra(EXTRA_SHOW_CALL, true)
-                },
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-            )
-        } else null
+        val contentIntent = PendingIntent.getActivity(
+            this, 101,
+            Intent(this, MainActivity::class.java).apply {
+                action = ACTION_INCOMING_CALL
+                setPackage(packageName)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                putExtra(EXTRA_SHOW_CALL, true)
+            },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
 
         val declinePendingIntent = PendingIntent.getService(
             this, 102,
-            Intent(this, MyInCallService::class.java).apply { action = ACTION_DECLINE },
+            Intent(this, MyInCallService::class.java).apply {
+                setPackage(packageName)
+                action = ACTION_DECLINE
+            },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
@@ -460,6 +462,7 @@ class MyInCallService : InCallService() {
             this, 103,
             Intent(this, MainActivity::class.java).apply {
                 action = ACTION_ANSWER
+                setPackage(packageName)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP or
                         Intent.FLAG_ACTIVITY_CLEAR_TOP or
@@ -481,12 +484,9 @@ class MyInCallService : InCallService() {
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
             .setAutoCancel(false)
-            // Single Audio Source: startRinging() handles audio and vibration cleanly to prevent dual-playback echo
-            .setContentIntent(answerPendingIntent)
+            .setContentIntent(contentIntent)
 
-        if (fullScreenPendingIntent != null) {
-            notificationBuilder.setFullScreenIntent(fullScreenPendingIntent, true)
-        }
+        notificationBuilder.setFullScreenIntent(contentIntent, true)
 
         nm.notify(NOTIFICATION_ID_INCOMING, notificationBuilder.build())
     }
