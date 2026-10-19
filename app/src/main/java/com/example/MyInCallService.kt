@@ -473,20 +473,38 @@ class MyInCallService : InCallService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val caller = Person.Builder().setName(displayName).setKey(number).build()
-        val style = NotificationCompat.CallStyle.forIncomingCall(caller, declinePendingIntent, answerPendingIntent)
-
-        val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_INCOMING)
-            .setSmallIcon(android.R.drawable.sym_call_incoming)
-            .setStyle(style)
-            .setPriority(NotificationCompat.PRIORITY_MAX)
-            .setCategory(NotificationCompat.CATEGORY_CALL)
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setOngoing(true)
-            .setAutoCancel(false)
-            .setContentIntent(contentIntent)
-
-        notificationBuilder.setFullScreenIntent(contentIntent, true)
+        val notificationBuilder = if (isCallWaiting) {
+            val title = getString(R.string.call_waiting_title)
+            val text = "$displayName\n${getString(R.string.call_waiting_notice)}"
+            NotificationCompat.Builder(this, CHANNEL_INCOMING)
+                .setSmallIcon(android.R.drawable.sym_call_incoming)
+                .setContentTitle(title)
+                .setContentText("Incoming call from $displayName")
+                .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setContentIntent(contentIntent)
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Decline", declinePendingIntent)
+                .addAction(android.R.drawable.sym_action_call, "Answer", answerPendingIntent)
+        } else {
+            val caller = Person.Builder().setName(displayName).setKey(number).build()
+            val style = NotificationCompat.CallStyle.forIncomingCall(caller, declinePendingIntent, answerPendingIntent)
+            NotificationCompat.Builder(this, CHANNEL_INCOMING)
+                .setSmallIcon(android.R.drawable.sym_call_incoming)
+                .setStyle(style)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setCategory(NotificationCompat.CATEGORY_CALL)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setOngoing(true)
+                .setAutoCancel(false)
+                .setContentIntent(contentIntent)
+                .also {
+                    it.setFullScreenIntent(contentIntent, true)
+                }
+        }
 
         nm.notify(NOTIFICATION_ID_INCOMING, notificationBuilder.build())
     }

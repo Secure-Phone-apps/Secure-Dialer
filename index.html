@@ -1985,10 +1985,24 @@ gradle :app:assembleDebug
                 <div class="space-y-6">
                     <p class="text-xs text-slate-500">All notable updates and releases of the Secure Dialer application are documented here.</p>
                     
-                    <!-- v1.6.0 -->
+                    <!-- v1.7.0 -->
                     <div class="border-l-2 border-brand-500 pl-4 space-y-2">
                         <div class="flex items-center gap-2">
-                            <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.6.0</span>
+                            <span class="px-2 py-0.5 text-xs bg-brand-500 text-white font-bold rounded">v1.7.0</span>
+                            <span class="text-xs text-slate-500">2026-10-19</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Cross-OEM Call Waiting & Telephony Reliability</h4>
+                        <ul class="list-disc pl-5 text-xs text-slate-600 dark:text-slate-400 space-y-1 leading-relaxed">
+                            <li><strong>Universal Call-Waiting Fix:</strong> Standard high-priority notification routing prevents Google Dialer and OEM ROM dialers from hijacking call-waiting alerts during active calls across all phone models.</li>
+                            <li><strong>Direct Telephony In-App Routing:</strong> Tapping incoming call-waiting banners cleanly raises Secure Dialer to the foreground with instant swap, merge, and hold management.</li>
+                            <li><strong>Obtainium Auto-Update Sync:</strong> Incremented versioning metadata to v1.7.0 (versionCode 15) for seamless background tracking in Obtainium and automated GitHub releases.</li>
+                        </ul>
+                    </div>
+
+                    <!-- v1.6.0 -->
+                    <div class="border-l-2 border-slate-300 dark:border-slate-700 pl-4 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-xs bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded">v1.6.0</span>
                             <span class="text-xs text-slate-500">2026-09-28</span>
                         </div>
                         <h4 class="font-bold text-slate-900 dark:text-white text-sm">Outgoing Caller ID (CLIR) Privacy & Recording Engine Hardening</h4>
@@ -2183,35 +2197,35 @@ free programs, and that you know you can do these things.</pre>
             }, 300);
         }
 
-        let latestTag = 'v1.6.0';
+        let latestTag = 'v1.7.0';
 
         const apkDetails = {
             'universal': {
-                fileName: 'secure-dialer-v1.6.0-universal.apk',
+                fileName: 'secure-dialer-v1.7.0-universal.apk',
                 size: '15.8 MB',
                 hash: 'ef4aed489f02c21bb47984fdb38e0e33715170396913a4017e6ab9e89e5b10ae',
                 desc: 'Includes all CPU architectures. Works on any device.'
             },
             'arm64': {
-                fileName: 'secure-dialer-v1.6.0-arm64-v8a.apk',
+                fileName: 'secure-dialer-v1.7.0-arm64-v8a.apk',
                 size: '6.4 MB',
                 hash: '542f7bb265c03009b458cfd60c1c9e613b1d2d252c0e4a683cb26d211092e1b9',
                 desc: 'For modern 64-bit phones (e.g., Pixel, Samsung S-series, newer devices).'
             },
             'arm32': {
-                fileName: 'secure-dialer-v1.6.0-armeabi-v7a.apk',
+                fileName: 'secure-dialer-v1.7.0-armeabi-v7a.apk',
                 size: '5.1 MB',
                 hash: '635146a90f27b9ad036e4716ab7b09c9391f47d74974029dc0413ea1a641696e',
                 desc: 'For older 32-bit Android phones and legacy devices.'
             },
             'x86_64': {
-                fileName: 'secure-dialer-v1.6.0-x86_64.apk',
+                fileName: 'secure-dialer-v1.7.0-x86_64.apk',
                 size: '6.8 MB',
                 hash: '508f1d3b51d303dddfdea8ca7390c77114d179d30a4cf44fadfe8c8566d3bbd3',
                 desc: 'For 64-bit Android emulators running on modern computer hardware.'
             },
             'x86': {
-                fileName: 'secure-dialer-v1.6.0-x86.apk',
+                fileName: 'secure-dialer-v1.7.0-x86.apk',
                 size: '6.3 MB',
                 hash: '62a122c4aa20af522512082e4602972e9058e846316c26e15220bd5a08bccda8',
                 desc: 'For older 32-bit computer-based Android emulators.'
@@ -2627,7 +2641,7 @@ free programs, and that you know you can do these things.</pre>
                             <div class="flex items-start justify-between gap-4">
                                 <div class="space-y-0.5">
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Selected Package File</p>
-                                    <p id="active-download-name" class="font-display font-bold text-base text-slate-900 dark:text-white">secure-dialer-v1.6.0-universal.apk</p>
+                                    <p id="active-download-name" class="font-display font-bold text-base text-slate-900 dark:text-white">secure-dialer-v1.7.0-universal.apk</p>
                                 </div>
                                 <div class="text-right space-y-0.5">
                                     <p class="text-xs text-slate-500 dark:text-slate-400">Size</p>
@@ -2699,7 +2713,7 @@ free programs, and that you know you can do these things.</pre>
                                 </div>
                                 <div class="flex gap-3">
                                     <span class="flex-shrink-0 w-5.5 h-5.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">2</span>
-                                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"><span class="font-bold text-slate-800 dark:text-slate-200">Launch APK:</span> Open your "Downloads" list and click <code class="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[10px]" id="active-download-filename-step">secure-dialer-v1.6.0-universal.apk</code>.</p>
+                                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"><span class="font-bold text-slate-800 dark:text-slate-200">Launch APK:</span> Open your "Downloads" list and click <code class="px-1 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono text-[10px]" id="active-download-filename-step">secure-dialer-v1.7.0-universal.apk</code>.</p>
                                 </div>
                                 <div class="flex gap-3">
                                     <span class="flex-shrink-0 w-5.5 h-5.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xs font-mono font-bold">3</span>

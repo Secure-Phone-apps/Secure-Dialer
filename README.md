@@ -222,15 +222,15 @@ Download signed release APKs directly from our **[GitHub Releases Page](https://
 
 | APK File Name | Target Architecture | Which Devices Use This? |
 | :--- | :--- | :--- |
-| **`secure-dialer-v1.6.0-arm64-v8a.apk`** | 64-bit ARM (`arm64-v8a`) | **Recommended for 95%+ of modern smartphones** (Pixel, Samsung, OnePlus, Xiaomi). |
-| **`secure-dialer-v1.6.0-armeabi-v7a.apk`** | 32-bit ARM (`armeabi-v7a`) | Older 32-bit Android phones and legacy entry-level hardware. |
-| **`secure-dialer-v1.6.0-x86_64.apk`** | 64-bit x86 (`x86_64`) | Android Emulators, ChromeOS devices, and Android-x86 PC setups. |
-| **`secure-dialer-v1.6.0-universal.apk`** | All Architectures (Fat APK) | Universal build compatible with any supported Android device. |
+| **`secure-dialer-v1.7.0-arm64-v8a.apk`** | 64-bit ARM (`arm64-v8a`) | **Recommended for 95%+ of modern smartphones** (Pixel, Samsung, OnePlus, Xiaomi). |
+| **`secure-dialer-v1.7.0-armeabi-v7a.apk`** | 32-bit ARM (`armeabi-v7a`) | Older 32-bit Android phones and legacy entry-level hardware. |
+| **`secure-dialer-v1.7.0-x86_64.apk`** | 64-bit x86 (`x86_64`) | Android Emulators, ChromeOS devices, and Android-x86 PC setups. |
+| **`secure-dialer-v1.7.0-universal.apk`** | All Architectures (Fat APK) | Universal build compatible with any supported Android device. |
 
 #### Verify Package Integrity (SHA-256)
 To verify that your downloaded APK matches the official build byte-for-byte:
 ```bash
-sha256sum secure-dialer-v1.6.0-arm64-v8a.apk
+sha256sum secure-dialer-v1.7.0-arm64-v8a.apk
 ```
 Compare the resulting hash with the published `checksums.txt` file on the release page.
 

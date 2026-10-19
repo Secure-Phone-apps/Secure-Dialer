@@ -1,6 +1,14 @@
 # Changelog
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
+## [1.7.0] - 2026-10-19
+
+### Cross-OEM Call Waiting & Telephony Reliability
+- **Universal Call-Waiting Notification Fix**: Resolved cross-device issue where tapping incoming call-waiting (second incoming call while already in an active call) notifications redirected to Google Dialer or OEM dialer instead of Secure Dialer. Configured call-waiting notifications to use a standard high-priority `BigTextStyle` notification builder with explicit pending intents and `FLAG_ACTIVITY_REORDER_TO_FRONT`, preventing third-party dialer hijacking across all Android ROMs and device manufacturers (Samsung, Xiaomi, Pixel, OnePlus, Motorola).
+- **Direct Telephony In-App Routing**: Tapping a call-waiting banner cleanly raises Secure Dialer to the foreground with seamless swap, hold, merge, or dismiss actions.
+- **Obtainium & Release Metadata Parity**: Bumped app `versionCode` to 15 and `versionName` to 1.7.0 with matching release pipeline targets for seamless Obtainium auto-updates and direct APK distribution.
+
+---
 
 ## [1.6.0] - 2026-09-28
 
