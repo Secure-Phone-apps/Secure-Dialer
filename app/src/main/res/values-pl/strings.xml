@@ -32,7 +32,7 @@
     <string name="call_log_perm_desc">Aby uzyskiwać dostęp, ładować i dzwonić do numerów z rzeczywistej historii połączeń na swoim urządzeniu, włącz uprawnienie do Rejestru połączeń.</string>
     <string name="contacts_header">Kontakty</string>
     <string name="no_contacts_title">Nie znaleziono kontaktów</string>
-    <string name="no_contacts_subtitle">Dotknij „Dodaj nowy”, aby utworzyć kontakt</string>
+    <string name="no_contacts_subtitle">Dotknij „Dodaj kontakt”, aby utworzyć kontakt</string>
     <string name="action_add_contact">Dodaj kontakt</string>
     <string name="label_name">Nazwa</string>
     <string name="label_phone_number">Numer telefonu</string>
