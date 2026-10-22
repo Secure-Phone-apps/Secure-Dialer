@@ -383,19 +383,15 @@ fun MainScreen(
                 // FIXED: Standard, accessible 3-page pager eliminates infinite carousel jumps and TalkBack bugs
                 val pagerState = rememberPagerState(initialPage = selectedTab.coerceIn(0, tabSlots.size - 1)) { tabSlots.size }
 
-                LaunchedEffect(pagerState.currentPage) {
-                    if (selectedTab != pagerState.currentPage) {
-                        selectedTab = pagerState.currentPage
+                // FIXED: Synchronize tab only when scroll has fully settled, preventing race condition and half-screen freeze
+                LaunchedEffect(pagerState.settledPage) {
+                    if (selectedTab != pagerState.settledPage) {
+                        selectedTab = pagerState.settledPage
                     }
                 }
 
-                LaunchedEffect(selectedTab) {
-                    if (pagerState.currentPage != selectedTab) {
-                        pagerState.animateScrollToPage(selectedTab)
-                    }
-                }
-
-                val currentPagerSlot = tabSlots.getOrElse(pagerState.currentPage) { "RECENTS" }
+                // FIXED: Anchor search bar visibility to selectedTab target to prevent height changes mid-animation
+                val currentPagerSlot = tabSlots.getOrElse(selectedTab) { "RECENTS" }
                 val isSearchVisible = remember(currentSlotKey, currentPagerSlot, isCallHistoryDetailsOpen) {
                     if (currentSlotKey == "CONTACTS" || currentPagerSlot == "CONTACTS") {
                         true

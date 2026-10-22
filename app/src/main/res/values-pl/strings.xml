@@ -576,7 +576,10 @@
     <string name="checking_mirrors">Sprawdzanie bezpiecznych serwerów zwierciadlanych...</string>
     <string name="app_up_to_date_desc">Używasz najnowszej oficjalnej kompilacji Secure Dialer z podpisem kryptograficznym.</string>
     <string name="check_for_updates_now">Sprawdź aktualizacje teraz</string>
-    <string name="up_to_date_result">Aplikacja Secure Dialer jest aktualna!\nWersja v1.5.0 (Wydanie stabilne)</string>
+    <string name="up_to_date_result">
+        Aplikacja Secure Dialer jest aktualna!
+Wersja v%1$s (Wydanie stabilne)
+    </string>
     <string name="settings_app_updates">Aktualizacje aplikacji</string>
     <string name="settings_app_updates_sub">Sprawdź status wersji i listę zmian</string>
     <string name="settings_updates_title">Aktualizacje aplikacji</string>
@@ -584,7 +587,7 @@
     <string name="settings_support_title">Wesprzyj Secure Dialer</string>
     <string name="settings_support_desc">Secure Dialer jest w 100% darmowy, otwartoźródłowy (open-source), wolny od reklam i stawia prywatność na pierwszym miejscu. Jeśli uważasz tę aplikację za przydatną, rozważ współtworzenie kodu, nadsyłanie tłumaczeń lub wsparcie rozwoju darmowych i bezpiecznych narzędzi.</string>
     <string name="settings_contribute_github">Współtwórz projekt na GitHubie</string>
-    <string name="app_version_name">Wersja 1.5.0</string>
+    <string name="app_version_name">Wersja %1$s</string>
     <string name="btn_cancel">Anuluj</string>
     <string name="btn_save">Zapisz</string>
     <string name="btn_delete">Usuń</string>
@@ -609,5 +612,5 @@
     <string name="permissions_dialog_desc">Aplikacja Secure Dialer wymaga dostępu do Twoich kontaktów oraz rejestru połączeń, aby wyświetlać historię, identyfikować rozmówców i umożliwiać wykonywanie połączeń. Wszystkie dane są przetwarzane w 100% lokalnie na Twoim urządzeniu i nigdy nie są przesyłane ani udostępniane.</string>
     <string name="btn_continue">Kontynuuj</string>
     <string name="btn_not_now">Nie teraz</string>
-    <string name="about_version_label">Secure Dialer v1.5.0</string>
+    <string name="about_version_label">Secure Dialer v%1$s</string>
 </resources>

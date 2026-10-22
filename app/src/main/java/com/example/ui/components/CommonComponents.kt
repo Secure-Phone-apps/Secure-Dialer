@@ -144,6 +144,7 @@ fun BottomNavBar(
 ) {
     val haptic = LocalHapticFeedback.current
     val isAmoled = LocalAmoledMode.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     NavigationBar(
         modifier = Modifier.fillMaxWidth(),
@@ -174,7 +175,9 @@ fun BottomNavBar(
                 selected = isSelected,
                 onClick = {
                     if (!isSelected) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (com.example.util.RichHapticEngine.isHapticsEnabled(context)) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
                         onTabSelected(index)
                     }
                 },

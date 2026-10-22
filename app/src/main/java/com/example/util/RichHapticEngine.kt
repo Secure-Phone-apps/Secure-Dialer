@@ -45,7 +45,23 @@ object RichHapticEngine {
     @Volatile
     private var cachedVibrator: Vibrator? = null
 
+    @Volatile
+    private var isVibrationGloballyEnabled: Boolean? = null
+
+    fun setHapticsEnabled(enabled: Boolean) {
+        isVibrationGloballyEnabled = enabled
+    }
+
+    fun isHapticsEnabled(context: Context): Boolean {
+        isVibrationGloballyEnabled?.let { return it }
+        val prefs = context.applicationContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+        val enabled = prefs.getBoolean("vibrate_on_click_enabled", true)
+        isVibrationGloballyEnabled = enabled
+        return enabled
+    }
+
     fun performHaptic(context: Context, style: HapticStyle) {
+        if (!isHapticsEnabled(context)) return
         try {
             val vibrator = getCachedVibrator(context) ?: return
             if (!vibrator.hasVibrator()) return

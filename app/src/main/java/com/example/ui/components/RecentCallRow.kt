@@ -59,6 +59,7 @@ import com.example.model.CallRecord
 import com.example.model.CallRecording
 import com.example.model.CallType
 import com.example.model.Contact
+import com.example.model.LabeledNumber
 import com.example.model.getAvatarShape
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
@@ -76,7 +77,8 @@ fun RecentCallRow(
     onDeleteRecord: (Int) -> Unit,
     getHistory: suspend (String) -> List<CallRecord>,
     viewModel: DialerViewModel,
-    onHistoryClick: (String) -> Unit
+    onHistoryClick: (String) -> Unit,
+    onCallRecord: ((CallRecord) -> Unit)? = null
 ) {
     val record = group.primary
     val context = LocalContext.current
@@ -104,6 +106,31 @@ fun RecentCallRow(
 
     val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
     val allRecordings by viewModel.recordingsFlow.collectAsStateWithLifecycle()
+    val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
+
+    val matchedContact = remember(allContacts, record.number, record.name) {
+        val digits = record.number.filter { it.isDigit() }
+        allContacts.firstOrNull { contact ->
+            val cAllNums = contact.getAllNumbers()
+            val numMatch = cAllNums.any { ln ->
+                val cDigits = ln.number.filter { it.isDigit() }
+                (digits.isNotEmpty() && cDigits.isNotEmpty() && (digits == cDigits || digits.endsWith(cDigits.takeLast(7)) || cDigits.endsWith(digits.takeLast(7)))) ||
+                (ln.number == record.number)
+            }
+            numMatch || (record.name.isNotBlank() && record.name != "Unknown" && contact.name.equals(record.name, ignoreCase = true))
+        }
+    }
+
+    val availableNumbers = remember(matchedContact, record.number, record.label) {
+        val nums = matchedContact?.getAllNumbers()
+        if (!nums.isNullOrEmpty()) {
+            nums.distinctBy { it.number.filter { c -> c.isDigit() }.ifEmpty { it.number } }
+        } else {
+            listOf(LabeledNumber(number = record.number, label = record.label.ifBlank { "Mobile" }, isPrimary = true))
+        }
+    }
+
+    var showCallerActionsDialog by remember { mutableStateOf(false) }
 
     val matchingRecordings = remember(allRecordings, record.number) {
         val digits = record.number.filter { it.isDigit() }
@@ -127,10 +154,7 @@ fun RecentCallRow(
                     },
                     onLongClick = {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
-                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                        val clip = ClipData.newPlainText("Phone Number", record.number)
-                        clipboard?.setPrimaryClip(clip)
-                        Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                        showCallerActionsDialog = true
                     }
                 ),
             colors = CardDefaults.cardColors(containerColor = containerColor),
@@ -529,6 +553,377 @@ fun RecentCallRow(
             onDismiss = { showPlaybackDialog = false },
             viewModel = viewModel
         )
+    }
+
+    if (showCallerActionsDialog) {
+        val isSavedContact = (matchedContact != null) || (record.name != record.number && record.name.isNotBlank() && record.name != "Unknown" && record.name !in listOf("-1", "-2", "-3"))
+        val displayName = if (matchedContact != null && matchedContact.name.isNotBlank()) {
+            matchedContact.name
+        } else if (record.name.isNotBlank() && record.name != "Unknown" && record.name !in listOf("-1", "-2", "-3")) {
+            com.example.formatContactName(record.name, viewModel.contactNameFormat.value)
+        } else {
+            record.number
+        }
+
+        if (availableNumbers.size > 1) {
+            AlertDialog(
+                onDismissRequest = { showCallerActionsDialog = false },
+                shape = AppShapes.Dialog,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Call,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                title = {
+                    Text(
+                        text = stringResource(R.string.dialog_call_contact, displayName),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.select_number_to_call),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        availableNumbers.forEach { labeledNum ->
+                            Surface(
+                                shape = AppShapes.Card,
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        showCallerActionsDialog = false
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                        val targetRecord = record.copy(number = labeledNum.number, label = labeledNum.label)
+                                        if (onCallRecord != null) {
+                                            onCallRecord(targetRecord)
+                                        } else {
+                                            onCallClick()
+                                        }
+                                    }
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Surface(
+                                        shape = AppShapes.Keypad,
+                                        color = MaterialTheme.colorScheme.primaryContainer,
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Call,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = localizeContactLabel(labeledNum.label),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            text = labeledNum.number,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Medium,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            showCallerActionsDialog = false
+                                            try {
+                                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                    data = Uri.parse("smsto:${labeledNum.number}")
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (_: Exception) {
+                                                Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                            }
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Message,
+                                            contentDescription = stringResource(R.string.send_sms),
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            showCallerActionsDialog = false
+                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                            val clip = ClipData.newPlainText("Phone Number", labeledNum.number)
+                                            clipboard?.setPrimaryClip(clip)
+                                            Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.ContentCopy,
+                                            contentDescription = stringResource(R.string.action_copy_number),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    if (isSavedContact) {
+                        TextButton(
+                            onClick = {
+                                showCallerActionsDialog = false
+                                if (matchedContact != null) {
+                                    viewModel.oldContactToEdit.value = matchedContact
+                                    viewModel.editContactName.value = matchedContact.name
+                                    viewModel.editContactNumber.value = matchedContact.number
+                                    viewModel.editContactLabel.value = matchedContact.label
+                                    viewModel.isEditContactDialogVisible.value = true
+                                } else {
+                                    viewModel.oldContactToEdit.value = Contact(
+                                        number = record.number,
+                                        name = record.name,
+                                        label = record.label,
+                                        favorite = false,
+                                        avatarText = record.avatarText,
+                                        avatarBgValue = record.avatarBgValue,
+                                        avatarTextColorValue = record.avatarTextColorValue,
+                                        email = ""
+                                    )
+                                    viewModel.editContactName.value = record.name
+                                    viewModel.editContactNumber.value = record.number
+                                    viewModel.editContactLabel.value = record.label
+                                    viewModel.isEditContactDialogVisible.value = true
+                                }
+                            }
+                        ) {
+                            Text(stringResource(R.string.btn_edit))
+                        }
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCallerActionsDialog = false }) {
+                        Text(stringResource(R.string.btn_cancel))
+                    }
+                }
+            )
+        } else {
+            AlertDialog(
+                onDismissRequest = { showCallerActionsDialog = false },
+                shape = AppShapes.Dialog,
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.Phone,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                title = {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (displayName != record.number) {
+                            Text(
+                                text = record.number,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Call Action
+                        Surface(
+                            shape = AppShapes.Card,
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showCallerActionsDialog = false
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    if (onCallRecord != null) {
+                                        onCallRecord(record)
+                                    } else {
+                                        onCallClick()
+                                    }
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(Icons.Default.Call, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    text = stringResource(R.string.action_call),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        // Send SMS Action
+                        Surface(
+                            shape = AppShapes.Card,
+                            color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showCallerActionsDialog = false
+                                    try {
+                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                            data = Uri.parse("smsto:${record.number}")
+                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(Icons.Default.Message, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                                Text(
+                                    text = stringResource(R.string.send_sms),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        // Copy Number Action
+                        Surface(
+                            shape = AppShapes.Card,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showCallerActionsDialog = false
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                    val clip = ClipData.newPlainText("Phone Number", record.number)
+                                    clipboard?.setPrimaryClip(clip)
+                                    Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(
+                                    text = stringResource(R.string.action_copy_number),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+
+                        // Edit / Add Contact Action
+                        Surface(
+                            shape = AppShapes.Card,
+                            color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showCallerActionsDialog = false
+                                    if (isSavedContact) {
+                                        if (matchedContact != null) {
+                                            viewModel.oldContactToEdit.value = matchedContact
+                                            viewModel.editContactName.value = matchedContact.name
+                                            viewModel.editContactNumber.value = matchedContact.number
+                                            viewModel.editContactLabel.value = matchedContact.label
+                                            viewModel.isEditContactDialogVisible.value = true
+                                        } else {
+                                            viewModel.oldContactToEdit.value = Contact(
+                                                number = record.number,
+                                                name = record.name,
+                                                label = record.label,
+                                                favorite = false,
+                                                avatarText = record.avatarText,
+                                                avatarBgValue = record.avatarBgValue,
+                                                avatarTextColorValue = record.avatarTextColorValue,
+                                                email = ""
+                                            )
+                                            viewModel.editContactName.value = record.name
+                                            viewModel.editContactNumber.value = record.number
+                                            viewModel.editContactLabel.value = record.label
+                                            viewModel.isEditContactDialogVisible.value = true
+                                        }
+                                    } else {
+                                        viewModel.newContactName.value = ""
+                                        viewModel.newContactNumber.value = record.number
+                                        viewModel.newContactLabel.value = "Mobile"
+                                        viewModel.isAddContactDialogVisible.value = true
+                                    }
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isSavedContact) Icons.Default.Edit else Icons.Default.PersonAdd,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary
+                                )
+                                Text(
+                                    text = if (isSavedContact) stringResource(R.string.btn_edit) else stringResource(R.string.action_add_contact),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {},
+                dismissButton = {
+                    TextButton(onClick = { showCallerActionsDialog = false }) {
+                        Text(stringResource(R.string.btn_cancel))
+                    }
+                }
+            )
+        }
     }
 }
 

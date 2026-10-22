@@ -638,7 +638,10 @@
     <string name="checking_mirrors">Checking secure mirrors...</string>
     <string name="app_up_to_date_desc">You are using the latest official cryptographic build of Secure Dialer.</string>
     <string name="check_for_updates_now">Check for Updates Now</string>
-    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v1.5.0 (Stable Release)</string>
+    <string name="up_to_date_result">
+        Secure Dialer is up to date!
+Version v%1$s (Stable Release)
+    </string>
     <string name="settings_app_updates">In-App Updates</string>
     <string name="settings_app_updates_sub">Check version status &amp; changelog</string>
     <string name="settings_updates_title">In-App Updates</string>
@@ -646,7 +649,7 @@
     <string name="settings_support_title">Support Secure Dialer</string>
     <string name="settings_support_desc" formatted="false">Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.</string>
     <string name="settings_contribute_github">Contribute on GitHub</string>
-    <string name="app_version_name">Version 1.5.0</string>
+    <string name="app_version_name">Version %1$s</string>
 
     <!-- General Buttons, Common Utilities & Common Dialogs -->
     <string name="btn_cancel">Cancel</string>
@@ -673,5 +676,5 @@
     <string name="permissions_dialog_desc">Secure Dialer requires access to your Contacts and Call Logs to display call history, identify incoming callers, and allow dialing. All data is processed 100% locally on your device and is never uploaded or shared.</string>
     <string name="btn_continue">Continue</string>
     <string name="btn_not_now">Not Now</string>
-    <string name="about_version_label">Secure Dialer v1.5.0</string>
+    <string name="about_version_label">Secure Dialer v%1$s</string>
 </resources>

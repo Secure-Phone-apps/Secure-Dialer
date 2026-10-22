@@ -615,19 +615,17 @@ fun CallRecordingsSettings(
                     checked = isVaultLockEnabled,
                     onCheckedChange = { enabled ->
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        if (enabled && activity != null) {
-                            VaultBiometricAuthHelper.authenticate(
-                                activity = activity,
-                                title = context.getString(R.string.vault_locked_title),
-                                subtitle = context.getString(R.string.vault_locked_desc),
-                                onSuccess = {
-                                    viewModel.updateRecordingsBiometricLockEnabled(true)
-                                    isVaultUnlocked = true
-                                }
-                            )
+                        if (enabled) {
+                            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? android.app.KeyguardManager
+                            if (keyguardManager?.isDeviceSecure != true) {
+                                Toast.makeText(context, context.getString(R.string.vault_locked_desc), Toast.LENGTH_LONG).show()
+                            } else {
+                                viewModel.updateRecordingsBiometricLockEnabled(true)
+                                isVaultUnlocked = true
+                            }
                         } else {
-                            viewModel.updateRecordingsBiometricLockEnabled(enabled)
-                            if (!enabled) isVaultUnlocked = true
+                            viewModel.updateRecordingsBiometricLockEnabled(false)
+                            isVaultUnlocked = true
                         }
                     }
                 )

@@ -18,8 +18,11 @@
 package com.example.ui.components
 
 import android.app.Activity
+import android.app.KeyguardManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -82,17 +85,15 @@ fun PrivacySecurityAboutSettings(
                     checked = isBiometricLockEnabled,
                     onCheckedChange = { enabled ->
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        if (enabled && activity != null) {
-                            VaultBiometricAuthHelper.authenticate(
-                                activity = activity,
-                                title = context.getString(R.string.settings_biometric_lock),
-                                subtitle = context.getString(R.string.settings_biometric_lock_sub),
-                                onSuccess = {
-                                    viewModel.updateBiometricLockEnabled(true)
-                                }
-                            )
+                        if (enabled) {
+                            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                            if (keyguardManager?.isDeviceSecure != true) {
+                                Toast.makeText(context, context.getString(R.string.app_locked_desc), Toast.LENGTH_LONG).show()
+                            } else {
+                                viewModel.updateBiometricLockEnabled(true)
+                            }
                         } else {
-                            viewModel.updateBiometricLockEnabled(enabled)
+                            viewModel.updateBiometricLockEnabled(false)
                         }
                     },
                     icon = Icons.Default.Lock,

@@ -431,6 +431,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings["vibrate_on_click_enabled"]?.toBooleanStrictOrNull()?.let {
                     vibrateOnClickEnabled.value = it
                     editor.putBoolean("vibrate_on_click_enabled", it)
+                    com.example.util.RichHapticEngine.setHapticsEnabled(it)
+                } ?: run {
+                    com.example.util.RichHapticEngine.setHapticsEnabled(vibrateOnClickEnabled.value)
                 }
                 settings["flip_to_silence_enabled"]?.toBooleanStrictOrNull()?.let {
                     flipToSilenceEnabled.value = it
@@ -624,6 +627,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateVibrateOnClickEnabled(enabled: Boolean) {
         vibrateOnClickEnabled.value = enabled
+        com.example.util.RichHapticEngine.setHapticsEnabled(enabled)
         prefs.edit().putBoolean("vibrate_on_click_enabled", enabled).apply()
         viewModelScope.launch {
             try {

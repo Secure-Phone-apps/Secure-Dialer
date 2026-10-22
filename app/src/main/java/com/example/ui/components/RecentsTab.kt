@@ -326,7 +326,8 @@ fun RecentsTabContent(
                                         onDeleteRecord = { id -> onDeleteRecord(id) },
                                         getHistory = { viewModel.getCallHistoryByNumber(it) },
                                         viewModel = viewModel,
-                                        onHistoryClick = { selectedHistoryNumber = it }
+                                        onHistoryClick = { selectedHistoryNumber = it },
+                                        onCallRecord = onCallClick
                                     )
                                 }
                             }
