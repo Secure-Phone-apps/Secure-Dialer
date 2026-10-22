@@ -83,6 +83,7 @@ object DynamicIslandOverlayManager {
                 val inForeground = state.inForeground
 
                 val isCallPlacedOrAnswered = call != null && (
+                    callState == android.telecom.Call.STATE_RINGING ||
                     callState == android.telecom.Call.STATE_ACTIVE ||
                     callState == android.telecom.Call.STATE_DIALING ||
                     callState == android.telecom.Call.STATE_CONNECTING ||
@@ -100,8 +101,9 @@ object DynamicIslandOverlayManager {
                     val isLocked = km?.isKeyguardLocked == true
 
                     if (isEnabled && canDrawOverlay(appContext) && !inForeground && !isLocked) {
+                        val isRinging = callState == android.telecom.Call.STATE_RINGING
                         val isSpeaker = state.audioRoute == CallAudioState.ROUTE_SPEAKER
-                        if (!speakerOnly || isSpeaker) {
+                        if (isRinging || !speakerOnly || isSpeaker) {
                             showOverlay(appContext)
                         } else {
                             hideOverlay(appContext)
@@ -136,20 +138,39 @@ object DynamicIslandOverlayManager {
                 (36 * density).toInt()
             }
 
-            // On modern Android (API 30+), ensure we measure the display cutout (camera hole)
+            // Universal Display Cutout & Status Bar calculation across all Android brands/ROMs/aspect ratios
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 try {
-                    val insets = wm.currentWindowMetrics.windowInsets.getInsets(
+                    val windowMetrics = wm.currentWindowMetrics
+                    val insets = windowMetrics.windowInsets.getInsets(
                         android.view.WindowInsets.Type.statusBars() or android.view.WindowInsets.Type.displayCutout()
                     )
                     if (insets.top > statusBarHeight) {
                         statusBarHeight = insets.top
                     }
+                    val cutout = windowMetrics.windowInsets.displayCutout
+                    if (cutout != null) {
+                        val cutoutBottom = cutout.safeInsetTop.coerceAtLeast(cutout.boundingRectTop.bottom)
+                        if (cutoutBottom > statusBarHeight) {
+                            statusBarHeight = cutoutBottom
+                        }
+                    }
+                } catch (_: Exception) {}
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try {
+                    @Suppress("DEPRECATION")
+                    val cutout = wm.defaultDisplay.cutout
+                    if (cutout != null) {
+                        val cutoutBottom = cutout.safeInsetTop.coerceAtLeast(cutout.boundingRectTop.bottom)
+                        if (cutoutBottom > statusBarHeight) {
+                            statusBarHeight = cutoutBottom
+                        }
+                    }
                 } catch (_: Exception) {}
             }
 
             // Position cleanly BELOW status bar, notification bar, and camera punch hole
-            val marginBelowCutout = (8 * density).toInt()
+            val marginBelowCutout = (6 * density).toInt()
             val compactY = statusBarHeight + marginBelowCutout
             val expandedY = statusBarHeight + marginBelowCutout
 
@@ -226,6 +247,9 @@ object DynamicIslandOverlayManager {
                                 }
                                 context.startActivity(intent)
                                 hideOverlay(context)
+                            },
+                            onAnswer = {
+                                CallManager.answer()
                             },
                             onHangUp = {
                                 CallManager.disconnect()

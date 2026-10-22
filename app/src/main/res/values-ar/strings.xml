@@ -26,6 +26,8 @@
     <string name="filter_dialed">الصادرة</string>
     <string name="filter_received">الواردة</string>
     <string name="default_dialer_warning">تعيين كتطبيق الاتصال الافتراضي لتمكين جميع الميزات.</string>
+    <string name="battery_optimization_warning">تعطيل تحسين البطارية لمنع انقطاع المكالمات أو تحويلها بعد ساعة واحدة.</string>
+    <string name="btn_unrestricted">غير مقيد</string>
     <string name="enable_contacts_perm">تمكين جهات الاتصال</string>
     <string name="enable_call_log_perm">تمكين سجل المكالمات</string>
     <string name="contacts_perm_desc">للوصول إلى جهات الاتصال الحقيقية وتحميلها وتعديلها والاتصال بها، يرجى تفعيل إذن جهات الاتصال.</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">إنهاء المكالمة</string>
     <string name="btn_swap">تبديل</string>
     <string name="btn_answer_hold">الرد والانتظار</string>
+    <string name="btn_end_answer">إنهاء والرد</string>
     <string name="call_status_ongoing">مكالمة جارية</string>
     <string name="call_status_dialing">جاري الاتصال...</string>
     <string name="call_status_ringing">مكالمة واردة...</string>

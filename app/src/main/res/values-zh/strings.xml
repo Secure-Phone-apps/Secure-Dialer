@@ -26,6 +26,8 @@
     <string name="filter_dialed">已拨</string>
     <string name="filter_received">已接</string>
     <string name="default_dialer_warning">设为默认拨号应用即可启用全部功能。</string>
+    <string name="battery_optimization_warning">请禁用电池优化，以防止通话超过1小时后被挂断或转接。</string>
+    <string name="btn_unrestricted">无限制</string>
     <string name="enable_contacts_perm">启用手机联系人</string>
     <string name="enable_call_log_perm">启用通话记录</string>
     <string name="contacts_perm_desc">若要访问、加载、编辑手机上的真实联系人并拨打电话，请授予联系人权限。</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">挂断</string>
     <string name="btn_swap">切换</string>
     <string name="btn_answer_hold">接听并保持</string>
+    <string name="btn_end_answer">结束并接听</string>
     <string name="call_status_ongoing">通话中</string>
     <string name="call_status_dialing">正在拨号...</string>
     <string name="call_status_ringing">来电中...</string>

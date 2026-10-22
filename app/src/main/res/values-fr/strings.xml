@@ -26,6 +26,8 @@
     <string name="filter_dialed">Émis</string>
     <string name="filter_received">Reçus</string>
     <string name="default_dialer_warning">Définir comme téléphone par défaut pour activer toutes les fonctionnalités.</string>
+    <string name="battery_optimization_warning">Désactivez l\'optimisation de la batterie pour éviter que les appels ne soient coupés ou basculés après 1 heure.</string>
+    <string name="btn_unrestricted">Non restreint</string>
     <string name="enable_contacts_perm">Autoriser les contacts</string>
     <string name="enable_call_log_perm">Autoriser le journal d\'appels</string>
     <string name="contacts_perm_desc">Pour accéder, charger, modifier et appeler les vrais contacts de votre téléphone, veuillez autoriser l\'accès aux Contacts.</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">Raccrocher</string>
     <string name="btn_swap">Permuter</string>
     <string name="btn_answer_hold">Répondre et mettre en attente</string>
+    <string name="btn_end_answer">Terminer et répondre</string>
     <string name="call_status_ongoing">Appel en cours</string>
     <string name="call_status_dialing">Numérotation...</string>
     <string name="call_status_ringing">Appel entrant...</string>

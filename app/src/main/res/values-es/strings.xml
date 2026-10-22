@@ -26,6 +26,8 @@
     <string name="filter_dialed">Realizadas</string>
     <string name="filter_received">Recibidas</string>
     <string name="default_dialer_warning">Establecer como teléfono predeterminado para habilitar todas las funciones.</string>
+    <string name="battery_optimization_warning">Desactive la optimización de batería para evitar que las llamadas se corten o cambien tras 1 hora.</string>
+    <string name="btn_unrestricted">Sin restricciones</string>
     <string name="enable_contacts_perm">Habilitar contactos</string>
     <string name="enable_call_log_perm">Habilitar registro de llamadas</string>
     <string name="contacts_perm_desc">Para acceder, cargar, editar y llamar a los contactos de su teléfono, habilite el permiso de Contactos.</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">Colgar</string>
     <string name="btn_swap">Cambiar</string>
     <string name="btn_answer_hold">Responder y retener</string>
+    <string name="btn_end_answer">Finalizar y responder</string>
     <string name="call_status_ongoing">Llamada en curso</string>
     <string name="call_status_dialing">Marcando...</string>
     <string name="call_status_ringing">Llamada entrante...</string>

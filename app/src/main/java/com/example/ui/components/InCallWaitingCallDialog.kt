@@ -147,23 +147,43 @@ fun InCallWaitingCallDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    try {
-                        val activeCall = CallManager.currentCall.value
-                        activeCall?.hold()
-                        waitingCall.answer(VideoProfile.STATE_AUDIO_ONLY)
-                        CallManager.updateCall(waitingCall)
-                        CallManager.updateWaitingCall(null)
-                    } catch (_: Exception) {}
-                },
-                shape = MaterialTheme.shapes.medium,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = getCallGreenColor(),
-                    contentColor = getOnCallGreenColor()
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(stringResource(R.string.btn_answer_hold), fontWeight = FontWeight.Bold)
+                OutlinedButton(
+                    onClick = {
+                        try {
+                            val activeCall = CallManager.currentCall.value
+                            activeCall?.disconnect()
+                            waitingCall.answer(VideoProfile.STATE_AUDIO_ONLY)
+                            CallManager.updateCall(waitingCall)
+                            CallManager.updateWaitingCall(null)
+                        } catch (_: Exception) {}
+                    },
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(stringResource(R.string.btn_end_answer), fontWeight = FontWeight.SemiBold)
+                }
+
+                Button(
+                    onClick = {
+                        try {
+                            val activeCall = CallManager.currentCall.value
+                            activeCall?.hold()
+                            waitingCall.answer(VideoProfile.STATE_AUDIO_ONLY)
+                            CallManager.updateCall(waitingCall)
+                            CallManager.updateWaitingCall(null)
+                        } catch (_: Exception) {}
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = getCallGreenColor(),
+                        contentColor = getOnCallGreenColor()
+                    )
+                ) {
+                    Text(stringResource(R.string.btn_answer_hold), fontWeight = FontWeight.Bold)
+                }
             }
         },
         dismissButton = {

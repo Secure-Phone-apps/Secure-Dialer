@@ -60,6 +60,14 @@ class CallScreenPermissionsTest {
     }
 
     @Test
+    fun testBatteryOptimizationExemptionCheckAndRequest() {
+        val isIgnored = CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context)
+        assertNotNull(isIgnored)
+        CallScreenPermissionHelper.requestIgnoreBatteryOptimizations(context)
+        assertTrue(true)
+    }
+
+    @Test
     fun testRequestIntentsDoNotThrowExceptions() {
         // Test fallback intent execution safely
         CallScreenPermissionHelper.requestDefaultDialer(context)

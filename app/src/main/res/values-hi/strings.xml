@@ -26,6 +26,8 @@
     <string name="filter_dialed">डायल किए गए</string>
     <string name="filter_received">प्राप्त</string>
     <string name="default_dialer_warning">सभी सुविधाओं को सक्षम करने के लिए डिफ़ॉल्ट डायलर के रूप में सेट करें।</string>
+    <string name="battery_optimization_warning">1 घंटे के बाद कॉल कटने या स्विच होने से रोकने के लिए बैटरी अनुकूलन अक्षम करें।</string>
+    <string name="btn_unrestricted">अप्रतिबंधित</string>
     <string name="enable_contacts_perm">संपर्क अनुमति दें</string>
     <string name="enable_call_log_perm">कॉल लॉग अनुमति दें</string>
     <string name="contacts_perm_desc">अपने फोन के वास्तविक संपर्कों को एक्सेस और कॉल करने के लिए कृपया संपर्क अनुमति सक्षम करें।</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">कॉल काटें</string>
     <string name="btn_swap">बदलें</string>
     <string name="btn_answer_hold">उत्तर दें और होल्ड करें</string>
+    <string name="btn_end_answer">समाप्त करें और उत्तर दें</string>
     <string name="call_status_ongoing">जारी कॉल</string>
     <string name="call_status_dialing">डायल किया जा रहा है...</string>
     <string name="call_status_ringing">आने वाली कॉल...</string>

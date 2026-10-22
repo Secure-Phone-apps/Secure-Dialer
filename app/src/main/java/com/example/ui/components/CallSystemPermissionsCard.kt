@@ -23,6 +23,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.PictureInPicture
@@ -54,6 +55,7 @@ fun CallSystemPermissionsCard(
 
     var canFullScreen by remember { mutableStateOf(CallScreenPermissionHelper.canUseFullScreenIntent(context)) }
     var canOverlay by remember { mutableStateOf(CallScreenPermissionHelper.canDrawOverlays(context)) }
+    var isBatteryOptimizationIgnored by remember { mutableStateOf(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context)) }
 
     // Native Activity Result Launcher guarantees system role prompt opens & updates state immediately
     val defaultDialerLauncher = rememberLauncherForActivityResult(
@@ -71,6 +73,7 @@ fun CallSystemPermissionsCard(
                 viewModel.isDefaultDialer.value = CallScreenPermissionHelper.isDefaultDialer(context)
                 canFullScreen = CallScreenPermissionHelper.canUseFullScreenIntent(context)
                 canOverlay = CallScreenPermissionHelper.canDrawOverlays(context)
+                isBatteryOptimizationIgnored = CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -78,10 +81,11 @@ fun CallSystemPermissionsCard(
     }
 
     val needsDefaultDialer = !isDefaultDialer
+    val needsBatteryExemption = !isBatteryOptimizationIgnored
     val needsFullScreen = !canFullScreen
     val needsOverlay = isDynamicIslandEnabled && !canOverlay
 
-    if (!needsDefaultDialer && !needsFullScreen && !needsOverlay) {
+    if (!needsDefaultDialer && !needsBatteryExemption && !needsFullScreen && !needsOverlay) {
         return
     }
 
@@ -103,6 +107,7 @@ fun CallSystemPermissionsCard(
         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
         when {
             needsDefaultDialer -> CallScreenPermissionHelper.requestDefaultDialer(context, defaultDialerLauncher)
+            needsBatteryExemption -> CallScreenPermissionHelper.requestIgnoreBatteryOptimizations(context)
             needsFullScreen -> CallScreenPermissionHelper.requestFullScreenIntentPermission(context)
             else -> CallScreenPermissionHelper.requestOverlayPermission(context)
         }
@@ -136,6 +141,7 @@ fun CallSystemPermissionsCard(
                     Icon(
                         imageVector = when {
                             needsDefaultDialer -> Icons.Default.PhoneInTalk
+                            needsBatteryExemption -> Icons.Default.BatteryChargingFull
                             needsFullScreen -> Icons.Default.LockOpen
                             else -> Icons.Default.PictureInPicture
                         },
@@ -152,6 +158,7 @@ fun CallSystemPermissionsCard(
                 Text(
                     text = when {
                         needsDefaultDialer -> stringResource(R.string.default_dialer_warning)
+                        needsBatteryExemption -> stringResource(R.string.battery_optimization_warning)
                         needsFullScreen -> stringResource(R.string.settings_full_screen_intent_warning)
                         else -> stringResource(R.string.settings_overlay_permission_warning)
                     },
@@ -163,6 +170,7 @@ fun CallSystemPermissionsCard(
                 Text(
                     text = when {
                         needsDefaultDialer -> stringResource(R.string.btn_set_default)
+                        needsBatteryExemption -> stringResource(R.string.btn_unrestricted)
                         needsFullScreen -> stringResource(R.string.btn_configure)
                         else -> stringResource(R.string.btn_grant)
                     },
@@ -186,6 +194,7 @@ fun CallSystemPermissionsCard(
                 Text(
                     text = when {
                         needsDefaultDialer -> stringResource(R.string.btn_set_default)
+                        needsBatteryExemption -> stringResource(R.string.btn_unrestricted)
                         needsFullScreen -> stringResource(R.string.btn_configure)
                         else -> stringResource(R.string.btn_grant)
                     },

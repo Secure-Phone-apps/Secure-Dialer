@@ -26,6 +26,8 @@
     <string name="filter_dialed">Gewählt</string>
     <string name="filter_received">Empfangen</string>
     <string name="default_dialer_warning">Als Standard-Telefon-App festlegen, um alle Funktionen zu nutzen.</string>
+    <string name="battery_optimization_warning">Akku-Optimierung deaktivieren, um Anrufabbrüche oder Weiterleitungen nach 1 Stunde zu verhindern.</string>
+    <string name="btn_unrestricted">Uneingeschränkt</string>
     <string name="enable_contacts_perm">Kontakte aktivieren</string>
     <string name="enable_call_log_perm">Anrufliste aktivieren</string>
     <string name="contacts_perm_desc">Um Ihre Kontakte anzuzeigen, zu laden, zu bearbeiten und anzurufen, aktivieren Sie bitte die Kontaktberechtigung.</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">Auflegen</string>
     <string name="btn_swap">Tauschen</string>
     <string name="btn_answer_hold">Antworten &amp; Halten</string>
+    <string name="btn_end_answer">Beenden &amp; Antworten</string>
     <string name="call_status_ongoing">Laufender Anruf</string>
     <string name="call_status_dialing">Wählen...</string>
     <string name="call_status_ringing">Eingehender Anruf...</string>

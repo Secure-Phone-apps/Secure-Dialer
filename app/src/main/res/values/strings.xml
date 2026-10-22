@@ -40,6 +40,8 @@
     <string name="filter_dialed">Dialed</string>
     <string name="filter_received">Received</string>
     <string name="default_dialer_warning">Set as default dialer to enable all features.</string>
+    <string name="battery_optimization_warning">Disable Battery Optimization to prevent calls from dropping or switching after 1 hour.</string>
+    <string name="btn_unrestricted">Unrestricted</string>
 
     <!-- Permissions -->
     <string name="enable_contacts_perm">Enable Phone Contacts</string>
@@ -119,6 +121,7 @@
     <string name="btn_hangup">Hang up</string>
     <string name="btn_swap">Swap</string>
     <string name="btn_answer_hold">Answer &amp; Hold</string>
+    <string name="btn_end_answer">End &amp; Answer</string>
     <string name="call_status_ongoing">Ongoing call</string>
     <string name="call_status_dialing">Dialing...</string>
     <string name="call_status_ringing">Incoming call...</string>

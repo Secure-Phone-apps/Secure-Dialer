@@ -26,6 +26,8 @@
     <string name="filter_dialed">Efetuadas</string>
     <string name="filter_received">Recebidas</string>
     <string name="default_dialer_warning">Defina como discador padrão para ativar todos os recursos.</string>
+    <string name="battery_optimization_warning">Desative a otimização de bateria para evitar que chamadas caiam ou mudem após 1 hora.</string>
+    <string name="btn_unrestricted">Irrestrito</string>
     <string name="enable_contacts_perm">Ativar contatos do telefone</string>
     <string name="enable_call_log_perm">Ativar registro de chamadas</string>
     <string name="contacts_perm_desc">Para acessar, carregar, editar e ligar para os contatos reais do seu telefone, ative a permissão de Contatos.</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">Desligar</string>
     <string name="btn_swap">Trocar</string>
     <string name="btn_answer_hold">Atender e reter</string>
+    <string name="btn_end_answer">Encerrar e atender</string>
     <string name="call_status_ongoing">Chamada em andamento</string>
     <string name="call_status_dialing">Discando...</string>
     <string name="call_status_ringing">Chamada recebida...</string>

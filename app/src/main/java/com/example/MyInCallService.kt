@@ -5,6 +5,8 @@
 
 package com.example
 
+import android.app.KeyguardManager
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -12,6 +14,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.Ringtone
@@ -52,7 +55,9 @@ class MyInCallService : InCallService() {
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val nm by lazy { getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager }
-    private var wakeLock: PowerManager.WakeLock? = null
+    private var screenWakeLock: PowerManager.WakeLock? = null
+    private var cpuWakeLock: PowerManager.WakeLock? = null
+    private var isForegroundServiceRunning = false
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
     private var callWaitingToneGenerator: ToneGenerator? = null
@@ -193,37 +198,82 @@ class MyInCallService : InCallService() {
     }
 
     @Synchronized
-    private fun acquireWakeLock() {
+    private fun acquireScreenWakeLock() {
         try {
-            if (wakeLock == null) {
+            if (screenWakeLock == null) {
                 val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
                 @Suppress("DEPRECATION")
                 val flags = PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
                         PowerManager.ACQUIRE_CAUSES_WAKEUP or
                         PowerManager.ON_AFTER_RELEASE
-                wakeLock = pm?.newWakeLock(flags, "SecureDialer:InCallScreenWakeLock")?.apply {
+                screenWakeLock = pm?.newWakeLock(flags, "SecureDialer:InCallScreenWakeLock")?.apply {
                     setReferenceCounted(false)
                 }
             }
-            wakeLock?.acquire(30_000L)
-        } catch (_: Exception) {
-            try {
-                if (wakeLock == null) {
-                    val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
-                    wakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SecureDialer:InCallCpuWakeLock")?.apply {
-                        setReferenceCounted(false)
-                    }
+            screenWakeLock?.acquire(30_000L)
+        } catch (_: Exception) {}
+    }
+
+    @Synchronized
+    private fun acquireCpuWakeLock() {
+        try {
+            if (cpuWakeLock == null) {
+                val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                cpuWakeLock = pm?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "SecureDialer:ActiveCallCpuWakeLock")?.apply {
+                    setReferenceCounted(false)
                 }
-                wakeLock?.acquire(30_000L)
-            } catch (_: Exception) {}
+            }
+            if (cpuWakeLock?.isHeld != true) {
+                cpuWakeLock?.acquire()
+            }
+        } catch (_: Exception) {}
+    }
+
+    @Synchronized
+    private fun releaseAllWakeLocks() {
+        try {
+            if (screenWakeLock?.isHeld == true) {
+                screenWakeLock?.release()
+            }
+        } catch (_: Exception) {}
+        try {
+            if (cpuWakeLock?.isHeld == true) {
+                cpuWakeLock?.release()
+            }
+        } catch (_: Exception) {}
+    }
+
+    @Synchronized
+    private fun startInCallForeground(notification: Notification) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val isRecording = CallAudioRecorder.isRecording.value
+                val fgsType = if (isRecording) {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
+                } else {
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                }
+                startForeground(NOTIFICATION_ID_ACTIVE, notification, fgsType)
+            } else {
+                startForeground(NOTIFICATION_ID_ACTIVE, notification)
+            }
+            isForegroundServiceRunning = true
+        } catch (_: Exception) {
+            nm.notify(NOTIFICATION_ID_ACTIVE, notification)
         }
     }
 
     @Synchronized
-    private fun releaseWakeLock() {
+    private fun stopInCallForeground() {
         try {
-            if (wakeLock?.isHeld == true) {
-                wakeLock?.release()
+            if (isForegroundServiceRunning) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                } else {
+                    @Suppress("DEPRECATION")
+                    stopForeground(true)
+                }
+                isForegroundServiceRunning = false
             }
         } catch (_: Exception) {}
     }
@@ -236,7 +286,8 @@ class MyInCallService : InCallService() {
     override fun onDestroy() {
         unregisterScreenOffReceiver()
         stopRinging()
-        releaseWakeLock()
+        releaseAllWakeLocks()
+        stopInCallForeground()
         DynamicIslandOverlayManager.stopCallMonitoring()
         FlashLightManager.stopFlashing(this)
         nm.cancel(NOTIFICATION_ID_INCOMING)
@@ -250,6 +301,8 @@ class MyInCallService : InCallService() {
             ACTION_HANG_UP, ACTION_DECLINE -> {
                 stopRinging()
                 CallManager.disconnect()
+                releaseAllWakeLocks()
+                stopInCallForeground()
                 nm.cancel(NOTIFICATION_ID_INCOMING)
                 nm.cancel(NOTIFICATION_ID_ACTIVE)
             }
@@ -280,12 +333,13 @@ class MyInCallService : InCallService() {
             }
             ACTION_TOGGLE_RECORD -> toggleCallRecordingFromNotification()
         }
-        return START_NOT_STICKY
+        return START_STICKY
     }
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
-        acquireWakeLock()
+        acquireScreenWakeLock()
+        acquireCpuWakeLock()
         CallManager.inCallService = this
         CallManager.addCall(call)
         val num = call.details?.handle?.schemeSpecificPart ?: ""
@@ -319,7 +373,12 @@ class MyInCallService : InCallService() {
 
                 if (state == Call.STATE_DISCONNECTED) {
                     stopRinging()
-                    nm.cancel(NOTIFICATION_ID_ACTIVE)
+                    val remaining = CallManager.calls.value.filter { it != c && it.state != Call.STATE_DISCONNECTED }
+                    if (remaining.isEmpty()) {
+                        releaseAllWakeLocks()
+                        stopInCallForeground()
+                        nm.cancel(NOTIFICATION_ID_ACTIVE)
+                    }
                     if (wasRinging) {
                         val cause = c.details?.disconnectCause?.code
                         if (cause != DisconnectCause.REJECTED && cause != DisconnectCause.LOCAL) {
@@ -346,7 +405,8 @@ class MyInCallService : InCallService() {
 
         val remainingActiveCalls = CallManager.calls.value.filter { it.state != Call.STATE_DISCONNECTED }
         if (remainingActiveCalls.isEmpty()) {
-            releaseWakeLock()
+            releaseAllWakeLocks()
+            stopInCallForeground()
             DynamicIslandOverlayManager.stopCallMonitoring()
             nm.cancel(NOTIFICATION_ID_ACTIVE)
 
@@ -417,7 +477,22 @@ class MyInCallService : InCallService() {
                     FlashLightManager.startFlashing(this)
                     startRinging()
                     showIncomingCallNotification(call, isCallWaiting = false)
-                    launchCallScreen(answerOnLaunch = false)
+
+                    // INDUSTRY-STANDARD INCOMING CALL PRESENTATION (Google Phone / Samsung One UI / iOS):
+                    // Determine if the user is actively interacting with the device or if it is sleeping/locked.
+                    val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+                    val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                    val isScreenInteractive = pm?.isInteractive ?: false
+                    val isKeyguardLocked = km?.isKeyguardLocked ?: false
+                    val isDialerInForeground = CallManager.isAppInForeground.value
+
+                    // If device screen is OFF, or device is LOCKED on keyguard, or user is already inside Secure Dialer:
+                    // Present full-screen incoming call UI immediately.
+                    // If user is actively using ANOTHER application (screen is ON & UNLOCKED):
+                    // Do NOT steal screen focus! The system Heads-Up Notification (HUN) + Dynamic Island will handle it non-intrusively.
+                    if (!isScreenInteractive || isKeyguardLocked || isDialerInForeground) {
+                        launchCallScreen(answerOnLaunch = false)
+                    }
                 }
             }
             Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING -> {
@@ -426,7 +501,13 @@ class MyInCallService : InCallService() {
                 stopCallWaitingTone()
                 FlashLightManager.stopFlashing(this)
                 showActiveCallNotification(call)
-                launchCallScreen(answerOnLaunch = false)
+
+                val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                val isKeyguardLocked = km?.isKeyguardLocked ?: false
+                val isDialerInForeground = CallManager.isAppInForeground.value
+                if (isKeyguardLocked || isDialerInForeground) {
+                    launchCallScreen(answerOnLaunch = false)
+                }
             }
         }
     }
@@ -568,6 +649,8 @@ class MyInCallService : InCallService() {
             .setContentTitle(contentTitle)
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_CALL)
+            .setForegroundServiceBehavior(NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE)
             .setOngoing(true)
             .setContentIntent(contentPendingIntent)
             .addAction(android.R.drawable.ic_btn_speak_now, recordTitle, recordPendingIntent)
@@ -576,7 +659,7 @@ class MyInCallService : InCallService() {
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Hang Up", hangUpPendingIntent)
             .build()
 
-        nm.notify(NOTIFICATION_ID_ACTIVE, notification)
+        startInCallForeground(notification)
     }
 
     private fun showMissedCallNotification(call: Call) {

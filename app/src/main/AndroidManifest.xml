@@ -39,6 +39,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_PHONE_CALL" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
 
+    <!-- Battery Optimization Exemption for Indefinite Ongoing Calls -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <!-- Allow installation on devices without native telephony (tablets, Chromebooks, Wi-Fi calling) -->
     <uses-feature
         android:name="android.hardware.telephony"

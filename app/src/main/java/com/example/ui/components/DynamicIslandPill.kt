@@ -82,6 +82,7 @@ fun DynamicIslandPill(
     photoUri: String = "",
     callerLabel: String = "",
     simSlot: Int = 1,
+    onAnswer: (() -> Unit)? = null,
     onExpandedChange: ((Boolean) -> Unit)? = null
 ) {
     var isExpanded by remember { mutableStateOf(false) }
@@ -191,17 +192,18 @@ fun DynamicIslandPill(
                 label = "DynamicIslandContent"
             ) { expanded ->
                 if (!expanded) {
+                    val isRinging = callState == Call.STATE_RINGING
                     // Compact Dynamic Island Pill - centered in status bar & clear of Wi-Fi / Cellular indicators
                     Surface(
                         shape = CircleShape,
                         color = Color(0xFF0F0F12),
                         contentColor = Color.White,
-                        border = BorderStroke(1.dp, Color(0x33FFFFFF)),
-                        shadowElevation = 6.dp,
+                        border = BorderStroke(1.dp, if (isRinging) Color(0x6600E676) else Color(0x33FFFFFF)),
+                        shadowElevation = 8.dp,
                         modifier = Modifier
                             .wrapContentWidth()
-                            .widthIn(min = 150.dp, max = 210.dp)
-                            .height(42.dp)
+                            .widthIn(min = if (isRinging) 180.dp else 150.dp, max = if (isRinging) 270.dp else 210.dp)
+                            .height(44.dp)
                             .clip(CircleShape)
                             .clickable {
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
@@ -222,7 +224,7 @@ fun DynamicIslandPill(
                             ) {
                                 if (photoUri.isNotBlank()) {
                                     Surface(
-                                        modifier = Modifier.size(26.dp),
+                                        modifier = Modifier.size(28.dp),
                                         shape = CircleShape,
                                         color = Color(0xFF26262D)
                                     ) {
@@ -239,9 +241,10 @@ fun DynamicIslandPill(
                                 } else {
                                     Box(
                                         modifier = Modifier
-                                            .size(26.dp)
+                                            .size(28.dp)
                                             .background(
                                                 when {
+                                                    isRinging -> Color(0xFF00E676).copy(alpha = 0.25f)
                                                     isSpeakerOn -> Color(0xFF00E5FF).copy(alpha = 0.25f)
                                                     isMuted -> Color(0xFFFF5252).copy(alpha = 0.25f)
                                                     else -> Color(0xFF00E676).copy(alpha = 0.25f)
@@ -252,17 +255,19 @@ fun DynamicIslandPill(
                                     ) {
                                         Icon(
                                             imageVector = when {
+                                                isRinging -> Icons.Default.Call
                                                 isSpeakerOn -> Icons.AutoMirrored.Filled.VolumeUp
                                                 isMuted -> Icons.Default.MicOff
                                                 else -> Icons.Default.Call
                                             },
                                             contentDescription = null,
                                             tint = when {
+                                                isRinging -> Color(0xFF00E676)
                                                 isSpeakerOn -> Color(0xFF00E5FF)
                                                 isMuted -> Color(0xFFFF5252)
                                                 else -> Color(0xFF00E676)
                                             },
-                                            modifier = Modifier.size(14.dp)
+                                            modifier = Modifier.size(15.dp)
                                         )
                                     }
                                 }
@@ -275,27 +280,78 @@ fun DynamicIslandPill(
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
                                     color = Color.White,
-                                    modifier = Modifier.widthIn(max = 80.dp)
+                                    modifier = Modifier.widthIn(max = if (isRinging) 72.dp else 80.dp)
                                 )
                             }
 
                             Spacer(modifier = Modifier.width(4.dp))
 
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                if (callState == Call.STATE_ACTIVE) {
-                                    EqualizerBars(isSpeakerOn = isSpeakerOn)
-                                }
+                            if (isRinging) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    // Quick Decline button
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color(0xFFFF1744),
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                                onHangUp()
+                                            }
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                            Icon(
+                                                imageVector = Icons.Default.CallEnd,
+                                                contentDescription = stringResource(R.string.btn_decline),
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
 
-                                Text(
-                                    text = if (callState == Call.STATE_ACTIVE) formattedDuration else stringResource(R.string.call_status_hold),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
-                                )
+                                    // Quick Answer button
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color(0xFF00E676),
+                                        modifier = Modifier
+                                            .size(30.dp)
+                                            .clip(CircleShape)
+                                            .clickable {
+                                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                                (onAnswer ?: { CallManager.answer() }).invoke()
+                                            }
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                            Icon(
+                                                imageVector = Icons.Default.Call,
+                                                contentDescription = stringResource(R.string.btn_answer),
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    if (callState == Call.STATE_ACTIVE) {
+                                        EqualizerBars(isSpeakerOn = isSpeakerOn)
+                                    }
+
+                                    Text(
+                                        text = if (callState == Call.STATE_ACTIVE) formattedDuration else stringResource(R.string.call_status_hold),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
+                                    )
+                                }
                             }
                         }
                     }
@@ -388,10 +444,14 @@ fun DynamicIslandPill(
                                             modifier = Modifier.padding(top = 2.dp)
                                         ) {
                                             Text(
-                                                text = if (callState == Call.STATE_ACTIVE) formattedDuration else stringResource(R.string.call_status_hold),
+                                                text = when (callState) {
+                                                    Call.STATE_RINGING -> stringResource(R.string.notification_incoming_call_title)
+                                                    Call.STATE_ACTIVE -> formattedDuration
+                                                    else -> stringResource(R.string.call_status_hold)
+                                                },
                                                 style = MaterialTheme.typography.bodySmall,
                                                 fontWeight = FontWeight.SemiBold,
-                                                color = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
+                                                color = if (callState == Call.STATE_RINGING) Color(0xFF00E676) else if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
                                             )
                                             if (simSlot > 0) {
                                                 Surface(
@@ -489,110 +549,217 @@ fun DynamicIslandPill(
                                 }
                             }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                // 1. Mute Action Button
-                                DynamicIslandActionButton(
-                                    icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
-                                    label = stringResource(R.string.mute),
-                                    isActive = isMuted,
-                                    activeColor = Color(0xFFFF5252),
-                                    onClick = {
-                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                        CallManager.setMuted(!isMuted)
-                                    }
-                                )
-
-                                // 2. Speaker Action Button
-                                DynamicIslandActionButton(
-                                    icon = if (isSpeakerOn) Icons.AutoMirrored.Filled.VolumeUp else Icons.Default.VolumeDown,
-                                    label = stringResource(R.string.speaker),
-                                    isActive = isSpeakerOn,
-                                    activeColor = Color(0xFF00E5FF),
-                                    onClick = {
-                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                        CallManager.setSpeaker(!isSpeakerOn)
-                                    }
-                                )
-
-                                // 3. Call Recording Button (FIXED: Integrated acoustic chimes, volume balancing, and auto-export)
-                                DynamicIslandActionButton(
-                                    icon = if (isRecording) Icons.Default.Stop else Icons.Default.FiberManualRecord,
-                                    label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
-                                    isActive = isRecording,
-                                    activeColor = Color(0xFFFF5252),
-                                    onClick = {
-                                        val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
-                                        val chimeEnabled = prefs.getBoolean("recording_chime_enabled", false)
-                                        val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
-
-                                        if (isRecording) {
-                                            RecordingFeedbackHelper.triggerRecordingStopFeedback(context, chimeEnabled)
-                                            val result = CallAudioRecorder.stopRecording()
-                                            if (autoTune) {
-                                                CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
-                                            }
-                                            val file = result.file
-                                            if (file != null && file.exists() && file.length() > 0L) {
-                                                val dur = result.durationSeconds.coerceAtLeast(1L)
-                                                val loc = getCurrentLocale(context)
-                                                val sdf = SimpleDateFormat("MMM d, HH:mm", loc)
-                                                val num = callerNumber.ifEmpty { "Unknown" }
-                                                val rec = CallRecording(
-                                                    number = num,
-                                                    name = callerName,
-                                                    timestamp = sdf.format(Date()),
-                                                    duration = dur,
-                                                    filePath = file.absolutePath
-                                                )
-                                                coroutineScope.launch(Dispatchers.IO) {
-                                                    try {
-                                                        val db = AppDatabase.getDatabase(context)
-                                                        db.dialerDao().insertCallRecording(rec)
-                                                        val isAutoExport = db.dialerDao().getSetting("is_auto_export_recordings_enabled")?.toBooleanStrictOrNull() ?: true
-                                                        if (isAutoExport) {
-                                                            CallAudioRecorder.exportRecordingToPublicDownloads(context, file)
-                                                        }
-                                                    } catch (_: Exception) {}
-                                                }
-                                            }
-                                        } else {
-                                            RecordingFeedbackHelper.triggerRecordingStartFeedback(context, chimeEnabled)
-                                            if (autoTune) {
-                                                CallAudioHelper.prepareSpeakerForRecording(context, CallManager.inCallService, audioState)
-                                            }
-                                            val num = callerNumber.ifEmpty { "Unknown" }
-                                            CallAudioRecorder.startRecording(context, num)
-                                        }
-                                    }
-                                )
-
-                                // 4. End Call Button
-                                Surface(
-                                    shape = AppShapes.Keypad,
-                                    color = Color(0xFFFF1744),
-                                    contentColor = Color.White,
-                                    modifier = Modifier
-                                        .size(48.dp)
-                                        .clip(AppShapes.Keypad)
-                                        .clickable {
-                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
-                                            onHangUp()
-                                        }
+                            if (callState == Call.STATE_RINGING) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
+                                    // 1. Decline Action Button
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
                                     ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CallEnd,
-                                            contentDescription = stringResource(R.string.call_status_ended),
-                                            tint = Color.White,
-                                            modifier = Modifier.size(24.dp)
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = Color(0xFFFF1744),
+                                            contentColor = Color.White,
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .clickable {
+                                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                                    onHangUp()
+                                                }
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.CallEnd,
+                                                    contentDescription = stringResource(R.string.btn_decline),
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(26.dp)
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            text = stringResource(R.string.btn_decline),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White.copy(alpha = 0.8f)
                                         )
+                                    }
+
+                                    // 2. Open Full Screen Button
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = Color.White.copy(alpha = 0.15f),
+                                            contentColor = Color.White,
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .clickable {
+                                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                                    onExpandToFullScreen()
+                                                }
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.OpenInFull,
+                                                    contentDescription = "Full Screen",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(24.dp)
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            text = "Full Screen",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White.copy(alpha = 0.8f)
+                                        )
+                                    }
+
+                                    // 3. Answer Action Button
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        Surface(
+                                            shape = CircleShape,
+                                            color = Color(0xFF00E676),
+                                            contentColor = Color.White,
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .clickable {
+                                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                                    (onAnswer ?: { CallManager.answer() }).invoke()
+                                                }
+                                        ) {
+                                            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Call,
+                                                    contentDescription = stringResource(R.string.btn_answer),
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(26.dp)
+                                                )
+                                            }
+                                        }
+                                        Text(
+                                            text = stringResource(R.string.btn_answer),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // 1. Mute Action Button
+                                    DynamicIslandActionButton(
+                                        icon = if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                                        label = stringResource(R.string.mute),
+                                        isActive = isMuted,
+                                        activeColor = Color(0xFFFF5252),
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            CallManager.setMuted(!isMuted)
+                                        }
+                                    )
+
+                                    // 2. Speaker Action Button
+                                    DynamicIslandActionButton(
+                                        icon = if (isSpeakerOn) Icons.AutoMirrored.Filled.VolumeUp else Icons.Default.VolumeDown,
+                                        label = stringResource(R.string.speaker),
+                                        isActive = isSpeakerOn,
+                                        activeColor = Color(0xFF00E5FF),
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            CallManager.setSpeaker(!isSpeakerOn)
+                                        }
+                                    )
+
+                                    // 3. Call Recording Button (FIXED: Integrated acoustic chimes, volume balancing, and auto-export)
+                                    DynamicIslandActionButton(
+                                        icon = if (isRecording) Icons.Default.Stop else Icons.Default.FiberManualRecord,
+                                        label = if (isRecording) stringResource(R.string.recording) else stringResource(R.string.record),
+                                        isActive = isRecording,
+                                        activeColor = Color(0xFFFF5252),
+                                        onClick = {
+                                            val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                                            val chimeEnabled = prefs.getBoolean("recording_chime_enabled", false)
+                                            val autoTune = prefs.getBoolean("auto_tune_recording_volume", true)
+
+                                            if (isRecording) {
+                                                RecordingFeedbackHelper.triggerRecordingStopFeedback(context, chimeEnabled)
+                                                val result = CallAudioRecorder.stopRecording()
+                                                if (autoTune) {
+                                                    CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
+                                                }
+                                                val file = result.file
+                                                if (file != null && file.exists() && file.length() > 0L) {
+                                                    val dur = result.durationSeconds.coerceAtLeast(1L)
+                                                    val loc = getCurrentLocale(context)
+                                                    val sdf = SimpleDateFormat("MMM d, HH:mm", loc)
+                                                    val num = callerNumber.ifEmpty { "Unknown" }
+                                                    val rec = CallRecording(
+                                                        number = num,
+                                                        name = callerName,
+                                                        timestamp = sdf.format(Date()),
+                                                        duration = dur,
+                                                        filePath = file.absolutePath
+                                                    )
+                                                    coroutineScope.launch(Dispatchers.IO) {
+                                                        try {
+                                                            val db = AppDatabase.getDatabase(context)
+                                                            db.dialerDao().insertCallRecording(rec)
+                                                            val isAutoExport = db.dialerDao().getSetting("is_auto_export_recordings_enabled")?.toBooleanStrictOrNull() ?: true
+                                                            if (isAutoExport) {
+                                                                CallAudioRecorder.exportRecordingToPublicDownloads(context, file)
+                                                            }
+                                                        } catch (_: Exception) {}
+                                                    }
+                                                }
+                                            } else {
+                                                RecordingFeedbackHelper.triggerRecordingStartFeedback(context, chimeEnabled)
+                                                if (autoTune) {
+                                                    CallAudioHelper.prepareSpeakerForRecording(context, CallManager.inCallService, audioState)
+                                                }
+                                                val num = callerNumber.ifEmpty { "Unknown" }
+                                                CallAudioRecorder.startRecording(context, num)
+                                            }
+                                        }
+                                    )
+
+                                    // 4. End Call Button
+                                    Surface(
+                                        shape = AppShapes.Keypad,
+                                        color = Color(0xFFFF1744),
+                                        contentColor = Color.White,
+                                        modifier = Modifier
+                                            .size(48.dp)
+                                            .clip(AppShapes.Keypad)
+                                            .clickable {
+                                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                                onHangUp()
+                                            }
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.CallEnd,
+                                                contentDescription = stringResource(R.string.call_status_ended),
+                                                tint = Color.White,
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }

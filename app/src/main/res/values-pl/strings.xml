@@ -26,6 +26,8 @@
     <string name="filter_dialed">Wychodzące</string>
     <string name="filter_received">Odebrane</string>
     <string name="default_dialer_warning">Ustaw jako domyślną aplikację do dzwonienia, aby włączyć wszystkie funkcje.</string>
+    <string name="battery_optimization_warning">Wyłącz optymalizację baterii, aby połączenia nie rozłączały się ani nie przełączały po 1 godzinie.</string>
+    <string name="btn_unrestricted">Bez ograniczeń</string>
     <string name="enable_contacts_perm">Włącz dostęp do kontaktów</string>
     <string name="enable_call_log_perm">Włącz dostęp do rejestru połączeń</string>
     <string name="contacts_perm_desc">Aby uzyskiwać dostęp, ładować, edytować i dzwonić do rzeczywistych kontaktów na swoim urządzeniu, włącz uprawnienie do Kontaktów.</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">Rozłącz się</string>
     <string name="btn_swap">Przełącz</string>
     <string name="btn_answer_hold">Odbierz i zawieś</string>
+    <string name="btn_end_answer">Zakończ i odbierz</string>
     <string name="call_status_ongoing">Połączenie w toku</string>
     <string name="call_status_dialing">Wybieranie numeru...</string>
     <string name="call_status_ringing">Połączenie przychodzące...</string>

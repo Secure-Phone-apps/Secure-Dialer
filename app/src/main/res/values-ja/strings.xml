@@ -26,6 +26,8 @@
     <string name="filter_dialed">発信</string>
     <string name="filter_received">着信</string>
     <string name="default_dialer_warning">すべての機能を使用するにはデフォルトの通話アプリに設定してください。</string>
+    <string name="battery_optimization_warning">1時間を超える通話の切断や切り替えを防ぐため、バッテリーの最適化を無効にしてください。</string>
+    <string name="btn_unrestricted">制限なし</string>
     <string name="enable_contacts_perm">連絡先の権限を許可</string>
     <string name="enable_call_log_perm">通話履歴の権限を許可</string>
     <string name="contacts_perm_desc">電話帳の連絡先を表示・編集・発信するのには、連絡先へのアクセス権限を許可してください。</string>
@@ -95,6 +97,7 @@
     <string name="btn_hangup">切断</string>
     <string name="btn_swap">切り替え</string>
     <string name="btn_answer_hold">保留して応答</string>
+    <string name="btn_end_answer">終了して応答</string>
     <string name="call_status_ongoing">通話中</string>
     <string name="call_status_dialing">発信中...</string>
     <string name="call_status_ringing">着信中...</string>
