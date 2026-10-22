@@ -119,6 +119,25 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         _dialpadInputFlow.value = newInput
     }
 
+    var pendingExternalNumber = mutableStateOf<String?>(null)
+
+    fun handleExternalNumber(number: String) {
+        if (number.isNotBlank()) {
+            pendingExternalNumber.value = number
+            onDialpadInputChange(number)
+            selectTabBySlotKey("DIALPAD")
+        }
+    }
+
+    fun flushPendingExternalNumber() {
+        val pending = pendingExternalNumber.value
+        if (!pending.isNullOrBlank()) {
+            onDialpadInputChange(pending)
+            selectTabBySlotKey("DIALPAD")
+            pendingExternalNumber.value = null
+        }
+    }
+
     fun insertDialpadDigit(digit: String) {
         val current = dialpadTextFieldValue.value
         val text = current.text

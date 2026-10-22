@@ -158,6 +158,12 @@ class MainActivity : ComponentActivity() {
                 updateDefaultDialerStatus(context)
             }
 
+            LaunchedEffect(isAppAuthenticated.value) {
+                if (isAppAuthenticated.value) {
+                    viewModel.flushPendingExternalNumber()
+                }
+            }
+
             if (showRestrictedSettingsDialog) {
                 RestrictedSettingsDialog(
                     onDismiss = { showRestrictedSettingsDialog = false },
@@ -433,9 +439,8 @@ class MainActivity : ComponentActivity() {
             if (data?.scheme == "tel") {
                 val number = data.schemeSpecificPart ?: ""
                 if (number.isNotEmpty()) {
-                    // SEC-02: Populate dialpad preview instead of placing call directly to avoid confused deputy attacks
-                    viewModel.dialpadInput.value = number
-                    viewModel.selectTabBySlotKey("DIALPAD")
+                    // SEC-02: Populate dialpad preview and queue pending number via ViewModel
+                    viewModel.handleExternalNumber(number)
                 }
             }
         }
@@ -470,6 +475,21 @@ class MainActivity : ComponentActivity() {
                 if (viewModel.isFakeCallActive.value) {
                     viewModel.fakeCallState.value = "SILENCED"
                 }
+                return true
+            }
+
+            val isActiveCall = CallManager.currentCall.value?.state == Call.STATE_ACTIVE ||
+                    CallManager.calls.value.any { it.state == Call.STATE_ACTIVE } ||
+                    (viewModel.isFakeCallActive.value && viewModel.fakeCallState.value == "ACTIVE")
+
+            if (isVolumeKey && isActiveCall) {
+                val audioManager = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+                val direction = if (event.keyCode == KeyEvent.KEYCODE_VOLUME_UP) {
+                    AudioManager.ADJUST_RAISE
+                } else {
+                    AudioManager.ADJUST_LOWER
+                }
+                audioManager?.adjustStreamVolume(AudioManager.STREAM_VOICE_CALL, direction, AudioManager.FLAG_SHOW_UI)
                 return true
             }
         }
