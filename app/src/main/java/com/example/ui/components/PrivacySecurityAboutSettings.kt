@@ -88,7 +88,7 @@ fun PrivacySecurityAboutSettings(
                         if (enabled) {
                             val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
                             if (keyguardManager?.isDeviceSecure != true) {
-                                Toast.makeText(context, context.getString(R.string.app_locked_desc), Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, context.getString(R.string.settings_biometric_lock_sub), Toast.LENGTH_LONG).show()
                             } else {
                                 viewModel.updateBiometricLockEnabled(true)
                             }

@@ -123,7 +123,7 @@ object RichHapticEngine {
                 val appContext = context.applicationContext
                 val v = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     val vm = appContext.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
-                    vm?.defaultVibrator
+                    vm?.defaultVibrator ?: (appContext.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator)
                 } else {
                     @Suppress("DEPRECATION")
                     appContext.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
