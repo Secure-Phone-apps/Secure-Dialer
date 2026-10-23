@@ -71,6 +71,82 @@ import java.util.Date
 import kotlin.math.roundToInt
 
 @Composable
+fun EqualizerBars(isSpeakerOn: Boolean) {
+    val infiniteTransition = rememberInfiniteTransition(label = "DynamicIslandEqualizer")
+    val bar1Height by infiniteTransition.animateFloat(
+        initialValue = 4f,
+        targetValue = 13f,
+        animationSpec = infiniteRepeatable(animation = tween(400, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
+        label = "bar1"
+    )
+    val bar2Height by infiniteTransition.animateFloat(
+        initialValue = 11f,
+        targetValue = 5f,
+        animationSpec = infiniteRepeatable(animation = tween(350, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
+        label = "bar2"
+    )
+    val bar3Height by infiniteTransition.animateFloat(
+        initialValue = 5f,
+        targetValue = 14f,
+        animationSpec = infiniteRepeatable(animation = tween(480, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
+        label = "bar3"
+    )
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = Modifier.height(14.dp)
+    ) {
+        val barColor = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
+        Box(modifier = Modifier.width(2.5.dp).height(bar1Height.dp).background(barColor, AppShapes.Small))
+        Box(modifier = Modifier.width(2.5.dp).height(bar2Height.dp).background(barColor, AppShapes.Small))
+        Box(modifier = Modifier.width(2.5.dp).height(bar3Height.dp).background(barColor, AppShapes.Small))
+    }
+}
+
+@Composable
+fun DynamicIslandActionButton(
+    icon: ImageVector,
+    label: String,
+    isActive: Boolean,
+    activeColor: Color,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Surface(
+            shape = AppShapes.Keypad,
+            color = if (isActive) activeColor else Color(0xFF26262D),
+            contentColor = if (isActive) Color.Black else Color.White,
+            modifier = Modifier
+                .size(44.dp)
+                .clip(AppShapes.Keypad)
+                .clickable { onClick() }
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    modifier = Modifier.size(20.dp),
+                    tint = if (isActive) Color.Black else Color.White
+                )
+            }
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
+            color = if (isActive) activeColor else Color.White.copy(alpha = 0.7f)
+        )
+    }
+}
+
+@Composable
 fun DynamicIslandPill(
     callerName: String,
     callerNumber: String,
@@ -83,9 +159,11 @@ fun DynamicIslandPill(
     callerLabel: String = "",
     simSlot: Int = 1,
     onAnswer: (() -> Unit)? = null,
-    onExpandedChange: ((Boolean) -> Unit)? = null
+    onExpandedChange: ((Boolean) -> Unit)? = null,
+    onMinimizedChange: ((Boolean) -> Unit)? = null
 ) {
     var isExpanded by remember { mutableStateOf(false) }
+    var isMinimized by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -129,59 +207,98 @@ fun DynamicIslandPill(
 
     Box(
         modifier = modifier
-            .fillMaxWidth()
+            .wrapContentWidth()
             .padding(top = 0.dp, start = 8.dp, end = 8.dp, bottom = 2.dp),
         contentAlignment = Alignment.TopCenter
     ) {
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(animOffsetX.value.roundToInt(), animOffsetY.value.roundToInt()) }
-                .pointerInput(isExpanded) {
-                    if (!isExpanded) {
-                        detectDragGestures(
-                            onDragStart = {
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                            },
-                            onDrag = { change, dragAmount ->
-                                change.consume()
-                                coroutineScope.launch {
-                                    animOffsetX.snapTo(animOffsetX.value + dragAmount.x)
-                                    animOffsetY.snapTo((animOffsetY.value + dragAmount.y).coerceIn(-10f, 600f))
-                                }
-                            },
-                            onDragEnd = {
-                                val currentX = animOffsetX.value
-                                val targetX = when {
-                                    currentX < -80f -> -130f
-                                    currentX > 80f -> 130f
-                                    else -> 0f
-                                }
-                                coroutineScope.launch {
-                                    animOffsetX.animateTo(
-                                        targetX,
-                                        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
-                                    )
-                                }
-                                coroutineScope.launch {
-                                    animOffsetY.animateTo(
-                                        0f,
-                                        spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
-                                    )
-                                }
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                            },
-                            onDragCancel = {
-                                coroutineScope.launch {
-                                    animOffsetX.animateTo(0f, spring(dampingRatio = Spring.DampingRatioNoBouncy))
-                                    animOffsetY.animateTo(0f, spring(dampingRatio = Spring.DampingRatioNoBouncy))
-                                }
-                            }
-                        )
+        if (isMinimized) {
+            val isRinging = callState == Call.STATE_RINGING
+            val dotTint = when {
+                isRinging -> Color(0xFF00E676)
+                isSpeakerOn -> Color(0xFF00E5FF)
+                isMuted -> Color(0xFFFF5252)
+                else -> Color(0xFF00E676)
+            }
+            Surface(
+                shape = CircleShape,
+                color = Color(0xFF0F0F12),
+                contentColor = Color.White,
+                border = BorderStroke(1.5.dp, dotTint),
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .clickable {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                        isMinimized = false
+                        onMinimizedChange?.invoke(false)
                     }
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                    Icon(
+                        imageVector = when {
+                            isSpeakerOn -> Icons.AutoMirrored.Filled.VolumeUp
+                            isMuted -> Icons.Default.MicOff
+                            else -> Icons.Default.Call
+                        },
+                        contentDescription = "Restore Call Pill",
+                        tint = dotTint,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
-        ) {
+            }
+        } else {
             AnimatedContent(
                 targetState = isExpanded,
+                modifier = Modifier
+                    .offset { IntOffset(animOffsetX.value.roundToInt(), animOffsetY.value.roundToInt()) }
+                    .pointerInput(isExpanded) {
+                        if (!isExpanded) {
+                            detectDragGestures(
+                                onDragStart = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    coroutineScope.launch {
+                                        animOffsetX.snapTo(animOffsetX.value + dragAmount.x * 0.35f)
+                                        animOffsetY.snapTo((animOffsetY.value + dragAmount.y).coerceIn(-70f, 40f))
+                                    }
+                                },
+                                onDragEnd = {
+                                    if (animOffsetY.value < -22f) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                        coroutineScope.launch {
+                                            animOffsetY.animateTo(-50f, tween(100))
+                                            isMinimized = true
+                                            onMinimizedChange?.invoke(true)
+                                            animOffsetX.snapTo(0f)
+                                            animOffsetY.snapTo(0f)
+                                        }
+                                    } else {
+                                        coroutineScope.launch {
+                                            animOffsetX.animateTo(
+                                                0f,
+                                                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                                            )
+                                        }
+                                        coroutineScope.launch {
+                                            animOffsetY.animateTo(
+                                                0f,
+                                                spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium)
+                                            )
+                                        }
+                                    }
+                                },
+                                onDragCancel = {
+                                    coroutineScope.launch {
+                                        animOffsetX.animateTo(0f, spring(dampingRatio = Spring.DampingRatioNoBouncy))
+                                        animOffsetY.animateTo(0f, spring(dampingRatio = Spring.DampingRatioNoBouncy))
+                                    }
+                                }
+                            )
+                        }
+                    },
                 transitionSpec = {
                     (fadeIn(spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)) +
                             scaleIn(initialScale = 0.85f, animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)))
@@ -351,6 +468,22 @@ fun DynamicIslandPill(
                                         fontWeight = FontWeight.Bold,
                                         color = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
                                     )
+
+                                    IconButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            isMinimized = true
+                                            onMinimizedChange?.invoke(true)
+                                        },
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.KeyboardArrowUp,
+                                            contentDescription = "Minimize to camera dot",
+                                            tint = Color.White.copy(alpha = 0.6f),
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -544,6 +677,23 @@ fun DynamicIslandPill(
                                             contentDescription = stringResource(R.string.btn_cancel),
                                             tint = Color.White.copy(alpha = 0.8f),
                                             modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            isExpanded = false
+                                            onExpandedChange?.invoke(false)
+                                            isMinimized = true
+                                            onMinimizedChange?.invoke(true)
+                                        },
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Minimize to camera dot",
+                                            tint = Color.White.copy(alpha = 0.8f),
+                                            modifier = Modifier.size(18.dp)
                                         )
                                     }
                                 }
@@ -763,87 +913,10 @@ fun DynamicIslandPill(
                                     }
                                 }
                             }
-                        }
                     }
                 }
             }
         }
     }
 }
-
-// PERF FIX: Isolates 60fps/120fps equalizer ticks from triggering whole-pill recompositions
-@Composable
-private fun EqualizerBars(isSpeakerOn: Boolean) {
-    val infiniteTransition = rememberInfiniteTransition(label = "DynamicIslandEqualizer")
-    val bar1Height by infiniteTransition.animateFloat(
-        initialValue = 4f,
-        targetValue = 13f,
-        animationSpec = infiniteRepeatable(animation = tween(400, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
-        label = "bar1"
-    )
-    val bar2Height by infiniteTransition.animateFloat(
-        initialValue = 11f,
-        targetValue = 5f,
-        animationSpec = infiniteRepeatable(animation = tween(350, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
-        label = "bar2"
-    )
-    val bar3Height by infiniteTransition.animateFloat(
-        initialValue = 5f,
-        targetValue = 14f,
-        animationSpec = infiniteRepeatable(animation = tween(480, easing = LinearEasing), repeatMode = RepeatMode.Reverse),
-        label = "bar3"
-    )
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        modifier = Modifier.height(14.dp)
-    ) {
-        val barColor = if (isSpeakerOn) Color(0xFF00E5FF) else Color(0xFF00E676)
-        Box(modifier = Modifier.width(2.5.dp).height(bar1Height.dp).background(barColor, AppShapes.Small))
-        Box(modifier = Modifier.width(2.5.dp).height(bar2Height.dp).background(barColor, AppShapes.Small))
-        Box(modifier = Modifier.width(2.5.dp).height(bar3Height.dp).background(barColor, AppShapes.Small))
-    }
-}
-
-@Composable
-private fun DynamicIslandActionButton(
-    icon: ImageVector,
-    label: String,
-    isActive: Boolean,
-    activeColor: Color,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Surface(
-            shape = AppShapes.Keypad,
-            color = if (isActive) activeColor else Color(0xFF26262D),
-            contentColor = if (isActive) Color.Black else Color.White,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(AppShapes.Keypad)
-                .clickable { onClick() }
-        ) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    modifier = Modifier.size(20.dp),
-                    tint = if (isActive) Color.Black else Color.White
-                )
-            }
-        }
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            fontSize = 10.sp,
-            color = if (isActive) activeColor else Color.White.copy(alpha = 0.7f)
-        )
-    }
 }

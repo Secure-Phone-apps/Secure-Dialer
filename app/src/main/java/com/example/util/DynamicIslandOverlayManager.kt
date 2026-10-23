@@ -238,6 +238,17 @@ object DynamicIslandOverlayManager {
                                     } catch (_: Exception) {}
                                 }
                             },
+                            onMinimizedChange = { minimized ->
+                                val currentWm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
+                                if (currentWm != null && overlayComposeView != null) {
+                                    layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
+                                    layoutParams.x = 0
+                                    layoutParams.y = compactY
+                                    try {
+                                        currentWm.updateViewLayout(overlayComposeView!!, layoutParams)
+                                    } catch (_: Exception) {}
+                                }
+                            },
                             onExpandToFullScreen = {
                                 // FIXED: Align intent extras with MainActivity contracts
                                 val intent = Intent(context, MainActivity::class.java).apply {
