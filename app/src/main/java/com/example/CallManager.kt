@@ -10,6 +10,7 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.telecom.Call
 import android.telecom.CallAudioState
@@ -19,6 +20,7 @@ import android.telecom.TelecomManager
 import android.telecom.VideoProfile
 import android.telephony.PhoneNumberUtils
 import android.telephony.SubscriptionManager
+import android.telephony.TelephonyManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import com.example.data.AppDatabase
@@ -523,10 +525,20 @@ object CallManager {
 
     fun setMuted(muted: Boolean) { inCallService?.setMuted(muted) }
     fun setSpeaker(speaker: Boolean) {
-        inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else CallAudioState.ROUTE_EARPIECE)
+        val defaultRoute = if ((_audioState.value?.supportedRouteMask ?: 0) and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+            CallAudioState.ROUTE_WIRED_HEADSET
+        } else {
+            CallAudioState.ROUTE_EARPIECE
+        }
+        inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else defaultRoute)
     }
     fun setBluetooth(bluetooth: Boolean) {
-        inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_EARPIECE)
+        val defaultRoute = if ((_audioState.value?.supportedRouteMask ?: 0) and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
+            CallAudioState.ROUTE_WIRED_HEADSET
+        } else {
+            CallAudioState.ROUTE_EARPIECE
+        }
+        inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else defaultRoute)
     }
     fun setHold(hold: Boolean) {
         if (hold) _currentCall.value?.hold() else _currentCall.value?.unhold()
@@ -599,7 +611,7 @@ object CallManager {
         return if (number.startsWith(clir)) number else "$clir$number"
     }
 
-    fun isEmergencyNumber(number: String): Boolean {
+    fun isEmergencyNumber(number: String, context: Context? = null): Boolean {
         val trimmed = number.trim()
         if (trimmed.isBlank()) return false
         val digits = trimmed.filter { it.isDigit() }
@@ -609,6 +621,15 @@ object CallManager {
             val withoutPrefix = digits.substring(1)
             if (withoutPrefix in standardEmergency) return true
         }
+
+        val targetContext = context ?: appContext
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && targetContext != null) {
+            try {
+                val tm = targetContext.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+                if (tm?.isEmergencyNumber(trimmed) == true) return true
+            } catch (_: Exception) {}
+        }
+
         return try {
             PhoneNumberUtils.isEmergencyNumber(trimmed)
         } catch (_: Exception) {
@@ -623,7 +644,7 @@ object CallManager {
             (context as? Activity)?.currentFocus?.windowToken?.let { imm.hideSoftInputFromWindow(it, 0) }
         }
 
-        val isEmergency = isEmergencyNumber(number)
+        val isEmergency = isEmergencyNumber(number, context)
         val targetSlot = if (preferredSim.contains("2")) 2 else 1
         _currentSimSlot.value = targetSlot
         SimCallTracker.recordOutgoingCall(context, number, targetSlot)

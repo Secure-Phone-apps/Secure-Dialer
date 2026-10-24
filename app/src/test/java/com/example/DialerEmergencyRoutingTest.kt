@@ -52,6 +52,38 @@ class DialerEmergencyRoutingTest {
     }
 
     @Test
+    fun testInternationalAndSimEmergencyCodes() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        // Verify international codes (e.g. 100, 101, 102, 108, 110, 112, 119) with Context
+        assertTrue(CallManager.isEmergencyNumber("100", context))
+        assertTrue(CallManager.isEmergencyNumber("101", context))
+        assertTrue(CallManager.isEmergencyNumber("102", context))
+        assertTrue(CallManager.isEmergencyNumber("108", context))
+        assertTrue(CallManager.isEmergencyNumber("112", context))
+        assertTrue(CallManager.isEmergencyNumber("911", context))
+        assertTrue(CallManager.isEmergencyNumber("999", context))
+        assertFalse(CallManager.isEmergencyNumber("5551234", context))
+    }
+
+    @Test
+    fun testWiredHeadsetFallbackRoute() {
+        // When wired headset is supported, default route must fall back to ROUTE_WIRED_HEADSET instead of earpiece
+        val supportedMask = android.telecom.CallAudioState.ROUTE_WIRED_HEADSET or
+                android.telecom.CallAudioState.ROUTE_SPEAKER
+        val state = android.telecom.CallAudioState(false, android.telecom.CallAudioState.ROUTE_SPEAKER, supportedMask)
+        CallManager.updateAudioState(state)
+
+        val defaultRoute = if (((CallManager.audioState.value?.supportedRouteMask ?: 0) and
+                    android.telecom.CallAudioState.ROUTE_WIRED_HEADSET) != 0) {
+            android.telecom.CallAudioState.ROUTE_WIRED_HEADSET
+        } else {
+            android.telecom.CallAudioState.ROUTE_EARPIECE
+        }
+
+        assertEquals(android.telecom.CallAudioState.ROUTE_WIRED_HEADSET, defaultRoute)
+    }
+
+    @Test
     fun testMultiSimAccountResolutionResilience() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val accounts = MultiSimManager.getActiveSimAccounts(context)

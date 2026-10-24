@@ -269,7 +269,7 @@ fun MainScreen(
         }
 
         val targetSim = simChoice ?: preferredSim
-        val isEmergency = CallManager.isEmergencyNumber(number)
+        val isEmergency = CallManager.isEmergencyNumber(number, context)
         if (targetSim == "Ask" && !isEmergency) {
             pendingCallName = resolvedName
             pendingCallNumber = number

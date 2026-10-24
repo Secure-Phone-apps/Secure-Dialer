@@ -42,7 +42,7 @@ object BlockedNumberContractManager {
 
             // CRITICAL SAFETY FIX: Emergency services must NEVER be blocked under any condition
             try {
-                if (PhoneNumberUtils.isEmergencyNumber(trimmed)) return@withContext false
+                if (com.example.CallManager.isEmergencyNumber(trimmed, context)) return@withContext false
             } catch (_: Exception) {}
 
             val cleanNum = trimmed.filter { it.isDigit() || it == '+' }
@@ -77,7 +77,7 @@ object BlockedNumberContractManager {
 
             // Never block emergency numbers
             try {
-                if (PhoneNumberUtils.isEmergencyNumber(trimmed)) return@withContext false
+                if (com.example.CallManager.isEmergencyNumber(trimmed, context)) return@withContext false
             } catch (_: Exception) {}
 
             val cleanNum = if (trimmed.contains("*")) trimmed else trimmed.filter { it.isDigit() || it == '+' }

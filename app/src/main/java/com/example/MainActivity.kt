@@ -53,6 +53,7 @@ import com.example.ui.MainScreen
 import com.example.ui.theme.AppShapes
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.VaultBiometricAuthHelper
 
 class MainActivity : ComponentActivity() {
 
@@ -68,12 +69,6 @@ class MainActivity : ComponentActivity() {
         viewModel.hasRecordAudioPermission.value = isGranted
     }
 
-    private val authLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        isAuthenticating = false
-        isAppAuthenticated.value = (result.resultCode == RESULT_OK)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -315,27 +310,26 @@ class MainActivity : ComponentActivity() {
 
     private fun triggerDeviceAuthentication() {
         if (isAuthenticating) return
-        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager ?: return
-        if (keyguardManager.isDeviceSecure) {
-            val intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                "Secure Dialer",
-                "Authenticate to open Secure Dialer"
-            )
-            if (intent != null) {
-                isAuthenticating = true
-                try {
-                    authLauncher.launch(intent)
-                } catch (_: Exception) {
-                    // FIXED: Prevent deadlock if OS fails to launch credential chooser
-                    isAuthenticating = false
-                    isAppAuthenticated.value = false
-                }
-            } else {
-                isAppAuthenticated.value = true
-            }
-        } else {
+        val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+        if (keyguardManager?.isDeviceSecure != true) {
             isAppAuthenticated.value = true
+            return
         }
+
+        isAuthenticating = true
+        VaultBiometricAuthHelper.authenticate(
+            activity = this,
+            title = "Secure Dialer",
+            subtitle = "Authenticate to open Secure Dialer",
+            onSuccess = {
+                isAuthenticating = false
+                isAppAuthenticated.value = true
+            },
+            onError = { _ ->
+                isAuthenticating = false
+                isAppAuthenticated.value = false
+            }
+        )
     }
 
     private fun dismissCallUiAndExit() {
