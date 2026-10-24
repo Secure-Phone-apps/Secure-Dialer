@@ -24,6 +24,7 @@ import android.widget.Toast
 import com.example.data.AppDatabase
 import com.example.model.AppSetting
 import com.example.model.CallRecording
+import com.example.model.PostCallData
 import com.example.ui.components.getCurrentLocale
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
@@ -112,6 +113,42 @@ object CallManager {
     private val _isConferenceActive = MutableStateFlow(false)
     val isConferenceActive: StateFlow<Boolean> = _isConferenceActive.asStateFlow()
 
+    private val _postCallData = MutableStateFlow<PostCallData?>(null)
+    val postCallData: StateFlow<PostCallData?> = _postCallData.asStateFlow()
+
+    fun dismissPostCallData() {
+        _postCallData.value = null
+    }
+
+    private fun capturePostCallData(call: Call) {
+        try {
+            val number = call.details?.handle?.schemeSpecificPart?.ifBlank { null }
+                ?: _callerNumber.value.ifBlank { null }
+                ?: return
+            if (isEmergencyNumber(number)) return
+
+            val name = _callerName.value.ifBlank {
+                ContactCache.getContact(number)?.name ?: number
+            }
+            val photoUri = _callerPhotoUri.value.ifBlank {
+                ContactCache.getContact(number)?.photoUri ?: ""
+            }
+            val connectTime = call.details?.connectTimeMillis ?: _activeStartTimestamp.value
+            val durationSec = if (connectTime > 0L) {
+                ((System.currentTimeMillis() - connectTime) / 1000L).coerceAtLeast(0L)
+            } else 0L
+            val isUnsaved = ContactCache.getContact(number) == null
+
+            _postCallData.value = PostCallData(
+                number = number,
+                name = name,
+                photoUri = photoUri,
+                durationSeconds = durationSec,
+                isUnsaved = isUnsaved
+            )
+        } catch (_: Exception) {}
+    }
+
     fun isConference(call: Call?): Boolean {
         if (call == null) return false
         // 1. Telecom Call Hierarchy: Has children (conference host) or has parent (merged participant)
@@ -157,6 +194,7 @@ object CallManager {
             notifyCallsChanged()
 
             if (state == Call.STATE_DISCONNECTED) {
+                capturePostCallData(call)
                 removeCall(call)
                 return
             }
@@ -227,6 +265,9 @@ object CallManager {
     }
 
     fun removeCall(call: Call) {
+        if (call.state == Call.STATE_DISCONNECTED) {
+            capturePostCallData(call)
+        }
         if (call in _calls.value) {
             _calls.value = _calls.value - call
             call.unregisterCallback(callCallback)
@@ -500,10 +541,46 @@ object CallManager {
         } catch (_: Exception) {}
     }
 
+    private var localToneGenerator: android.media.ToneGenerator? = null
+
+    private fun getToneType(key: Char): Int {
+        return when (key) {
+            '0' -> android.media.ToneGenerator.TONE_DTMF_0
+            '1' -> android.media.ToneGenerator.TONE_DTMF_1
+            '2' -> android.media.ToneGenerator.TONE_DTMF_2
+            '3' -> android.media.ToneGenerator.TONE_DTMF_3
+            '4' -> android.media.ToneGenerator.TONE_DTMF_4
+            '5' -> android.media.ToneGenerator.TONE_DTMF_5
+            '6' -> android.media.ToneGenerator.TONE_DTMF_6
+            '7' -> android.media.ToneGenerator.TONE_DTMF_7
+            '8' -> android.media.ToneGenerator.TONE_DTMF_8
+            '9' -> android.media.ToneGenerator.TONE_DTMF_9
+            '*' -> android.media.ToneGenerator.TONE_DTMF_S
+            '#' -> android.media.ToneGenerator.TONE_DTMF_P
+            'A', 'a' -> android.media.ToneGenerator.TONE_DTMF_A
+            'B', 'b' -> android.media.ToneGenerator.TONE_DTMF_B
+            'C', 'c' -> android.media.ToneGenerator.TONE_DTMF_C
+            'D', 'd' -> android.media.ToneGenerator.TONE_DTMF_D
+            else -> -1
+        }
+    }
+
     fun playDtmf(key: Char) {
         val call = _currentCall.value ?: return
         dtmfJob?.cancel()
         try { call.playDtmfTone(key) } catch (_: Exception) {}
+
+        // Play local acoustic tone so the caller hears crisp audio feedback across all OEM ROMs
+        try {
+            if (localToneGenerator == null) {
+                localToneGenerator = android.media.ToneGenerator(android.media.AudioManager.STREAM_VOICE_CALL, 75)
+            }
+            val tone = getToneType(key)
+            if (tone != -1) {
+                localToneGenerator?.startTone(tone, 150)
+            }
+        } catch (_: Exception) {}
+
         dtmfJob = scope.launch(Dispatchers.Default) {
             delay(150)
             try { call.stopDtmfTone() } catch (_: Exception) {}
@@ -513,6 +590,7 @@ object CallManager {
     fun stopDtmf() {
         dtmfJob?.cancel()
         try { _currentCall.value?.stopDtmfTone() } catch (_: Exception) {}
+        try { localToneGenerator?.stopTone() } catch (_: Exception) {}
     }
 
     fun formatOutgoingNumberWithClir(number: String, isHideCallerId: Boolean, clirPrefix: String): String {

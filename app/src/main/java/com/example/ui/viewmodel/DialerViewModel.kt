@@ -45,6 +45,26 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = DialerRepository(application)
     private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
+    private val recordingsCoordinator = DialerRecordingsCoordinator(
+        repository = repository,
+        prefs = prefs,
+        scope = viewModelScope,
+        onRecordingCreated = { pendingPostCallRecordingNote.value = it }
+    )
+
+    private val spamAndBackupCoordinator = DialerSpamAndBackupCoordinator(
+        application = application,
+        repository = repository,
+        scope = viewModelScope,
+        onDataChanged = { syncData() }
+    )
+
+    private val settingsCoordinator = DialerSettingsCoordinator(
+        repository = repository,
+        prefs = prefs,
+        scope = viewModelScope
+    )
+
     // Search Query
     var searchQuery = mutableStateOf("")
     private val _searchQueryFlow = MutableStateFlow("")
@@ -569,48 +589,42 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updatePreferredSim(sim: String) {
         preferredSim.value = sim
-        prefs.edit().putString("preferred_sim", sim).apply()
-        viewModelScope.launch { repository.savePreferredSim(sim) }
+        settingsCoordinator.updatePreferredSim(sim)
     }
 
     fun updateDarkTheme(dark: Boolean) {
         isDarkTheme.value = dark
-        prefs.edit().putBoolean("is_dark_theme", dark).apply()
+        settingsCoordinator.updateDarkTheme(dark)
     }
 
     fun updateAmoledMode(amoled: Boolean) {
         isAmoledMode.value = amoled
-        val editor = prefs.edit().putBoolean("is_amoled_mode", amoled)
-        if (amoled && !isDarkTheme.value) {
-            isDarkTheme.value = true
-            editor.putBoolean("is_dark_theme", true)
-        }
-        editor.apply()
+        settingsCoordinator.updateAmoledMode(amoled, isDarkTheme.value) { isDarkTheme.value = true }
     }
 
     fun updateCustomColorHex(hex: String) {
         customColorHex.value = hex
-        prefs.edit().putString("custom_color_hex", hex).apply()
+        settingsCoordinator.updateCustomColorHex(hex)
     }
 
     fun updateM3Expressive(expressive: Boolean) {
         isM3Expressive.value = expressive
-        prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
+        settingsCoordinator.updateM3Expressive(expressive)
     }
 
     fun updateAvatarShapeType(shapeType: String) {
         avatarShapeType.value = shapeType
-        prefs.edit().putString("avatar_shape_type", shapeType).apply()
+        settingsCoordinator.updateAvatarShapeType(shapeType)
     }
 
     fun updateUseDynamicColor(dynamic: Boolean) {
         useDynamicColor.value = dynamic
-        prefs.edit().putBoolean("use_dynamic_color", dynamic).apply()
+        settingsCoordinator.updateUseDynamicColor(dynamic)
     }
 
     fun updateThemeColor(color: String) {
         themeColor.value = color
-        prefs.edit().putString("theme_color", color).apply()
+        settingsCoordinator.updateThemeColor(color)
     }
 
     fun updateDefaultTab(tab: Int) {
@@ -636,234 +650,118 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateDialpadTonesEnabled(enabled: Boolean) {
         dialpadTonesEnabled.value = enabled
-        prefs.edit().putBoolean("dialpad_tones_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("dialpad_tones_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("dialpad_tones_enabled", enabled)
     }
 
     fun updateVibrateOnClickEnabled(enabled: Boolean) {
         vibrateOnClickEnabled.value = enabled
-        com.example.util.RichHapticEngine.setHapticsEnabled(enabled)
-        prefs.edit().putBoolean("vibrate_on_click_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("vibrate_on_click_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateVibrateOnClickEnabled(enabled)
     }
 
     fun updateFlipToSilenceEnabled(enabled: Boolean) {
         flipToSilenceEnabled.value = enabled
-        prefs.edit().putBoolean("flip_to_silence_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("flip_to_silence_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("flip_to_silence_enabled", enabled)
     }
 
     fun updateCallWaitingEnabled(enabled: Boolean) {
         callWaitingEnabled.value = enabled
-        prefs.edit().putBoolean("call_waiting_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("call_waiting_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("call_waiting_enabled", enabled)
     }
 
     fun updateHideCallerIdEnabled(enabled: Boolean) {
         isHideCallerIdEnabled.value = enabled
-        prefs.edit().putBoolean("is_hide_caller_id_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_hide_caller_id_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_hide_caller_id_enabled", enabled)
     }
 
     fun updateClirPrefix(prefix: String) {
         val sanitized = prefix.trim().ifBlank { "#31#" }
         clirPrefix.value = sanitized
-        prefs.edit().putString("clir_prefix", sanitized).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("clir_prefix", sanitized))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingString("clir_prefix", sanitized)
     }
 
     fun updateRecordingEnabled(enabled: Boolean) {
         recordingEnabled.value = enabled
-        prefs.edit().putBoolean("recording_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("recording_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("recording_enabled", enabled)
     }
 
     fun updateAutoTuneRecordingVolume(enabled: Boolean) {
         autoTuneRecordingVolume.value = enabled
-        prefs.edit().putBoolean("auto_tune_recording_volume", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("auto_tune_recording_volume", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("auto_tune_recording_volume", enabled)
     }
 
     fun updateRecordingChimeEnabled(enabled: Boolean) {
         recordingChimeEnabled.value = enabled
-        prefs.edit().putBoolean("recording_chime_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("recording_chime_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("recording_chime_enabled", enabled)
     }
 
     fun updateBiometricLockEnabled(enabled: Boolean) {
         isBiometricLockEnabled.value = enabled
-        prefs.edit().putBoolean("is_biometric_lock_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_biometric_lock_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_biometric_lock_enabled", enabled)
     }
 
     fun updateRecordingsBiometricLockEnabled(enabled: Boolean) {
         isRecordingsBiometricLockEnabled.value = enabled
-        prefs.edit().putBoolean("is_recordings_biometric_lock_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_recordings_biometric_lock_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_recordings_biometric_lock_enabled", enabled)
     }
 
     fun updateAutoRecordCallsEnabled(enabled: Boolean) {
         isAutoRecordCallsEnabled.value = enabled
-        prefs.edit().putBoolean("is_auto_record_calls_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_auto_record_calls_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_auto_record_calls_enabled", enabled)
     }
 
     fun updateDynamicIslandEnabled(enabled: Boolean) {
         isDynamicIslandEnabled.value = enabled
-        prefs.edit().putBoolean("is_dynamic_island_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_dynamic_island_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_dynamic_island_enabled", enabled)
     }
 
     fun updateDynamicIslandSpeakerOnly(speakerOnly: Boolean) {
         isDynamicIslandSpeakerOnly.value = speakerOnly
-        prefs.edit().putBoolean("is_dynamic_island_speaker_only", speakerOnly).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_dynamic_island_speaker_only", speakerOnly.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_dynamic_island_speaker_only", speakerOnly)
     }
 
     fun updateAutoExportRecordingsEnabled(enabled: Boolean) {
         isAutoExportRecordingsEnabled.value = enabled
-        prefs.edit().putBoolean("is_auto_export_recordings_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_auto_export_recordings_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_auto_export_recordings_enabled", enabled)
     }
 
     fun updateRecordingCompressionProfile(profile: RecordingCompressionProfile) {
         recordingCompressionProfile.value = profile
-        CallAudioRecorder.setCompressionProfile(repository.context, profile)
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("recording_compression_profile", profile.key))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateRecordingCompressionProfile(profile)
     }
 
     fun updatePocketProtectionEnabled(enabled: Boolean) {
         isPocketProtectionEnabled.value = enabled
-        prefs.edit().putBoolean("is_pocket_protection_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_pocket_protection_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_pocket_protection_enabled", enabled)
     }
 
     fun updateCallbackRemindersEnabled(enabled: Boolean) {
         isCallbackRemindersEnabled.value = enabled
-        prefs.edit().putBoolean("is_callback_reminders_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_callback_reminders_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_callback_reminders_enabled", enabled)
     }
 
     fun updateCallNotesEnabled(enabled: Boolean) {
         isCallNotesEnabled.value = enabled
-        prefs.edit().putBoolean("is_call_notes_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_call_notes_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_call_notes_enabled", enabled)
     }
 
     fun updateFakeCallSimulatorEnabled(enabled: Boolean) {
         isFakeCallSimulatorEnabled.value = enabled
-        prefs.edit().putBoolean("is_fake_call_simulator_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_fake_call_simulator_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_fake_call_simulator_enabled", enabled)
     }
 
     fun updateDashboardMode(mode: String) {
         dashboardMode.value = mode
-        prefs.edit().putString("dashboard_mode", mode).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("dashboard_mode", mode))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingString("dashboard_mode", mode)
     }
 
     fun updateCallLogDashboardEnabled(enabled: Boolean) {
         isCallLogDashboardEnabled.value = enabled
-        prefs.edit().putBoolean("is_call_log_dashboard_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_call_log_dashboard_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_call_log_dashboard_enabled", enabled)
     }
 
     fun updateCallLogFiltersEnabled(enabled: Boolean) {
         isCallLogFiltersEnabled.value = enabled
-        prefs.edit().putBoolean("is_call_log_filters_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("is_call_log_filters_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("is_call_log_filters_enabled", enabled)
     }
 
     fun updateTabSlotLeft(screen: String) {
@@ -972,91 +870,47 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateVoicemailNumber(num: String) {
         voicemailNumber.value = num
-        viewModelScope.launch { repository.saveVoicemailNumber(num) }
+        settingsCoordinator.updateVoicemailNumber(num)
     }
 
-    fun addBlockedNumber(num: String) {
-        viewModelScope.launch { repository.addBlockedNumber(num) }
-    }
+    fun addBlockedNumber(num: String) = spamAndBackupCoordinator.addBlockedNumber(num)
+    fun removeBlockedNumber(num: String) = spamAndBackupCoordinator.removeBlockedNumber(num)
 
-    fun removeBlockedNumber(num: String) {
-        viewModelScope.launch { repository.removeBlockedNumber(num) }
-    }
+    fun writeTextToUri(uri: Uri, content: String, onResult: (Boolean) -> Unit) =
+        spamAndBackupCoordinator.writeTextToUri(uri, content, onResult)
 
-    fun writeTextToUri(uri: Uri, content: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val success = com.example.data.BackupRestoreManager.writeTextToUri(getApplication(), uri, content)
-            onResult(success)
-        }
-    }
+    fun readTextFromUri(uri: Uri, onResult: (String?) -> Unit) =
+        spamAndBackupCoordinator.readTextFromUri(uri, onResult)
 
-    fun readTextFromUri(uri: Uri, onResult: (String?) -> Unit) {
-        viewModelScope.launch {
-            val content = com.example.data.BackupRestoreManager.readTextFromUri(getApplication(), uri)
-            onResult(content)
-        }
-    }
+    fun exportBlockedNumbers(onResult: (String) -> Unit) =
+        spamAndBackupCoordinator.exportBlockedNumbers(onResult)
 
-    fun exportBlockedNumbers(onResult: (String) -> Unit) {
-        viewModelScope.launch {
-            val data = com.example.data.BackupRestoreManager.exportBlockedNumbers(getApplication())
-            onResult(data)
-        }
-    }
+    fun importBlockedNumbers(rawData: String, onResult: (Int) -> Unit) =
+        spamAndBackupCoordinator.importBlockedNumbers(rawData, onResult)
 
-    fun importBlockedNumbers(rawData: String, onResult: (Int) -> Unit) {
-        viewModelScope.launch {
-            val count = com.example.data.BackupRestoreManager.importBlockedNumbers(getApplication(), rawData)
-            if (count > 0) syncData()
-            onResult(count)
-        }
-    }
+    fun exportBackup(password: String = "", onResult: (String) -> Unit) =
+        spamAndBackupCoordinator.exportBackup(password, onResult)
 
-    fun exportBackup(password: String = "", onResult: (String) -> Unit) {
-        viewModelScope.launch {
-            val data = repository.exportBackup(password)
-            onResult(data)
-        }
-    }
+    fun importBackup(rawData: String, password: String = "", onResult: (Boolean) -> Unit) =
+        spamAndBackupCoordinator.importBackup(rawData, password, onResult)
 
-    fun importBackup(rawData: String, password: String = "", onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val success = repository.importBackup(rawData, password)
-            if (success) syncData()
-            onResult(success)
-        }
-    }
+    fun exportContactsVcf(onResult: (String) -> Unit) =
+        spamAndBackupCoordinator.exportContactsVcf(onResult)
 
-    fun exportContactsVcf(onResult: (String) -> Unit) {
-        viewModelScope.launch {
-            val data = com.example.data.BackupRestoreManager.exportContactsToVcf(getApplication())
-            onResult(data)
-        }
-    }
+    fun importContactsVcf(rawData: String, onResult: (Boolean) -> Unit) =
+        spamAndBackupCoordinator.importContactsVcf(rawData, onResult)
 
-    fun importContactsVcf(rawData: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val success = com.example.data.BackupRestoreManager.importContactsFromVcf(getApplication(), rawData)
-            if (success) syncData()
-            onResult(success)
-        }
-    }
+    fun saveSpeedDial(key: Int, num: String, name: String) =
+        spamAndBackupCoordinator.saveSpeedDial(key, num, name)
 
-    fun saveSpeedDial(key: Int, num: String, name: String) {
-        viewModelScope.launch { repository.saveSpeedDial(key, num, name) }
-    }
+    fun deleteSpeedDial(key: Int) =
+        spamAndBackupCoordinator.deleteSpeedDial(key)
 
-    fun deleteSpeedDial(key: Int) {
-        viewModelScope.launch { repository.deleteSpeedDial(key) }
-    }
+    fun addQuickResponse(msg: String) =
+        spamAndBackupCoordinator.addQuickResponse(msg)
 
-    fun addQuickResponse(msg: String) {
-        viewModelScope.launch { repository.addQuickResponse(msg) }
-    }
-
-    fun deleteQuickResponse(resp: QuickResponse) {
-        viewModelScope.launch { repository.deleteQuickResponse(resp) }
-    }
+    fun deleteQuickResponse(resp: QuickResponse) =
+        spamAndBackupCoordinator.deleteQuickResponse(resp)
 
     // Helper Dialog State
     var isAddContactDialogVisible = mutableStateOf(false)
@@ -1135,63 +989,17 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun saveCallNote(number: String, note: String) {
-        if (note.isBlank()) return
-        viewModelScope.launch {
-            repository.saveCallNote(CallNote(number = number, note = note, lastUpdated = System.currentTimeMillis()))
-        }
-    }
+    fun saveCallNote(number: String, note: String) = spamAndBackupCoordinator.saveCallNote(number, note)
+    suspend fun getCallNote(number: String): CallNote? = spamAndBackupCoordinator.getCallNote(number)
+    fun deleteCallNote(number: String) = spamAndBackupCoordinator.deleteCallNote(number)
+    fun deleteCallNoteById(id: Long) = spamAndBackupCoordinator.deleteCallNoteById(id)
+    fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>> = spamAndBackupCoordinator.getCallNotesForNumberFlow(number)
 
-    suspend fun getCallNote(number: String): CallNote? = repository.getCallNote(number)
+    fun toggleCallRecording(context: Context, phoneNumber: String, callerName: String = "Unknown") =
+        recordingsCoordinator.toggleCallRecording(context, phoneNumber, callerName, isAutoExportRecordingsEnabled.value, isCallNotesEnabled.value)
 
-    fun deleteCallNote(number: String) {
-        viewModelScope.launch { repository.deleteCallNotesForNumber(number) }
-    }
-
-    fun deleteCallNoteById(id: Long) {
-        viewModelScope.launch { repository.deleteCallNoteById(id) }
-    }
-
-    fun getCallNotesForNumberFlow(number: String): Flow<List<CallNote>> = repository.getCallNotesForNumberFlow(number)
-
-    fun toggleCallRecording(context: Context, phoneNumber: String, callerName: String = "Unknown") {
-        if (CallAudioRecorder.isRecording.value) {
-            val result = CallAudioRecorder.stopRecording()
-            val file = result.file
-            if (file != null && file.exists() && file.length() > 0L) {
-                val durationSec = result.durationSeconds.coerceAtLeast(1L)
-                val sdf = SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
-                val timestamp = sdf.format(Date())
-                val recording = CallRecording(
-                    number = phoneNumber,
-                    name = if (callerName.isBlank()) phoneNumber else callerName,
-                    timestamp = timestamp,
-                    duration = durationSec,
-                    filePath = file.absolutePath
-                )
-                saveCallRecording(recording)
-            }
-        } else {
-            CallAudioRecorder.startRecording(context, phoneNumber)
-        }
-    }
-
-    fun saveCallRecording(recording: CallRecording) {
-        viewModelScope.launch {
-            val insertedId = repository.saveCallRecording(recording)
-            if (isAutoExportRecordingsEnabled.value) {
-                withContext(Dispatchers.IO) {
-                    val f = File(recording.filePath)
-                    if (f.exists() && f.length() > 128L) {
-                        CallAudioRecorder.exportRecordingToPublicDownloads(repository.context, f)
-                    }
-                }
-            }
-            if (isCallNotesEnabled.value) {
-                pendingPostCallRecordingNote.value = recording.copy(id = insertedId.toInt())
-            }
-        }
-    }
+    fun saveCallRecording(recording: CallRecording) =
+        recordingsCoordinator.saveCallRecording(recording, isAutoExportRecordingsEnabled.value, isCallNotesEnabled.value)
 
     fun dismissPostCallRecordingNote() {
         pendingPostCallRecordingNote.value = null
@@ -1205,53 +1013,23 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
-    fun deleteCallRecording(id: Int) {
-        viewModelScope.launch { repository.deleteCallRecording(id) }
-    }
+    fun deleteCallRecording(id: Int) = recordingsCoordinator.deleteCallRecording(id)
+    fun updateCallRecordingNote(id: Int, note: String) = recordingsCoordinator.updateCallRecordingNote(id, note)
 
-    fun updateCallRecordingNote(id: Int, note: String) {
-        viewModelScope.launch { repository.updateCallRecordingNote(id, note) }
-    }
+    fun syncRecordingsFromDisk(context: Context, onComplete: ((Int) -> Unit)? = null) =
+        recordingsCoordinator.syncRecordingsFromDisk(context, onComplete)
 
-    fun syncRecordingsFromDisk(context: Context, onComplete: ((Int) -> Unit)? = null) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val existing = repository.getAllCallRecordings().first()
-                val existingPaths = existing.map { it.filePath }.toSet()
-                val existingNames = existing.map { File(it.filePath).name }.toSet()
-                val recovered = CallAudioRecorder.recoverRecordingsFromDisk(context)
-                var newCount = 0
-                for (rec in recovered) {
-                    val f = File(rec.filePath)
-                    if (f.exists() && f.length() > 128L && !existingPaths.contains(rec.filePath) && !existingNames.contains(f.name)) {
-                        val contactName = getContactNameFromNumber(context, rec.number) ?: rec.name
-                        repository.saveCallRecording(rec.copy(name = contactName))
-                        newCount++
-                    }
-                }
-                withContext(Dispatchers.Main) { onComplete?.invoke(newCount) }
-            } catch (_: Exception) {
-                withContext(Dispatchers.Main) { onComplete?.invoke(0) }
-            }
-        }
-    }
+    fun recoverRecordingsFromDisk(context: Context, onComplete: ((Int) -> Unit)? = null) =
+        recordingsCoordinator.recoverRecordingsFromDisk(context, onComplete)
 
-    fun recoverRecordingsFromDisk(context: Context, onComplete: ((Int) -> Unit)? = null) {
-        syncRecordingsFromDisk(context, onComplete)
-    }
+    fun exportRecordingToDownloads(context: Context, filePath: String): Boolean =
+        recordingsCoordinator.exportRecordingToDownloads(context, filePath)
 
-    fun exportRecordingToDownloads(context: Context, filePath: String): Boolean {
-        val f = File(filePath)
-        return CallAudioRecorder.exportRecordingToPublicDownloads(context, f)
-    }
+    fun exportAllRecordingsToDownloads(context: Context): Int =
+        recordingsCoordinator.exportAllRecordingsToDownloads(context)
 
-    fun exportAllRecordingsToDownloads(context: Context): Int = CallAudioRecorder.exportAllRecordingsToDownloads(context)
-
-    fun cleanupCorruptOrEmptyRecordings(context: Context): Int {
-        val count = CallAudioRecorder.cleanupCorruptOrEmptyFiles(context)
-        syncRecordingsFromDisk(context)
-        return count
-    }
+    fun cleanupCorruptOrEmptyRecordings(context: Context): Int =
+        recordingsCoordinator.cleanupCorruptOrEmptyRecordings(context)
 
     fun deleteContact(contact: Contact) {
         viewModelScope.launch {
@@ -1283,72 +1061,35 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateFlashAlertsEnabled(enabled: Boolean) {
         flashAlertsEnabled.value = enabled
-        prefs.edit().putBoolean("flash_alerts_enabled", enabled).apply()
-        viewModelScope.launch {
-            try {
-                repository.dao.insertSetting(AppSetting("flash_alerts_enabled", enabled.toString()))
-            } catch (_: Exception) {}
-        }
+        settingsCoordinator.updateSettingBoolean("flash_alerts_enabled", enabled)
     }
 
-    fun addSpamNumber(number: String, label: String = "Spam") {
-        viewModelScope.launch { repository.addSpamNumber(number, label) }
-    }
+    fun addSpamNumber(number: String, label: String = "Spam") =
+        spamAndBackupCoordinator.addSpamNumber(number, label)
 
-    fun deleteSpamNumber(spam: SpamNumber) {
-        viewModelScope.launch { repository.deleteSpamNumber(spam) }
-    }
+    fun deleteSpamNumber(spam: SpamNumber) =
+        spamAndBackupCoordinator.deleteSpamNumber(spam)
 
-    fun clearAllSpam() {
-        viewModelScope.launch { repository.clearAllSpam() }
-    }
+    fun clearAllSpam() =
+        spamAndBackupCoordinator.clearAllSpam()
 
-    fun importSpamNumbersFromCsv(csvContent: String, onResult: (Int) -> Unit) {
-        viewModelScope.launch {
-            val count = repository.importSpamNumbersFromCsv(csvContent)
-            onResult(count)
-        }
-    }
+    fun importSpamNumbersFromCsv(csvContent: String, onResult: (Int) -> Unit) =
+        spamAndBackupCoordinator.importSpamNumbersFromCsv(csvContent, onResult)
 
-    fun exportSpamNumbersToCsv(onResult: (String) -> Unit) {
-        viewModelScope.launch {
-            val data = repository.exportSpamNumbersToCsv()
-            onResult(data)
-        }
-    }
+    fun exportSpamNumbersToCsv(onResult: (String) -> Unit) =
+        spamAndBackupCoordinator.exportSpamNumbersToCsv(onResult)
 
-    fun addReminder(number: String, name: String, triggerTime: Long, note: String = "", onResult: (Long) -> Unit = {}) {
-        viewModelScope.launch {
-            val reminder = CallReminder(
-                number = number,
-                name = name,
-                reminderTime = triggerTime,
-                isCompleted = false,
-                note = note
-            )
-            val id = repository.saveReminder(reminder)
-            ReminderScheduler.schedule(getApplication(), id.toInt(), triggerTime)
-            onResult(id)
-        }
-    }
+    fun addReminder(number: String, name: String, triggerTime: Long, note: String = "", onResult: (Long) -> Unit = {}) =
+        spamAndBackupCoordinator.addReminder(number, name, triggerTime, note, onResult)
 
-    fun updateReminder(reminder: CallReminder) {
-        viewModelScope.launch { repository.updateReminder(reminder) }
-    }
+    fun updateReminder(reminder: CallReminder) =
+        spamAndBackupCoordinator.updateReminder(reminder)
 
-    fun deleteReminder(reminder: CallReminder) {
-        viewModelScope.launch {
-            repository.deleteReminder(reminder)
-            ReminderScheduler.cancel(getApplication(), reminder.id)
-        }
-    }
+    fun deleteReminder(reminder: CallReminder) =
+        spamAndBackupCoordinator.deleteReminder(reminder)
 
-    fun deleteReminderById(id: Int) {
-        viewModelScope.launch {
-            repository.deleteReminderById(id)
-            ReminderScheduler.cancel(getApplication(), id)
-        }
-    }
+    fun deleteReminderById(id: Int) =
+        spamAndBackupCoordinator.deleteReminderById(id)
 
     fun logCall(name: String, number: String, type: CallType, durationSeconds: Long, simSlot: Int = 1) {
         viewModelScope.launch {

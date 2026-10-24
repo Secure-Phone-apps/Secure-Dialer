@@ -271,3 +271,13 @@ data class DialpadMatch(
     val avatarBg: Color get() = Color(avatarBgValue.toULong())
     val avatarTextColor: Color get() = Color(avatarTextColorValue.toULong())
 }
+
+@Immutable
+data class PostCallData(
+    val number: String,
+    val name: String,
+    val photoUri: String = "",
+    val durationSeconds: Long = 0L,
+    val isUnsaved: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)

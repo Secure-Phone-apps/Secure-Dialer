@@ -91,6 +91,9 @@ fun MainScreen(
     var isCallActive by viewModel.isCallActive
     var isCallMinimized by viewModel.isCallMinimized
 
+    val postCallData by CallManager.postCallData.collectAsStateWithLifecycle()
+    val ussdDialogData by com.example.util.UssdManager.ussdDialogData.collectAsStateWithLifecycle()
+
     LaunchedEffect(selectedTab) {
         focusManager.clearFocus()
         keyboardController?.hide()
@@ -244,6 +247,10 @@ fun MainScreen(
     fun initiateCall(name: String, number: String, label: String = "Mobile", simChoice: String? = null) {
         focusManager.clearFocus()
         keyboardController?.hide()
+        if (com.example.util.UssdManager.handleUssdOrMmi(context, number)) {
+            isDialpadVisible = false
+            return
+        }
         if (blockedNumbers.contains(number)) {
             Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
@@ -828,6 +835,31 @@ fun MainScreen(
                     voicemailNumber = voicemailNumber,
                     viewModel = viewModel
                 )
+            }
+
+            ussdDialogData?.let { ussdData ->
+                UssdResponseDialog(
+                    data = ussdData,
+                    onDismiss = { com.example.util.UssdManager.dismissDialog() }
+                )
+            }
+
+            AnimatedVisibility(
+                visible = postCallData != null && !isCallActive,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = if (isDialpadVisible) 0.dp else 16.dp)
+            ) {
+                postCallData?.let { data ->
+                    PostCallSheet(
+                        data = data,
+                        onDismiss = { CallManager.dismissPostCallData() },
+                        onCallBack = { num, nm -> initiateCall(nm, num) },
+                        onSaveContact = { num -> viewModel.openAddContactWithNumber(num) }
+                    )
+                }
             }
         }
     }

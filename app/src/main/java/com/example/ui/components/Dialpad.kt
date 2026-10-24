@@ -267,7 +267,7 @@ fun DialpadTabContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
@@ -286,19 +286,19 @@ fun DialpadTabContent(
                         .testTag("dialpad_create_contact_chip")
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.PersonAdd,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Text(
                             text = stringResource(R.string.dialpad_create_contact),
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
                             maxLines = 1
                         )
@@ -322,26 +322,63 @@ fun DialpadTabContent(
                         .testTag("dialpad_add_to_existing_chip")
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                        modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.GroupAdd,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp),
+                            modifier = Modifier.size(15.dp),
                             tint = MaterialTheme.colorScheme.secondary
                         )
                         Text(
                             text = stringResource(R.string.dialpad_add_to_existing),
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                Surface(
+                    onClick = {
+                        if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        }
+                        com.example.util.WhatsAppHelper.openWhatsAppChat(context, inputValue)
+                    },
+                    shape = chipShape,
+                    color = Color(0xFF25D366).copy(alpha = 0.18f),
+                    contentColor = Color(0xFF1EBE5D),
+                    modifier = Modifier
+                        .height(38.dp)
+                        .testTag("dialpad_whatsapp_chip")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Chat,
+                            contentDescription = "WhatsApp",
+                            modifier = Modifier.size(15.dp),
+                            tint = Color(0xFF1EBE5D)
+                        )
+                        Text(
+                            text = "WhatsApp",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
                     }
                 }
             }
         }
+
+        val countryIso = remember(context) { com.example.util.PhoneFormatHelper.getCountryIso(context) }
+        val phoneVisualTransformation = remember(countryIso) { com.example.util.PhoneFormatHelper.createVisualTransformation(countryIso) }
 
         // Dialed Number Container (Locked to AppShapes.Keypad Squircle geometry)
         Surface(
@@ -376,6 +413,7 @@ fun DialpadTabContent(
                         if (viewModel != null) viewModel.onDialpadTextFieldValueChange(newTfv)
                         else onValueChange(newTfv.text)
                     },
+                    visualTransformation = phoneVisualTransformation,
                     textStyle = if (currentTfv.text.isEmpty()) {
                         MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Normal,

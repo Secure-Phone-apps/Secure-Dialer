@@ -37,6 +37,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -289,6 +290,17 @@ fun CallHistoryDetailsScreen(
                         onClick = {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
                             onCallClick(primaryRecord)
+                        }
+                    )
+
+                    DetailActionItem(
+                        icon = Icons.Default.Chat,
+                        label = "WhatsApp",
+                        containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
+                        contentColor = Color(0xFF1EBE5D),
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            com.example.util.WhatsAppHelper.openWhatsAppChat(context, number)
                         }
                     )
 

@@ -389,6 +389,17 @@ fun RecentCallRow(
                             val isContact = record.name != record.number
 
                             DetailActionItem(
+                                icon = Icons.Default.Chat,
+                                label = "WhatsApp",
+                                containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
+                                contentColor = Color(0xFF1EBE5D),
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    com.example.util.WhatsAppHelper.openWhatsAppChat(context, record.number)
+                                }
+                            )
+
+                            DetailActionItem(
                                 icon = Icons.Default.Message,
                                 label = stringResource(R.string.send_sms),
                                 containerColor = MaterialTheme.colorScheme.secondaryContainer,
