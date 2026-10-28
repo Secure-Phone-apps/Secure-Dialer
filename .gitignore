@@ -20,3 +20,5 @@ debug.keystore
 # AI Studio environment metadata & session cache
 .aistudio/
 **/.aistudio/
+**/aistudio/
+public/
