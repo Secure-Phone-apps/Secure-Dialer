@@ -16,3 +16,7 @@
 local.properties
 .env
 debug.keystore
+
+# AI Studio environment metadata & session cache
+.aistudio/
+**/.aistudio/

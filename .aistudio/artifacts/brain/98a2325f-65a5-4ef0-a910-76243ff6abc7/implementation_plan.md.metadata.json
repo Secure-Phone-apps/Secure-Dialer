@@ -1,6 +1,0 @@
-{
-  "summary": "Comprehensive implementation plan for upgrading the Fake Call feature: resolving the notification privacy flaw, adding date/time clock scheduling, enabling multiple scheduled fake calls, and supporting custom answered audio playback.",
-  "updatedAt": "2026-10-16T03:30:28.750994949Z",
-  "requestFeedback": true,
-  "userFacing": true
-}
