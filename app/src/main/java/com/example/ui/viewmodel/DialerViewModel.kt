@@ -384,6 +384,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isCallbackRemindersEnabled = mutableStateOf(prefs.getBoolean("is_callback_reminders_enabled", true))
     var isCallNotesEnabled = mutableStateOf(prefs.getBoolean("is_call_notes_enabled", true))
     var isFakeCallSimulatorEnabled = mutableStateOf(prefs.getBoolean("is_fake_call_simulator_enabled", true))
+    var isPostCallActionsEnabled = mutableStateOf(prefs.getBoolean("is_post_call_actions_enabled", true))
+    var postCallDismissDurationSeconds = mutableIntStateOf(prefs.getInt("post_call_dismiss_duration_seconds", 5))
     var pendingPostCallRecordingNote = mutableStateOf<CallRecording?>(null)
 
     // Dashboard & Tab Layout & Swipe Preferences
@@ -533,6 +535,20 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings["is_fake_call_simulator_enabled"]?.toBooleanStrictOrNull()?.let {
                     isFakeCallSimulatorEnabled.value = it
                     editor.putBoolean("is_fake_call_simulator_enabled", it)
+                }
+                val savedPostCallEnabled = settings["is_post_call_actions_enabled"]?.toBooleanStrictOrNull()
+                if (savedPostCallEnabled != null) {
+                    isPostCallActionsEnabled.value = savedPostCallEnabled
+                    editor.putBoolean("is_post_call_actions_enabled", savedPostCallEnabled)
+                } else {
+                    repository.dao.insertSetting(AppSetting("is_post_call_actions_enabled", isPostCallActionsEnabled.value.toString()))
+                }
+                val savedDismissDuration = settings["post_call_dismiss_duration_seconds"]?.toIntOrNull()
+                if (savedDismissDuration != null) {
+                    postCallDismissDurationSeconds.intValue = savedDismissDuration
+                    editor.putInt("post_call_dismiss_duration_seconds", savedDismissDuration)
+                } else {
+                    repository.dao.insertSetting(AppSetting("post_call_dismiss_duration_seconds", postCallDismissDurationSeconds.intValue.toString()))
                 }
                 settings["flash_alerts_enabled"]?.toBooleanStrictOrNull()?.let {
                     flashAlertsEnabled.value = it
@@ -749,6 +765,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         settingsCoordinator.updateSettingBoolean("is_fake_call_simulator_enabled", enabled)
     }
 
+    fun updatePostCallActionsEnabled(enabled: Boolean) {
+        isPostCallActionsEnabled.value = enabled
+        settingsCoordinator.updateSettingBoolean("is_post_call_actions_enabled", enabled)
+    }
+
+    fun updatePostCallDismissDurationSeconds(seconds: Int) {
+        postCallDismissDurationSeconds.intValue = seconds
+        settingsCoordinator.updateSettingInt("post_call_dismiss_duration_seconds", seconds)
+    }
+
     fun updateDashboardMode(mode: String) {
         dashboardMode.value = mode
         settingsCoordinator.updateSettingString("dashboard_mode", mode)
@@ -956,7 +982,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 repository.syncContacts(force)
-                repository.syncCallLogs()
+                repository.syncCallLogs(force)
             } catch (_: Exception) {}
         }
     }

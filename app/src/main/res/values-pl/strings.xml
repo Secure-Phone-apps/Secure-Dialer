@@ -485,6 +485,12 @@
     <string name="note_placeholder">Wpisz ważne informacje...</string>
     <string name="btn_save_note">Zapisz notatkę</string>
     <string name="header_productivity_notes">PRODUKTYWNOŚĆ I NOTATKI</string>
+    <string name="settings_post_call_actions">Szybkie akcje po zakończeniu połączenia</string>
+    <string name="settings_post_call_actions_sub">Pokaż oddzwonienie, wiadomość, WhatsApp i notatkę po zakończeniu połączenia</string>
+    <string name="settings_post_call_timer">Czas automatycznego zamknięcia</string>
+    <string name="settings_post_call_timer_sub">Automatycznie zamknij arkusz akcji po upływie odliczania</string>
+    <string name="timer_never">Nigdy</string>
+    <string name="timer_seconds_format">%1$d s</string>
     <string name="settings_fake_call_sim">Symulator fałszywego połączenia</string>
     <string name="settings_fake_call_sim_sub">Zaplanuj symulowane połączenie przychodzące, aby wyjść z niezręcznej sytuacji</string>
     <string name="fake_call_sim_title">Symulator fałszywego połączenia</string>

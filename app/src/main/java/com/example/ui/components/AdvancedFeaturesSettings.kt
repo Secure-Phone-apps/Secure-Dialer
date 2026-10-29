@@ -25,12 +25,21 @@ import androidx.compose.material.icons.automirrored.filled.PhoneCallback
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.util.RichHapticEngine
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
@@ -51,6 +60,9 @@ fun AdvancedFeaturesSettings(
     val isCallNotesEnabled by viewModel.isCallNotesEnabled
     val isFakeCallSimulatorEnabled by viewModel.isFakeCallSimulatorEnabled
     val isRecordingEnabled by viewModel.recordingEnabled
+    val isPostCallActionsEnabled by viewModel.isPostCallActionsEnabled
+    val postCallDismissDuration by viewModel.postCallDismissDurationSeconds
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -176,6 +188,101 @@ fun AdvancedFeaturesSettings(
                         isMatchTitle("Fake Call Simulator", highlightedTitle)
             ) {
                 FakeCallSettings(viewModel = viewModel, cardBgColor = cardBgColor)
+            }
+        }
+
+        // Feature Container 5: Post-Call Quick Actions
+        HighlightableCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            cardBgColor = cardBgColor,
+            isHighlighted = isMatchTitle("Post-Call Quick Actions", highlightedTitle) ||
+                    isMatchTitle("Post-Call Actions", highlightedTitle) ||
+                    isMatchTitle("Call Actions", highlightedTitle) ||
+                    isMatchTitle("Auto-Dismiss Countdown", highlightedTitle) ||
+                    isMatchTitle("Auto-Dismiss Timer", highlightedTitle),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_post_call_actions),
+                    subtitle = stringResource(R.string.settings_post_call_actions_sub),
+                    checked = isPostCallActionsEnabled,
+                    onCheckedChange = { viewModel.updatePostCallActionsEnabled(it) },
+                    icon = Icons.Default.CallEnd,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+
+                AnimatedVisibility(visible = isPostCallActionsEnabled) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, bottom = 12.dp, top = 2.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                            modifier = Modifier.padding(bottom = 2.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_post_call_timer),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            val timerLabel = when (postCallDismissDuration) {
+                                0 -> stringResource(R.string.timer_never)
+                                else -> stringResource(R.string.timer_seconds_format, postCallDismissDuration)
+                            }
+                            Text(
+                                text = timerLabel,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        Text(
+                            text = stringResource(R.string.settings_post_call_timer_sub),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val durations = listOf(3, 5, 10, 0)
+                            durations.forEach { seconds ->
+                                val isSelected = (postCallDismissDuration == seconds)
+                                val label = if (seconds == 0) {
+                                    stringResource(R.string.timer_never)
+                                } else {
+                                    "${seconds}s"
+                                }
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        viewModel.updatePostCallDismissDurationSeconds(seconds)
+                                    },
+                                    label = {
+                                        Text(
+                                            text = label,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }

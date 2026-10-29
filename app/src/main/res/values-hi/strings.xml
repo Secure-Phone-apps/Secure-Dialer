@@ -485,6 +485,12 @@
     <string name="note_placeholder">महत्वपूर्ण विवरण दर्ज करें...</string>
     <string name="btn_save_note">नोट सहेजें</string>
     <string name="header_productivity_notes">उत्पादकता और नोट्स</string>
+    <string name="settings_post_call_actions">कॉल के बाद त्वरित कार्रवाइयां</string>
+    <string name="settings_post_call_actions_sub">कॉल समाप्त होने के बाद वापस कॉल, संदेश, व्हाट्सएप और नोट के विकल्प दिखाएं</string>
+    <string name="settings_post_call_timer">स्वतः बंद होने का टाइमर</string>
+    <string name="settings_post_call_timer_sub">उलटी गिनती समाप्त होने पर एक्शन शीट को स्वचालित रूप से बंद करें</string>
+    <string name="timer_never">कभी नहीं</string>
+    <string name="timer_seconds_format">%1$d सेकंड</string>
     <string name="settings_fake_call_sim">फेक कॉल सिमुलेटर</string>
     <string name="settings_fake_call_sim_sub">असहज स्थितियों से बचने के लिए फेक कॉल शेड्यूल करें</string>
     <string name="fake_call_sim_title">फेक कॉल सिमुलेटर</string>

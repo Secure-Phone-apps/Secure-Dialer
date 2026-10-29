@@ -485,6 +485,12 @@
     <string name="note_placeholder">Ingresar detalles importantes...</string>
     <string name="btn_save_note">Guardar nota</string>
     <string name="header_productivity_notes">PRODUCTIVIDAD Y NOTAS</string>
+    <string name="settings_post_call_actions">Acciones rápidas posteriores a la llamada</string>
+    <string name="settings_post_call_actions_sub">Mostrar acciones de devolver llamada, mensaje, WhatsApp y notas al finalizar llamadas</string>
+    <string name="settings_post_call_timer">Cuenta atrás para cerrar</string>
+    <string name="settings_post_call_timer_sub">Cerrar automáticamente el panel de acciones al finalizar la cuenta atrás</string>
+    <string name="timer_never">Nunca</string>
+    <string name="timer_seconds_format">%1$d seg</string>
     <string name="settings_fake_call_sim">Simulador de llamada falsa</string>
     <string name="settings_fake_call_sim_sub">Programe una llamada simulada entrante para salir de situaciones incómodas</string>
     <string name="fake_call_sim_title">Simulador de llamada falsa</string>

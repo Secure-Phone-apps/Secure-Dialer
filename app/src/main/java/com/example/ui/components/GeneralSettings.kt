@@ -185,6 +185,8 @@ fun GeneralSettings(
             SettingsSearchItem("Scheduled Callback Reminders Dashboard", "Dashboard for viewing and setting scheduled call alarms and reminders", "Advanced Tools", 7, Icons.Default.Schedule),
             SettingsSearchItem("Call Notes & Memos", "Create, view, and search notes linked to specific phone numbers", "Advanced Tools", 7, Icons.Default.NoteAlt),
             SettingsSearchItem("Fake Call Simulator", "Schedule simulated incoming phone calls with custom caller name & timer", "Advanced Tools", 7, Icons.Default.PhoneInTalk),
+            SettingsSearchItem("Post-Call Quick Actions", "Show Call Back, Message, WhatsApp, and Note actions after calls end", "Advanced Tools", 7, Icons.Default.CallEnd),
+            SettingsSearchItem("Auto-Dismiss Countdown", "Configure auto-dismiss timer for post-call action sheet (3s, 5s, 10s, Never)", "Advanced Tools", 7, Icons.Default.Timer),
 
             // 8. PRIVACY & ABOUT
             SettingsSearchItem("Privacy & Security Settings", "Biometric app lock, pocket protection, app lock & app specs", "Privacy & About", 8, Icons.Default.Lock),

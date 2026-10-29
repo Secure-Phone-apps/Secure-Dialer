@@ -25,6 +25,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
@@ -295,6 +296,14 @@ fun RecentsTabContent(
                         val consolidatedRecords = remember(callRecords, currentFilter, query) {
                             groupCallRecords(callRecords, currentFilter, query)
                         }
+                        val listState = rememberLazyListState()
+                        val latestCallId = consolidatedRecords.firstOrNull()?.primary?.id
+
+                        LaunchedEffect(latestCallId) {
+                            if (latestCallId != null) {
+                                listState.animateScrollToItem(0)
+                            }
+                        }
 
                         if (consolidatedRecords.isEmpty() && query.isNotEmpty()) {
                             Box(
@@ -310,6 +319,7 @@ fun RecentsTabContent(
                             }
                         } else {
                             LazyColumn(
+                                state = listState,
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                                 modifier = Modifier
                                     .fillMaxSize()

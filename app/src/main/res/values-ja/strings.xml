@@ -485,6 +485,12 @@
     <string name="note_placeholder">メモを入力...</string>
     <string name="btn_save_note">メモを保存</string>
     <string name="header_productivity_notes">生産性とメモ</string>
+    <string name="settings_post_call_actions">通話後のクイックアクション</string>
+    <string name="settings_post_call_actions_sub">通話終了後に折り返し電話、メッセージ、WhatsApp、メモのアクションを表示</string>
+    <string name="settings_post_call_timer">自動終了カウントダウン</string>
+    <string name="settings_post_call_timer_sub">カウントダウン終了後にアクションシートを自動的に閉じる</string>
+    <string name="timer_never">なし</string>
+    <string name="timer_seconds_format">%1$d秒</string>
     <string name="settings_fake_call_sim">偽着信シミュレーター</string>
     <string name="settings_fake_call_sim_sub">気まずい場面から抜け出すための偽着信をスケジュールする</string>
     <string name="fake_call_sim_title">偽着信シミュレーター</string>

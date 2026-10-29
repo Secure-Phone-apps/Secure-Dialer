@@ -235,8 +235,18 @@ fun MainScreen(
         } else {
             if (isCallActive) {
                 delay(650)
+                isCallActive = false
+                // Auto-switch to Recents tab so the user immediately sees the latest completed call
+                viewModel.selectTabBySlotKey("RECENTS")
+                // Staggered sync to guarantee newly written OS baseband call log entry is captured
+                viewModel.syncData(force = true)
+                delay(500)
+                viewModel.syncData(force = true)
+                delay(1200)
+                viewModel.syncData(force = true)
+            } else {
+                isCallActive = false
             }
-            isCallActive = false
         }
     }
 
@@ -389,6 +399,13 @@ fun MainScreen(
 
                 // FIXED: Standard, accessible 3-page pager eliminates infinite carousel jumps and TalkBack bugs
                 val pagerState = rememberPagerState(initialPage = selectedTab.coerceIn(0, tabSlots.size - 1)) { tabSlots.size }
+
+                // FIXED: Automatically animate pager when selectedTab changes (e.g. from call completion or bottom nav)
+                LaunchedEffect(selectedTab) {
+                    if (pagerState.currentPage != selectedTab) {
+                        pagerState.animateScrollToPage(selectedTab)
+                    }
+                }
 
                 // FIXED: Synchronize tab only when scroll has fully settled, preventing race condition and half-screen freeze
                 LaunchedEffect(pagerState.settledPage) {
@@ -844,8 +861,11 @@ fun MainScreen(
                 )
             }
 
+            val isPostCallActionsEnabled by viewModel.isPostCallActionsEnabled
+            val postCallDismissDuration = viewModel.postCallDismissDurationSeconds.intValue
+
             AnimatedVisibility(
-                visible = postCallData != null && !isCallActive,
+                visible = isPostCallActionsEnabled && postCallData != null && !isCallActive,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier
@@ -855,6 +875,7 @@ fun MainScreen(
                 postCallData?.let { data ->
                     PostCallSheet(
                         data = data,
+                        dismissDurationSeconds = postCallDismissDuration,
                         onDismiss = { CallManager.dismissPostCallData() },
                         onCallBack = { num, nm -> initiateCall(nm, num) },
                         onSaveContact = { num -> viewModel.openAddContactWithNumber(num) }

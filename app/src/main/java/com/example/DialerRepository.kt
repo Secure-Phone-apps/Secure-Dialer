@@ -175,7 +175,7 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
-    suspend fun syncCallLogs() = withContext(Dispatchers.IO) {
+    suspend fun syncCallLogs(force: Boolean = false) = withContext(Dispatchers.IO) {
         try {
             val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
             var systemCount = 0
@@ -201,7 +201,7 @@ class DialerRepository(rawContext: Context) {
             val lastSyncedLang = prefs.getString("last_synced_locale_lang", "")
             val localeChanged = currentLang != lastSyncedLang
 
-            if (localCount > 0 && localCount == systemCount && systemMaxId == lastSyncedMaxId && systemCount == lastSyncedCount && !localeChanged) {
+            if (!force && localCount > 0 && localCount == systemCount && systemMaxId == lastSyncedMaxId && systemCount == lastSyncedCount && !localeChanged) {
                 return@withContext
             }
 

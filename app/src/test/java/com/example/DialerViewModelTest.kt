@@ -62,6 +62,8 @@ class DialerViewModelTest {
         viewModel.updateCallbackRemindersEnabled(false)
         viewModel.updateCallNotesEnabled(false)
         viewModel.updateFakeCallSimulatorEnabled(false)
+        viewModel.updatePostCallActionsEnabled(false)
+        viewModel.updatePostCallDismissDurationSeconds(10)
         viewModel.onAccountFilterChange("Google:test@gmail.com")
         viewModel.updateDefaultContactAccount("Google:test@gmail.com", "com.google")
 
@@ -76,6 +78,8 @@ class DialerViewModelTest {
         assertFalse(viewModel.isCallbackRemindersEnabled.value)
         assertFalse(viewModel.isCallNotesEnabled.value)
         assertFalse(viewModel.isFakeCallSimulatorEnabled.value)
+        assertFalse(viewModel.isPostCallActionsEnabled.value)
+        assertEquals(10, viewModel.postCallDismissDurationSeconds.intValue)
         assertEquals("Google:test@gmail.com", viewModel.selectedAccountFilter.value)
         assertEquals("Google:test@gmail.com", viewModel.defaultContactAccountName.value)
 
@@ -92,8 +96,20 @@ class DialerViewModelTest {
         assertFalse(newViewModel.isCallbackRemindersEnabled.value)
         assertFalse(newViewModel.isCallNotesEnabled.value)
         assertFalse(newViewModel.isFakeCallSimulatorEnabled.value)
+        assertFalse(newViewModel.isPostCallActionsEnabled.value)
+        assertEquals(10, newViewModel.postCallDismissDurationSeconds.intValue)
         assertEquals("Google:test@gmail.com", newViewModel.selectedAccountFilter.value)
         assertEquals("Google:test@gmail.com", newViewModel.defaultContactAccountName.value)
+
+        // Verify toggling back to ON persists across another restart
+        newViewModel.updatePostCallActionsEnabled(true)
+        newViewModel.updatePostCallDismissDurationSeconds(0)
+        assertTrue(newViewModel.isPostCallActionsEnabled.value)
+        assertEquals(0, newViewModel.postCallDismissDurationSeconds.intValue)
+
+        val rebootViewModel = DialerViewModel(context)
+        assertTrue(rebootViewModel.isPostCallActionsEnabled.value)
+        assertEquals(0, rebootViewModel.postCallDismissDurationSeconds.intValue)
     }
 
     @Test

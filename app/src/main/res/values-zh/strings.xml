@@ -485,6 +485,12 @@
     <string name="note_placeholder">输入重要信息...</string>
     <string name="btn_save_note">保存备注</string>
     <string name="header_productivity_notes">效率与备注</string>
+    <string name="settings_post_call_actions">通话后快捷操作</string>
+    <string name="settings_post_call_actions_sub">在通话结束后显示回拨、短信、WhatsApp和备忘录快捷操作</string>
+    <string name="settings_post_call_timer">自动关闭倒计时</string>
+    <string name="settings_post_call_timer_sub">倒计时结束后自动关闭快捷操作面板</string>
+    <string name="timer_never">永不</string>
+    <string name="timer_seconds_format">%1$d秒</string>
     <string name="settings_fake_call_sim">模拟来电</string>
     <string name="settings_fake_call_sim_sub">预约模拟的来电</string>
     <string name="fake_call_sim_title">模拟来电</string>

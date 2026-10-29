@@ -53,6 +53,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun PostCallSheet(
     data: PostCallData,
+    dismissDurationSeconds: Int = 5,
     onDismiss: () -> Unit = { CallManager.dismissPostCallData() },
     onCallBack: (String, String) -> Unit,
     onSaveContact: (String) -> Unit
@@ -61,17 +62,25 @@ fun PostCallSheet(
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
 
-    // Auto-dismiss countdown timer (4.5s)
-    var progressTarget by remember { mutableFloatStateOf(1f) }
-    LaunchedEffect(data) {
-        progressTarget = 0f
-        delay(4500)
-        onDismiss()
+    val isAutoDismissEnabled = dismissDurationSeconds > 0
+    val dismissMillis = (dismissDurationSeconds * 1000L).coerceAtLeast(0L)
+
+    // Auto-dismiss countdown timer (configurable seconds, or persistent if 0)
+    var progressTarget by remember(dismissDurationSeconds, data) { mutableFloatStateOf(1f) }
+    LaunchedEffect(data, dismissDurationSeconds) {
+        if (isAutoDismissEnabled) {
+            progressTarget = 0f
+            delay(dismissMillis)
+            onDismiss()
+        }
     }
 
     val animatedProgress by animateFloatAsState(
-        targetValue = progressTarget,
-        animationSpec = tween(durationMillis = 4500, easing = LinearEasing),
+        targetValue = if (isAutoDismissEnabled) progressTarget else 1f,
+        animationSpec = tween(
+            durationMillis = if (isAutoDismissEnabled) dismissMillis.toInt() else 0,
+            easing = LinearEasing
+        ),
         label = "post_call_progress"
     )
 
@@ -281,18 +290,20 @@ fun PostCallSheet(
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            if (isAutoDismissEnabled) {
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // Subdued Linear Progress Indicator showing auto-dismiss time
-            LinearProgressIndicator(
-                progress = { animatedProgress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(2.dp)
-                    .clip(AppShapes.Avatar),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
-                trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
-            )
+                // Subdued Linear Progress Indicator showing auto-dismiss time
+                LinearProgressIndicator(
+                    progress = { animatedProgress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .clip(AppShapes.Avatar),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.45f),
+                    trackColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
+                )
+            }
         }
     }
 }

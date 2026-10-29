@@ -485,6 +485,12 @@
     <string name="note_placeholder">Entrer les détails importants...</string>
     <string name="btn_save_note">Enregistrer la note</string>
     <string name="header_productivity_notes">PRODUCTIVITÉ ET NOTES</string>
+    <string name="settings_post_call_actions">Actions rapides après appel</string>
+    <string name="settings_post_call_actions_sub">Afficher les actions rappeler, message, WhatsApp et note après la fin des appels</string>
+    <string name="settings_post_call_timer">Compte à rebours de fermeture</string>
+    <string name="settings_post_call_timer_sub">Fermer automatiquement la fiche d\'actions après le compte à rebours</string>
+    <string name="timer_never">Jamais</string>
+    <string name="timer_seconds_format">%1$d sec</string>
     <string name="settings_fake_call_sim">Simulateur de faux appel</string>
     <string name="settings_fake_call_sim_sub">Programmez un appel simulé pour vous éclipser</string>
     <string name="fake_call_sim_title">Simulateur de faux appel</string>

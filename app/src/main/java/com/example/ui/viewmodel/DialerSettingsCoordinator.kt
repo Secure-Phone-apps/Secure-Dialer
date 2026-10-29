@@ -38,6 +38,15 @@ class DialerSettingsCoordinator(
         }
     }
 
+    fun updateSettingInt(key: String, value: Int) {
+        prefs.edit().putInt(key, value).apply()
+        scope.launch {
+            try {
+                repository.dao.insertSetting(AppSetting(key, value.toString()))
+            } catch (_: Exception) {}
+        }
+    }
+
     fun updateDarkTheme(dark: Boolean) {
         prefs.edit().putBoolean("is_dark_theme", dark).apply()
     }

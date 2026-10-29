@@ -485,6 +485,12 @@
     <string name="note_placeholder">أدخل تفاصيل مهمة...</string>
     <string name="btn_save_note">حفظ الملاحظة</string>
     <string name="header_productivity_notes">الإنتاجية والملاحظات</string>
+    <string name="settings_post_call_actions">إجراءات ما بعد المكالمة السريعة</string>
+    <string name="settings_post_call_actions_sub">إظهار إجراءات معاودة الاتصال والرسائل وواتساب والملاحظات بعد انتهاء المكالمات</string>
+    <string name="settings_post_call_timer">مؤقت الإغلاق التلقائي</string>
+    <string name="settings_post_call_timer_sub">إغلاق ورقة الإجراءات تلقائياً بعد انتهاء العد التنازلي</string>
+    <string name="timer_never">أبداً</string>
+    <string name="timer_seconds_format">%1$d ثوانٍ</string>
     <string name="settings_fake_call_sim">محاكي المكالمة الوهمية</string>
     <string name="settings_fake_call_sim_sub">جدولة مكالمة واردة وهمية للخروج من المواقف المخرجة</string>
     <string name="fake_call_sim_title">محاكي المكالمة الوهمية</string>

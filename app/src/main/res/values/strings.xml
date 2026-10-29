@@ -543,6 +543,12 @@
     <string name="header_productivity_notes">PRODUCTIVITY &amp; NOTES</string>
 
     <!-- Settings - Fake Call Simulator & Reminders -->
+    <string name="settings_post_call_actions">Post-Call Quick Actions</string>
+    <string name="settings_post_call_actions_sub">Show Call Back, Message, WhatsApp, and Note actions after calls end</string>
+    <string name="settings_post_call_timer">Auto-Dismiss Countdown</string>
+    <string name="settings_post_call_timer_sub">Automatically close action sheet after countdown expires</string>
+    <string name="timer_never">Never</string>
+    <string name="timer_seconds_format">%1$d sec</string>
     <string name="settings_fake_call_sim">Fake Call Simulator</string>
     <string name="settings_fake_call_sim_sub">Schedule simulated incoming calls</string>
     <string name="fake_call_sim_title">Fake Call Simulator</string>

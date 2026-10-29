@@ -485,6 +485,12 @@
     <string name="note_placeholder">Wichtige Details eingeben...</string>
     <string name="btn_save_note">Notiz speichern</string>
     <string name="header_productivity_notes">PRODUKTIVITÄT &amp; NOTIZEN</string>
+    <string name="settings_post_call_actions">Schnellaktionen nach dem Anruf</string>
+    <string name="settings_post_call_actions_sub">Aktionen für Rückruf, Nachricht, WhatsApp und Notiz nach Anrufende anzeigen</string>
+    <string name="settings_post_call_timer">Automatischer Schließ-Timer</string>
+    <string name="settings_post_call_timer_sub">Aktionsfenster nach Ablauf des Countdowns automatisch schließen</string>
+    <string name="timer_never">Nie</string>
+    <string name="timer_seconds_format">%1$d Sek.</string>
     <string name="settings_fake_call_sim">Täuschungsanruf</string>
     <string name="settings_fake_call_sim_sub">Anruf simulieren</string>
     <string name="fake_call_sim_title">Täuschungsanruf</string>
