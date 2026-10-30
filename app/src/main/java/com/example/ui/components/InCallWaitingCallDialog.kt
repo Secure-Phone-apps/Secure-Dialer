@@ -46,25 +46,39 @@ import com.example.ui.theme.getOnDeclineRedColor
 
 @Composable
 fun InCallWaitingCallDialog(
-    waitingCall: Call,
+    waitingCall: Call? = null,
+    simulatedWaitingName: String? = null,
+    simulatedWaitingNumber: String? = null,
     contacts: List<Contact>,
-    avatarShapeType: String = "circular"
+    avatarShapeType: String = "circular",
+    onSimulatedAnswerHold: (() -> Unit)? = null,
+    onSimulatedEndAnswer: (() -> Unit)? = null,
+    onSimulatedDecline: (() -> Unit)? = null
 ) {
-    val waitingNumber = waitingCall.details?.handle?.schemeSpecificPart ?: ""
-    // FIXED: Multi-number & normalized cache lookup with CNAP fallback
-    val waitingName = remember(waitingNumber, contacts) {
-        ContactCache.getContact(waitingNumber)?.name
-            ?: contacts.find { it.number == waitingNumber }?.name
-            ?: waitingCall.details?.callerDisplayName?.takeIf { it.isNotBlank() }
-            ?: waitingNumber
+    val waitingNumber = waitingCall?.details?.handle?.schemeSpecificPart ?: (simulatedWaitingNumber ?: "")
+    // Multi-number & normalized cache lookup with CNAP / Simulated fallback
+    val waitingName = remember(waitingNumber, contacts, simulatedWaitingName) {
+        if (!simulatedWaitingName.isNullOrBlank()) {
+            simulatedWaitingName
+        } else {
+            ContactCache.getContact(waitingNumber)?.name
+                ?: contacts.find { it.number == waitingNumber }?.name
+                ?: waitingCall?.details?.callerDisplayName?.takeIf { it.isNotBlank() }
+                ?: waitingNumber
+        }
     }
 
     val initials = getInitials(waitingName)
     val avatarShape = getAvatarShape(avatarShapeType)
 
     AlertDialog(
-        // FIXED: Dismissing dialog allows user to continue using keypad/controls without rejecting caller
-        onDismissRequest = { CallManager.updateWaitingCall(null) },
+        onDismissRequest = {
+            if (waitingCall != null) {
+                CallManager.updateWaitingCall(null)
+            } else {
+                onSimulatedDecline?.invoke()
+            }
+        },
         shape = MaterialTheme.shapes.extraLarge,
         containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 6.dp,
@@ -153,13 +167,11 @@ fun InCallWaitingCallDialog(
             ) {
                 OutlinedButton(
                     onClick = {
-                        try {
-                            val activeCall = CallManager.currentCall.value
-                            activeCall?.disconnect()
-                            waitingCall.answer(VideoProfile.STATE_AUDIO_ONLY)
-                            CallManager.updateCall(waitingCall)
-                            CallManager.updateWaitingCall(null)
-                        } catch (_: Exception) {}
+                        if (waitingCall != null) {
+                            CallManager.answerWaitingCall(holdCurrent = false)
+                        } else {
+                            onSimulatedEndAnswer?.invoke()
+                        }
                     },
                     shape = MaterialTheme.shapes.medium
                 ) {
@@ -168,13 +180,11 @@ fun InCallWaitingCallDialog(
 
                 Button(
                     onClick = {
-                        try {
-                            val activeCall = CallManager.currentCall.value
-                            activeCall?.hold()
-                            waitingCall.answer(VideoProfile.STATE_AUDIO_ONLY)
-                            CallManager.updateCall(waitingCall)
-                            CallManager.updateWaitingCall(null)
-                        } catch (_: Exception) {}
+                        if (waitingCall != null) {
+                            CallManager.answerWaitingCall(holdCurrent = true)
+                        } else {
+                            onSimulatedAnswerHold?.invoke()
+                        }
                     },
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors(
@@ -189,10 +199,11 @@ fun InCallWaitingCallDialog(
         dismissButton = {
             Button(
                 onClick = {
-                    try {
-                        waitingCall.reject(false, null)
-                        CallManager.updateWaitingCall(null)
-                    } catch (_: Exception) {}
+                    if (waitingCall != null) {
+                        CallManager.rejectWaitingCall()
+                    } else {
+                        onSimulatedDecline?.invoke()
+                    }
                 },
                 shape = MaterialTheme.shapes.medium,
                 colors = ButtonDefaults.buttonColors(

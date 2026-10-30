@@ -95,4 +95,30 @@ class TelephonyEnhancementsTest {
         assertEquals(85L, postCall.durationSeconds)
         assertTrue(postCall.isUnsaved)
     }
+
+    @Test
+    fun testCallManagerWaitingCallReset() {
+        CallManager.updateWaitingCall(null)
+        assertNull("Waiting call must be null when updated with null", CallManager.waitingCall.value)
+    }
+
+    @Test
+    fun testIsSameCallerWithFormattingAndPrefixes() {
+        // Same number formatted vs raw
+        assertTrue(PhoneFormatHelper.isSameCaller("+1 (555) 234-5678", "5552345678", context))
+        assertTrue(PhoneFormatHelper.isSameCaller("5552345678", "+15552345678", context))
+        assertTrue(PhoneFormatHelper.isSameCaller("+91 98765 43210", "09876543210", context))
+        assertTrue(PhoneFormatHelper.isSameCaller("tel:+15552345678", "5552345678", context))
+        assertTrue(PhoneFormatHelper.isSameCaller("1234567890", "1234567890", context))
+    }
+
+    @Test
+    fun testIsSameCallerRejectionForDistinctNumbers() {
+        // Distinct callers should NOT match
+        assertFalse(PhoneFormatHelper.isSameCaller("5551234", "5559876", context))
+        assertFalse(PhoneFormatHelper.isSameCaller("+15551234567", "+15559876543", context))
+        assertFalse(PhoneFormatHelper.isSameCaller("", "5551234", context))
+        assertFalse(PhoneFormatHelper.isSameCaller(null, "5551234", context))
+        assertFalse(PhoneFormatHelper.isSameCaller("", "", context))
+    }
 }

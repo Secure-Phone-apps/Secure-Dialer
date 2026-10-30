@@ -31,6 +31,7 @@ import com.example.ui.components.getCurrentLocale
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.MultiSimManager
+import com.example.util.PhoneFormatHelper
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.SimCallTracker
 import kotlinx.coroutines.CoroutineScope
@@ -210,10 +211,19 @@ object CallManager {
                     }
                     autoStartRecordingIfNeeded()
                 }
-            } else if (call == _waitingCall.value && state == Call.STATE_DISCONNECTED) {
-                updateWaitingCall(null)
             }
+
+            // If the waiting call is no longer ringing (e.g. answered, holding, disconnected),
+            // immediately clear waitingCall so it can never be presented as waiting once received
+            if (_waitingCall.value == call && state != Call.STATE_RINGING) {
+                _waitingCall.value = null
+            }
+            if (_waitingCall.value == _currentCall.value) {
+                _waitingCall.value = null
+            }
+
             autoSelectCurrentCall()
+            validateWaitingCallState()
         }
 
         override fun onParentChanged(call: Call, parent: Call?) {
@@ -259,11 +269,34 @@ object CallManager {
             call.registerCallback(callCallback)
         }
         notifyCallsChanged()
-        if (call.state == Call.STATE_RINGING && _currentCall.value != null && _currentCall.value != call) {
-            updateWaitingCall(call)
+
+        val activeCalls = _calls.value.filter {
+            it != call && it.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING)
+        }
+        val current = _currentCall.value
+
+        val isSameCallerAsActive = activeCalls.any {
+            PhoneFormatHelper.isSameCallOrCaller(call, it, _callerNumber.value, _callerName.value, appContext)
+        } || (current != null && current != call && PhoneFormatHelper.isSameCallOrCaller(call, current, _callerNumber.value, _callerName.value, appContext))
+
+        if (call.state == Call.STATE_RINGING) {
+            val hasActiveCall = activeCalls.isNotEmpty() || (current != null && current != call && current.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING))
+            if (hasActiveCall) {
+                if (isSameCallerAsActive) {
+                    // Same caller as active call: Suppress second call waiting alert completely
+                    _waitingCall.value = null
+                    autoSelectCurrentCall()
+                } else {
+                    // Genuine different caller: alert as waiting call
+                    updateWaitingCall(call)
+                }
+            } else {
+                autoSelectCurrentCall()
+            }
         } else {
             autoSelectCurrentCall()
         }
+        validateWaitingCallState()
     }
 
     fun removeCall(call: Call) {
@@ -282,6 +315,7 @@ object CallManager {
             updateWaitingCall(null)
         }
         autoSelectCurrentCall()
+        validateWaitingCallState()
     }
 
     fun autoSelectCurrentCall() {
@@ -308,6 +342,9 @@ object CallManager {
     fun updateCall(call: Call?) {
         _currentCall.value = call
         if (call != null) {
+            if (_waitingCall.value == call) {
+                _waitingCall.value = null
+            }
             _callState.value = call.state
             _isConferenceActive.value = _calls.value.any { it.state != Call.STATE_DISCONNECTED && isConference(it) } || isConference(call)
             if (call.state == Call.STATE_ACTIVE) {
@@ -376,6 +413,7 @@ object CallManager {
             if (number.isNotEmpty() && (_callerName.value.isEmpty() || _callerName.value == number)) {
                 resolveCallerDetailsAsync(number, cnap)
             }
+            validateWaitingCallState()
         } else {
             autoStopRecordingIfNeeded()
             stopDtmf()
@@ -503,11 +541,96 @@ object CallManager {
         }
     }
 
-    fun updateWaitingCall(call: Call?) { _waitingCall.value = call }
+    fun updateWaitingCall(call: Call?) {
+        if (call == null) {
+            _waitingCall.value = null
+            return
+        }
+        val current = _currentCall.value
+        val isCurrentActive = current != null && current != call &&
+                current.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING)
+
+        val isSameCallerAsActive = isCurrentActive && (
+            PhoneFormatHelper.isSameCallOrCaller(call, current, _callerNumber.value, _callerName.value, appContext) ||
+            _calls.value.any { it != call && it.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING) &&
+                PhoneFormatHelper.isSameCallOrCaller(call, it, _callerNumber.value, _callerName.value, appContext) }
+        )
+
+        if (call.state != Call.STATE_RINGING || !isCurrentActive || isSameCallerAsActive) {
+            _waitingCall.value = null
+        } else {
+            _waitingCall.value = call
+        }
+    }
+
+    private fun validateWaitingCallState() {
+        val waiting = _waitingCall.value ?: return
+        val current = _currentCall.value
+        if (waiting.state != Call.STATE_RINGING) {
+            _waitingCall.value = null
+            return
+        }
+        if (current == null || current == waiting) {
+            _waitingCall.value = null
+            return
+        }
+        if (current.state !in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING)) {
+            _waitingCall.value = null
+            return
+        }
+        if (PhoneFormatHelper.isSameCallOrCaller(waiting, current, _callerNumber.value, _callerName.value, appContext)) {
+            _waitingCall.value = null
+            return
+        }
+        val isSameAsAnyActive = _calls.value.any {
+            it != waiting && it.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING) &&
+                PhoneFormatHelper.isSameCallOrCaller(waiting, it, _callerNumber.value, _callerName.value, appContext)
+        }
+        if (isSameAsAnyActive) {
+            _waitingCall.value = null
+            return
+        }
+    }
+
     fun updateAudioState(state: CallAudioState?) { _audioState.value = state }
 
     fun answer() {
-        try { _currentCall.value?.answer(VideoProfile.STATE_AUDIO_ONLY) } catch (_: Exception) {}
+        try {
+            // When user answers incoming call, only answer the ringing primary call.
+            // Waiting calls are NEVER auto-answered by answer(); they require explicit user selection in dialog/notification.
+            val callToAnswer = _currentCall.value?.takeIf { it.state == Call.STATE_RINGING }
+                ?: _calls.value.find { it != _waitingCall.value && it.state == Call.STATE_RINGING }
+                ?: _calls.value.find { it.state == Call.STATE_RINGING }
+
+            callToAnswer?.answer(VideoProfile.STATE_AUDIO_ONLY)
+            if (callToAnswer != null) {
+                updateCall(callToAnswer)
+            }
+        } catch (_: Exception) {}
+        validateWaitingCallState()
+    }
+
+    fun rejectWaitingCall() {
+        try {
+            _waitingCall.value?.reject(false, null)
+        } catch (_: Exception) {}
+        _waitingCall.value = null
+    }
+
+    fun answerWaitingCall(holdCurrent: Boolean) {
+        try {
+            val waiting = _waitingCall.value ?: return
+            val current = _currentCall.value
+            if (holdCurrent) {
+                current?.hold()
+            } else {
+                current?.disconnect()
+            }
+            waiting.answer(VideoProfile.STATE_AUDIO_ONLY)
+            updateCall(waiting)
+            _waitingCall.value = null
+        } catch (_: Exception) {}
+        validateWaitingCallState()
     }
 
     fun disconnect() {

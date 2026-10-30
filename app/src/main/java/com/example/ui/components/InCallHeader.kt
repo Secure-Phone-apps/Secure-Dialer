@@ -103,7 +103,10 @@ fun InCallHeader(
     activeStartTimestamp: Long = 0L,
     isFake: Boolean = false,
     fakeState: String = "RINGING",
-    fakeActiveStartTimestamp: Long = 0L
+    fakeActiveStartTimestamp: Long = 0L,
+    simulatedHeldName: String? = null,
+    simulatedHeldNumber: String? = null,
+    onSimulatedSwap: (() -> Unit)? = null
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -262,12 +265,13 @@ fun InCallHeader(
             )
         }
 
-        if (heldCall != null) {
+        val hasHeld = heldCall != null || !simulatedHeldName.isNullOrBlank()
+        if (hasHeld) {
             Spacer(modifier = Modifier.height(16.dp))
-            val heldNumber = heldCall.details?.handle?.schemeSpecificPart ?: ""
-            val heldName = ContactCache.getContact(heldNumber)?.name
+            val heldNumber = heldCall?.details?.handle?.schemeSpecificPart ?: (simulatedHeldNumber ?: "")
+            val heldName = simulatedHeldName ?: (ContactCache.getContact(heldNumber)?.name
                 ?: contacts.find { it.number == heldNumber }?.name
-                ?: heldNumber
+                ?: heldNumber)
 
             Card(
                 modifier = Modifier
@@ -309,11 +313,15 @@ fun InCallHeader(
                     ) {
                         Button(
                             onClick = {
-                                try {
-                                    val activeCall = CallManager.currentCall.value
-                                    activeCall?.hold()
-                                    CallManager.updateCall(heldCall)
-                                } catch (_: Exception) {}
+                                if (heldCall != null) {
+                                    try {
+                                        val activeCall = CallManager.currentCall.value
+                                        activeCall?.hold()
+                                        CallManager.updateCall(heldCall)
+                                    } catch (_: Exception) {}
+                                } else {
+                                    onSimulatedSwap?.invoke()
+                                }
                             },
                             contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
                             modifier = Modifier.height(32.dp),

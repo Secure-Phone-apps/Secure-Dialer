@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.CallManager
 import com.example.R
 import com.example.model.ScheduledFakeCall
 import com.example.ui.viewmodel.DialerViewModel
@@ -626,6 +627,111 @@ fun FakeCallSettings(
                                 label = { Text(unit.key, maxLines = 1) }
                             )
                         }
+                    }
+                }
+            }
+        }
+
+        // Multi-Call & Call Waiting Testing Card
+        Card(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            shape = RoundedCornerShape(16.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.PhoneCallback,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Call Waiting & Multi-Call Testing",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                Text(
+                    text = "Simulate receiving a secondary call while on an active call to test Call Waiting alerts or verify same-caller suppression.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            val isCallCurrentlyActive = (CallManager.currentCall.value != null && CallManager.callState.value != android.telecom.Call.STATE_DISCONNECTED) ||
+                                    (viewModel.isFakeCallActive.value && viewModel.fakeCallState.value == "ACTIVE")
+
+                            if (!isCallCurrentlyActive) {
+                                viewModel.isFakeCallActive.value = true
+                                viewModel.fakeCallerName.value = fakeName.trim().ifBlank { "Boss" }
+                                viewModel.fakeCallerNumber.value = fakeNumber.trim().ifBlank { "+1 (555) 492-0192" }
+                                viewModel.fakeCallState.value = "ACTIVE"
+                                viewModel.fakeCallStartTimestamp = System.currentTimeMillis()
+                                viewModel.isCallMinimized.value = false
+                                viewModel.isSettingsVisible.value = false
+                            }
+                            viewModel.triggerSimulatedCallWaiting(
+                                name = "Alice Cooper",
+                                number = "+1 (555) 987-6543",
+                                delayMillis = 3500L,
+                                context = context
+                            )
+                            Toast.makeText(context, "📞 Call Waiting simulated from Alice Cooper (+1 555-987-6543) in 3.5s", Toast.LENGTH_SHORT).show()
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Different Caller (Alert)", style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            val isCallCurrentlyActive = (CallManager.currentCall.value != null && CallManager.callState.value != android.telecom.Call.STATE_DISCONNECTED) ||
+                                    (viewModel.isFakeCallActive.value && viewModel.fakeCallState.value == "ACTIVE")
+
+                            val sameNum = if (viewModel.isFakeCallActive.value) {
+                                viewModel.fakeCallerNumber.value
+                            } else if (CallManager.currentCall.value != null) {
+                                CallManager.callerNumber.value
+                            } else {
+                                fakeNumber.trim().ifBlank { "+1 (555) 492-0192" }
+                            }
+
+                            if (!isCallCurrentlyActive) {
+                                viewModel.isFakeCallActive.value = true
+                                viewModel.fakeCallerName.value = fakeName.trim().ifBlank { "Boss" }
+                                viewModel.fakeCallerNumber.value = sameNum
+                                viewModel.fakeCallState.value = "ACTIVE"
+                                viewModel.fakeCallStartTimestamp = System.currentTimeMillis()
+                                viewModel.isCallMinimized.value = false
+                                viewModel.isSettingsVisible.value = false
+                            }
+
+                            viewModel.triggerSimulatedCallWaiting(
+                                name = "Same Caller Retry",
+                                number = sameNum,
+                                delayMillis = 2000L,
+                                context = context
+                            )
+                        },
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Same Caller (Suppress)", style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }

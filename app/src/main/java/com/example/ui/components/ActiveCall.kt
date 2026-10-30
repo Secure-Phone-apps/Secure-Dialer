@@ -25,6 +25,7 @@ import android.os.Build
 import android.os.PowerManager
 import android.telecom.Call
 import android.telecom.CallAudioState
+import android.telephony.PhoneNumberUtils
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -56,6 +57,7 @@ import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.CallGestureSensorManager
 import com.example.util.FakeCallVoicePlayer
+import com.example.util.PhoneFormatHelper
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.RichHapticEngine
 import kotlinx.coroutines.delay
@@ -87,7 +89,17 @@ fun ActiveCallScreen(
     fakeAudioUri: String? = null,
     fakeVoiceType: String = "NONE",
     onFakeAnswer: () -> Unit = {},
-    onFakeHangUp: () -> Unit = {}
+    onFakeHangUp: () -> Unit = {},
+    simulatedWaitingName: String? = null,
+    simulatedWaitingNumber: String? = null,
+    simulatedHeldName: String? = null,
+    simulatedHeldNumber: String? = null,
+    onSimulatedAnswerHold: (() -> Unit)? = null,
+    onSimulatedEndAnswer: (() -> Unit)? = null,
+    onSimulatedDecline: (() -> Unit)? = null,
+    onSimulatedSwap: (() -> Unit)? = null,
+    onSimulatedMerge: (() -> Unit)? = null,
+    onTriggerSimulatedCallWaiting: ((String, String) -> Unit)? = null
 ) {
     BackHandler(enabled = true) {
         onMinimize?.invoke()
@@ -314,7 +326,8 @@ fun ActiveCallScreen(
                     heldCall = heldCall,
                     contacts = contacts,
                     onMerge = {
-                        if (isFake) {
+                        if (isFake || !simulatedHeldName.isNullOrBlank()) {
+                            onSimulatedMerge?.invoke()
                             Toast.makeText(context, "📞 Call merged", Toast.LENGTH_SHORT).show()
                         } else {
                             CallManager.mergeCalls()
@@ -325,16 +338,54 @@ fun ActiveCallScreen(
                     activeStartTimestamp = activeStartTimestamp,
                     isFake = isFake,
                     fakeState = fakeState,
-                    fakeActiveStartTimestamp = fakeActiveStartTimestamp
+                    fakeActiveStartTimestamp = fakeActiveStartTimestamp,
+                    simulatedHeldName = simulatedHeldName,
+                    simulatedHeldNumber = simulatedHeldNumber,
+                    onSimulatedSwap = onSimulatedSwap
                 )
 
                 Spacer(modifier = Modifier.weight(1f, fill = false))
 
-                waitingCall?.let { call ->
+                val isWaitingCallValid = waitingCall != null &&
+                        waitingCall?.state == Call.STATE_RINGING &&
+                        waitingCall != currentCall &&
+                        !PhoneFormatHelper.isSameCaller(
+                            PhoneFormatHelper.extractPhoneNumber(waitingCall),
+                            contactNumber,
+                            context
+                        ) &&
+                        !PhoneFormatHelper.isSameCallOrCaller(
+                            waitingCall,
+                            currentCall,
+                            contactNumber,
+                            contactName,
+                            context
+                        )
+
+                LaunchedEffect(waitingCall, isWaitingCallValid) {
+                    if (waitingCall != null && !isWaitingCallValid) {
+                        CallManager.updateWaitingCall(null)
+                    }
+                }
+
+                if (isWaitingCallValid) {
+                    waitingCall?.let { call ->
+                        InCallWaitingCallDialog(
+                            waitingCall = call,
+                            contacts = contacts,
+                            avatarShapeType = avatarShapeType
+                        )
+                    }
+                } else if (!simulatedWaitingNumber.isNullOrBlank()) {
                     InCallWaitingCallDialog(
-                        waitingCall = call,
+                        waitingCall = null,
+                        simulatedWaitingName = simulatedWaitingName,
+                        simulatedWaitingNumber = simulatedWaitingNumber,
                         contacts = contacts,
-                        avatarShapeType = avatarShapeType
+                        avatarShapeType = avatarShapeType,
+                        onSimulatedAnswerHold = onSimulatedAnswerHold,
+                        onSimulatedEndAnswer = onSimulatedEndAnswer,
+                        onSimulatedDecline = onSimulatedDecline
                     )
                 }
 
@@ -374,7 +425,9 @@ fun ActiveCallScreen(
                                 CallManager.placeCall(context, number)
                             }
                         },
-                        avatarShapeType = avatarShapeType
+                        avatarShapeType = avatarShapeType,
+                        currentCallerNumber = contactNumber,
+                        onSimulateCallWaiting = onTriggerSimulatedCallWaiting
                     )
                 }
 

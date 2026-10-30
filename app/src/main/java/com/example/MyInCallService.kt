@@ -30,6 +30,7 @@ import android.telecom.Call
 import android.telecom.CallAudioState
 import android.telecom.DisconnectCause
 import android.telecom.InCallService
+import android.telephony.PhoneNumberUtils
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
 import com.example.data.AppDatabase
@@ -40,6 +41,7 @@ import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.DynamicIslandOverlayManager
 import com.example.util.FlashLightManager
+import com.example.util.PhoneFormatHelper
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.RichHapticEngine
 import kotlinx.coroutines.CoroutineScope
@@ -306,6 +308,17 @@ class MyInCallService : InCallService() {
                 nm.cancel(NOTIFICATION_ID_INCOMING)
                 nm.cancel(NOTIFICATION_ID_ACTIVE)
             }
+            ACTION_DECLINE_WAITING -> {
+                stopCallWaitingTone()
+                CallManager.rejectWaitingCall()
+                nm.cancel(NOTIFICATION_ID_INCOMING)
+            }
+            ACTION_ANSWER_WAITING -> {
+                stopCallWaitingTone()
+                CallManager.answerWaitingCall(holdCurrent = true)
+                nm.cancel(NOTIFICATION_ID_INCOMING)
+                launchCallScreen(answerOnLaunch = false)
+            }
             ACTION_ANSWER -> {
                 stopRinging()
                 CallManager.answer()
@@ -368,6 +381,10 @@ class MyInCallService : InCallService() {
 
                 if (state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {
                     stopRinging()
+                    stopCallWaitingTone()
+                    if (CallManager.waitingCall.value == c) {
+                        CallManager.updateWaitingCall(null)
+                    }
                     showActiveCallNotification(c)
                 }
 
@@ -465,14 +482,27 @@ class MyInCallService : InCallService() {
         when (call.state) {
             Call.STATE_RINGING -> {
                 registerScreenOffReceiver()
-                val hasExistingActiveCall = CallManager.calls.value.any {
-                    it != call && (it.state == Call.STATE_ACTIVE || it.state == Call.STATE_HOLDING || it.state == Call.STATE_DIALING)
+                val activeCalls = CallManager.calls.value.filter {
+                    it != call && it.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING)
                 }
-                if (hasExistingActiveCall) {
-                    // Call Waiting: Suppress full speaker ringtone and camera flashlight to protect user's hearing
-                    CallManager.updateWaitingCall(call)
-                    playCallWaitingTone()
-                    showIncomingCallNotification(call, isCallWaiting = true)
+                val current = CallManager.currentCall.value
+                val isCurrentlyOnCall = activeCalls.isNotEmpty() || (current != null && current != call && current.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING))
+
+                val isSameCallerAsActive = activeCalls.any {
+                    PhoneFormatHelper.isSameCallOrCaller(call, it, CallManager.callerNumber.value, CallManager.callerName.value, this)
+                } || (current != null && current != call && PhoneFormatHelper.isSameCallOrCaller(call, current, CallManager.callerNumber.value, CallManager.callerName.value, this))
+
+                if (isCurrentlyOnCall) {
+                    if (isSameCallerAsActive) {
+                        // SAME CALLER as active call: NEVER present call waiting!
+                        CallManager.updateWaitingCall(null)
+                        stopCallWaitingTone()
+                    } else {
+                        // DIFFERENT CALLER: Genuine call waiting alert
+                        CallManager.updateWaitingCall(call)
+                        playCallWaitingTone()
+                        showIncomingCallNotification(call, isCallWaiting = true)
+                    }
                 } else {
                     FlashLightManager.startFlashing(this)
                     startRinging()
@@ -499,6 +529,9 @@ class MyInCallService : InCallService() {
                 unregisterScreenOffReceiver()
                 stopRinging()
                 stopCallWaitingTone()
+                if (CallManager.waitingCall.value == call) {
+                    CallManager.updateWaitingCall(null)
+                }
                 FlashLightManager.stopFlashing(this)
                 showActiveCallNotification(call)
 
@@ -530,29 +563,51 @@ class MyInCallService : InCallService() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val declinePendingIntent = PendingIntent.getService(
-            this, 102,
-            Intent(this, MyInCallService::class.java).apply {
-                setPackage(packageName)
-                action = ACTION_DECLINE
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val declinePendingIntent = if (isCallWaiting) {
+            PendingIntent.getService(
+                this, 104,
+                Intent(this, MyInCallService::class.java).apply {
+                    setPackage(packageName)
+                    action = ACTION_DECLINE_WAITING
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else {
+            PendingIntent.getService(
+                this, 102,
+                Intent(this, MyInCallService::class.java).apply {
+                    setPackage(packageName)
+                    action = ACTION_DECLINE
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
-        val answerPendingIntent = PendingIntent.getActivity(
-            this, 103,
-            Intent(this, MainActivity::class.java).apply {
-                action = ACTION_ANSWER
-                setPackage(packageName)
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
-                putExtra(EXTRA_SHOW_CALL, true)
-                putExtra(EXTRA_ANSWER, true)
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
+        val answerPendingIntent = if (isCallWaiting) {
+            PendingIntent.getService(
+                this, 105,
+                Intent(this, MyInCallService::class.java).apply {
+                    setPackage(packageName)
+                    action = ACTION_ANSWER_WAITING
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        } else {
+            PendingIntent.getActivity(
+                this, 103,
+                Intent(this, MainActivity::class.java).apply {
+                    action = ACTION_ANSWER
+                    setPackage(packageName)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                    putExtra(EXTRA_SHOW_CALL, true)
+                    putExtra(EXTRA_ANSWER, true)
+                },
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            )
+        }
 
         val notificationBuilder = if (isCallWaiting) {
             val title = getString(R.string.call_waiting_title)
@@ -827,6 +882,8 @@ class MyInCallService : InCallService() {
         const val ACTION_HANG_UP = "com.example.ACTION_HANG_UP"
         const val ACTION_ANSWER = "com.example.ACTION_ANSWER"
         const val ACTION_DECLINE = "com.example.ACTION_DECLINE"
+        const val ACTION_DECLINE_WAITING = "com.example.ACTION_DECLINE_WAITING"
+        const val ACTION_ANSWER_WAITING = "com.example.ACTION_ANSWER_WAITING"
         const val ACTION_TOGGLE_RECORD = "com.example.ACTION_TOGGLE_RECORD"
         const val ACTION_TOGGLE_SPEAKER = "com.example.ACTION_TOGGLE_SPEAKER"
         const val ACTION_TOGGLE_MUTE = "com.example.ACTION_TOGGLE_MUTE"

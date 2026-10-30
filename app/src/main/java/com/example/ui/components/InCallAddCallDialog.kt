@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -43,7 +44,9 @@ fun InCallAddCallDialog(
     contacts: List<Contact>,
     onDismiss: () -> Unit,
     onAddCall: (name: String, number: String) -> Unit,
-    avatarShapeType: String = "circular"
+    avatarShapeType: String = "circular",
+    currentCallerNumber: String = "",
+    onSimulateCallWaiting: ((String, String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     var addCallNumberInput by remember { mutableStateOf("") }
@@ -183,6 +186,45 @@ fun InCallAddCallDialog(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+
+                if (onSimulateCallWaiting != null) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Text(
+                        text = "Call Waiting Simulation",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                onSimulateCallWaiting("Alice Cooper", "+1 (555) 987-6543")
+                                onDismiss()
+                            },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+                        ) {
+                            Text("New Caller (Waiting)", style = MaterialTheme.typography.labelSmall)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                val sameNum = currentCallerNumber.ifBlank { "+1 (555) 492-0192" }
+                                onSimulateCallWaiting("Same Caller", sameNum)
+                                onDismiss()
+                            },
+                            modifier = Modifier.weight(1f),
+                            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
+                        ) {
+                            Text("Same Caller (Suppress)", style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

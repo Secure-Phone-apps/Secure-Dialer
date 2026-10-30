@@ -29,8 +29,10 @@ import androidx.paging.*
 import com.example.*
 import com.example.model.*
 import com.example.util.CallAudioRecorder
+import com.example.util.PhoneFormatHelper
 import com.example.util.RecordingCompressionProfile
 import com.example.util.ReminderScheduler
+import com.example.util.RichHapticEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -406,6 +408,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var fakeCallVoiceType = mutableStateOf("NONE")
     var fakeCallState = mutableStateOf("RINGING")
     var fakeCallStartTimestamp = 0L
+
+    // Simulated Multi-Call & Call Waiting State
+    var simulatedWaitingCallName = mutableStateOf<String?>(null)
+    var simulatedWaitingCallNumber = mutableStateOf<String?>(null)
+    var simulatedHeldCallName = mutableStateOf<String?>(null)
+    var simulatedHeldCallNumber = mutableStateOf<String?>(null)
+    private var simulatedWaitingCallJob: kotlinx.coroutines.Job? = null
+
     var dialpadTonesEnabled = mutableStateOf(prefs.getBoolean("dialpad_tones_enabled", true))
     var vibrateOnClickEnabled = mutableStateOf(prefs.getBoolean("vibrate_on_click_enabled", true))
     var flipToSilenceEnabled = mutableStateOf(prefs.getBoolean("flip_to_silence_enabled", false))
@@ -1126,6 +1136,106 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun logFakeCall(name: String, number: String, type: CallType, durationSeconds: Long, simSlot: Int = 1) {
         logCall(name, number, type, durationSeconds, simSlot)
+    }
+
+    fun triggerSimulatedCallWaiting(
+        name: String = "Alice Cooper",
+        number: String = "+1 (555) 987-6543",
+        delayMillis: Long = 3000L,
+        context: Context
+    ) {
+        simulatedWaitingCallJob?.cancel()
+        val activeNum = if (isFakeCallActive.value) fakeCallerNumber.value else callingContactNumber.value
+        val activeName = if (isFakeCallActive.value) fakeCallerName.value else callingContactName.value
+
+        // Defensive check: is incoming number or name the same as the active caller?
+        val isSameCaller = PhoneFormatHelper.isSameCaller(number, activeNum, context) ||
+                (activeName.isNotBlank() && name.equals(activeName, ignoreCase = true))
+
+        simulatedWaitingCallJob = viewModelScope.launch {
+            if (delayMillis > 0L) {
+                kotlinx.coroutines.delay(delayMillis)
+            }
+            if (isSameCaller) {
+                // VERIFIED: Same-caller suppression works flawlessly
+                simulatedWaitingCallName.value = null
+                simulatedWaitingCallNumber.value = null
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                android.widget.Toast.makeText(
+                    context,
+                    "🛡️ Call Waiting suppressed: $number matches active caller line",
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            } else {
+                // Different caller: Real Call Waiting alert
+                simulatedWaitingCallName.value = name
+                simulatedWaitingCallNumber.value = number
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.DOUBLE_TICK)
+            }
+        }
+    }
+
+    fun answerSimulatedWaitingCall(holdCurrent: Boolean) {
+        val waitingName = simulatedWaitingCallName.value ?: return
+        val waitingNumber = simulatedWaitingCallNumber.value ?: return
+
+        if (holdCurrent) {
+            val currName = if (isFakeCallActive.value) fakeCallerName.value else callingContactName.value
+            val currNumber = if (isFakeCallActive.value) fakeCallerNumber.value else callingContactNumber.value
+            simulatedHeldCallName.value = currName
+            simulatedHeldCallNumber.value = currNumber
+        } else {
+            simulatedHeldCallName.value = null
+            simulatedHeldCallNumber.value = null
+        }
+
+        if (isFakeCallActive.value) {
+            fakeCallerName.value = waitingName
+            fakeCallerNumber.value = waitingNumber
+            fakeCallState.value = "ACTIVE"
+            fakeCallStartTimestamp = System.currentTimeMillis()
+        } else {
+            callingContactName.value = waitingName
+            callingContactNumber.value = waitingNumber
+        }
+        simulatedWaitingCallName.value = null
+        simulatedWaitingCallNumber.value = null
+    }
+
+    fun rejectSimulatedWaitingCall() {
+        simulatedWaitingCallName.value = null
+        simulatedWaitingCallNumber.value = null
+    }
+
+    fun swapSimulatedCalls() {
+        val heldName = simulatedHeldCallName.value ?: return
+        val heldNumber = simulatedHeldCallNumber.value ?: return
+        val currName = if (isFakeCallActive.value) fakeCallerName.value else callingContactName.value
+        val currNumber = if (isFakeCallActive.value) fakeCallerNumber.value else callingContactNumber.value
+
+        simulatedHeldCallName.value = currName
+        simulatedHeldCallNumber.value = currNumber
+
+        if (isFakeCallActive.value) {
+            fakeCallerName.value = heldName
+            fakeCallerNumber.value = heldNumber
+        } else {
+            callingContactName.value = heldName
+            callingContactNumber.value = heldNumber
+        }
+    }
+
+    fun mergeSimulatedCalls() {
+        simulatedHeldCallName.value = null
+        simulatedHeldCallNumber.value = null
+    }
+
+    fun clearSimulatedMultiCallState() {
+        simulatedWaitingCallJob?.cancel()
+        simulatedWaitingCallName.value = null
+        simulatedWaitingCallNumber.value = null
+        simulatedHeldCallName.value = null
+        simulatedHeldCallNumber.value = null
     }
 
     override fun onCleared() {

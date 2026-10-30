@@ -461,7 +461,7 @@ class MainActivity : ComponentActivity() {
                     event.keyCode == KeyEvent.KEYCODE_VOLUME_UP
             val isRinging = CallManager.currentCall.value?.state == Call.STATE_RINGING ||
                     CallManager.calls.value.any { it.state == Call.STATE_RINGING } ||
-                    CallManager.waitingCall.value != null ||
+                    CallManager.waitingCall.value?.state == Call.STATE_RINGING ||
                     (viewModel.isFakeCallActive.value && viewModel.fakeCallState.value == "RINGING")
 
             if (isVolumeKey && isRinging) {

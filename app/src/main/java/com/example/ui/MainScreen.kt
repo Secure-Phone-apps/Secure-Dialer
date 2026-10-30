@@ -635,6 +635,7 @@ fun MainScreen(
                     preferredSim = preferredSim,
                     quickResponses = quickResponses,
                     onHangUp = {
+                        viewModel.clearSimulatedMultiCallState()
                         if (isFakeCallActive) {
                             FakeCallVoicePlayer.stop()
                             try {
@@ -656,6 +657,7 @@ fun MainScreen(
                     },
                     onAnswer = { CallManager.answer() },
                     onQuickDecline = {
+                        viewModel.clearSimulatedMultiCallState()
                         if (isFakeCallActive) {
                             FakeCallVoicePlayer.stop()
                             try {
@@ -709,6 +711,7 @@ fun MainScreen(
                         viewModel.fakeCallState.value = "ACTIVE"
                     },
                     onFakeHangUp = {
+                        viewModel.clearSimulatedMultiCallState()
                         FakeCallVoicePlayer.stop()
                         try {
                             (context.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager)?.cancel(9999)
@@ -723,6 +726,18 @@ fun MainScreen(
                         viewModel.fakeCallStartTimestamp = 0L
                         viewModel.isFakeCallActive.value = false
                         viewModel.fakeCallState.value = "DISCONNECTED"
+                    },
+                    simulatedWaitingName = viewModel.simulatedWaitingCallName.value,
+                    simulatedWaitingNumber = viewModel.simulatedWaitingCallNumber.value,
+                    simulatedHeldName = viewModel.simulatedHeldCallName.value,
+                    simulatedHeldNumber = viewModel.simulatedHeldCallNumber.value,
+                    onSimulatedAnswerHold = { viewModel.answerSimulatedWaitingCall(holdCurrent = true) },
+                    onSimulatedEndAnswer = { viewModel.answerSimulatedWaitingCall(holdCurrent = false) },
+                    onSimulatedDecline = { viewModel.rejectSimulatedWaitingCall() },
+                    onSimulatedSwap = { viewModel.swapSimulatedCalls() },
+                    onSimulatedMerge = { viewModel.mergeSimulatedCalls() },
+                    onTriggerSimulatedCallWaiting = { name, number ->
+                        viewModel.triggerSimulatedCallWaiting(name, number, delayMillis = 3000L, context = context)
                     }
                 )
             }
