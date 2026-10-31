@@ -10,6 +10,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.example.model.PostCallData
 import com.example.util.PhoneFormatHelper
 import com.example.util.UssdManager
+import com.example.util.WhatsAppFlavor
 import com.example.util.WhatsAppHelper
 import org.junit.Assert.*
 import org.junit.Before
@@ -66,6 +67,33 @@ class TelephonyEnhancementsTest {
 
         val emptyDigits = WhatsAppHelper.formatToE164Digits(context, "   ")
         assertEquals("", emptyDigits)
+    }
+
+    @Test
+    fun testWhatsAppFlavorsAndMultiAccountPreference() {
+        assertEquals("com.whatsapp", WhatsAppFlavor.STANDARD.packageName)
+        assertEquals("com.whatsapp.w4b", WhatsAppFlavor.BUSINESS.packageName)
+        assertTrue(WhatsAppFlavor.BUSINESS.isBusiness)
+        assertFalse(WhatsAppFlavor.STANDARD.isBusiness)
+
+        assertEquals(WhatsAppFlavor.STANDARD, WhatsAppFlavor.fromKey("STANDARD"))
+        assertEquals(WhatsAppFlavor.BUSINESS, WhatsAppFlavor.fromKey("BUSINESS"))
+        assertEquals(WhatsAppFlavor.STANDARD, WhatsAppFlavor.fromPackage("com.whatsapp"))
+        assertEquals(WhatsAppFlavor.BUSINESS, WhatsAppFlavor.fromPackage("com.whatsapp.w4b"))
+
+        // Test preference persistence
+        WhatsAppHelper.setPreferredPackageKey(context, "BUSINESS")
+        assertEquals("BUSINESS", WhatsAppHelper.getPreferredPackageKey(context))
+
+        WhatsAppHelper.setPreferredPackageKey(context, "STANDARD")
+        assertEquals("STANDARD", WhatsAppHelper.getPreferredPackageKey(context))
+
+        WhatsAppHelper.setPreferredPackageKey(context, "ASK")
+        assertEquals("ASK", WhatsAppHelper.getPreferredPackageKey(context))
+
+        // Test chooser dismissal
+        WhatsAppHelper.dismissChooser()
+        assertNull(WhatsAppHelper.pendingChooserRequest.value)
     }
 
     @Test

@@ -27,8 +27,10 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.material.icons.filled.CallEnd
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -40,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.util.RichHapticEngine
+import com.example.util.WhatsAppHelper
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
@@ -280,6 +283,92 @@ fun AdvancedFeaturesSettings(
                                     modifier = Modifier.weight(1f)
                                 )
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Feature Container 6: Default WhatsApp Account (Multi-Account & Auto-Detection)
+        val installedFlavors = remember { WhatsAppHelper.getInstalledFlavors(context) }
+        val preferredWhatsAppPackage by viewModel.preferredWhatsAppPackage
+
+        HighlightableCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            cardBgColor = cardBgColor,
+            isHighlighted = isMatchTitle("Default WhatsApp Account", highlightedTitle) ||
+                    isMatchTitle("WhatsApp Account", highlightedTitle) ||
+                    isMatchTitle("WhatsApp Business", highlightedTitle),
+            shape = MaterialTheme.shapes.medium
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Chat,
+                        contentDescription = null,
+                        tint = Color(0xFF1EBE5D),
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.settings_whatsapp_pref_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = when {
+                                installedFlavors.isEmpty() -> stringResource(R.string.whatsapp_standard_desc) + " (wa.me web link)"
+                                installedFlavors.size == 1 -> "Auto-detected: " + stringResource(installedFlavors[0].titleRes)
+                                else -> stringResource(R.string.settings_whatsapp_pref_sub)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (installedFlavors.size > 1) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f),
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val options = listOf(
+                            "ASK" to stringResource(R.string.whatsapp_pref_ask),
+                            "STANDARD" to "WhatsApp",
+                            "BUSINESS" to "Business"
+                        )
+                        options.forEach { (key, label) ->
+                            val isSelected = preferredWhatsAppPackage.equals(key, ignoreCase = true)
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    viewModel.updatePreferredWhatsAppPackage(key)
+                                },
+                                label = {
+                                    Text(
+                                        text = label,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                                    )
+                                },
+                                modifier = Modifier.weight(1f)
+                            )
                         }
                     }
                 }

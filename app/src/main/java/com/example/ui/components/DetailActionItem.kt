@@ -44,14 +44,15 @@ fun DetailActionItem(
     label: String,
     containerColor: Color,
     contentColor: Color,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .widthIn(min = 64.dp, max = 84.dp)
+        modifier = modifier
+            .widthIn(min = 52.dp, max = 84.dp)
             .clip(AppShapes.Small)
             .clickable(
                 role = Role.Button,

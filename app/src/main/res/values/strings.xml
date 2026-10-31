@@ -80,8 +80,21 @@
     <string name="contact_multiple_numbers">%1$d numbers</string>
     <string name="select_number_to_call">Select a number to call</string>
     <string name="select_number_to_message">Select a number to message</string>
+    <string name="select_number_to_whatsapp">Select a number for WhatsApp chat</string>
     <string name="dialog_call_contact">Call %1$s</string>
     <string name="dialog_message_contact">Message %1$s</string>
+    <string name="dialog_whatsapp_contact">WhatsApp %1$s</string>
+    <string name="whatsapp_standard">WhatsApp</string>
+    <string name="whatsapp_standard_desc">Personal / standard messaging</string>
+    <string name="whatsapp_business">WhatsApp Business</string>
+    <string name="whatsapp_business_desc">Work / commercial messaging</string>
+    <string name="choose_whatsapp_account">Choose WhatsApp Account</string>
+    <string name="choose_whatsapp_account_desc">Select which WhatsApp app to message %1$s</string>
+    <string name="remember_whatsapp_choice">Remember choice for future chats</string>
+    <string name="cannot_open_whatsapp">Could not open WhatsApp</string>
+    <string name="settings_whatsapp_pref_title">Default WhatsApp Account</string>
+    <string name="settings_whatsapp_pref_sub">App to launch when both WhatsApp and Business are installed</string>
+    <string name="whatsapp_pref_ask">Always Ask</string>
 
     <!-- Recents & Call History -->
     <string name="recents_header">Recents</string>

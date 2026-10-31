@@ -187,6 +187,7 @@ fun GeneralSettings(
             SettingsSearchItem("Fake Call Simulator", "Schedule simulated incoming phone calls with custom caller name & timer", "Advanced Tools", 7, Icons.Default.PhoneInTalk),
             SettingsSearchItem("Post-Call Quick Actions", "Show Call Back, Message, WhatsApp, and Note actions after calls end", "Advanced Tools", 7, Icons.Default.CallEnd),
             SettingsSearchItem("Auto-Dismiss Countdown", "Configure auto-dismiss timer for post-call action sheet (3s, 5s, 10s, Never)", "Advanced Tools", 7, Icons.Default.Timer),
+            SettingsSearchItem("Default WhatsApp Account", "Choose between WhatsApp and WhatsApp Business for chat actions", "Advanced Tools", 7, Icons.Default.Chat),
 
             // 8. PRIVACY & ABOUT
             SettingsSearchItem("Privacy & Security Settings", "Biometric app lock, pocket protection, app lock & app specs", "Privacy & About", 8, Icons.Default.Lock),

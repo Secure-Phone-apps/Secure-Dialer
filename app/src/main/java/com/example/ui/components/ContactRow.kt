@@ -57,8 +57,9 @@ import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
+import com.example.util.WhatsAppHelper
 
-private enum class NumberPickerAction { CALL, MESSAGE }
+private enum class NumberPickerAction { CALL, MESSAGE, WHATSAPP }
 
 @Composable
 fun ContactRow(
@@ -282,25 +283,42 @@ fun ContactRow(
                                 )
                             }
 
-                            IconButton(
-                                onClick = {
-                                    try {
-                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                        val clip = ClipData.newPlainText("Phone Number", labeledNum.number)
-                                        clipboard?.setPrimaryClip(clip)
-                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                            Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
-                                        }
-                                    } catch (_: Exception) {}
-                                },
-                                modifier = Modifier.size(34.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = stringResource(R.string.dialpad_copy),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(17.dp)
-                                )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                IconButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                        WhatsAppHelper.openWhatsAppChat(context, labeledNum.number)
+                                    },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Chat,
+                                        contentDescription = "WhatsApp",
+                                        tint = Color(0xFF1EBE5D),
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }
+
+                                IconButton(
+                                    onClick = {
+                                        try {
+                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                            val clip = ClipData.newPlainText("Phone Number", labeledNum.number)
+                                            clipboard?.setPrimaryClip(clip)
+                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                                Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (_: Exception) {}
+                                    },
+                                    modifier = Modifier.size(34.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = stringResource(R.string.dialpad_copy),
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(17.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -401,7 +419,7 @@ fun ContactRow(
                         }
                     }
 
-                    // 4. Hero Quick-Action Row (Call, Message, Edit, Delete placed LOWER than numbers)
+                    // 4. Hero Quick-Action Row (Call, WhatsApp, Message, Edit, Delete placed LOWER than numbers)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -414,6 +432,7 @@ fun ContactRow(
                             label = stringResource(R.string.action_call),
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.weight(1f),
                             onClick = {
                                 if (allNumbers.size > 1) {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -426,10 +445,28 @@ fun ContactRow(
                         )
 
                         DetailActionItem(
+                            icon = Icons.Default.Chat,
+                            label = "WhatsApp",
+                            containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
+                            contentColor = Color(0xFF1EBE5D),
+                            modifier = Modifier.weight(1f),
+                            onClick = {
+                                if (allNumbers.size > 1) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    numberPickerAction = NumberPickerAction.WHATSAPP
+                                } else {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    WhatsAppHelper.openWhatsAppChat(context, primaryNumber)
+                                }
+                            }
+                        )
+
+                        DetailActionItem(
                             icon = Icons.Default.Message,
                             label = stringResource(R.string.action_message),
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.weight(1f),
                             onClick = {
                                 if (allNumbers.size > 1) {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -453,6 +490,7 @@ fun ContactRow(
                             label = stringResource(R.string.btn_edit),
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.weight(1f),
                             onClick = {
                                 onEditContact(contact)
                             }
@@ -463,6 +501,7 @@ fun ContactRow(
                             label = stringResource(R.string.btn_delete),
                             containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
                             contentColor = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f),
                             onClick = {
                                 onDeleteContact(contact)
                             }
@@ -480,17 +519,29 @@ fun ContactRow(
             shape = AppShapes.Dialog,
             icon = {
                 Icon(
-                    imageVector = if (currentAction == NumberPickerAction.CALL) Icons.Default.Call else Icons.Default.Message,
+                    imageVector = when (currentAction) {
+                        NumberPickerAction.CALL -> Icons.Default.Call
+                        NumberPickerAction.MESSAGE -> Icons.Default.Message
+                        NumberPickerAction.WHATSAPP -> Icons.Default.Chat
+                        null -> Icons.Default.Call
+                    },
                     contentDescription = null,
-                    tint = if (currentAction == NumberPickerAction.CALL) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary
+                    tint = when (currentAction) {
+                        NumberPickerAction.CALL -> MaterialTheme.colorScheme.primary
+                        NumberPickerAction.MESSAGE -> MaterialTheme.colorScheme.secondary
+                        NumberPickerAction.WHATSAPP -> Color(0xFF1EBE5D)
+                        null -> MaterialTheme.colorScheme.primary
+                    }
                 )
             },
             title = {
                 Text(
-                    text = stringResource(
-                        if (currentAction == NumberPickerAction.CALL) R.string.dialog_call_contact else R.string.dialog_message_contact,
-                        contact.name
-                    ),
+                    text = when (currentAction) {
+                        NumberPickerAction.CALL -> stringResource(R.string.dialog_call_contact, contact.name)
+                        NumberPickerAction.MESSAGE -> stringResource(R.string.dialog_message_contact, contact.name)
+                        NumberPickerAction.WHATSAPP -> stringResource(R.string.dialog_whatsapp_contact, contact.name)
+                        null -> ""
+                    },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -501,9 +552,12 @@ fun ContactRow(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = stringResource(
-                            if (currentAction == NumberPickerAction.CALL) R.string.select_number_to_call else R.string.select_number_to_message
-                        ),
+                        text = when (currentAction) {
+                            NumberPickerAction.CALL -> stringResource(R.string.select_number_to_call)
+                            NumberPickerAction.MESSAGE -> stringResource(R.string.select_number_to_message)
+                            NumberPickerAction.WHATSAPP -> stringResource(R.string.select_number_to_whatsapp)
+                            null -> ""
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -514,21 +568,29 @@ fun ContactRow(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    val isCall = currentAction == NumberPickerAction.CALL
+                                    val action = currentAction
                                     numberPickerAction = null
-                                    if (isCall) {
-                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                                        onCallClick(contact.copy(number = labeledNum.number, label = labeledNum.label))
-                                    } else {
-                                        try {
-                                            val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                                data = Uri.parse("smsto:${labeledNum.number}")
-                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                                            }
-                                            context.startActivity(intent)
-                                        } catch (_: Exception) {
-                                            Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                    when (action) {
+                                        NumberPickerAction.CALL -> {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                            onCallClick(contact.copy(number = labeledNum.number, label = labeledNum.label))
                                         }
+                                        NumberPickerAction.MESSAGE -> {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                    data = Uri.parse("smsto:${labeledNum.number}")
+                                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                                }
+                                                context.startActivity(intent)
+                                            } catch (_: Exception) {
+                                                Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                        NumberPickerAction.WHATSAPP -> {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                            WhatsAppHelper.openWhatsAppChat(context, labeledNum.number)
+                                        }
+                                        null -> {}
                                     }
                                 }
                         ) {
@@ -541,14 +603,29 @@ fun ContactRow(
                             ) {
                                 Surface(
                                     shape = AppShapes.Keypad,
-                                    color = if (currentAction == NumberPickerAction.CALL) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.secondaryContainer,
+                                    color = when (currentAction) {
+                                        NumberPickerAction.CALL -> MaterialTheme.colorScheme.primaryContainer
+                                        NumberPickerAction.MESSAGE -> MaterialTheme.colorScheme.secondaryContainer
+                                        NumberPickerAction.WHATSAPP -> Color(0xFF25D366).copy(alpha = 0.20f)
+                                        null -> MaterialTheme.colorScheme.primaryContainer
+                                    },
                                     modifier = Modifier.size(40.dp)
                                 ) {
                                     Box(contentAlignment = Alignment.Center) {
                                         Icon(
-                                            imageVector = if (currentAction == NumberPickerAction.CALL) Icons.Default.Call else Icons.Default.Message,
+                                            imageVector = when (currentAction) {
+                                                NumberPickerAction.CALL -> Icons.Default.Call
+                                                NumberPickerAction.MESSAGE -> Icons.Default.Message
+                                                NumberPickerAction.WHATSAPP -> Icons.Default.Chat
+                                                null -> Icons.Default.Call
+                                            },
                                             contentDescription = null,
-                                            tint = if (currentAction == NumberPickerAction.CALL) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                                            tint = when (currentAction) {
+                                                NumberPickerAction.CALL -> MaterialTheme.colorScheme.onPrimaryContainer
+                                                NumberPickerAction.MESSAGE -> MaterialTheme.colorScheme.onSecondaryContainer
+                                                NumberPickerAction.WHATSAPP -> Color(0xFF1EBE5D)
+                                                null -> MaterialTheme.colorScheme.onPrimaryContainer
+                                            },
                                             modifier = Modifier.size(20.dp)
                                         )
                                     }

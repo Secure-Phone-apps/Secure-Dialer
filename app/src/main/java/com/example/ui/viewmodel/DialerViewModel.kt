@@ -388,6 +388,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isFakeCallSimulatorEnabled = mutableStateOf(prefs.getBoolean("is_fake_call_simulator_enabled", true))
     var isPostCallActionsEnabled = mutableStateOf(prefs.getBoolean("is_post_call_actions_enabled", true))
     var postCallDismissDurationSeconds = mutableIntStateOf(prefs.getInt("post_call_dismiss_duration_seconds", 5))
+    var preferredWhatsAppPackage = mutableStateOf(prefs.getString("preferred_whatsapp_package", "ASK") ?: "ASK")
     var pendingPostCallRecordingNote = mutableStateOf<CallRecording?>(null)
 
     // Dashboard & Tab Layout & Swipe Preferences
@@ -783,6 +784,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updatePostCallDismissDurationSeconds(seconds: Int) {
         postCallDismissDurationSeconds.intValue = seconds
         settingsCoordinator.updateSettingInt("post_call_dismiss_duration_seconds", seconds)
+    }
+
+    fun updatePreferredWhatsAppPackage(pkgKey: String) {
+        preferredWhatsAppPackage.value = pkgKey
+        com.example.util.WhatsAppHelper.setPreferredPackageKey(getApplication<Application>(), pkgKey)
+        settingsCoordinator.updateSettingString("preferred_whatsapp_package", pkgKey)
     }
 
     fun updateDashboardMode(mode: String) {

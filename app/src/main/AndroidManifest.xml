@@ -53,6 +53,16 @@
         android:name="android.hardware.bluetooth"
         android:required="false" />
 
+    <!-- Package visibility queries for WhatsApp & WhatsApp Business (API 30+) -->
+    <queries>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" android:host="wa.me" />
+        </intent>
+    </queries>
+
     <application
         android:name=".DialerApplication"
         android:allowBackup="false"

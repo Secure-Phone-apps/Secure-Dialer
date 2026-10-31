@@ -744,6 +744,14 @@ fun MainScreen(
 
             MainScreenContactDialogs(viewModel = viewModel)
 
+            val pendingWhatsAppChooser = com.example.util.WhatsAppHelper.pendingChooserRequest.value
+            if (pendingWhatsAppChooser != null) {
+                WhatsAppAccountChooserDialog(
+                    request = pendingWhatsAppChooser,
+                    onDismiss = { com.example.util.WhatsAppHelper.dismissChooser() }
+                )
+            }
+
             val pendingRecNote = viewModel.pendingPostCallRecordingNote.value
             if (pendingRecNote != null) {
                 var noteInput by remember(pendingRecNote.id) { mutableStateOf("") }
