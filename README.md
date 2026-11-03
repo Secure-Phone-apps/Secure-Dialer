@@ -9,7 +9,7 @@
   <a href="https://kotlinlang.org/"><img src="https://img.shields.io/badge/Kotlin-2.0-8A2BE2?style=flat&logo=kotlin&logoColor=white" alt="Kotlin 2.0" /></a>
   <a href="https://developer.android.com/develop/ui/compose"><img src="https://img.shields.io/badge/Compose-M3-4285F4?style=flat&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose Material 3" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Permissions-0_Internet%20%7C%20100%25%20Offline-10B981?style=flat&logo=android&logoColor=white" alt="0 Internet Permissions" /></a>
-  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Locales-8_Languages-6366F1?style=flat&logo=translate&logoColor=white" alt="8 Languages Supported" /></a>
+  <a href="https://github.com/Secure-Phone-apps/Secure-Dialer"><img src="https://img.shields.io/badge/Locales-10_Languages-6366F1?style=flat&logo=translate&logoColor=white" alt="10 Languages Supported" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-A3E635?style=flat&logo=opensourceinitiative&logoColor=white" alt="Open Source FOSS GPLv3" /></a>
   <a href="https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fadd%2Fhttps%3A%2F%2Fgithub.com%2FSecure-Phone-apps%2FSecure-Dialer"><img src="https://img.shields.io/badge/Obtainium-Add_App-00BCD4?style=flat&logo=android&logoColor=white" alt="Install via Obtainium" /></a>
   <a href="https://github.com/Secure-Phone-apps/Secure-Dialer/discussions"><img src="https://img.shields.io/badge/Community-Discussions-1F6FEB?style=flat&logo=github&logoColor=white" alt="GitHub Discussions" /></a>
@@ -121,6 +121,7 @@ I wanted an app that is:
 | **Smart T9 Predictive Dialpad** | Instant on-device index matching names and numbers as you tap digits; supports dual-SIM account selection per call. | Allows rapid dialing in milliseconds without cloud search requests or lag. |
 | **Dynamic Island & Floating Pill** | Minimized floating overlay status indicator when navigating outside active calls; includes speaker-only toggle. | Keep track of ongoing call duration and audio state while multitasking in other apps. |
 | **Pocket Protection & Gestures** | Proximity sensor detects pocket placement to disable accidental touches; flip phone face-down to silence ringers. | Eliminates accidental face hangups and prevents loud ring interruptions during meetings. |
+| **WhatsApp Multi-Account & Actions** | Package inspector auto-detects standard WhatsApp (`com.whatsapp`) and Business (`com.whatsapp.w4b`), offering instant 1-tap launching or in-app account chooser dialogs. | Instant messaging from contacts and recents cards without requiring contacts to be saved or sharing account graphs. |
 | **AMOLED True Black & Themes** | Pure `#000000` surface themes, customizable avatar shapes (Squircle, Hexagon, Rounded Square), and custom tab ordering. | Maximizes OLED battery life and tailors the calling interface to your aesthetic workflow. |
 
 ---
@@ -239,7 +240,7 @@ Compare the resulting hash with the published `checksums.txt` file on the releas
 <a id="translations"></a>
 ## <img src="https://raw.githubusercontent.com/google/material-design-icons/master/symbols/web/translate/materialsymbolsoutlined/translate_24px.svg" width="22" height="22" alt="" valign="middle" /> Community Translations
 
-Secure Dialer currently supports 8 languages: **English, Polish, German, Spanish, French, Hindi, Japanese, and Portuguese**.
+Secure Dialer currently supports 10 languages: **English, Polish, German, Spanish, French, Hindi, Japanese, Portuguese, Arabic, and Chinese**.
 
 We welcome community contributions to bring Secure Dialer to more languages and keep existing translations accurate!
 * No coding experience required.
