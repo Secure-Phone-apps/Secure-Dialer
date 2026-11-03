@@ -1,6 +1,18 @@
 # Changelog
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
+
+## [1.8.0] - 2026-11-03
+
+### WhatsApp Multi-Account & Contacts Integration
+- **Contacts Screen WhatsApp Actions**: Integrated WhatsApp messaging shortcuts on expanded contact cards and beside individual phone number rows.
+- **Intelligent Package Auto-Detection**: Auto-detects whether standard WhatsApp (`com.whatsapp`), WhatsApp Business (`com.whatsapp.w4b`), or both are installed on device, launching single installations instantly without unnecessary prompt dialogs.
+- **In-App Account Chooser**: Displays a dedicated Material 3 choice dialog with optional "Remember choice" preferences when both WhatsApp Personal and Business apps are present.
+- **Default WhatsApp Account Settings**: Reconfigurable Default WhatsApp Account control added to Settings > Advanced Tools (`Always Ask`, `WhatsApp`, `Business`).
+- **10-Language Parity & Package Visibility**: Full localized translation parity across all 10 supported languages and AndroidManifest `<queries>` declarations for Android 11+ package visibility.
+
+---
+
 ## [1.7.0] - 2026-10-19
 
 ### Cross-OEM Call Waiting & Telephony Reliability
