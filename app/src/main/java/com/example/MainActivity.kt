@@ -138,7 +138,11 @@ class MainActivity : ComponentActivity() {
                             setLockScreenVisibility(true)
                         } else if (viewModel.isBiometricLockEnabled.value) {
                             if (!isAuthenticating && !isAppAuthenticated.value) {
-                                triggerDeviceAuthentication()
+                                window.decorView.post {
+                                    if (!isFinishing && !isDestroyed && viewModel.isBiometricLockEnabled.value && !isAppAuthenticated.value) {
+                                        triggerDeviceAuthentication()
+                                    }
+                                }
                             }
                         } else {
                             isAppAuthenticated.value = true
@@ -237,7 +241,10 @@ class MainActivity : ComponentActivity() {
                                 Spacer(modifier = Modifier.size(36.dp))
 
                                 Button(
-                                    onClick = { triggerDeviceAuthentication() },
+                                    onClick = {
+                                        isAuthenticating = false
+                                        triggerDeviceAuthentication()
+                                    },
                                     modifier = Modifier.fillMaxWidth(0.7f)
                                 ) {
                                     Text(text = "Unlock Dialer", style = MaterialTheme.typography.titleMedium)

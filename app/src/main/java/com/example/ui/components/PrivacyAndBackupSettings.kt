@@ -17,6 +17,9 @@
 
 package com.example.ui.components
 
+import android.app.Activity
+import android.app.KeyguardManager
+import android.content.Context
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -40,6 +43,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
+import com.example.util.VaultBiometricAuthHelper
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -89,6 +94,8 @@ private fun PrivacyProtectionSection(
     viewModel: DialerViewModel,
     cardBgColor: Color
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
     val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
     val isPocketProtectionEnabled by viewModel.isPocketProtectionEnabled
 
@@ -114,7 +121,45 @@ private fun PrivacyProtectionSection(
                     title = stringResource(R.string.settings_biometric_lock),
                     subtitle = stringResource(R.string.settings_biometric_lock_sub),
                     checked = isBiometricLockEnabled,
-                    onCheckedChange = { viewModel.updateBiometricLockEnabled(it) },
+                    onCheckedChange = { enabled ->
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        if (activity != null) {
+                            if (enabled) {
+                                val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                                if (keyguardManager?.isDeviceSecure != true) {
+                                    Toast.makeText(context, context.getString(R.string.settings_biometric_lock_sub), Toast.LENGTH_LONG).show()
+                                } else {
+                                    VaultBiometricAuthHelper.authenticate(
+                                        activity = activity,
+                                        title = "Enable Biometric Lock",
+                                        subtitle = "Authenticate to confirm enabling App Lock",
+                                        onSuccess = {
+                                            viewModel.updateBiometricLockEnabled(true)
+                                        },
+                                        onError = { err ->
+                                            viewModel.updateBiometricLockEnabled(false)
+                                            Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                }
+                            } else {
+                                VaultBiometricAuthHelper.authenticate(
+                                    activity = activity,
+                                    title = "Disable Biometric Lock",
+                                    subtitle = "Authenticate to confirm disabling App Lock",
+                                    onSuccess = {
+                                        viewModel.updateBiometricLockEnabled(false)
+                                    },
+                                    onError = { err ->
+                                        viewModel.updateBiometricLockEnabled(true)
+                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            }
+                        } else {
+                            viewModel.updateBiometricLockEnabled(enabled)
+                        }
+                    },
                     icon = Icons.Default.Lock,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.primary

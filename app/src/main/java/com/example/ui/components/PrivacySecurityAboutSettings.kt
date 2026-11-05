@@ -85,15 +85,41 @@ fun PrivacySecurityAboutSettings(
                     checked = isBiometricLockEnabled,
                     onCheckedChange = { enabled ->
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        if (enabled) {
-                            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-                            if (keyguardManager?.isDeviceSecure != true) {
-                                Toast.makeText(context, context.getString(R.string.settings_biometric_lock_sub), Toast.LENGTH_LONG).show()
+                        if (activity != null) {
+                            if (enabled) {
+                                val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                                if (keyguardManager?.isDeviceSecure != true) {
+                                    Toast.makeText(context, context.getString(R.string.settings_biometric_lock_sub), Toast.LENGTH_LONG).show()
+                                } else {
+                                    VaultBiometricAuthHelper.authenticate(
+                                        activity = activity,
+                                        title = "Enable Biometric Lock",
+                                        subtitle = "Authenticate to confirm enabling App Lock",
+                                        onSuccess = {
+                                            viewModel.updateBiometricLockEnabled(true)
+                                        },
+                                        onError = { err ->
+                                            viewModel.updateBiometricLockEnabled(false)
+                                            Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                        }
+                                    )
+                                }
                             } else {
-                                viewModel.updateBiometricLockEnabled(true)
+                                VaultBiometricAuthHelper.authenticate(
+                                    activity = activity,
+                                    title = "Disable Biometric Lock",
+                                    subtitle = "Authenticate to confirm disabling App Lock",
+                                    onSuccess = {
+                                        viewModel.updateBiometricLockEnabled(false)
+                                    },
+                                    onError = { err ->
+                                        viewModel.updateBiometricLockEnabled(true)
+                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
                             }
                         } else {
-                            viewModel.updateBiometricLockEnabled(false)
+                            viewModel.updateBiometricLockEnabled(enabled)
                         }
                     },
                     icon = Icons.Default.Lock,

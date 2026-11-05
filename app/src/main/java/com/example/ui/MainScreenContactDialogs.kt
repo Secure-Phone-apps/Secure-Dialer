@@ -79,6 +79,7 @@ fun MainScreenContactDialogs(
             initialAddresses = contactToEdit.getAllAddresses(),
             availableAccounts = viewModel.availableAccounts,
             selectedAccountFilter = contactToEdit.accountName,
+            defaultAccountName = viewModel.defaultContactAccountName.value,
             onDismiss = {
                 isEditContactDialogVisible = false
                 oldContactToEdit = null

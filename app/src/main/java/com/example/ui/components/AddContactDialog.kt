@@ -83,19 +83,44 @@ fun AddContactDialog(
     var lastName by remember { mutableStateOf("") }
     var addressInput by remember { mutableStateOf(initialAddresses.firstOrNull()?.address ?: "") }
 
-    val defaultSaveAccount = remember(availableAccounts, defaultAccountName, selectedAccountFilter) {
-        val specificAccounts = availableAccounts.filter { it.name.isNotBlank() }
-        if (defaultAccountName.isNotBlank()) {
-            specificAccounts.firstOrNull { it.name == defaultAccountName }
-                ?: specificAccounts.firstOrNull { it.type == "com.google" }
-                ?: specificAccounts.firstOrNull()
-        } else if (selectedAccountFilter.isNotBlank()) {
-            specificAccounts.firstOrNull { it.name == selectedAccountFilter }
-                ?: specificAccounts.firstOrNull { it.type == "com.google" }
-                ?: specificAccounts.firstOrNull()
+    val phoneAccount = remember(availableAccounts) {
+        availableAccounts.firstOrNull { it.name == "Phone" || it.type.contains("local") || it.displayName.contains("Phone", ignoreCase = true) }
+            ?: ContactAccount(name = "Phone", type = "com.android.localphone", displayName = "Phone storage")
+    }
+
+    val accountsToPick = remember(availableAccounts, phoneAccount) {
+        val list = availableAccounts.toMutableList()
+        if (list.none { it.name == phoneAccount.name && it.type == phoneAccount.type }) {
+            list.add(0, phoneAccount)
+        }
+        list
+    }
+
+    val defaultSaveAccount = remember(accountsToPick, defaultAccountName, selectedAccountFilter) {
+        val isLocalSelected = selectedAccountFilter.isBlank() ||
+                selectedAccountFilter.equals("Phone", ignoreCase = true) ||
+                selectedAccountFilter.equals("Phone storage", ignoreCase = true) ||
+                selectedAccountFilter.contains("local", ignoreCase = true)
+
+        val isLocalDefault = defaultAccountName.isBlank() ||
+                defaultAccountName.equals("Phone", ignoreCase = true) ||
+                defaultAccountName.equals("Phone storage", ignoreCase = true) ||
+                defaultAccountName.contains("local", ignoreCase = true)
+
+        if (selectedAccountFilter.isNotBlank() && !isLocalSelected) {
+            accountsToPick.firstOrNull { it.name == selectedAccountFilter }
+                ?: accountsToPick.firstOrNull { it.type == "com.google" }
+                ?: phoneAccount
+        } else if (isLocalSelected && selectedAccountFilter.isNotBlank()) {
+            phoneAccount
+        } else if (defaultAccountName.isNotBlank() && !isLocalDefault) {
+            accountsToPick.firstOrNull { it.name == defaultAccountName }
+                ?: accountsToPick.firstOrNull { it.type == "com.google" }
+                ?: phoneAccount
+        } else if (isLocalDefault) {
+            phoneAccount
         } else {
-            specificAccounts.firstOrNull { it.type == "com.google" }
-                ?: specificAccounts.firstOrNull()
+            accountsToPick.firstOrNull { it.type == "com.google" } ?: phoneAccount
         }
     }
 
@@ -169,8 +194,6 @@ fun AddContactDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Account Banner
-                val accountsToPick = availableAccounts.filter { it.name.isNotBlank() }
                 if (accountsToPick.isNotEmpty()) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth()) {
