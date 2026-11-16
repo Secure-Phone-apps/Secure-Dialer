@@ -87,6 +87,9 @@ object DynamicIslandOverlayManager {
                     callState == android.telecom.Call.STATE_ACTIVE ||
                     callState == android.telecom.Call.STATE_DIALING ||
                     callState == android.telecom.Call.STATE_CONNECTING ||
+                    callState == android.telecom.Call.STATE_NEW ||
+                    callState == android.telecom.Call.STATE_SELECT_PHONE_ACCOUNT ||
+                    callState == android.telecom.Call.STATE_DISCONNECTING ||
                     callState == android.telecom.Call.STATE_HOLDING
                 )
 

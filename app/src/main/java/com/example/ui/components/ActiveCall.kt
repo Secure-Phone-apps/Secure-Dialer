@@ -552,7 +552,11 @@ fun ActiveCallScreen(
                     onAnswer = if (isFake) onFakeAnswer else onAnswer,
                     onHangUp = if (isFake) onFakeHangUp else onHangUp,
                     onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen },
-                    avatarShapeType = avatarShapeType
+                    avatarShapeType = avatarShapeType,
+                    isDisconnecting = !isFake && (
+                        currentCallState == Call.STATE_DISCONNECTING ||
+                            currentCallState == Call.STATE_DISCONNECTED
+                        )
                 )
             }
         }

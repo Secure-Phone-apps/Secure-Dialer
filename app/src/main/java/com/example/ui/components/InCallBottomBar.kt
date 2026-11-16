@@ -17,6 +17,7 @@
 
 package com.example.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -47,7 +48,8 @@ fun InCallBottomBar(
     onAnswer: () -> Unit,
     onHangUp: () -> Unit,
     onToggleQuickDeclineMenu: () -> Unit,
-    avatarShapeType: String = "squircle"
+    avatarShapeType: String = "squircle",
+    isDisconnecting: Boolean = false
 ) {
     val context = LocalContext.current
     val buttonShape = AppShapes.Keypad
@@ -118,6 +120,7 @@ fun InCallBottomBar(
                     onHangUp = onHangUp,
                     buttonShape = buttonShape,
                     labelResId = R.string.btn_decline,
+                    isDisconnecting = isDisconnecting,
                     modifier = Modifier.size(width = 84.dp, height = 64.dp)
                 )
             } else {
@@ -125,6 +128,7 @@ fun InCallBottomBar(
                     onHangUp = onHangUp,
                     buttonShape = buttonShape,
                     labelResId = R.string.call_status_ended,
+                    isDisconnecting = isDisconnecting,
                     modifier = Modifier.size(width = 84.dp, height = 64.dp)
                 )
             }
@@ -137,18 +141,30 @@ private fun HangUpActionCallButton(
     onHangUp: () -> Unit,
     buttonShape: Shape,
     labelResId: Int,
+    isDisconnecting: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val hangUpInteractionSource = remember { MutableInteractionSource() }
     val isHangUpPressed by hangUpInteractionSource.collectIsPressedAsState()
+    val targetScale = when {
+        isHangUpPressed -> 0.90f
+        isDisconnecting -> 0.94f
+        else -> 1.0f
+    }
     val hangUpScale by animateFloatAsState(
-        targetValue = if (isHangUpPressed) 0.92f else 1.0f,
+        targetValue = targetScale,
         animationSpec = spring(
-            stiffness = Spring.StiffnessHigh,
+            stiffness = Spring.StiffnessMediumLow,
             dampingRatio = Spring.DampingRatioMediumBouncy
         ),
         label = "hangup_button_scale"
+    )
+    val baseContainerColor = getDeclineRedColor()
+    val containerColor by animateColorAsState(
+        targetValue = if (isDisconnecting) baseContainerColor.copy(alpha = 0.6f) else baseContainerColor,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "hangup_button_color"
     )
 
     Surface(
@@ -157,7 +173,7 @@ private fun HangUpActionCallButton(
             onHangUp()
         },
         interactionSource = hangUpInteractionSource,
-        color = getDeclineRedColor(),
+        color = containerColor,
         contentColor = getOnDeclineRedColor(),
         shape = buttonShape,
         modifier = modifier

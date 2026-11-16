@@ -52,6 +52,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.IdentityHashMap
 
 class MyInCallService : InCallService() {
 
@@ -64,6 +65,7 @@ class MyInCallService : InCallService() {
     private var vibrator: Vibrator? = null
     private var callWaitingToneGenerator: ToneGenerator? = null
     private var isScreenOffReceiverRegistered = false
+    private val serviceCallbacks = IdentityHashMap<Call, Call.Callback>()
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
@@ -288,25 +290,64 @@ class MyInCallService : InCallService() {
     override fun onDestroy() {
         unregisterScreenOffReceiver()
         stopRinging()
+        stopCallWaitingTone()
         releaseAllWakeLocks()
         stopInCallForeground()
         DynamicIslandOverlayManager.stopCallMonitoring()
         FlashLightManager.stopFlashing(this)
         nm.cancel(NOTIFICATION_ID_INCOMING)
         nm.cancel(NOTIFICATION_ID_ACTIVE)
+        CallManager.onInCallServiceUnbound(this)
         serviceScope.cancel()
         super.onDestroy()
+    }
+
+    override fun onUnbind(intent: Intent?): Boolean {
+        unregisterScreenOffReceiver()
+        stopRinging()
+        stopCallWaitingTone()
+        releaseAllWakeLocks()
+        stopInCallForeground()
+        DynamicIslandOverlayManager.stopCallMonitoring()
+        FlashLightManager.stopFlashing(this)
+        CallManager.onInCallServiceUnbound(this)
+        return super.onUnbind(intent)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_HANG_UP, ACTION_DECLINE -> {
                 stopRinging()
-                CallManager.disconnect()
-                releaseAllWakeLocks()
-                stopInCallForeground()
+                FlashLightManager.stopFlashing(this)
                 nm.cancel(NOTIFICATION_ID_INCOMING)
-                nm.cancel(NOTIFICATION_ID_ACTIVE)
+                CallManager.disconnect()
+
+                val hasPendingTelecomCalls = try {
+                    calls.any { it.state != Call.STATE_DISCONNECTED } ||
+                        CallManager.calls.value.any { it.state != Call.STATE_DISCONNECTED }
+                } catch (_: Exception) {
+                    CallManager.calls.value.any { it.state != Call.STATE_DISCONNECTED }
+                }
+
+                if (!hasPendingTelecomCalls) {
+                    releaseAllWakeLocks()
+                    stopInCallForeground()
+                    nm.cancel(NOTIFICATION_ID_ACTIVE)
+                } else {
+                    serviceScope.launch {
+                        delay(6000)
+                        val stillAlive = try {
+                            calls.any { it.state != Call.STATE_DISCONNECTED }
+                        } catch (_: Exception) {
+                            false
+                        }
+                        if (!stillAlive) {
+                            releaseAllWakeLocks()
+                            stopInCallForeground()
+                            nm.cancel(NOTIFICATION_ID_ACTIVE)
+                        }
+                    }
+                }
             }
             ACTION_DECLINE_WAITING -> {
                 stopCallWaitingTone()
@@ -355,34 +396,50 @@ class MyInCallService : InCallService() {
         acquireCpuWakeLock()
         CallManager.inCallService = this
         CallManager.addCall(call)
-        val num = call.details?.handle?.schemeSpecificPart ?: ""
-        val resolvedName = resolveCallerDisplayName(call, num)
-        if (resolvedName.isNotBlank() && resolvedName != num && resolvedName != "Unknown") {
-            CallManager.setCallerName(resolvedName)
+
+        val wasAutoCancelled = CallManager.isPreCancelledCall(call) || CallManager.isDisconnectRequested(call)
+
+        if (!wasAutoCancelled) {
+            val num = call.details?.handle?.schemeSpecificPart ?: ""
+            val resolvedName = resolveCallerDisplayName(call, num)
+            if (resolvedName.isNotBlank() && resolvedName != num && resolvedName != "Unknown") {
+                CallManager.setCallerName(resolvedName)
+            }
+            DynamicIslandOverlayManager.startCallMonitoring(this)
+            persistCnapIfPresent(call)
+            handleCallState(call)
         }
-        DynamicIslandOverlayManager.startCallMonitoring(this)
 
-        persistCnapIfPresent(call)
-        handleCallState(call)
-
-        call.registerCallback(object : Call.Callback() {
+        val callback = object : Call.Callback() {
             private var wasRinging = (call.state == Call.STATE_RINGING)
 
             override fun onStateChanged(c: Call, state: Int) {
                 super.onStateChanged(c, state)
                 if (state == Call.STATE_RINGING) wasRinging = true
 
-                if (state == Call.STATE_ACTIVE || state == Call.STATE_DISCONNECTED) {
+                if (CallManager.isPreCancelledCall(c) && state != Call.STATE_DISCONNECTED) {
+                    return
+                }
+
+                if (state == Call.STATE_ACTIVE || state == Call.STATE_DISCONNECTING || state == Call.STATE_DISCONNECTED) {
                     unregisterScreenOffReceiver()
                     stopRinging()
                     nm.cancel(NOTIFICATION_ID_INCOMING)
                     FlashLightManager.stopFlashing(this@MyInCallService)
                 }
 
-                if (state in listOf(Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING)) {
+                if (state in listOf(
+                        Call.STATE_ACTIVE,
+                        Call.STATE_DIALING,
+                        Call.STATE_CONNECTING,
+                        Call.STATE_NEW,
+                        Call.STATE_SELECT_PHONE_ACCOUNT,
+                        Call.STATE_HOLDING
+                    ) && !CallManager.isDisconnectRequested(c)
+                ) {
                     stopRinging()
                     stopCallWaitingTone()
-                    if (CallManager.waitingCall.value == c) {
+                    if (CallManager.waitingCall.value === c) {
                         CallManager.updateWaitingCall(null)
                     }
                     showActiveCallNotification(c)
@@ -390,32 +447,38 @@ class MyInCallService : InCallService() {
 
                 if (state == Call.STATE_DISCONNECTED) {
                     stopRinging()
-                    val remaining = CallManager.calls.value.filter { it != c && it.state != Call.STATE_DISCONNECTED }
+                    val remaining = CallManager.calls.value.filter { it !== c && it.state != Call.STATE_DISCONNECTED }
                     if (remaining.isEmpty()) {
                         releaseAllWakeLocks()
                         stopInCallForeground()
                         nm.cancel(NOTIFICATION_ID_ACTIVE)
                     }
-                    if (wasRinging) {
+                    if (wasRinging && !CallManager.isPreCancelledCall(c)) {
                         val cause = c.details?.disconnectCause?.code
                         if (cause != DisconnectCause.REJECTED && cause != DisconnectCause.LOCAL) {
                             showMissedCallNotification(c)
                         }
                     }
-                    if (CallManager.waitingCall.value == c) {
+                    if (CallManager.waitingCall.value === c) {
                         CallManager.updateWaitingCall(null)
                     }
-                    c.unregisterCallback(this)
+                    serviceCallbacks.remove(c)
+                    try { c.unregisterCallback(this) } catch (_: Exception) {}
                 }
 
                 if (state == Call.STATE_ACTIVE) wasRinging = false
             }
-        })
+        }
+        serviceCallbacks[call] = callback
+        call.registerCallback(callback)
     }
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
         stopRinging()
+        serviceCallbacks.remove(call)?.let { cb ->
+            try { call.unregisterCallback(cb) } catch (_: Exception) {}
+        }
         CallManager.removeCall(call)
         FlashLightManager.stopFlashing(this)
         nm.cancel(NOTIFICATION_ID_INCOMING)
@@ -435,7 +498,7 @@ class MyInCallService : InCallService() {
             }
         } else {
             val nextCall = remainingActiveCalls.firstOrNull()
-            if (nextCall != null) {
+            if (nextCall != null && !CallManager.isPreCancelledCall(nextCall)) {
                 showActiveCallNotification(nextCall)
             } else {
                 nm.cancel(NOTIFICATION_ID_ACTIVE)
@@ -525,22 +588,35 @@ class MyInCallService : InCallService() {
                     }
                 }
             }
-            Call.STATE_ACTIVE, Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_HOLDING -> {
+            Call.STATE_ACTIVE,
+            Call.STATE_DIALING,
+            Call.STATE_CONNECTING,
+            Call.STATE_NEW,
+            Call.STATE_SELECT_PHONE_ACCOUNT,
+            Call.STATE_HOLDING -> {
                 unregisterScreenOffReceiver()
                 stopRinging()
                 stopCallWaitingTone()
-                if (CallManager.waitingCall.value == call) {
+                if (CallManager.waitingCall.value === call) {
                     CallManager.updateWaitingCall(null)
                 }
                 FlashLightManager.stopFlashing(this)
-                showActiveCallNotification(call)
-
-                val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-                val isKeyguardLocked = km?.isKeyguardLocked ?: false
-                val isDialerInForeground = CallManager.isAppInForeground.value
-                if (isKeyguardLocked || isDialerInForeground) {
-                    launchCallScreen(answerOnLaunch = false)
+                if (!CallManager.isDisconnectRequested(call)) {
+                    showActiveCallNotification(call)
+                    val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                    val isKeyguardLocked = km?.isKeyguardLocked ?: false
+                    val isDialerInForeground = CallManager.isAppInForeground.value
+                    if (isKeyguardLocked || isDialerInForeground) {
+                        launchCallScreen(answerOnLaunch = false)
+                    }
                 }
+            }
+            Call.STATE_DISCONNECTING, Call.STATE_DISCONNECTED -> {
+                unregisterScreenOffReceiver()
+                stopRinging()
+                stopCallWaitingTone()
+                FlashLightManager.stopFlashing(this)
+                nm.cancel(NOTIFICATION_ID_INCOMING)
             }
         }
     }

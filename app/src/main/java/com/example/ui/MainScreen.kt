@@ -213,7 +213,7 @@ fun MainScreen(
         }
     }
 
-    LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, systemCallerCnapName) {
+    LaunchedEffect(systemActiveCall, systemCallState, systemCallerNumber, systemCallerCnapName, isCallActive) {
         if (systemActiveCall != null) {
             isCallActive = true
             if (systemCallState == android.telecom.Call.STATE_RINGING) {
@@ -232,9 +232,26 @@ fun MainScreen(
                 }
                 CallManager.setCallerName(callingContactName)
             }
-        } else {
-            if (isCallActive) {
-                delay(650)
+        } else if (isCallActive) {
+            if (CallManager.hasPendingOutgoingCancel()) {
+                isCallActive = false
+                return@LaunchedEffect
+            }
+            if (CallManager.isInPreAttachPlacementWindow()) {
+                // Telecom is attaching the outgoing call asynchronously; avoid closing UI prematurely
+                // while still bounding wait if the OEM/system never attaches a Call object.
+                val startWaitMs = System.currentTimeMillis()
+                while (CallManager.currentCall.value == null &&
+                    !CallManager.hasPendingOutgoingCancel() &&
+                    (System.currentTimeMillis() - startWaitMs) < 3500L
+                ) {
+                    delay(120)
+                }
+                if (CallManager.currentCall.value == null) {
+                    isCallActive = false
+                }
+            } else {
+                delay(400)
                 isCallActive = false
                 // Auto-switch to Recents tab so the user immediately sees the latest completed call
                 viewModel.selectTabBySlotKey("RECENTS")
@@ -244,8 +261,6 @@ fun MainScreen(
                 viewModel.syncData(force = true)
                 delay(1200)
                 viewModel.syncData(force = true)
-            } else {
-                isCallActive = false
             }
         }
     }
@@ -541,7 +556,9 @@ fun MainScreen(
                             onExpand = { isCallMinimized = false },
                             onHangUp = {
                                 CallManager.disconnect()
-                                isCallActive = false
+                                if (CallManager.currentCall.value == null && CallManager.calls.value.isEmpty()) {
+                                    isCallActive = false
+                                }
                             }
                         )
                     }
@@ -571,6 +588,9 @@ fun MainScreen(
             val isPlacedOrAnswered = systemCallState == android.telecom.Call.STATE_ACTIVE ||
                     systemCallState == android.telecom.Call.STATE_DIALING ||
                     systemCallState == android.telecom.Call.STATE_CONNECTING ||
+                    systemCallState == android.telecom.Call.STATE_NEW ||
+                    systemCallState == android.telecom.Call.STATE_SELECT_PHONE_ACCOUNT ||
+                    systemCallState == android.telecom.Call.STATE_DISCONNECTING ||
                     systemCallState == android.telecom.Call.STATE_HOLDING
 
             if (isCallActive && isCallMinimized && isDynamicIsland && isPlacedOrAnswered && (!speakerOnly || isSpeakerOn)) {
@@ -592,7 +612,9 @@ fun MainScreen(
                         onExpandToFullScreen = { isCallMinimized = false },
                         onHangUp = {
                             CallManager.disconnect()
-                            isCallActive = false
+                            if (CallManager.currentCall.value == null && CallManager.calls.value.isEmpty()) {
+                                isCallActive = false
+                            }
                         }
                     )
                 }
@@ -653,6 +675,9 @@ fun MainScreen(
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
                             CallManager.disconnect()
+                            if (CallManager.currentCall.value == null && CallManager.calls.value.isEmpty()) {
+                                isCallActive = false
+                            }
                         }
                     },
                     onAnswer = { CallManager.answer() },
@@ -668,6 +693,9 @@ fun MainScreen(
                             viewModel.fakeCallState.value = "DISCONNECTED"
                         } else {
                             CallManager.disconnect()
+                            if (CallManager.currentCall.value == null && CallManager.calls.value.isEmpty()) {
+                                isCallActive = false
+                            }
                         }
                     },
                     isIncoming = if (isFakeCallActive) (fakeCallState == "RINGING") else (systemCallState == android.telecom.Call.STATE_RINGING),

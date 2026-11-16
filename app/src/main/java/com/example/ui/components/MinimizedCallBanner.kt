@@ -88,7 +88,8 @@ fun MinimizedCallBanner(
     val statusText = when (callState) {
         Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
         Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
-        Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
+        Call.STATE_CONNECTING, Call.STATE_NEW, Call.STATE_SELECT_PHONE_ACCOUNT -> stringResource(R.string.call_status_connecting)
+        Call.STATE_DISCONNECTING, Call.STATE_DISCONNECTED -> stringResource(R.string.call_status_ended)
         Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
         else -> formattedTime
     }
@@ -183,7 +184,15 @@ fun MinimizedCallBanner(
 // PERF FIX: Isolates 60fps/120fps infinite pulse animation from triggering whole-banner recomposition
 @Composable
 private fun BannerPulseIndicator(callState: Int) {
-    val indicatorColor = if (callState == Call.STATE_RINGING) getDeclineRedColor() else getCallGreenColor()
+    val indicatorColor = if (
+        callState == Call.STATE_RINGING ||
+        callState == Call.STATE_DISCONNECTING ||
+        callState == Call.STATE_DISCONNECTED
+    ) {
+        getDeclineRedColor()
+    } else {
+        getCallGreenColor()
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "banner_pulse")
     val scale by infiniteTransition.animateFloat(

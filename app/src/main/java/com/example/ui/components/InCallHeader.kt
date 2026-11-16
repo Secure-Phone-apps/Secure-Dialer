@@ -8,6 +8,7 @@ package com.example.ui.components
 import android.os.Build
 import android.telecom.Call
 import android.telecom.Connection
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -119,11 +120,14 @@ fun InCallHeader(
         }
 
         val displayHeader = when {
-            callState == Call.STATE_DISCONNECTED -> stringResource(R.string.call_status_ended)
+            callState == Call.STATE_DISCONNECTED || callState == Call.STATE_DISCONNECTING ->
+                stringResource(R.string.call_status_ended)
             isOnHold || callState == Call.STATE_HOLDING -> stringResource(R.string.call_status_hold)
             callState == Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
             callState == Call.STATE_RINGING -> stringResource(R.string.call_status_ringing)
-            callState == Call.STATE_CONNECTING -> stringResource(R.string.call_status_connecting)
+            callState == Call.STATE_CONNECTING ||
+                callState == Call.STATE_NEW ||
+                callState == Call.STATE_SELECT_PHONE_ACCOUNT -> stringResource(R.string.call_status_connecting)
             isConference || participants.size > 1 -> "${stringResource(R.string.call_status_conference)} • $simDisplay"
             else -> "${stringResource(R.string.call_status_ongoing)} • $simDisplay"
         }
@@ -151,10 +155,17 @@ fun InCallHeader(
             }
         }
 
+        val isEnding = callState == Call.STATE_DISCONNECTED || callState == Call.STATE_DISCONNECTING
+        val headerColor by animateColorAsState(
+            targetValue = if (isEnding) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+            label = "incall_header_color"
+        )
+
         Text(
             text = displayHeader,
             style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = headerColor
         )
 
         Spacer(modifier = Modifier.height(8.dp))

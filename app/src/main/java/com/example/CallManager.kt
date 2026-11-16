@@ -31,7 +31,9 @@ import com.example.ui.components.getCurrentLocale
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.MultiSimManager
+import com.example.util.OutgoingCallDisconnectCoordinator
 import com.example.util.PhoneFormatHelper
+import com.example.util.PlatformTelecomCallHandle
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.SimCallTracker
 import kotlinx.coroutines.CoroutineScope
@@ -51,6 +53,42 @@ object CallManager {
     private var dtmfJob: Job? = null
     private var resolveDetailsJob: Job? = null
     private var resolveCnapJob: Job? = null
+    private var disconnectWatchdogJob: Job? = null
+
+    internal val disconnectCoordinator = OutgoingCallDisconnectCoordinator()
+
+    @Volatile
+    private var isDtmfPlaying: Boolean = false
+
+    fun isDisconnectRequested(call: Call): Boolean = disconnectCoordinator.isDisconnectRequested(call)
+
+    fun isPreCancelledCall(call: Call): Boolean = disconnectCoordinator.isPreCancelled(call)
+
+    fun hasPendingOutgoingCancel(): Boolean = disconnectCoordinator.hasPendingOutgoingCancel()
+
+    fun isInPreAttachPlacementWindow(): Boolean = disconnectCoordinator.isInPreAttachPlacementWindow()
+
+    internal fun isOutgoingCall(call: Call): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                val direction = call.details?.callDirection
+                if (direction == Call.Details.DIRECTION_OUTGOING) return true
+                if (direction == Call.Details.DIRECTION_INCOMING) return false
+            } catch (_: Exception) {}
+        }
+        return call.state != Call.STATE_RINGING
+    }
+
+    fun onInCallServiceUnbound(service: InCallService) {
+        if (inCallService === service) {
+            inCallService = null
+        }
+        if (_calls.value.isEmpty()) {
+            disconnectWatchdogJob?.cancel()
+            disconnectWatchdogJob = null
+            disconnectCoordinator.reset()
+        }
+    }
 
     private val _isAppInForeground = MutableStateFlow(false)
     val isAppInForeground: StateFlow<Boolean> = _isAppInForeground.asStateFlow()
@@ -196,15 +234,31 @@ object CallManager {
             super.onStateChanged(call, state)
             notifyCallsChanged()
 
+            val handle = PlatformTelecomCallHandle(call)
+            val wasPreCancelled = disconnectCoordinator.isPreCancelled(call)
+            val isDisconnectMarked = disconnectCoordinator.isDisconnectRequested(call)
+            val shouldRetryDisconnect = disconnectCoordinator.onCallStateUpdated(handle, state)
+
             if (state == Call.STATE_DISCONNECTED) {
-                capturePostCallData(call)
+                if (!wasPreCancelled) {
+                    capturePostCallData(call)
+                }
                 removeCall(call)
+                if (!disconnectCoordinator.hasAnyPendingDisconnects()) {
+                    disconnectWatchdogJob?.cancel()
+                    disconnectWatchdogJob = null
+                }
                 return
             }
 
+            if (shouldRetryDisconnect) {
+                disconnectCoordinator.terminateCallHandle(handle)
+                startDisconnectWatchdog()
+            }
+
             if (call == _currentCall.value) {
-                _callState.value = state
-                if (state == Call.STATE_ACTIVE) {
+                _callState.value = if (isDisconnectMarked) Call.STATE_DISCONNECTING else state
+                if (state == Call.STATE_ACTIVE && !isDisconnectMarked) {
                     if (_activeStartTimestamp.value == 0L) {
                         val connect = call.details?.connectTimeMillis ?: 0L
                         _activeStartTimestamp.value = if (connect > 0L) connect else System.currentTimeMillis()
@@ -240,6 +294,10 @@ object CallManager {
 
         override fun onDetailsChanged(call: Call, details: Call.Details) {
             super.onDetailsChanged(call, details)
+            val handle = PlatformTelecomCallHandle(call)
+            if (disconnectCoordinator.shouldRetryOnDetailsChange(handle, call.state)) {
+                disconnectCoordinator.terminateCallHandle(handle)
+            }
             notifyCallsChanged()
             autoSelectCurrentCall()
         }
@@ -264,23 +322,49 @@ object CallManager {
     }
 
     fun addCall(call: Call) {
-        if (call !in _calls.value) {
+        if (_calls.value.none { it === call }) {
             _calls.value = _calls.value + call
             call.registerCallback(callCallback)
         }
+
+        val handle = PlatformTelecomCallHandle(call)
+        val outgoing = isOutgoingCall(call)
+        if (disconnectCoordinator.shouldAutoDisconnectOnAdd(handle, outgoing)) {
+            disconnectCoordinator.terminateCallHandle(handle)
+            startDisconnectWatchdog()
+            notifyCallsChanged()
+            autoSelectCurrentCall()
+            validateWaitingCallState()
+            return
+        }
+
         notifyCallsChanged()
 
         val activeCalls = _calls.value.filter {
-            it != call && it.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING)
+            it !== call && it.state in listOf(
+                Call.STATE_ACTIVE,
+                Call.STATE_HOLDING,
+                Call.STATE_DIALING,
+                Call.STATE_CONNECTING,
+                Call.STATE_NEW,
+                Call.STATE_SELECT_PHONE_ACCOUNT
+            )
         }
         val current = _currentCall.value
 
         val isSameCallerAsActive = activeCalls.any {
             PhoneFormatHelper.isSameCallOrCaller(call, it, _callerNumber.value, _callerName.value, appContext)
-        } || (current != null && current != call && PhoneFormatHelper.isSameCallOrCaller(call, current, _callerNumber.value, _callerName.value, appContext))
+        } || (current != null && current !== call && PhoneFormatHelper.isSameCallOrCaller(call, current, _callerNumber.value, _callerName.value, appContext))
 
         if (call.state == Call.STATE_RINGING) {
-            val hasActiveCall = activeCalls.isNotEmpty() || (current != null && current != call && current.state in listOf(Call.STATE_ACTIVE, Call.STATE_HOLDING, Call.STATE_DIALING, Call.STATE_CONNECTING))
+            val hasActiveCall = activeCalls.isNotEmpty() || (current != null && current !== call && current.state in listOf(
+                Call.STATE_ACTIVE,
+                Call.STATE_HOLDING,
+                Call.STATE_DIALING,
+                Call.STATE_CONNECTING,
+                Call.STATE_NEW,
+                Call.STATE_SELECT_PHONE_ACCOUNT
+            ))
             if (hasActiveCall) {
                 if (isSameCallerAsActive) {
                     // Same caller as active call: Suppress second call waiting alert completely
@@ -300,18 +384,24 @@ object CallManager {
     }
 
     fun removeCall(call: Call) {
-        if (call.state == Call.STATE_DISCONNECTED) {
+        val wasPreCancelled = disconnectCoordinator.isPreCancelled(call)
+        if (call.state == Call.STATE_DISCONNECTED && !wasPreCancelled) {
             capturePostCallData(call)
         }
-        if (call in _calls.value) {
-            _calls.value = _calls.value - call
-            call.unregisterCallback(callCallback)
+        disconnectCoordinator.clearCall(call)
+        if (!disconnectCoordinator.hasAnyPendingDisconnects()) {
+            disconnectWatchdogJob?.cancel()
+            disconnectWatchdogJob = null
+        }
+        if (_calls.value.any { it === call }) {
+            _calls.value = _calls.value.filterNot { it === call }
+            try { call.unregisterCallback(callCallback) } catch (_: Exception) {}
         }
         notifyCallsChanged()
-        if (_currentCall.value == call) {
+        if (_currentCall.value === call) {
             autoStopRecordingIfNeeded()
         }
-        if (_waitingCall.value == call) {
+        if (_waitingCall.value === call) {
             updateWaitingCall(null)
         }
         autoSelectCurrentCall()
@@ -319,7 +409,9 @@ object CallManager {
     }
 
     fun autoSelectCurrentCall() {
-        val activeCalls = _calls.value.filter { it.state != Call.STATE_DISCONNECTED }
+        val activeCalls = _calls.value.filter {
+            it.state != Call.STATE_DISCONNECTED && !disconnectCoordinator.isPreCancelled(it)
+        }
         if (activeCalls.isEmpty()) {
             updateCall(null)
             return
@@ -327,11 +419,20 @@ object CallManager {
 
         val target = activeCalls.find { it.children.isNotEmpty() || isConference(it) }
             ?: activeCalls.find { it.state == Call.STATE_ACTIVE }
-            ?: activeCalls.find { it.state in listOf(Call.STATE_DIALING, Call.STATE_CONNECTING, Call.STATE_RINGING) }
+            ?: activeCalls.find {
+                it.state in listOf(
+                    Call.STATE_DIALING,
+                    Call.STATE_CONNECTING,
+                    Call.STATE_NEW,
+                    Call.STATE_SELECT_PHONE_ACCOUNT,
+                    Call.STATE_RINGING
+                )
+            }
             ?: activeCalls.find { it.state == Call.STATE_HOLDING }
+            ?: activeCalls.find { it.state == Call.STATE_DISCONNECTING }
             ?: activeCalls.firstOrNull()
 
-        if (_currentCall.value != target) {
+        if (_currentCall.value !== target) {
             updateCall(target)
         } else {
             // Re-evaluate conference status
@@ -429,7 +530,6 @@ object CallManager {
             _callerLabel.value = ""
             _activeStartTimestamp.value = 0L
             _isConferenceActive.value = false
-            if (_calls.value.isEmpty()) inCallService = null
         }
     }
 
@@ -640,10 +740,108 @@ object CallManager {
             resolveDetailsJob = null
             resolveCnapJob?.cancel()
             resolveCnapJob = null
-            val call = _currentCall.value ?: return
-            if (call.state == Call.STATE_RINGING) call.reject(false, null) else call.disconnect()
-            if (_calls.value.none { it != call && it.state != Call.STATE_DISCONNECTED }) updateCall(null)
+
+            val trackedHandles = _calls.value.map { PlatformTelecomCallHandle(it) }
+            val serviceHandles = try {
+                inCallService?.calls?.map { PlatformTelecomCallHandle(it) }.orEmpty()
+            } catch (_: Exception) {
+                emptyList()
+            }
+            val currentHandle = _currentCall.value?.let { PlatformTelecomCallHandle(it) }
+            val waitingHandle = _waitingCall.value?.let { PlatformTelecomCallHandle(it) }
+
+            val targets = disconnectCoordinator.collectDisconnectTargets(
+                trackedCalls = trackedHandles,
+                serviceCalls = serviceHandles,
+                currentCall = currentHandle,
+                waitingCall = waitingHandle
+            )
+
+            if (targets.isEmpty()) {
+                disconnectCoordinator.armPreAttachCancel()
+                if (_currentCall.value != null) {
+                    updateCall(null)
+                }
+                return
+            }
+
+            // Ensure any stray call discovered only inside InCallService.calls is also tracked for callbacks
+            targets.forEach { target ->
+                val call = (target as PlatformTelecomCallHandle).call
+                if (_calls.value.none { it === call }) {
+                    _calls.value = _calls.value + call
+                    try { call.registerCallback(callCallback) } catch (_: Exception) {}
+                }
+            }
+
+            disconnectCoordinator.markDisconnectRequested(targets)
+
+            val current = _currentCall.value
+            if (current != null && targets.any { it.identityKey === current } && current.state != Call.STATE_DISCONNECTED) {
+                _callState.value = Call.STATE_DISCONNECTING
+            }
+
+            targets.forEach { target ->
+                disconnectCoordinator.terminateCallHandle(target)
+            }
+
+            startDisconnectWatchdog()
         } catch (_: Exception) {}
+    }
+
+    private fun startDisconnectWatchdog() {
+        if (disconnectWatchdogJob?.isActive == true) return
+        disconnectWatchdogJob = scope.launch {
+            val retryDelaysMs = longArrayOf(250L, 450L, 800L, 1200L, 1500L, 1500L)
+            for (waitMs in retryDelaysMs) {
+                delay(waitMs)
+
+                val allKnownCalls = buildList {
+                    val seen = java.util.IdentityHashMap<Call, Boolean>()
+                    _calls.value.forEach { if (seen.put(it, true) == null) add(it) }
+                    try {
+                        inCallService?.calls?.forEach { if (seen.put(it, true) == null) add(it) }
+                    } catch (_: Exception) {}
+                }
+
+                val pendingCalls = allKnownCalls.filter {
+                    disconnectCoordinator.isDisconnectRequested(it) && it.state != Call.STATE_DISCONNECTED
+                }
+
+                if (pendingCalls.isEmpty()) {
+                    // Prune any calls that entered STATE_DISCONNECTED without delivering onCallRemoved
+                    val staleDisconnected = allKnownCalls.filter {
+                        disconnectCoordinator.isDisconnectRequested(it) && it.state == Call.STATE_DISCONNECTED
+                    }
+                    staleDisconnected.forEach { removeCall(it) }
+                    if (!disconnectCoordinator.hasAnyPendingDisconnects()) return@launch
+                    continue
+                }
+
+                pendingCalls.forEach { call ->
+                    disconnectCoordinator.terminateCallHandle(PlatformTelecomCallHandle(call))
+                }
+            }
+
+            // Bounded failsafe (after ~5.7s): prevent frozen call screen if a broken OEM Telecom stack
+            // dropped onCallRemoved/STATE_DISCONNECTED callbacks permanently.
+            val allKnownCalls = buildList {
+                val seen = java.util.IdentityHashMap<Call, Boolean>()
+                _calls.value.forEach { if (seen.put(it, true) == null) add(it) }
+                try {
+                    inCallService?.calls?.forEach { if (seen.put(it, true) == null) add(it) }
+                } catch (_: Exception) {}
+            }
+            val stuckCalls = allKnownCalls.filter { disconnectCoordinator.isDisconnectRequested(it) }
+            stuckCalls.forEach { call ->
+                try {
+                    if (call.state != Call.STATE_DISCONNECTED) {
+                        disconnectCoordinator.terminateCallHandle(PlatformTelecomCallHandle(call))
+                    }
+                } catch (_: Exception) {}
+                removeCall(call)
+            }
+        }
     }
 
     fun setMuted(muted: Boolean) { inCallService?.setMuted(muted) }
@@ -703,7 +901,12 @@ object CallManager {
     fun playDtmf(key: Char) {
         val call = _currentCall.value ?: return
         dtmfJob?.cancel()
-        try { call.playDtmfTone(key) } catch (_: Exception) {}
+        if (call.state == Call.STATE_ACTIVE) {
+            try {
+                call.playDtmfTone(key)
+                isDtmfPlaying = true
+            } catch (_: Exception) {}
+        }
 
         // Play local acoustic tone so the caller hears crisp audio feedback across all OEM ROMs
         try {
@@ -718,13 +921,19 @@ object CallManager {
 
         dtmfJob = scope.launch(Dispatchers.Default) {
             delay(150)
-            try { call.stopDtmfTone() } catch (_: Exception) {}
+            if (isDtmfPlaying) {
+                try { call.stopDtmfTone() } catch (_: Exception) {}
+                isDtmfPlaying = false
+            }
         }
     }
 
     fun stopDtmf() {
         dtmfJob?.cancel()
-        try { _currentCall.value?.stopDtmfTone() } catch (_: Exception) {}
+        if (isDtmfPlaying) {
+            try { _currentCall.value?.stopDtmfTone() } catch (_: Exception) {}
+            isDtmfPlaying = false
+        }
         try { localToneGenerator?.stopTone() } catch (_: Exception) {}
     }
 
@@ -798,6 +1007,8 @@ object CallManager {
             }
         }
 
+        disconnectCoordinator.onOutgoingCallPlaced()
+
         val tm = context.getSystemService(Context.TELECOM_SERVICE) as? TelecomManager
         var placedSuccessfully = false
         if (tm != null) {
@@ -817,6 +1028,7 @@ object CallManager {
                 }
                 context.startActivity(callIntent)
             } catch (_: Exception) {
+                disconnectCoordinator.clearPlacementWindow()
                 try {
                     val dialIntent = Intent(Intent.ACTION_DIAL, uri).apply {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK

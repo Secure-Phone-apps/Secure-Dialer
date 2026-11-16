@@ -462,7 +462,15 @@ fun DynamicIslandPill(
                                     }
 
                                     Text(
-                                        text = if (callState == Call.STATE_ACTIVE) formattedDuration else stringResource(R.string.call_status_hold),
+                                        text = when (callState) {
+                                            Call.STATE_ACTIVE -> formattedDuration
+                                            Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
+                                            Call.STATE_CONNECTING, Call.STATE_NEW, Call.STATE_SELECT_PHONE_ACCOUNT ->
+                                                stringResource(R.string.call_status_connecting)
+                                            Call.STATE_DISCONNECTING, Call.STATE_DISCONNECTED ->
+                                                stringResource(R.string.call_status_ended)
+                                            else -> stringResource(R.string.call_status_hold)
+                                        },
                                         style = MaterialTheme.typography.labelSmall,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
@@ -580,6 +588,11 @@ fun DynamicIslandPill(
                                                 text = when (callState) {
                                                     Call.STATE_RINGING -> stringResource(R.string.notification_incoming_call_title)
                                                     Call.STATE_ACTIVE -> formattedDuration
+                                                    Call.STATE_DIALING -> stringResource(R.string.call_status_dialing)
+                                                    Call.STATE_CONNECTING, Call.STATE_NEW, Call.STATE_SELECT_PHONE_ACCOUNT ->
+                                                        stringResource(R.string.call_status_connecting)
+                                                    Call.STATE_DISCONNECTING, Call.STATE_DISCONNECTED ->
+                                                        stringResource(R.string.call_status_ended)
                                                     else -> stringResource(R.string.call_status_hold)
                                                 },
                                                 style = MaterialTheme.typography.bodySmall,
