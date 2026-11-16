@@ -77,9 +77,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:showWhenLocked="true"
-            android:turnScreenOn="true"
-            android:inheritShowWhenLocked="true"
             android:launchMode="singleTop"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:windowSoftInputMode="adjustPan">
@@ -116,6 +113,18 @@
                 <category android:name="android.intent.category.BROWSABLE" />
             </intent-filter>
         </activity>
+
+        <!-- Dedicated lockscreen-isolated in-call screen (Android 9-17+) -->
+        <activity
+            android:name=".InCallActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.example.incall"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:windowSoftInputMode="adjustPan" />
 
         <!-- Telecom InCallService Binding -->
         <service

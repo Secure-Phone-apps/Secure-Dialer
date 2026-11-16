@@ -447,6 +447,9 @@
     <string name="settings_security_protection">Sécurité &amp; Protection</string>
     <string name="settings_biometric_lock">Verrouillage de l\'application</string>
     <string name="settings_biometric_lock_sub">Exiger le verrouillage de l\'appareil (Code/Schéma/Empreinte) pour ouvrir l\'application</string>
+    <string name="settings_require_unlock_answer">Déverrouillage requis pour répondre</string>
+    <string name="settings_require_unlock_answer_sub">Demander le code PIN, le schéma ou la biométrie avant de répondre aux appels sur l\'écran verrouillé</string>
+    <string name="lockscreen_unlock_for_action">Déverrouillez l\'appareil pour accéder à cette fonction</string>
     <string name="settings_pocket_protection">Protection anti-tactile de poche</string>
     <string name="settings_pocket_protection_sub">Bloque les touches involontaires lors d\'un appel dans la poche</string>
     <string name="pocket_lock_active">Mode anti-poche actif</string>

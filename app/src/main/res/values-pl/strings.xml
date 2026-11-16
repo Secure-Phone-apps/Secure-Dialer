@@ -447,6 +447,9 @@
     <string name="settings_security_protection">Bezpieczeństwo i ochrona</string>
     <string name="settings_biometric_lock">Blokada aplikacji</string>
     <string name="settings_biometric_lock_sub">Wymagaj blokady urządzenia (kod PIN/wzór/biometria) do otwarcia aplikacji</string>
+    <string name="settings_require_unlock_answer">Wymagaj odblokowania, aby odebrać</string>
+    <string name="settings_require_unlock_answer_sub">Żądaj kodu PIN, wzoru lub biometrii przed odebraniem połączeń na ekranie blokady</string>
+    <string name="lockscreen_unlock_for_action">Odblokuj urządzenie, aby uzyskać dostęp do tej funkcji</string>
     <string name="settings_pocket_protection">Ochrona przed przypadkowym dotknięciem w kieszeni</string>
     <string name="settings_pocket_protection_sub">Blokuj reakcję na dotyk podczas rozmów, gdy czujnik zbliżeniowy wykryje bliskość (np. w kieszeni)</string>
     <string name="pocket_lock_active">Blokada kieszonkowa aktywna</string>

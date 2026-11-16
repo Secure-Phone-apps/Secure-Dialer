@@ -447,6 +447,9 @@
     <string name="settings_security_protection">Seguridad y Protección</string>
     <string name="settings_biometric_lock">Bloqueo de aplicación</string>
     <string name="settings_biometric_lock_sub">Requerir bloqueo de dispositivo (PIN/Patrón/Biometría) para abrir la aplicación</string>
+    <string name="settings_require_unlock_answer">Requerir desbloqueo para contestar</string>
+    <string name="settings_require_unlock_answer_sub">Solicitar PIN, patrón o biometría del dispositivo antes de contestar llamadas desde la pantalla de bloqueo</string>
+    <string name="lockscreen_unlock_for_action">Desbloquea el dispositivo para acceder a esta función</string>
     <string name="settings_pocket_protection">Protección táctil de bolsillo</string>
     <string name="settings_pocket_protection_sub">Bloquea toques táctiles durante llamadas en el bolsillo usando sensor de proximidad</string>
     <string name="pocket_lock_active">Bloqueo de bolsillo activo</string>

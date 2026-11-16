@@ -447,6 +447,9 @@
     <string name="settings_security_protection">安全与保护</string>
     <string name="settings_biometric_lock">应用锁</string>
     <string name="settings_biometric_lock_sub">需要设备锁（PIN/图案/生物识别）才能打开应用</string>
+    <string name="settings_require_unlock_answer">接听来电前需要解锁</string>
+    <string name="settings_require_unlock_answer_sub">在锁屏界面接听来电前要求验证设备 PIN 码、图案或生物识别</string>
+    <string name="lockscreen_unlock_for_action">请先解锁设备以使用此功能</string>
     <string name="settings_pocket_protection">口袋防误触保护</string>
     <string name="settings_pocket_protection_sub">通话中当距离传感器检测到遮挡时（例如放在口袋里）拦截触摸输入</string>
     <string name="pocket_lock_active">口袋锁已启用</string>

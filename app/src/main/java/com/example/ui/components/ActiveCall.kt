@@ -99,9 +99,11 @@ fun ActiveCallScreen(
     onSimulatedDecline: (() -> Unit)? = null,
     onSimulatedSwap: (() -> Unit)? = null,
     onSimulatedMerge: (() -> Unit)? = null,
-    onTriggerSimulatedCallWaiting: ((String, String) -> Unit)? = null
+    onTriggerSimulatedCallWaiting: ((String, String) -> Unit)? = null,
+    isDeviceLocked: Boolean = false,
+    onRequestUnlock: ((() -> Unit) -> Unit)? = null
 ) {
-    BackHandler(enabled = true) {
+    BackHandler(enabled = onMinimize != null || isDeviceLocked) {
         onMinimize?.invoke()
     }
 
@@ -468,7 +470,12 @@ fun ActiveCallScreen(
                     isAddCallDialogOpen = isAddCallDialogOpen,
                     onOpenAddCallDialog = {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                        isAddCallDialogOpen = true
+                        if (isDeviceLocked && onRequestUnlock != null) {
+                            Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
+                            onRequestUnlock { isAddCallDialogOpen = true }
+                        } else {
+                            isAddCallDialogOpen = true
+                        }
                     },
                     recordingEnabled = recordingEnabled,
                     callNotesEnabled = callNotesEnabled,
@@ -495,8 +502,15 @@ fun ActiveCallScreen(
                             ) == PackageManager.PERMISSION_GRANTED
 
                             if (!hasAudioPermission) {
-                                Toast.makeText(context, "Microphone permission required for call recording", Toast.LENGTH_SHORT).show()
-                                recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                if (isDeviceLocked && onRequestUnlock != null) {
+                                    Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
+                                    onRequestUnlock {
+                                        recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Microphone permission required for call recording", Toast.LENGTH_SHORT).show()
+                                    recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                }
                                 return@InCallControlGrid
                             }
 
@@ -535,7 +549,12 @@ fun ActiveCallScreen(
                     isNoteDialogOpen = isNoteDialogOpen,
                     onOpenNoteDialog = {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                        isNoteDialogOpen = true
+                        if (isDeviceLocked && onRequestUnlock != null) {
+                            Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
+                            onRequestUnlock { isNoteDialogOpen = true }
+                        } else {
+                            isNoteDialogOpen = true
+                        }
                     },
                     avatarShapeType = avatarShapeType
                 )
@@ -561,7 +580,7 @@ fun ActiveCallScreen(
             }
         }
 
-        if (onMinimize != null) {
+        if (onMinimize != null && !isDeviceLocked) {
             IconButton(
                 onClick = {
                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)

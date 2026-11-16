@@ -90,17 +90,33 @@ object CallManager {
         }
     }
 
+    private val _isMainActivityInForeground = MutableStateFlow(false)
+    val isMainActivityInForeground: StateFlow<Boolean> = _isMainActivityInForeground.asStateFlow()
+
+    private val _isInCallUiVisible = MutableStateFlow(false)
+    val isInCallUiVisible: StateFlow<Boolean> = _isInCallUiVisible.asStateFlow()
+
     private val _isAppInForeground = MutableStateFlow(false)
     val isAppInForeground: StateFlow<Boolean> = _isAppInForeground.asStateFlow()
 
+    fun setMainActivityInForeground(inForeground: Boolean) {
+        _isMainActivityInForeground.value = inForeground
+        _isAppInForeground.value = _isMainActivityInForeground.value || _isInCallUiVisible.value
+    }
+
+    fun setInCallUiVisible(visible: Boolean) {
+        _isInCallUiVisible.value = visible
+        _isAppInForeground.value = _isMainActivityInForeground.value || _isInCallUiVisible.value
+    }
+
     fun setAppInForeground(inForeground: Boolean) {
-        _isAppInForeground.value = inForeground
+        setMainActivityInForeground(inForeground)
     }
 
     var isAppInForegroundValue: Boolean
         get() = _isAppInForeground.value
         set(value) {
-            _isAppInForeground.value = value
+            setMainActivityInForeground(value)
         }
 
     private val _currentCall = MutableStateFlow<Call?>(null)

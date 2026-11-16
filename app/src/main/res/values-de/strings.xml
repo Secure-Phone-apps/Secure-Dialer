@@ -447,6 +447,9 @@
     <string name="settings_security_protection">Sicherheit &amp; Schutz</string>
     <string name="settings_biometric_lock">App-Sperre</string>
     <string name="settings_biometric_lock_sub">Gerätesperre zum Öffnen der App anfordern</string>
+    <string name="settings_require_unlock_answer">Entsperren zum Annehmen erforderlich</string>
+    <string name="settings_require_unlock_answer_sub">PIN, Muster oder Biometrie anfordern, bevor eingehende Anrufe vom Sperrbildschirm angenommen werden</string>
+    <string name="lockscreen_unlock_for_action">Gerät entsperren, um diese Funktion zu nutzen</string>
     <string name="settings_pocket_protection">Taschen-Berührungsschutz</string>
     <string name="settings_pocket_protection_sub">Blockiert Touch-Eingaben in der Tasche</string>
     <string name="pocket_lock_active">Taschensperre</string>

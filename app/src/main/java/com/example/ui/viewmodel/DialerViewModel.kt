@@ -366,6 +366,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isDynamicIslandEnabled = mutableStateOf(prefs.getBoolean("is_dynamic_island_enabled", true))
     var isDynamicIslandSpeakerOnly = mutableStateOf(prefs.getBoolean("is_dynamic_island_speaker_only", false))
     var isBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_biometric_lock_enabled", false))
+    var isRequireUnlockToAnswerEnabled = mutableStateOf(
+        prefs.getBoolean(com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER, false)
+    )
     var isRecordingsBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_recordings_biometric_lock_enabled", false))
     var isAutoExportRecordingsEnabled = mutableStateOf(prefs.getBoolean("is_auto_export_recordings_enabled", true))
     var recordingCompressionProfile = mutableStateOf(
@@ -522,6 +525,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings["is_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
                     isBiometricLockEnabled.value = it
                     editor.putBoolean("is_biometric_lock_enabled", it)
+                }
+                settings[com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER]?.toBooleanStrictOrNull()?.let {
+                    isRequireUnlockToAnswerEnabled.value = it
+                    editor.putBoolean(com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER, it)
                 }
                 settings["is_recordings_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
                     isRecordingsBiometricLockEnabled.value = it
@@ -724,6 +731,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun updateBiometricLockEnabled(enabled: Boolean) {
         isBiometricLockEnabled.value = enabled
         settingsCoordinator.updateSettingBoolean("is_biometric_lock_enabled", enabled)
+    }
+
+    fun updateRequireUnlockToAnswerEnabled(enabled: Boolean) {
+        isRequireUnlockToAnswerEnabled.value = enabled
+        settingsCoordinator.updateSettingBoolean(
+            com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER,
+            enabled
+        )
     }
 
     fun updateRecordingsBiometricLockEnabled(enabled: Boolean) {

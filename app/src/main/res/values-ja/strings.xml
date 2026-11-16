@@ -447,6 +447,9 @@
     <string name="settings_security_protection">セキュリティと保護</string>
     <string name="settings_biometric_lock">アプリのロック</string>
     <string name="settings_biometric_lock_sub">アプリ起動時に端末のロック (PIN/パターン/生体認証) を要求する</string>
+    <string name="settings_require_unlock_answer">応答時にロック解除を要求</string>
+    <string name="settings_require_unlock_answer_sub">ロック画面から着信に応答する前に PIN、パターン、または生体認証を要求します</string>
+    <string name="lockscreen_unlock_for_action">この機能を使用するには端末のロックを解除してください</string>
     <string name="settings_pocket_protection">ポケット誤作動防止</string>
     <string name="settings_pocket_protection_sub">ポケット内での誤タッチを近接センサーで防止</string>
     <string name="pocket_lock_active">ポケット誤動作防止アクティブ</string>

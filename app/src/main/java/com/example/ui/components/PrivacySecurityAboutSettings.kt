@@ -55,6 +55,7 @@ fun PrivacySecurityAboutSettings(
     val context = LocalContext.current
     val activity = context as? Activity
     val isBiometricLockEnabled by viewModel.isBiometricLockEnabled
+    val isRequireUnlockToAnswerEnabled by viewModel.isRequireUnlockToAnswerEnabled
     val isPocketProtectionEnabled by viewModel.isPocketProtectionEnabled
 
     LazyColumn(
@@ -125,6 +126,32 @@ fun PrivacySecurityAboutSettings(
                     icon = Icons.Default.Lock,
                     iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+
+        // Require Unlock to Answer Calls Card (Default: OFF to match Google/Samsung Phone)
+        item {
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Require Unlock to Answer Calls", highlightedTitle) ||
+                        isMatchTitle("Lock Screen Call Security", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowToggle(
+                    title = stringResource(R.string.settings_require_unlock_answer),
+                    subtitle = stringResource(R.string.settings_require_unlock_answer_sub),
+                    checked = isRequireUnlockToAnswerEnabled,
+                    onCheckedChange = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        viewModel.updateRequireUnlockToAnswerEnabled(it)
+                    },
+                    icon = Icons.Default.ScreenLockPortrait,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
                 )
             }
         }

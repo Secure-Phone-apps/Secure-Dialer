@@ -37,7 +37,7 @@ import androidx.savedstate.SavedStateRegistryController
 import androidx.savedstate.SavedStateRegistryOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.example.CallManager
-import com.example.MainActivity
+import com.example.InCallActivity
 import com.example.ui.components.DynamicIslandPill
 import com.example.ui.theme.MyApplicationTheme
 import kotlinx.coroutines.*
@@ -253,8 +253,7 @@ object DynamicIslandOverlayManager {
                                 }
                             },
                             onExpandToFullScreen = {
-                                // FIXED: Align intent extras with MainActivity contracts
-                                val intent = Intent(context, MainActivity::class.java).apply {
+                                val intent = Intent(context, InCallActivity::class.java).apply {
                                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                                     putExtra("SHOW_CALL_SCREEN", true)
                                     putExtra("EXTRA_NAVIGATE_TO_INCALL", true)

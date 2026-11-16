@@ -140,6 +140,7 @@ fun MainScreen(
     val systemAudioState by CallManager.audioState.collectAsStateWithLifecycle()
     val systemCallerNumber by CallManager.callerNumber.collectAsStateWithLifecycle()
     val systemCallerCnapName by CallManager.callerCnapName.collectAsStateWithLifecycle()
+    val isInCallUiVisible by CallManager.isInCallUiVisible.collectAsStateWithLifecycle()
 
     var toneGenerator by remember { mutableStateOf<ToneGenerator?>(null) }
     DisposableEffect(Unit) {
@@ -643,7 +644,7 @@ fun MainScreen(
             }
 
             AnimatedVisibility(
-                visible = (isCallActive && !isCallMinimized) || isFakeCallActive,
+                visible = (isCallActive && !isCallMinimized && !isInCallUiVisible) || isFakeCallActive,
                 enter = fadeIn(animationSpec = tween(120)) + scaleIn(initialScale = 0.95f, animationSpec = tween(120)),
                 exit = fadeOut(animationSpec = tween(100)) + scaleOut(targetScale = 0.95f, animationSpec = tween(100))
             ) {

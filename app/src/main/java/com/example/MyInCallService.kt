@@ -572,18 +572,15 @@ class MyInCallService : InCallService() {
                     showIncomingCallNotification(call, isCallWaiting = false)
 
                     // INDUSTRY-STANDARD INCOMING CALL PRESENTATION (Google Phone / Samsung One UI / iOS):
-                    // Determine if the user is actively interacting with the device or if it is sleeping/locked.
+                    // Screen OFF or Locked: Present dedicated lockscreen-safe InCallActivity without forcing keyguard unlock.
+                    // Unlocked & inside MainActivity: MainActivity's inline ActiveCallScreen presents immediately.
+                    // Unlocked & inside another app: Heads-Up CallStyle notification + Dynamic Island present non-intrusively.
                     val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
                     val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
                     val isScreenInteractive = pm?.isInteractive ?: false
                     val isKeyguardLocked = km?.isKeyguardLocked ?: false
-                    val isDialerInForeground = CallManager.isAppInForeground.value
 
-                    // If device screen is OFF, or device is LOCKED on keyguard, or user is already inside Secure Dialer:
-                    // Present full-screen incoming call UI immediately.
-                    // If user is actively using ANOTHER application (screen is ON & UNLOCKED):
-                    // Do NOT steal screen focus! The system Heads-Up Notification (HUN) + Dynamic Island will handle it non-intrusively.
-                    if (!isScreenInteractive || isKeyguardLocked || isDialerInForeground) {
+                    if (!isScreenInteractive || isKeyguardLocked) {
                         launchCallScreen(answerOnLaunch = false)
                     }
                 }
@@ -605,8 +602,7 @@ class MyInCallService : InCallService() {
                     showActiveCallNotification(call)
                     val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
                     val isKeyguardLocked = km?.isKeyguardLocked ?: false
-                    val isDialerInForeground = CallManager.isAppInForeground.value
-                    if (isKeyguardLocked || isDialerInForeground) {
+                    if (isKeyguardLocked) {
                         launchCallScreen(answerOnLaunch = false)
                     }
                 }
@@ -627,13 +623,12 @@ class MyInCallService : InCallService() {
 
         val contentIntent = PendingIntent.getActivity(
             this, 101,
-            Intent(this, MainActivity::class.java).apply {
+            Intent(this, InCallActivity::class.java).apply {
                 action = ACTION_INCOMING_CALL
                 setPackage(packageName)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        Intent.FLAG_ACTIVITY_NO_USER_ACTION
                 putExtra(EXTRA_SHOW_CALL, true)
             },
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
@@ -671,13 +666,11 @@ class MyInCallService : InCallService() {
         } else {
             PendingIntent.getActivity(
                 this, 103,
-                Intent(this, MainActivity::class.java).apply {
+                Intent(this, InCallActivity::class.java).apply {
                     action = ACTION_ANSWER
                     setPackage(packageName)
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
                     putExtra(EXTRA_SHOW_CALL, true)
                     putExtra(EXTRA_ANSWER, true)
                 },
@@ -731,7 +724,7 @@ class MyInCallService : InCallService() {
 
         val contentPendingIntent = PendingIntent.getActivity(
             this, 200,
-            Intent(this, MainActivity::class.java).apply {
+            Intent(this, InCallActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
                 putExtra(EXTRA_SHOW_CALL, true)
             },
@@ -907,12 +900,12 @@ class MyInCallService : InCallService() {
 
     private fun launchCallScreen(answerOnLaunch: Boolean) {
         try {
-            val intent = Intent(this, MainActivity::class.java).apply {
+            val intent = Intent(this, InCallActivity::class.java).apply {
                 action = if (answerOnLaunch) ACTION_ANSWER else ACTION_INCOMING_CALL
+                setPackage(packageName)
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                         Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_REORDER_TO_FRONT
+                        Intent.FLAG_ACTIVITY_NO_USER_ACTION
                 putExtra(EXTRA_SHOW_CALL, true)
                 if (answerOnLaunch) putExtra(EXTRA_ANSWER, true)
             }

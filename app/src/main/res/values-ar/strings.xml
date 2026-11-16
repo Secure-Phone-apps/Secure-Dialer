@@ -447,6 +447,9 @@
     <string name="settings_security_protection">الأمان والحماية</string>
     <string name="settings_biometric_lock">قفل التطبيق</string>
     <string name="settings_biometric_lock_sub">طلب قفل الجهاز (رمز PIN/نمط/بصمة) لفتح التطبيق</string>
+    <string name="settings_require_unlock_answer">طلب فتح القفل للرد على المكالمات</string>
+    <string name="settings_require_unlock_answer_sub">طلب رمز PIN أو النمط أو البصمة قبل الرد على المكالمات الواردة من شاشة القفل</string>
+    <string name="lockscreen_unlock_for_action">افتح قفل الجهاز للوصول إلى هذه الميزة</string>
     <string name="settings_pocket_protection">حماية اللمس في الجيب</string>
     <string name="settings_pocket_protection_sub">حظر إدخال اللمس أثناء المكالمات عند وجود الهاتف في الجيب</string>
     <string name="pocket_lock_active">قفل الجيب نشط</string>

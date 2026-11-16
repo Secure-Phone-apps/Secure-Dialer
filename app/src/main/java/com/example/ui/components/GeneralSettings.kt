@@ -190,8 +190,9 @@ fun GeneralSettings(
             SettingsSearchItem("Default WhatsApp Account", "Choose between WhatsApp and WhatsApp Business for chat actions", "Advanced Tools", 7, Icons.Default.Chat),
 
             // 8. PRIVACY & ABOUT
-            SettingsSearchItem("Privacy & Security Settings", "Biometric app lock, pocket protection, app lock & app specs", "Privacy & About", 8, Icons.Default.Lock),
+            SettingsSearchItem("Privacy & Security Settings", "Biometric app lock, lock screen answering, pocket protection & app specs", "Privacy & About", 8, Icons.Default.Lock),
             SettingsSearchItem("Biometric App Lock", "Require fingerprint or PIN lock to open dialer application", "Privacy & About", 8, Icons.Default.Fingerprint),
+            SettingsSearchItem("Require Unlock to Answer Calls", "Require PIN, pattern, or biometrics before answering calls from lock screen", "Privacy & About", 8, Icons.Default.LockPerson),
             SettingsSearchItem("Pocket Protection Mode", "Prevent accidental pocket touches using proximity sensor", "Privacy & About", 8, Icons.Default.PhonelinkLock),
             SettingsSearchItem("App Version & Device Specifications", "View application version, build numbers, and system permissions", "Privacy & About", 8, Icons.Default.Info),
             SettingsSearchItem("Help & Customer Support", "Send feedback or contact developer support", "Privacy & About", 8, Icons.Default.Help)

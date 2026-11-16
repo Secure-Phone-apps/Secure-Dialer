@@ -501,6 +501,9 @@
     <string name="settings_security_protection">Security &amp; Protection</string>
     <string name="settings_biometric_lock">App Lock</string>
     <string name="settings_biometric_lock_sub">Require device lock (PIN/Pattern/Biometric) to open the app</string>
+    <string name="settings_require_unlock_answer">Require Unlock to Answer Calls</string>
+    <string name="settings_require_unlock_answer_sub">Ask for device PIN, pattern, or biometrics before answering incoming calls from the lock screen</string>
+    <string name="lockscreen_unlock_for_action">Unlock device to access this feature</string>
     <string name="settings_pocket_protection">Pocket Touch Protection</string>
     <string name="settings_pocket_protection_sub">Block touch input during calls when proximity sensor detects proximity (e.g., in pocket)</string>
     <string name="pocket_lock_active">Pocket Lock Active</string>

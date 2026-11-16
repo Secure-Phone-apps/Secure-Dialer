@@ -447,6 +447,9 @@
     <string name="settings_security_protection">सुरक्षा और संरक्षण</string>
     <string name="settings_biometric_lock">ऐप लॉक</string>
     <string name="settings_biometric_lock_sub">ऐप खोलने के लिए डिवाइस लॉक (PIN/पैटर्न/बायोमेट्रिक) आवश्यक है</string>
+    <string name="settings_require_unlock_answer">कॉल उठाने के लिए अनलॉक आवश्यक</string>
+    <string name="settings_require_unlock_answer_sub">लॉक स्क्रीन से कॉल उठाने से पहले डिवाइस PIN, पैटर्न या बायोमेट्रिक मांगें</string>
+    <string name="lockscreen_unlock_for_action">इस सुविधा का उपयोग करने के लिए डिवाइस अनलॉक करें</string>
     <string name="settings_pocket_protection">पॉकेट टच प्रोटेक्शन</string>
     <string name="settings_pocket_protection_sub">जेब में कॉल के दौरान अनपेक्षित टच ब्लॉक करता है</string>
     <string name="pocket_lock_active">पॉकेट लॉक सक्रिय</string>
