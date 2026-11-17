@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
@@ -61,6 +62,8 @@ import com.example.getSavedCnapName
 import com.example.model.CallRecording
 import com.example.model.CallType
 import com.example.ui.components.*
+import com.example.ui.theme.LocalAdaptiveLayout
+import com.example.ui.theme.computeAdaptiveLayoutMetrics
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.FakeCallVoicePlayer
 import kotlinx.coroutines.delay
@@ -277,7 +280,7 @@ fun MainScreen(
             isDialpadVisible = false
             return
         }
-        if (blockedNumbers.contains(number)) {
+        if (com.example.util.BlockedNumberContractManager.matchesAnyRule(number, blockedNumbers, context)) {
             Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
         }
@@ -349,12 +352,24 @@ fun MainScreen(
             }
         }
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .consumeWindowInsets(paddingValues)
         ) {
+            val density = LocalDensity.current
+            val fontScale = density.fontScale
+            val isKeyboardOpen = WindowInsets.ime.getBottom(density) > 0
+            val adaptiveMetrics = remember(maxWidth, maxHeight, fontScale) {
+                computeAdaptiveLayoutMetrics(
+                    maxWidth = maxWidth,
+                    maxHeight = maxHeight,
+                    fontScale = fontScale
+                )
+            }
+            CompositionLocalProvider(LocalAdaptiveLayout provides adaptiveMetrics) {
+                Box(modifier = Modifier.fillMaxSize()) {
             if (showProminentDisclosure) {
                 AlertDialog(
                     onDismissRequest = { showProminentDisclosure = false },
@@ -408,66 +423,92 @@ fun MainScreen(
                 )
             }
 
-            Column(modifier = Modifier.fillMaxSize()) {
-                CallSystemPermissionsCard(viewModel = viewModel)
+            val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
+            val pagerState = rememberPagerState(initialPage = selectedTab.coerceIn(0, tabSlots.size - 1)) { tabSlots.size }
 
-                val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
-
-                // FIXED: Standard, accessible 3-page pager eliminates infinite carousel jumps and TalkBack bugs
-                val pagerState = rememberPagerState(initialPage = selectedTab.coerceIn(0, tabSlots.size - 1)) { tabSlots.size }
-
-                // FIXED: Automatically animate pager when selectedTab changes (e.g. from call completion or bottom nav)
-                LaunchedEffect(selectedTab) {
-                    if (pagerState.currentPage != selectedTab) {
-                        pagerState.animateScrollToPage(selectedTab)
-                    }
+            LaunchedEffect(selectedTab) {
+                if (pagerState.currentPage != selectedTab) {
+                    pagerState.animateScrollToPage(selectedTab)
                 }
+            }
 
-                // FIXED: Synchronize tab only when scroll has fully settled, preventing race condition and half-screen freeze
-                LaunchedEffect(pagerState.settledPage) {
-                    if (selectedTab != pagerState.settledPage) {
-                        selectedTab = pagerState.settledPage
-                    }
+            LaunchedEffect(pagerState.settledPage) {
+                if (selectedTab != pagerState.settledPage) {
+                    selectedTab = pagerState.settledPage
                 }
+            }
 
-                // FIXED: Anchor search bar visibility to selectedTab target to prevent height changes mid-animation
-                val currentPagerSlot = tabSlots.getOrElse(selectedTab) { "RECENTS" }
-                val isSearchVisible = remember(currentSlotKey, currentPagerSlot, isCallHistoryDetailsOpen) {
-                    if (currentSlotKey == "CONTACTS" || currentPagerSlot == "CONTACTS") {
-                        true
-                    } else if (currentSlotKey == "RECENTS" && currentPagerSlot == "RECENTS") {
-                        !isCallHistoryDetailsOpen
-                    } else if (currentSlotKey != "DIALPAD" && currentPagerSlot != "DIALPAD") {
-                        true
-                    } else {
-                        false
-                    }
-                }
-
-                AnimatedVisibility(
-                    visible = isSearchVisible,
-                    enter = expandVertically(
-                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
-                    ) + fadeIn(animationSpec = tween(120)),
-                    exit = shrinkVertically(
-                        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
-                    ) + fadeOut(animationSpec = tween(120))
-                ) {
-                    HeaderSearchBar(
-                        searchQuery = searchQuery,
-                        onQueryChange = { viewModel.onSearchQueryChange(it) },
+            Row(modifier = Modifier.fillMaxSize()) {
+                if (adaptiveMetrics.useNavigationRail) {
+                    AppNavigationRail(
+                        selectedTab = selectedTab,
+                        onTabSelected = { targetTab ->
+                            if (viewModel.isCallHistoryDetailsOpen.value) {
+                                viewModel.isCallHistoryDetailsOpen.value = false
+                            }
+                            selectedTab = targetTab
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(targetTab)
+                            }
+                        },
+                        tabSlots = tabSlots,
                         onSettingsClick = { isSettingsVisible = true }
                     )
                 }
 
-                Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    val currentSlot = tabSlots.getOrElse(pagerState.currentPage) { "RECENTS" }
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize(),
-                        beyondViewportPageCount = 1,
-                        userScrollEnabled = !isRowSwipeEnabled || currentSlot != "RECENTS"
-                    ) { page ->
+                Column(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                    Box(
+                        modifier = Modifier
+                            .widthIn(max = adaptiveMetrics.contentMaxWidth)
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        CallSystemPermissionsCard(viewModel = viewModel)
+                    }
+
+                    // Anchor search bar visibility to selectedTab target to prevent height changes mid-animation
+                    val currentPagerSlot = tabSlots.getOrElse(selectedTab) { "RECENTS" }
+                    val isSearchVisible = remember(currentSlotKey, currentPagerSlot, isCallHistoryDetailsOpen) {
+                        if (currentSlotKey == "CONTACTS" || currentPagerSlot == "CONTACTS") {
+                            true
+                        } else if (currentSlotKey == "RECENTS" && currentPagerSlot == "RECENTS") {
+                            !isCallHistoryDetailsOpen
+                        } else if (currentSlotKey != "DIALPAD" && currentPagerSlot != "DIALPAD") {
+                            true
+                        } else {
+                            false
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = isSearchVisible,
+                        enter = expandVertically(
+                            animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
+                        ) + fadeIn(animationSpec = tween(120)),
+                        exit = shrinkVertically(
+                            animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy)
+                        ) + fadeOut(animationSpec = tween(120))
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            HeaderSearchBar(
+                                searchQuery = searchQuery,
+                                onQueryChange = { viewModel.onSearchQueryChange(it) },
+                                onSettingsClick = { isSettingsVisible = true },
+                                modifier = Modifier.widthIn(max = adaptiveMetrics.contentMaxWidth)
+                            )
+                        }
+                    }
+
+                    Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                        val currentSlot = tabSlots.getOrElse(pagerState.currentPage) { "RECENTS" }
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize(),
+                            beyondViewportPageCount = 1,
+                            userScrollEnabled = !isRowSwipeEnabled || currentSlot != "RECENTS"
+                        ) { page ->
                         when (tabSlots.getOrElse(page) { "RECENTS" }) {
                             "RECENTS" -> {
                                 val allCallHistory by viewModel.allCallHistoryFlow.collectAsStateWithLifecycle()
@@ -544,41 +585,48 @@ fun MainScreen(
                     }
                 }
 
-                if (isCallActive && isCallMinimized) {
-                    val isDynamicIsland = viewModel.isDynamicIslandEnabled.value
-                    val speakerOnly = viewModel.isDynamicIslandSpeakerOnly.value
-                    val isSpeakerOn = systemAudioState?.route == android.telecom.CallAudioState.ROUTE_SPEAKER
+                    if (isCallActive && isCallMinimized) {
+                        val isDynamicIsland = viewModel.isDynamicIslandEnabled.value
+                        val speakerOnly = viewModel.isDynamicIslandSpeakerOnly.value
+                        val isSpeakerOn = systemAudioState?.route == android.telecom.CallAudioState.ROUTE_SPEAKER
 
-                    if (!isDynamicIsland || (speakerOnly && !isSpeakerOn)) {
-                        MinimizedCallBanner(
-                            contactName = callingContactName,
-                            contactNumber = callingContactNumber,
-                            callState = systemCallState,
-                            onExpand = { isCallMinimized = false },
-                            onHangUp = {
-                                CallManager.disconnect()
-                                if (CallManager.currentCall.value == null && CallManager.calls.value.isEmpty()) {
-                                    isCallActive = false
-                                }
+                        if (!isDynamicIsland || (speakerOnly && !isSpeakerOn)) {
+                            Box(
+                                modifier = Modifier
+                                    .widthIn(max = 640.dp)
+                                    .align(Alignment.CenterHorizontally)
+                            ) {
+                                MinimizedCallBanner(
+                                    contactName = callingContactName,
+                                    contactNumber = callingContactNumber,
+                                    callState = systemCallState,
+                                    onExpand = { isCallMinimized = false },
+                                    onHangUp = {
+                                        CallManager.disconnect()
+                                        if (CallManager.currentCall.value == null && CallManager.calls.value.isEmpty()) {
+                                            isCallActive = false
+                                        }
+                                    }
+                                )
                             }
+                        }
+                    }
+
+                    if (!adaptiveMetrics.useNavigationRail && !isKeyboardOpen) {
+                        BottomNavBar(
+                            selectedTab = selectedTab,
+                            onTabSelected = { targetTab ->
+                                if (viewModel.isCallHistoryDetailsOpen.value) {
+                                    viewModel.isCallHistoryDetailsOpen.value = false
+                                }
+                                selectedTab = targetTab
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(targetTab)
+                                }
+                            },
+                            tabSlots = tabSlots
                         )
                     }
-                }
-
-                if (!WindowInsets.isImeVisible) {
-                    BottomNavBar(
-                        selectedTab = selectedTab,
-                        onTabSelected = { targetTab ->
-                            if (viewModel.isCallHistoryDetailsOpen.value) {
-                                viewModel.isCallHistoryDetailsOpen.value = false
-                            }
-                            selectedTab = targetTab
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(targetTab)
-                            }
-                        },
-                        tabSlots = tabSlots
-                    )
                 }
             }
 
@@ -716,7 +764,7 @@ fun MainScreen(
                             CallRecording(
                                 name = if (isFakeCallActive) fakeCallerName else callingContactName,
                                 number = if (isFakeCallActive) fakeCallerNumber else callingContactNumber,
-                                timestamp = System.currentTimeMillis().toString(),
+                                timestamp = com.example.util.CallAudioRecorder.formatRecordingTimestamp(context),
                                 duration = duration,
                                 filePath = filePath
                             )
@@ -873,37 +921,39 @@ fun MainScreen(
                 val speedDialEntities by viewModel.speedDialFlow.collectAsStateWithLifecycle()
                 val speedDialMap = remember(speedDialEntities) { speedDialEntities.associate { it.key to it.number } }
 
-                DialpadOverlay(
-                    inputValue = dialpadInput,
-                    onValueChange = {
-                        if (it.length > dialpadInput.length) {
-                            if (dialpadTonesEnabled) playDtmf(it.last().toString())
-                        }
-                        viewModel.onDialpadInputChange(it)
-                    },
-                    onClose = { isDialpadVisible = false },
-                    onCallClick = { num ->
-                        if (num.isNotEmpty()) {
-                            initiateCall("Unknown", num)
-                            viewModel.onDialpadInputChange("")
+                Box(modifier = Modifier.widthIn(max = 500.dp)) {
+                    DialpadOverlay(
+                        inputValue = dialpadInput,
+                        onValueChange = {
+                            if (it.length > dialpadInput.length) {
+                                if (dialpadTonesEnabled) playDtmf(it.last().toString())
+                            }
+                            viewModel.onDialpadInputChange(it)
+                        },
+                        onClose = { isDialpadVisible = false },
+                        onCallClick = { num ->
+                            if (num.isNotEmpty()) {
+                                initiateCall("Unknown", num)
+                                viewModel.onDialpadInputChange("")
+                                isDialpadVisible = false
+                            }
+                        },
+                        onCallWithSim = { num, sim ->
+                            if (num.isNotEmpty()) {
+                                initiateCall("Unknown", num, simChoice = sim)
+                                viewModel.onDialpadInputChange("")
+                                isDialpadVisible = false
+                            }
+                        },
+                        onSpeedDialCall = { num ->
+                            initiateCall("Speed Dial", num)
                             isDialpadVisible = false
-                        }
-                    },
-                    onCallWithSim = { num, sim ->
-                        if (num.isNotEmpty()) {
-                            initiateCall("Unknown", num, simChoice = sim)
-                            viewModel.onDialpadInputChange("")
-                            isDialpadVisible = false
-                        }
-                    },
-                    onSpeedDialCall = { num ->
-                        initiateCall("Speed Dial", num)
-                        isDialpadVisible = false
-                    },
-                    speedDialMap = speedDialMap,
-                    voicemailNumber = voicemailNumber,
-                    viewModel = viewModel
-                )
+                        },
+                        speedDialMap = speedDialMap,
+                        voicemailNumber = voicemailNumber,
+                        viewModel = viewModel
+                    )
+                }
             }
 
             ussdDialogData?.let { ussdData ->
@@ -925,13 +975,17 @@ fun MainScreen(
                     .padding(bottom = if (isDialpadVisible) 0.dp else 16.dp)
             ) {
                 postCallData?.let { data ->
-                    PostCallSheet(
-                        data = data,
-                        dismissDurationSeconds = postCallDismissDuration,
-                        onDismiss = { CallManager.dismissPostCallData() },
-                        onCallBack = { num, nm -> initiateCall(nm, num) },
-                        onSaveContact = { num -> viewModel.openAddContactWithNumber(num) }
-                    )
+                    Box(modifier = Modifier.widthIn(max = 520.dp)) {
+                        PostCallSheet(
+                            data = data,
+                            dismissDurationSeconds = postCallDismissDuration,
+                            onDismiss = { CallManager.dismissPostCallData() },
+                            onCallBack = { num, nm -> initiateCall(nm, num) },
+                            onSaveContact = { num -> viewModel.openAddContactWithNumber(num) }
+                        )
+                    }
+                }
+            }
                 }
             }
         }

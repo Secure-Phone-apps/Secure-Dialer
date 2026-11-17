@@ -17,6 +17,7 @@
 
 package com.example.ui.components
 
+import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
@@ -25,6 +26,8 @@ import android.media.PlaybackParams
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -87,6 +90,36 @@ fun CallRecordingsSettings(
     var mediaPlayer by remember { mutableStateOf<MediaPlayer?>(null) }
     var noteEditingRecording by remember { mutableStateOf<CallRecording?>(null) }
     var shareSheetRecording by remember { mutableStateOf<CallRecording?>(null) }
+    var pendingSingleExportPath by remember { mutableStateOf<String?>(null) }
+    var pendingExportAll by remember { mutableStateOf(false) }
+
+    val legacyWritePermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        val path = pendingSingleExportPath
+        val doAll = pendingExportAll
+        pendingSingleExportPath = null
+        pendingExportAll = false
+        if (granted) {
+            if (path != null) {
+                val exported = viewModel.exportRecordingToDownloads(context, path)
+                Toast.makeText(
+                    context,
+                    context.getString(if (exported) R.string.file_saved_success else R.string.file_save_failed),
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else if (doAll) {
+                val count = viewModel.exportAllRecordingsToDownloads(context)
+                Toast.makeText(
+                    context,
+                    context.getString(if (count > 0) R.string.file_saved_success else R.string.file_save_failed),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        } else {
+            Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+        }
+    }
 
     LaunchedEffect(isVaultLockEnabled) {
         if (!isVaultLockEnabled) {
@@ -173,8 +206,11 @@ fun CallRecordingsSettings(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+                        val shareTimestamp = remember(rec.timestamp) {
+                            CallAudioRecorder.formatStoredTimestampForDisplay(context, rec.timestamp)
+                        }
                         Text(
-                            text = "${rec.name.ifEmpty { rec.number }} • ${rec.timestamp}",
+                            text = "${rec.name.ifEmpty { rec.number }} • $shareTimestamp",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -310,11 +346,17 @@ fun CallRecordingsSettings(
                         .clickable {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             shareSheetRecording = null
-                            val exported = viewModel.exportRecordingToDownloads(context, rec.filePath)
-                            if (exported) {
-                                Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                            if (!CallAudioRecorder.hasLegacyStorageWritePermission(context)) {
+                                pendingSingleExportPath = rec.filePath
+                                pendingExportAll = false
+                                legacyWritePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                             } else {
-                                Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                                val exported = viewModel.exportRecordingToDownloads(context, rec.filePath)
+                                if (exported) {
+                                    Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                                }
                             }
                         }
                 ) {
@@ -379,8 +421,11 @@ fun CallRecordingsSettings(
             },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val noteTimestamp = remember(rec.timestamp) {
+                        CallAudioRecorder.formatStoredTimestampForDisplay(context, rec.timestamp)
+                    }
                     Text(
-                        text = "${rec.name.ifEmpty { rec.number }} • ${rec.timestamp}",
+                        text = "${rec.name.ifEmpty { rec.number }} • $noteTimestamp",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -916,11 +961,17 @@ fun CallRecordingsSettings(
                         Button(
                             onClick = {
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                val count = viewModel.exportAllRecordingsToDownloads(context)
-                                if (count > 0) {
-                                    Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                                if (!CallAudioRecorder.hasLegacyStorageWritePermission(context)) {
+                                    pendingSingleExportPath = null
+                                    pendingExportAll = true
+                                    legacyWritePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                 } else {
-                                    Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                                    val count = viewModel.exportAllRecordingsToDownloads(context)
+                                    if (count > 0) {
+                                        Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -1119,8 +1170,12 @@ private fun CompactRecordingRow(
                         val f = File(recording.filePath)
                         if (f.exists()) "${f.length() / 1024} KB" else ""
                     }
+                    val rowContext = LocalContext.current
+                    val displayTimestamp = remember(recording.timestamp) {
+                        CallAudioRecorder.formatStoredTimestampForDisplay(rowContext, recording.timestamp)
+                    }
                     Text(
-                        text = "${recording.timestamp} • ${recording.duration}s${if (fileSizeStr.isNotEmpty()) " • $fileSizeStr" else ""}",
+                        text = "$displayTimestamp • ${recording.duration}s${if (fileSizeStr.isNotEmpty()) " • $fileSizeStr" else ""}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1

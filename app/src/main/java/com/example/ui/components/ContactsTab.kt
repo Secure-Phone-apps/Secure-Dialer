@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.paging.LoadState
@@ -51,6 +52,7 @@ import androidx.paging.compose.itemContentType
 import androidx.paging.compose.itemKey
 import com.example.R
 import com.example.model.Contact
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.viewmodel.DialerViewModel
 import kotlinx.coroutines.launch
 import java.util.Locale
@@ -155,11 +157,21 @@ fun ContactsTabContent(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    val adaptive = LocalAdaptiveLayout.current
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        Box(
+            modifier = Modifier
+                .widthIn(max = adaptive.contentMaxWidth)
+                .fillMaxSize()
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp)
+                .padding(horizontal = if (adaptive.isVeryNarrowWidth) 8.dp else 12.dp)
         ) {
             if (!hasPermission && !isLoading) {
                 Card(
@@ -190,7 +202,7 @@ fun ContactsTabContent(
                         Spacer(modifier = Modifier.height(12.dp))
                         Button(
                             onClick = onRequestPermission,
-                            modifier = Modifier.height(40.dp)
+                            modifier = Modifier.heightIn(min = 48.dp)
                         ) {
                             Text(stringResource(R.string.enable_contacts_perm))
                         }
@@ -214,7 +226,10 @@ fun ContactsTabContent(
                             containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                             contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                         ),
-                        modifier = Modifier.testTag("favorites_toggle_fab")
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .heightIn(min = 48.dp)
+                            .testTag("favorites_toggle_fab")
                     ) {
                         Icon(
                             imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
@@ -224,7 +239,9 @@ fun ContactsTabContent(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = stringResource(R.string.tab_favorites),
-                            style = MaterialTheme.typography.labelLarge
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
@@ -236,7 +253,10 @@ fun ContactsTabContent(
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        modifier = Modifier.testTag("add_contact_fab")
+                        modifier = Modifier
+                            .weight(1f, fill = false)
+                            .heightIn(min = 48.dp)
+                            .testTag("add_contact_fab")
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -246,10 +266,11 @@ fun ContactsTabContent(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                // FIXED: Fully localized Add action string
                                 text = stringResource(R.string.action_add_contact),
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
@@ -359,62 +380,75 @@ fun ContactsTabContent(
             val haptic = LocalHapticFeedback.current
             val maxScrollTarget = (if (showOnlyFavorites) sortedFavorites.size else contactsPaged.itemCount) - 1
 
-            Column(
+            BoxWithConstraints(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
                     .width(40.dp)
-                    .padding(vertical = 40.dp)
-                    .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
-                        detectTapGestures { offset ->
-                            val index = (offset.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
-                            val char = alphabet[index]
-                            letterToIndex[char]?.let { targetIndex ->
-                                val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
-                                coroutineScope.launch {
-                                    listState.animateScrollToItem(safeIndex)
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                }
-                            }
-                        }
-                    }
-                    .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
-                        detectDragGestures { change, _ ->
-                            val index = (change.position.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
-                            val char = alphabet[index]
-                            letterToIndex[char]?.let { targetIndex ->
-                                val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
-                                coroutineScope.launch {
-                                    listState.scrollToItem(safeIndex)
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                }
-                            }
-                        }
-                    },
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceEvenly
+                    .padding(vertical = if (adaptive.isTightVerticalSpace) 8.dp else 28.dp)
             ) {
-                alphabet.forEach { char ->
-                    val isActive = char == activeLetter.value
-                    Box(
-                        contentAlignment = Alignment.Center,
-                        modifier = Modifier
-                            .size(20.dp)
-                            .background(
-                                color = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
-                                shape = RoundedCornerShape(16.dp)
+                val maxRailSlots = (maxHeight.value / 16f).toInt().coerceAtLeast(8)
+                val step = if (alphabet.size > maxRailSlots) ((alphabet.size + maxRailSlots - 1) / maxRailSlots) else 1
+                val visibleAlphabet = remember(alphabet, step) {
+                    if (step <= 1) alphabet else alphabet.filterIndexed { i, _ -> i % step == 0 || i == alphabet.lastIndex }
+                }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
+                            detectTapGestures { offset ->
+                                val index = (offset.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
+                                val char = alphabet[index]
+                                letterToIndex[char]?.let { targetIndex ->
+                                    val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
+                                    coroutineScope.launch {
+                                        listState.animateScrollToItem(safeIndex)
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    }
+                                }
+                            }
+                        }
+                        .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
+                            detectDragGestures { change, _ ->
+                                val index = (change.position.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
+                                val char = alphabet[index]
+                                letterToIndex[char]?.let { targetIndex ->
+                                    val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
+                                    coroutineScope.launch {
+                                        listState.scrollToItem(safeIndex)
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
+                                }
+                            }
+                        },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    visibleAlphabet.forEach { char ->
+                        val isActive = char == activeLetter.value
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .sizeIn(minWidth = 18.dp, minHeight = 14.dp, maxHeight = 20.dp)
+                                .background(
+                                    color = if (isActive) MaterialTheme.colorScheme.primaryContainer else Color.Transparent,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                        ) {
+                            Text(
+                                text = char.toString(),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = if (isActive) 11.sp else 9.sp,
+                                fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
+                                color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
                             )
-                    ) {
-                        Text(
-                            text = char.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = if (isActive) 11.sp else 9.sp,
-                            fontWeight = if (isActive) FontWeight.ExtraBold else FontWeight.Medium,
-                            color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.primary.copy(alpha = 0.65f)
-                        )
+                        }
                     }
                 }
             }
+        }
         }
     }
 }

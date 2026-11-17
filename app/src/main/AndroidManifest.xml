@@ -42,6 +42,11 @@
     <!-- Battery Optimization Exemption for Indefinite Ongoing Calls -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 
+    <!-- Android 9 (API 28) Public Downloads Export Only; Scoped MediaStore is used on API 29+ -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
     <!-- Allow installation on devices without native telephony (tablets, Chromebooks, Wi-Fi calling) -->
     <uses-feature
         android:name="android.hardware.telephony"
@@ -140,6 +145,16 @@
                 android:value="true" />
             <intent-filter>
                 <action android:name="android.telecom.InCallService" />
+            </intent-filter>
+        </service>
+
+        <!-- Telecom CallScreeningService Binding (Android 9-17+) -->
+        <service
+            android:name=".SecureCallScreeningService"
+            android:permission="android.permission.BIND_SCREENING_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>
         </service>
 

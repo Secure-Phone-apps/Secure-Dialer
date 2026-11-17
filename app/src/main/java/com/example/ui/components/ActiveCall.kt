@@ -32,6 +32,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lock
@@ -42,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -52,7 +55,9 @@ import com.example.CallManager
 import com.example.R
 import com.example.model.CallRecording
 import com.example.model.Contact
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.theme.LocalAmoledMode
+import com.example.ui.theme.computeAdaptiveLayoutMetrics
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
 import com.example.util.CallGestureSensorManager
@@ -309,44 +314,16 @@ fun ActiveCallScreen(
             modifier = Modifier.fillMaxSize(),
             color = surfaceColor
         ) {
-            Column(
+            BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
                     .statusBarsPadding()
                     .navigationBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                InCallHeader(
-                    isOnHold = isOnHold,
-                    callState = currentCallState,
-                    participants = participants,
-                    preferredSim = preferredSim,
-                    contactName = contactName,
-                    contactNumber = contactNumber,
-                    heldCall = heldCall,
-                    contacts = contacts,
-                    onMerge = {
-                        if (isFake || !simulatedHeldName.isNullOrBlank()) {
-                            onSimulatedMerge?.invoke()
-                            Toast.makeText(context, "📞 Call merged", Toast.LENGTH_SHORT).show()
-                        } else {
-                            CallManager.mergeCalls()
-                        }
-                    },
-                    isConference = isConference,
-                    isRecording = isRecording,
-                    activeStartTimestamp = activeStartTimestamp,
-                    isFake = isFake,
-                    fakeState = fakeState,
-                    fakeActiveStartTimestamp = fakeActiveStartTimestamp,
-                    simulatedHeldName = simulatedHeldName,
-                    simulatedHeldNumber = simulatedHeldNumber,
-                    onSimulatedSwap = onSimulatedSwap
-                )
-
-                Spacer(modifier = Modifier.weight(1f, fill = false))
+                val fontScale = LocalDensity.current.fontScale
+                val adaptive = remember(maxWidth, maxHeight, fontScale) {
+                    computeAdaptiveLayoutMetrics(maxWidth, maxHeight, fontScale)
+                }
 
                 val isWaitingCallValid = waitingCall != null &&
                         waitingCall?.state == Call.STATE_RINGING &&
@@ -370,150 +347,38 @@ fun ActiveCallScreen(
                     }
                 }
 
-                if (isWaitingCallValid) {
-                    waitingCall?.let { call ->
-                        InCallWaitingCallDialog(
-                            waitingCall = call,
-                            contacts = contacts,
-                            avatarShapeType = avatarShapeType
-                        )
-                    }
-                } else if (!simulatedWaitingNumber.isNullOrBlank()) {
-                    InCallWaitingCallDialog(
-                        waitingCall = null,
-                        simulatedWaitingName = simulatedWaitingName,
-                        simulatedWaitingNumber = simulatedWaitingNumber,
-                        contacts = contacts,
-                        avatarShapeType = avatarShapeType,
-                        onSimulatedAnswerHold = onSimulatedAnswerHold,
-                        onSimulatedEndAnswer = onSimulatedEndAnswer,
-                        onSimulatedDecline = onSimulatedDecline
-                    )
-                }
-
-                if (isIncoming && isQuickDeclineMenuOpen) {
-                    InCallQuickDeclineSheet(
-                        contactNumber = contactNumber,
-                        quickResponses = quickResponses,
-                        onClose = { isQuickDeclineMenuOpen = false },
-                        onQuickDecline = onQuickDecline
-                    )
-                } else if (isInCallDialpadOpen) {
-                    InCallKeypad(
-                        onClose = { isInCallDialpadOpen = false },
-                        avatarShapeType = avatarShapeType
-                    )
-                } else {
-                    InCallAvatarDisplay(
-                        participants = participants,
-                        contactName = contactName,
-                        contactNumber = contactNumber,
-                        contacts = contacts,
-                        avatarShapeType = avatarShapeType,
-                        isConference = isConference
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f, fill = false))
-
-                if (isAddCallDialogOpen) {
-                    InCallAddCallDialog(
-                        contacts = contacts,
-                        onDismiss = { isAddCallDialogOpen = false },
-                        onAddCall = { finalName, number ->
-                            if (isFake) {
-                                fakeParticipants = fakeParticipants + Pair(finalName, number)
-                            } else {
-                                CallManager.placeCall(context, number)
-                            }
-                        },
-                        avatarShapeType = avatarShapeType,
-                        currentCallerNumber = contactNumber,
-                        onSimulateCallWaiting = onTriggerSimulatedCallWaiting
-                    )
-                }
-
-                InCallControlGrid(
-                    isInCallDialpadOpen = isInCallDialpadOpen,
-                    onToggleDialpad = {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        isInCallDialpadOpen = !isInCallDialpadOpen
-                    },
-                    isMuted = isMuted,
-                    onToggleMute = {
-                        val next = !isMuted
-                        RichHapticEngine.performHaptic(context, if (next) RichHapticEngine.HapticStyle.WARNING else RichHapticEngine.HapticStyle.CLICK)
-                        isMuted = next
-                        CallManager.setMuted(next)
-                    },
-                    isSpeakerOn = isSpeakerOn,
-                    onToggleSpeaker = {
-                        val next = !isSpeakerOn
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                        isSpeakerOn = next
-                        CallManager.setSpeaker(next)
-                    },
-                    isOnHold = isOnHold,
-                    onToggleHold = {
-                        val next = !isOnHold
-                        RichHapticEngine.performHaptic(context, if (next) RichHapticEngine.HapticStyle.WARNING else RichHapticEngine.HapticStyle.CLICK)
-                        isOnHold = next
-                        CallManager.setHold(next)
-                    },
-                    isBluetoothOn = isBluetoothOn,
-                    onToggleBluetooth = {
-                        val next = !isBluetoothOn
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                        isBluetoothOn = next
-                        CallManager.setBluetooth(next)
-                    },
-                    isAddCallDialogOpen = isAddCallDialogOpen,
-                    onOpenAddCallDialog = {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                        if (isDeviceLocked && onRequestUnlock != null) {
-                            Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
-                            onRequestUnlock { isAddCallDialogOpen = true }
-                        } else {
-                            isAddCallDialogOpen = true
+                val onToggleRecordingAction: () -> Unit = {
+                    if (isRecording || CallAudioRecorder.isRecording.value) {
+                        RecordingFeedbackHelper.triggerRecordingStopFeedback(context, recordingChimeEnabled)
+                        val result = CallAudioRecorder.stopRecording()
+                        if (autoTuneVolume) {
+                            CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
                         }
-                    },
-                    recordingEnabled = recordingEnabled,
-                    callNotesEnabled = callNotesEnabled,
-                    isRecording = isRecording,
-                    onToggleRecording = {
-                        if (isRecording || CallAudioRecorder.isRecording.value) {
-                            RecordingFeedbackHelper.triggerRecordingStopFeedback(context, recordingChimeEnabled)
-                            val result = CallAudioRecorder.stopRecording()
-                            if (autoTuneVolume) {
-                                CallAudioHelper.restoreAudioState(context, CallManager.inCallService)
-                            }
-                            val file = result.file
-                            if (file != null && file.exists() && file.length() > 0L) {
-                                onSaveRecording(result.durationSeconds.coerceAtLeast(1L), file.absolutePath)
-                                Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(context, "Call recording failed or file empty", Toast.LENGTH_SHORT).show()
-                            }
-                            isRecording = false
+                        val file = result.file
+                        if (file != null && file.exists() && file.length() > 0L) {
+                            onSaveRecording(result.durationSeconds.coerceAtLeast(1L), file.absolutePath)
+                            Toast.makeText(context, context.getString(R.string.recording_saved), Toast.LENGTH_SHORT).show()
                         } else {
-                            val hasAudioPermission = ContextCompat.checkSelfPermission(
-                                context,
-                                Manifest.permission.RECORD_AUDIO
-                            ) == PackageManager.PERMISSION_GRANTED
+                            Toast.makeText(context, "Call recording failed or file empty", Toast.LENGTH_SHORT).show()
+                        }
+                        isRecording = false
+                    } else {
+                        val hasAudioPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.RECORD_AUDIO
+                        ) == PackageManager.PERMISSION_GRANTED
 
-                            if (!hasAudioPermission) {
-                                if (isDeviceLocked && onRequestUnlock != null) {
-                                    Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
-                                    onRequestUnlock {
-                                        recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Microphone permission required for call recording", Toast.LENGTH_SHORT).show()
+                        if (!hasAudioPermission) {
+                            if (isDeviceLocked && onRequestUnlock != null) {
+                                Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
+                                onRequestUnlock {
                                     recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                 }
-                                return@InCallControlGrid
+                            } else {
+                                Toast.makeText(context, "Microphone permission required for call recording", Toast.LENGTH_SHORT).show()
+                                recordAudioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                             }
-
+                        } else {
                             RecordingFeedbackHelper.triggerRecordingStartFeedback(context, recordingChimeEnabled)
                             val currentRoute = audioState?.route ?: CallAudioState.ROUTE_EARPIECE
                             val isHeadset = currentRoute == CallAudioState.ROUTE_BLUETOOTH || currentRoute == CallAudioState.ROUTE_WIRED_HEADSET
@@ -545,38 +410,296 @@ fun ActiveCallScreen(
                                 Toast.makeText(context, "Cannot start recording. Grant Microphone permission.", Toast.LENGTH_LONG).show()
                             }
                         }
-                    },
-                    isNoteDialogOpen = isNoteDialogOpen,
-                    onOpenNoteDialog = {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                        if (isDeviceLocked && onRequestUnlock != null) {
-                            Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
-                            onRequestUnlock { isNoteDialogOpen = true }
-                        } else {
-                            isNoteDialogOpen = true
-                        }
-                    },
-                    avatarShapeType = avatarShapeType
-                )
-
-                if (isNoteDialogOpen) {
-                    InCallNoteDialog(
-                        onDismiss = { isNoteDialogOpen = false },
-                        onSaveNote = onSaveNote
-                    )
+                    }
                 }
 
-                InCallBottomBar(
-                    isIncoming = if (isFake) (fakeState == "RINGING") else isIncoming,
-                    onAnswer = if (isFake) onFakeAnswer else onAnswer,
-                    onHangUp = if (isFake) onFakeHangUp else onHangUp,
-                    onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen },
-                    avatarShapeType = avatarShapeType,
-                    isDisconnecting = !isFake && (
-                        currentCallState == Call.STATE_DISCONNECTING ||
-                            currentCallState == Call.STATE_DISCONNECTED
+                CompositionLocalProvider(LocalAdaptiveLayout provides adaptive) {
+                    val renderHeader: @Composable () -> Unit = {
+                        InCallHeader(
+                            isOnHold = isOnHold,
+                            callState = currentCallState,
+                            participants = participants,
+                            preferredSim = preferredSim,
+                            contactName = contactName,
+                            contactNumber = contactNumber,
+                            heldCall = heldCall,
+                            contacts = contacts,
+                            onMerge = {
+                                if (isFake || !simulatedHeldName.isNullOrBlank()) {
+                                    onSimulatedMerge?.invoke()
+                                    Toast.makeText(context, "📞 Call merged", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    CallManager.mergeCalls()
+                                }
+                            },
+                            isConference = isConference,
+                            isRecording = isRecording,
+                            activeStartTimestamp = activeStartTimestamp,
+                            isFake = isFake,
+                            fakeState = fakeState,
+                            fakeActiveStartTimestamp = fakeActiveStartTimestamp,
+                            simulatedHeldName = simulatedHeldName,
+                            simulatedHeldNumber = simulatedHeldNumber,
+                            onSimulatedSwap = onSimulatedSwap
                         )
-                )
+                    }
+
+                    val renderWaitingBanner: @Composable () -> Unit = {
+                        if (isWaitingCallValid) {
+                            waitingCall?.let { call ->
+                                InCallWaitingCallDialog(
+                                    waitingCall = call,
+                                    contacts = contacts,
+                                    avatarShapeType = avatarShapeType
+                                )
+                            }
+                        } else if (!simulatedWaitingNumber.isNullOrBlank()) {
+                            InCallWaitingCallDialog(
+                                waitingCall = null,
+                                simulatedWaitingName = simulatedWaitingName,
+                                simulatedWaitingNumber = simulatedWaitingNumber,
+                                contacts = contacts,
+                                avatarShapeType = avatarShapeType,
+                                onSimulatedAnswerHold = onSimulatedAnswerHold,
+                                onSimulatedEndAnswer = onSimulatedEndAnswer,
+                                onSimulatedDecline = onSimulatedDecline
+                            )
+                        }
+                    }
+
+                    val renderControlGrid: @Composable () -> Unit = {
+                        InCallControlGrid(
+                            isInCallDialpadOpen = isInCallDialpadOpen,
+                            onToggleDialpad = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                isInCallDialpadOpen = !isInCallDialpadOpen
+                            },
+                            isMuted = isMuted,
+                            onToggleMute = {
+                                val next = !isMuted
+                                RichHapticEngine.performHaptic(context, if (next) RichHapticEngine.HapticStyle.WARNING else RichHapticEngine.HapticStyle.CLICK)
+                                isMuted = next
+                                CallManager.setMuted(next)
+                            },
+                            isSpeakerOn = isSpeakerOn,
+                            onToggleSpeaker = {
+                                val next = !isSpeakerOn
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                isSpeakerOn = next
+                                CallManager.setSpeaker(next)
+                            },
+                            isOnHold = isOnHold,
+                            onToggleHold = {
+                                val next = !isOnHold
+                                RichHapticEngine.performHaptic(context, if (next) RichHapticEngine.HapticStyle.WARNING else RichHapticEngine.HapticStyle.CLICK)
+                                isOnHold = next
+                                CallManager.setHold(next)
+                            },
+                            isBluetoothOn = isBluetoothOn,
+                            onToggleBluetooth = {
+                                val next = !isBluetoothOn
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                isBluetoothOn = next
+                                CallManager.setBluetooth(next)
+                            },
+                            isAddCallDialogOpen = isAddCallDialogOpen,
+                            onOpenAddCallDialog = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                if (isDeviceLocked && onRequestUnlock != null) {
+                                    Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
+                                    onRequestUnlock { isAddCallDialogOpen = true }
+                                } else {
+                                    isAddCallDialogOpen = true
+                                }
+                            },
+                            recordingEnabled = recordingEnabled,
+                            callNotesEnabled = callNotesEnabled,
+                            isRecording = isRecording,
+                            onToggleRecording = onToggleRecordingAction,
+                            isNoteDialogOpen = isNoteDialogOpen,
+                            onOpenNoteDialog = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                if (isDeviceLocked && onRequestUnlock != null) {
+                                    Toast.makeText(context, context.getString(R.string.lockscreen_unlock_for_action), Toast.LENGTH_SHORT).show()
+                                    onRequestUnlock { isNoteDialogOpen = true }
+                                } else {
+                                    isNoteDialogOpen = true
+                                }
+                            },
+                            avatarShapeType = avatarShapeType
+                        )
+                    }
+
+                    val renderBottomBar: @Composable () -> Unit = {
+                        InCallBottomBar(
+                            isIncoming = if (isFake) (fakeState == "RINGING") else isIncoming,
+                            onAnswer = if (isFake) onFakeAnswer else onAnswer,
+                            onHangUp = if (isFake) onFakeHangUp else onHangUp,
+                            onToggleQuickDeclineMenu = { isQuickDeclineMenuOpen = !isQuickDeclineMenuOpen },
+                            avatarShapeType = avatarShapeType,
+                            isDisconnecting = !isFake && (
+                                currentCallState == Call.STATE_DISCONNECTING ||
+                                    currentCallState == Call.STATE_DISCONNECTED
+                                )
+                        )
+                    }
+
+                    if (adaptive.useTwoPaneInCall) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 24.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .widthIn(max = 460.dp)
+                                    .fillMaxHeight(),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f)
+                                        .verticalScroll(rememberScrollState()),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.Center
+                                ) {
+                                    renderHeader()
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    renderWaitingBanner()
+                                    InCallAvatarDisplay(
+                                        participants = participants,
+                                        contactName = contactName,
+                                        contactNumber = contactNumber,
+                                        contacts = contacts,
+                                        avatarShapeType = avatarShapeType,
+                                        isConference = isConference
+                                    )
+                                }
+                                renderBottomBar()
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .widthIn(max = 460.dp)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .verticalScroll(rememberScrollState()),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    if (isIncoming && isQuickDeclineMenuOpen) {
+                                        InCallQuickDeclineSheet(
+                                            contactNumber = contactNumber,
+                                            quickResponses = quickResponses,
+                                            onClose = { isQuickDeclineMenuOpen = false },
+                                            onQuickDecline = onQuickDecline
+                                        )
+                                    } else if (isInCallDialpadOpen) {
+                                        InCallKeypad(
+                                            onClose = { isInCallDialpadOpen = false },
+                                            avatarShapeType = avatarShapeType
+                                        )
+                                    } else {
+                                        renderControlGrid()
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        val horizontalPad = if (adaptive.isVeryNarrowWidth) 12.dp else 24.dp
+                        val verticalPad = if (adaptive.isTightVerticalSpace) 6.dp else 12.dp
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .widthIn(max = 560.dp)
+                                    .fillMaxSize()
+                                    .padding(horizontal = horizontalPad, vertical = verticalPad),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .weight(1f)
+                                        .verticalScroll(rememberScrollState()),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    renderHeader()
+
+                                    Spacer(modifier = Modifier.weight(1f, fill = false))
+
+                                    renderWaitingBanner()
+
+                                    if (isIncoming && isQuickDeclineMenuOpen) {
+                                        InCallQuickDeclineSheet(
+                                            contactNumber = contactNumber,
+                                            quickResponses = quickResponses,
+                                            onClose = { isQuickDeclineMenuOpen = false },
+                                            onQuickDecline = onQuickDecline
+                                        )
+                                    } else if (isInCallDialpadOpen) {
+                                        InCallKeypad(
+                                            onClose = { isInCallDialpadOpen = false },
+                                            avatarShapeType = avatarShapeType
+                                        )
+                                    } else {
+                                        InCallAvatarDisplay(
+                                            participants = participants,
+                                            contactName = contactName,
+                                            contactNumber = contactNumber,
+                                            contacts = contacts,
+                                            avatarShapeType = avatarShapeType,
+                                            isConference = isConference
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.weight(1f, fill = false))
+
+                                    renderControlGrid()
+                                }
+
+                                renderBottomBar()
+                            }
+                        }
+                    }
+
+                    if (isAddCallDialogOpen) {
+                        InCallAddCallDialog(
+                            contacts = contacts,
+                            onDismiss = { isAddCallDialogOpen = false },
+                            onAddCall = { finalName, number ->
+                                if (isFake) {
+                                    fakeParticipants = fakeParticipants + Pair(finalName, number)
+                                } else {
+                                    CallManager.placeCall(context, number)
+                                }
+                            },
+                            avatarShapeType = avatarShapeType,
+                            currentCallerNumber = contactNumber,
+                            onSimulateCallWaiting = onTriggerSimulatedCallWaiting
+                        )
+                    }
+
+                    if (isNoteDialogOpen) {
+                        InCallNoteDialog(
+                            onDismiss = { isNoteDialogOpen = false },
+                            onSaveNote = onSaveNote
+                        )
+                    }
+                }
             }
         }
 
@@ -590,6 +713,7 @@ fun ActiveCallScreen(
                     .align(Alignment.TopStart)
                     .statusBarsPadding()
                     .padding(8.dp)
+                    .size(48.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,

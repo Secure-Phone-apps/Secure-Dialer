@@ -21,7 +21,9 @@ import androidx.compose.animation.*
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
@@ -35,9 +37,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -199,36 +203,43 @@ fun CallLogSummaryDashboard(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     if (dashboardMode == "FULL") {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(AppShapes.Chip)
-                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
-                                .padding(2.dp),
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            // FIXED: Use .entries instead of .values() to eliminate array allocations
-                            SummaryTimeRange.entries.forEach { range ->
-                                val isSelected = selectedRange == range
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .clip(AppShapes.Small)
-                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
-                                        .clickable {
-                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                            selectedRange = range
-                                        }
-                                        .padding(vertical = 3.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = range.getLabel(),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontSize = 11.sp
-                                    )
+                        val dashFontScale = LocalDensity.current.fontScale
+                        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                            val scrollTabs = maxWidth < 340.dp || dashFontScale >= 1.3f
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(AppShapes.Chip)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                                    .then(if (scrollTabs) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
+                                    .padding(2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
+                            ) {
+                                SummaryTimeRange.entries.forEach { range ->
+                                    val isSelected = selectedRange == range
+                                    Box(
+                                        modifier = Modifier
+                                            .then(if (scrollTabs) Modifier else Modifier.weight(1f))
+                                            .heightIn(min = 32.dp)
+                                            .clip(AppShapes.Small)
+                                            .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                            .clickable {
+                                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                                selectedRange = range
+                                            }
+                                            .padding(horizontal = if (scrollTabs) 10.dp else 2.dp, vertical = 4.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = range.getLabel(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 11.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -392,7 +403,8 @@ fun SummaryBox(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 1
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
     }

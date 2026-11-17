@@ -209,7 +209,7 @@ class InCallActivity : ComponentActivity() {
                                 val recording = CallRecording(
                                     name = name,
                                     number = number,
-                                    timestamp = System.currentTimeMillis().toString(),
+                                    timestamp = CallAudioRecorder.formatRecordingTimestamp(applicationContext),
                                     duration = duration,
                                     filePath = filePath
                                 )

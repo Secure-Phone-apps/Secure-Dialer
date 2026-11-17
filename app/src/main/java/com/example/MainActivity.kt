@@ -44,16 +44,23 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import com.example.data.AppDatabase
+import com.example.data.DatabaseIntegrityStatus
 import com.example.ui.MainScreen
 import com.example.ui.theme.AppShapes
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.VaultBiometricAuthHelper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -159,15 +166,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            if (showRestrictedSettingsDialog) {
-                RestrictedSettingsDialog(
-                    onDismiss = { showRestrictedSettingsDialog = false },
-                    onOpenSettings = {
-                        showRestrictedSettingsDialog = false
-                        com.example.util.CallScreenPermissionHelper.openOemPermissionSettings(this@MainActivity)
-                    }
-                )
-            }
+            val dbIntegrityStatus by AppDatabase.integrityStatus.collectAsStateWithLifecycle()
 
             val currentThemeColor by viewModel.themeColor
             val customColorHex by viewModel.customColorHex
@@ -183,6 +182,62 @@ class MainActivity : ComponentActivity() {
                 isAmoledMode = isAmoledMode,
                 isM3Expressive = isM3Expressive
             ) {
+                if (showRestrictedSettingsDialog) {
+                    RestrictedSettingsDialog(
+                        onDismiss = { showRestrictedSettingsDialog = false },
+                        onOpenSettings = {
+                            showRestrictedSettingsDialog = false
+                            com.example.util.CallScreenPermissionHelper.openOemPermissionSettings(this@MainActivity)
+                        }
+                    )
+                }
+
+                when (val status = dbIntegrityStatus) {
+                    is DatabaseIntegrityStatus.TransientKeystoreError -> {
+                        AlertDialog(
+                            onDismissRequest = {},
+                            title = { Text(stringResource(R.string.db_keystore_locked_title)) },
+                            text = { Text(stringResource(R.string.db_keystore_locked_desc)) },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = {
+                                        lifecycleScope.launch(Dispatchers.IO) {
+                                            AppDatabase.retryOpenOnTransientRecovery(applicationContext)
+                                        }
+                                    },
+                                    modifier = Modifier.testTag("db_keystore_retry_button")
+                                ) {
+                                    Text(stringResource(R.string.btn_retry))
+                                }
+                            }
+                        )
+                    }
+                    is DatabaseIntegrityStatus.CorruptedQuarantined -> {
+                        AlertDialog(
+                            onDismissRequest = { AppDatabase.dismissIntegrityWarning() },
+                            title = { Text(stringResource(R.string.db_quarantined_title)) },
+                            text = {
+                                Text(
+                                    stringResource(
+                                        R.string.db_quarantined_desc,
+                                        status.backupFileName
+                                    )
+                                )
+                            },
+                            confirmButton = {
+                                TextButton(
+                                    onClick = { AppDatabase.dismissIntegrityWarning() },
+                                    modifier = Modifier.testTag("db_quarantine_close_button")
+                                ) {
+                                    Text(stringResource(R.string.close))
+                                }
+                            }
+                        )
+                    }
+                    DatabaseIntegrityStatus.Healthy,
+                    is DatabaseIntegrityStatus.RobolectricTestFallback -> Unit
+                }
+
                 if (isAppAuthenticated.value) {
                     MainScreen(
                         viewModel = viewModel,
@@ -281,6 +336,11 @@ class MainActivity : ComponentActivity() {
             this,
             android.Manifest.permission.RECORD_AUDIO
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (AppDatabase.integrityStatus.value is DatabaseIntegrityStatus.TransientKeystoreError) {
+            lifecycleScope.launch(Dispatchers.IO) {
+                AppDatabase.retryOpenOnTransientRecovery(applicationContext)
+            }
+        }
     }
 
     override fun onStart() {

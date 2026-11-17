@@ -257,6 +257,23 @@ class DialerRepository(rawContext: Context) {
         )
     }
 
+    internal fun splitFullNameParts(fullName: String): Pair<String, String> {
+        val trimmed = fullName.trim()
+        if (trimmed.isEmpty()) return "" to ""
+        if (trimmed.contains(",")) {
+            val parts = trimmed.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+            if (parts.size >= 2) {
+                return parts.drop(1).joinToString(" ") to parts[0]
+            }
+        }
+        val words = trimmed.split(Regex("\\s+")).filter { it.isNotEmpty() }
+        return if (words.size <= 1) {
+            trimmed to ""
+        } else {
+            words.dropLast(1).joinToString(" ") to words.last()
+        }
+    }
+
     suspend fun addContactWithDetails(
         name: String,
         numbers: List<LabeledNumber>,
@@ -265,6 +282,7 @@ class DialerRepository(rawContext: Context) {
         accountName: String = "",
         accountType: String = ""
     ) {
+        val (givenName, familyName) = splitFullNameParts(name)
         val ops = arrayListOf<ContentProviderOperation>()
         val rawInsert = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
         if (accountName.isNotBlank() && accountType.isNotBlank() && accountName != "Phone") {
@@ -279,9 +297,145 @@ class DialerRepository(rawContext: Context) {
             ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
                 .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
                 .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
-                .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name)
+                .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, name.trim())
+                .withValue(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME, givenName)
+                .withValue(ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME, familyName)
                 .build()
         )
+
+        appendContactDetailInsertOps(
+            ops = ops,
+            rawContactId = null,
+            backRefIndex = 0,
+            numbers = numbers,
+            emails = emails,
+            addresses = addresses
+        )
+
+        try { context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops) } catch (_: Exception) {}
+        syncContacts(true)
+    }
+
+    /**
+     * Atomically updates an existing contact in-place using its RAW_CONTACT_ID,
+     * preserving Contact _ID, photo, company/organization, birthday, custom ringtone,
+     * notes, starred status, and linked third-party RawContacts.
+     */
+    suspend fun updateContactWithDetails(
+        oldContact: Contact,
+        name: String,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail> = emptyList(),
+        addresses: List<LabeledAddress> = emptyList(),
+        accountName: String = "",
+        accountType: String = ""
+    ) = withContext(Dispatchers.IO) {
+        val rawId = resolveEditableRawContactId(oldContact)
+        if (rawId == null || rawId <= 0L) {
+            addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
+            if (oldContact.favorite) {
+                val primaryNum = numbers.firstOrNull()?.number ?: oldContact.number
+                if (primaryNum.isNotBlank()) toggleFavorite(primaryNum, true)
+            }
+            return@withContext
+        }
+
+        val (givenName, familyName) = splitFullNameParts(name)
+        val ops = buildUpdateContactOps(
+            rawContactId = rawId,
+            existingNameDataId = findStructuredNameDataId(rawId),
+            displayName = name.trim(),
+            givenName = givenName,
+            familyName = familyName,
+            numbers = numbers,
+            emails = emails,
+            addresses = addresses
+        )
+
+        try {
+            context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops)
+        } catch (_: Exception) {}
+
+        syncContacts(true)
+    }
+
+    internal fun buildUpdateContactOps(
+        rawContactId: Long,
+        existingNameDataId: Long?,
+        displayName: String,
+        givenName: String,
+        familyName: String,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail>,
+        addresses: List<LabeledAddress>
+    ): ArrayList<ContentProviderOperation> {
+        val ops = arrayListOf<ContentProviderOperation>()
+
+        if (existingNameDataId != null && existingNameDataId > 0L) {
+            ops.add(
+                ContentProviderOperation.newUpdate(ContactsContract.Data.CONTENT_URI)
+                    .withSelection("${ContactsContract.Data._ID} = ?", arrayOf(existingNameDataId.toString()))
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, displayName)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME, givenName)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME, familyName)
+                    .build()
+            )
+        } else {
+            ops.add(
+                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+                    .withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.DISPLAY_NAME, displayName)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME, givenName)
+                    .withValue(ContactsContract.CommonDataKinds.StructuredName.FAMILY_NAME, familyName)
+                    .build()
+            )
+        }
+
+        // Only replace phones, emails, and postal addresses for this raw contact; preserve all other metadata rows
+        ops.add(
+            ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
+                .withSelection(
+                    "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} IN (?, ?, ?)",
+                    arrayOf(
+                        rawContactId.toString(),
+                        Phone.CONTENT_ITEM_TYPE,
+                        ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE,
+                        ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
+                    )
+                )
+                .build()
+        )
+
+        appendContactDetailInsertOps(
+            ops = ops,
+            rawContactId = rawContactId,
+            backRefIndex = null,
+            numbers = numbers,
+            emails = emails,
+            addresses = addresses
+        )
+
+        return ops
+    }
+
+    private fun appendContactDetailInsertOps(
+        ops: ArrayList<ContentProviderOperation>,
+        rawContactId: Long?,
+        backRefIndex: Int?,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail>,
+        addresses: List<LabeledAddress>
+    ) {
+        fun baseDataInsert(): ContentProviderOperation.Builder {
+            val builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
+            if (rawContactId != null) {
+                builder.withValue(ContactsContract.Data.RAW_CONTACT_ID, rawContactId)
+            } else if (backRefIndex != null) {
+                builder.withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, backRefIndex)
+            }
+            return builder
+        }
 
         for (numItem in numbers) {
             if (numItem.number.isBlank()) continue
@@ -293,8 +447,7 @@ class DialerRepository(rawContext: Context) {
                 "mobile" -> Phone.TYPE_MOBILE
                 else -> Phone.TYPE_CUSTOM
             }
-            val builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+            val builder = baseDataInsert()
                 .withValue(ContactsContract.Data.MIMETYPE, Phone.CONTENT_ITEM_TYPE)
                 .withValue(Phone.NUMBER, numItem.number)
                 .withValue(Phone.TYPE, phoneType)
@@ -315,8 +468,7 @@ class DialerRepository(rawContext: Context) {
                 else -> ContactsContract.CommonDataKinds.Email.TYPE_HOME
             }
             ops.add(
-                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                baseDataInsert()
                     .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE)
                     .withValue(ContactsContract.CommonDataKinds.Email.ADDRESS, emailItem.email)
                     .withValue(ContactsContract.CommonDataKinds.Email.TYPE, emailType)
@@ -332,17 +484,73 @@ class DialerRepository(rawContext: Context) {
                 else -> ContactsContract.CommonDataKinds.StructuredPostal.TYPE_HOME
             }
             ops.add(
-                ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
-                    .withValueBackReference(ContactsContract.Data.RAW_CONTACT_ID, 0)
+                baseDataInsert()
                     .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE)
                     .withValue(ContactsContract.CommonDataKinds.StructuredPostal.FORMATTED_ADDRESS, addrItem.address)
                     .withValue(ContactsContract.CommonDataKinds.StructuredPostal.TYPE, addrType)
                     .build()
             )
         }
+    }
 
-        try { context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops) } catch (_: Exception) {}
-        syncContacts(true)
+    private fun resolveEditableRawContactId(contact: Contact): Long? {
+        try {
+            if (contact.rawContactId > 0L) {
+                context.contentResolver.query(
+                    ContactsContract.RawContacts.CONTENT_URI,
+                    arrayOf(ContactsContract.RawContacts._ID, ContactsContract.RawContacts.ACCOUNT_TYPE),
+                    "${ContactsContract.RawContacts._ID} = ? AND ${ContactsContract.RawContacts.DELETED} = 0",
+                    arrayOf(contact.rawContactId.toString()),
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val accType = cursor.getString(1) ?: ""
+                        if (!accType.contains("whatsapp", ignoreCase = true)) {
+                            return cursor.getLong(0)
+                        }
+                    }
+                }
+            }
+
+            val contactIdStr = if (contact.contactId > 0L) contact.contactId.toString() else getContactIdFromNumber(contact.number)
+            if (!contactIdStr.isNullOrBlank()) {
+                context.contentResolver.query(
+                    ContactsContract.RawContacts.CONTENT_URI,
+                    arrayOf(ContactsContract.RawContacts._ID, ContactsContract.RawContacts.ACCOUNT_TYPE),
+                    "${ContactsContract.RawContacts.CONTACT_ID} = ? AND ${ContactsContract.RawContacts.DELETED} = 0",
+                    arrayOf(contactIdStr),
+                    null
+                )?.use { cursor ->
+                    var fallbackId: Long? = null
+                    while (cursor.moveToNext()) {
+                        val rawId = cursor.getLong(0)
+                        val accType = cursor.getString(1) ?: ""
+                        if (!accType.contains("whatsapp", ignoreCase = true)) {
+                            return rawId
+                        }
+                        if (fallbackId == null) fallbackId = rawId
+                    }
+                    return fallbackId
+                }
+            }
+        } catch (_: Exception) {}
+        return null
+    }
+
+    private fun findStructuredNameDataId(rawContactId: Long): Long? {
+        return try {
+            context.contentResolver.query(
+                ContactsContract.Data.CONTENT_URI,
+                arrayOf(ContactsContract.Data._ID),
+                "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} = ?",
+                arrayOf(rawContactId.toString(), ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE),
+                null
+            )?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getLong(0) else null
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     suspend fun deleteContact(contact: Contact) {

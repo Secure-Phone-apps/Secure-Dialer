@@ -30,6 +30,7 @@ import com.example.model.PostCallData
 import com.example.ui.components.getCurrentLocale
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
+import com.example.util.CallAudioRouteCoordinator
 import com.example.util.MultiSimManager
 import com.example.util.OutgoingCallDisconnectCoordinator
 import com.example.util.PhoneFormatHelper
@@ -239,10 +240,19 @@ object CallManager {
     @Volatile
     var appContext: Context? = null
 
+    @Volatile
+    private var cachedEndpoints: List<Any> = emptyList()
+
     var inCallService: InCallService? = null
         set(value) {
             field = value
-            if (value != null) appContext = value.applicationContext else _audioState.value = null
+            if (value != null) {
+                appContext = value.applicationContext
+            } else {
+                _audioState.value = null
+                cachedEndpoints = emptyList()
+                CallAudioRouteCoordinator.clearUserIntent()
+            }
         }
 
     private val callCallback = object : Call.Callback() {
@@ -498,15 +508,15 @@ object CallManager {
                 _callerLabel.value = ""
             }
 
-            // SIM Slot resolution
+            // SIM Slot resolution (handle equality + ID/componentName + API 30+ subId + OEM ID patterns)
             val accountHandle = call.details?.accountHandle
             val ctx = appContext ?: inCallService?.applicationContext
             if (accountHandle != null && ctx != null) {
                 try {
                     val activeSims = MultiSimManager.getActiveSimAccounts(ctx)
-                    val matchedSim = activeSims.find { it.accountHandle == accountHandle }
-                    if (matchedSim != null) {
-                        _currentSimSlot.value = matchedSim.slotIndex + 1
+                    val resolvedSlot = MultiSimManager.inferSlotFromPhoneAccountHandle(accountHandle, ctx, activeSims)
+                    if (resolvedSlot != null && resolvedSlot in 1..2) {
+                        _currentSimSlot.value = resolvedSlot
                     }
                 } catch (_: Exception) {}
             }
@@ -618,8 +628,7 @@ object CallManager {
             file.nameWithoutExtension.removePrefix("REC_").split("_").firstOrNull()?.filter { it.isDigit() }?.ifEmpty { "Unknown" } ?: "Unknown"
         }
         val name = _callerName.value.ifEmpty { number }
-        val locale = getCurrentLocale(ctx)
-        val timestamp = SimpleDateFormat("MMM d, HH:mm", locale).format(Date())
+        val timestamp = CallAudioRecorder.formatRecordingTimestamp(ctx)
 
         val recording = CallRecording(
             number = number,
@@ -709,6 +718,21 @@ object CallManager {
     }
 
     fun updateAudioState(state: CallAudioState?) { _audioState.value = state }
+
+    fun updateAvailableEndpoints(endpoints: List<Any>) {
+        cachedEndpoints = endpoints
+    }
+
+    fun getAvailableEndpointsSnapshot(): List<Any> = cachedEndpoints
+
+    fun routeAudio(targetRoute: Int, isUserAction: Boolean = true) {
+        CallAudioRouteCoordinator.routeAudio(
+            inCallService = inCallService,
+            targetRoute = targetRoute,
+            availableEndpoints = cachedEndpoints,
+            isUserAction = isUserAction
+        )
+    }
 
     fun answer() {
         try {
@@ -862,20 +886,16 @@ object CallManager {
 
     fun setMuted(muted: Boolean) { inCallService?.setMuted(muted) }
     fun setSpeaker(speaker: Boolean) {
-        val defaultRoute = if ((_audioState.value?.supportedRouteMask ?: 0) and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
-            CallAudioState.ROUTE_WIRED_HEADSET
-        } else {
-            CallAudioState.ROUTE_EARPIECE
-        }
-        inCallService?.setAudioRoute(if (speaker) CallAudioState.ROUTE_SPEAKER else defaultRoute)
+        val supportedMask = _audioState.value?.supportedRouteMask ?: 0
+        val defaultRoute = CallAudioRouteCoordinator.resolveDefaultFallbackRoute(supportedMask)
+        val targetRoute = if (speaker) CallAudioState.ROUTE_SPEAKER else defaultRoute
+        routeAudio(targetRoute, isUserAction = true)
     }
     fun setBluetooth(bluetooth: Boolean) {
-        val defaultRoute = if ((_audioState.value?.supportedRouteMask ?: 0) and CallAudioState.ROUTE_WIRED_HEADSET != 0) {
-            CallAudioState.ROUTE_WIRED_HEADSET
-        } else {
-            CallAudioState.ROUTE_EARPIECE
-        }
-        inCallService?.setAudioRoute(if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else defaultRoute)
+        val supportedMask = _audioState.value?.supportedRouteMask ?: 0
+        val defaultRoute = CallAudioRouteCoordinator.resolveDefaultFallbackRoute(supportedMask)
+        val targetRoute = if (bluetooth) CallAudioState.ROUTE_BLUETOOTH else defaultRoute
+        routeAudio(targetRoute, isUserAction = true)
     }
     fun setHold(hold: Boolean) {
         if (hold) _currentCall.value?.hold() else _currentCall.value?.unhold()
@@ -993,7 +1013,8 @@ object CallManager {
         }
 
         val isEmergency = isEmergencyNumber(number, context)
-        val targetSlot = if (preferredSim.contains("2")) 2 else 1
+        val activeSims = MultiSimManager.getActiveSimAccounts(context)
+        val (matchedAccount, targetSlot) = MultiSimManager.resolvePreferredSimTarget(preferredSim, activeSims)
         _currentSimSlot.value = targetSlot
         SimCallTracker.recordOutgoingCall(context, number, targetSlot)
 
@@ -1007,8 +1028,7 @@ object CallManager {
         val uri = Uri.fromParts("tel", dialedNumber, null)
         val extras = Bundle()
 
-        if (!isEmergency && preferredSim != "Ask") {
-            val matchedAccount = findPhoneAccountForSlot(context, targetSlot, preferredSim)
+        if (!isEmergency && !preferredSim.equals("Ask", ignoreCase = true)) {
             if (matchedAccount?.accountHandle != null) {
                 // Official AOSP Telecom binding
                 extras.putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, matchedAccount.accountHandle)
@@ -1020,6 +1040,7 @@ object CallManager {
                 extras.putInt("slot", matchedAccount.slotIndex)
                 extras.putInt("simSlot", matchedAccount.slotIndex)
                 extras.putInt("com.android.phone.extra.slot", matchedAccount.slotIndex)
+                extras.putInt("sim_slot", matchedAccount.slotIndex)
             }
         }
 
@@ -1053,20 +1074,6 @@ object CallManager {
                 } catch (_: Exception) {}
             }
         }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun findPhoneAccountForSlot(context: Context, slotIndex: Int, preferredSimLabel: String): com.example.util.SimAccountInfo? {
-        val simAccounts = MultiSimManager.getActiveSimAccounts(context)
-        if (simAccounts.isEmpty()) return null
-
-        val matchByLabel = simAccounts.find {
-            it.displayName.equals(preferredSimLabel, ignoreCase = true) ||
-            it.carrierName.equals(preferredSimLabel, ignoreCase = true)
-        }
-        if (matchByLabel != null) return matchByLabel
-
-        return simAccounts.find { it.slotIndex == (slotIndex - 1) } ?: simAccounts.firstOrNull()
     }
 
     fun rejectCallWithMessage(context: Context, number: String, textMessage: String) {

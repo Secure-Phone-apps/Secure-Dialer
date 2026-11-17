@@ -34,11 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.CallScreenPermissionHelper
 import com.example.util.RichHapticEngine
 
 @Composable
@@ -50,6 +52,22 @@ fun CallingAccountsSettings(
     val context = LocalContext.current
     val callWaitingEnabled by viewModel.callWaitingEnabled
     val flashAlertsEnabled by viewModel.flashAlertsEnabled
+    val oemFamily = remember { CallScreenPermissionHelper.detectOemFamily() }
+    val oemName = remember(oemFamily) { CallScreenPermissionHelper.getOemDisplayName(oemFamily) }
+    var isBatteryUnrestricted by remember {
+        mutableStateOf(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context))
+    }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                isBatteryUnrestricted = CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -169,6 +187,36 @@ fun CallingAccountsSettings(
                         iconTint = MaterialTheme.colorScheme.primary
                     )
                 }
+            }
+        }
+
+        // [Header] BACKGROUND & OEM RELIABILITY
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            PreferenceHeader(stringResource(R.string.header_background_reliability))
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .testTag("oem_background_settings_card"),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Background", highlightedTitle) ||
+                    isMatchTitle("Battery", highlightedTitle) ||
+                    isMatchTitle("OEM", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_oem_background_title),
+                    subtitle = if (isBatteryUnrestricted) {
+                        stringResource(R.string.settings_oem_background_unrestricted, oemName)
+                    } else {
+                        stringResource(R.string.settings_oem_background_restricted, oemName)
+                    },
+                    onClick = { CallScreenPermissionHelper.openOemBackgroundSettings(context, oemFamily) },
+                    icon = Icons.Default.BatteryChargingFull,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary
+                )
             }
         }
     }

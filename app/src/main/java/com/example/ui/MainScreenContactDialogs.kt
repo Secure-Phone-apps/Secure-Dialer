@@ -85,12 +85,15 @@ fun MainScreenContactDialogs(
                 oldContactToEdit = null
             },
             onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
-                viewModel.deleteContact(contactToEdit)
-                viewModel.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
-                if (contactToEdit.favorite) {
-                    val primaryNum = numbers.firstOrNull()?.number ?: contactToEdit.number
-                    viewModel.toggleFavorite(primaryNum, true)
-                }
+                viewModel.updateContactWithDetails(
+                    oldContact = contactToEdit,
+                    name = name,
+                    numbers = numbers,
+                    emails = emails,
+                    addresses = addresses,
+                    accountName = accountName,
+                    accountType = accountType
+                )
                 isEditContactDialogVisible = false
                 oldContactToEdit = null
             }

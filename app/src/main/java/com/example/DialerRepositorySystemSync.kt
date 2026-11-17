@@ -27,6 +27,7 @@ import android.telephony.SubscriptionManager
 import com.example.model.*
 import com.example.ui.components.getCurrentLocale
 import com.example.ui.theme.*
+import com.example.util.MultiSimManager
 import com.example.util.SimCallTracker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -349,32 +350,28 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
     val subIdToSlotMap = mutableMapOf<String, Int>()
     try {
         val subManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as? SubscriptionManager
-        val subList = subManager?.activeSubscriptionInfoList ?: emptyList()
+        val subList = try {
+            subManager?.activeSubscriptionInfoList ?: emptyList()
+        } catch (_: SecurityException) {
+            emptyList()
+        }
         if (subList.isNotEmpty()) {
-            if (subList.size == 1) {
-                val subInfo = subList[0]
-                val slot = subInfo.simSlotIndex + 1
+            subList.forEachIndexed { index, subInfo ->
+                val slot = (subInfo.simSlotIndex.takeIf { it >= 0 } ?: index) + 1
                 val subIdStr = subInfo.subscriptionId.toString()
                 subIdToSlotMap[subIdStr] = slot
-                subInfo.iccId?.takeIf { it.isNotBlank() }?.let { subIdToSlotMap[it] = slot }
-                if (subInfo.cardId > 0) subIdToSlotMap[subInfo.cardId.toString()] = slot
+                try {
+                    subInfo.iccId?.takeIf { it.length >= 6 }?.let { subIdToSlotMap[it] = slot }
+                } catch (_: Exception) {}
+                try {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q && subInfo.cardId > 0) {
+                        subIdToSlotMap[subInfo.cardId.toString()] = slot
+                    }
+                } catch (_: Exception) {}
                 subIdToSlotMap["sub_${subInfo.subscriptionId}"] = slot
                 subIdToSlotMap["slot_${subInfo.simSlotIndex}"] = slot
                 subIdToSlotMap["sim_${subInfo.simSlotIndex}"] = slot
-                subIdToSlotMap["sim_1"] = slot
-                subIdToSlotMap["sim_2"] = slot
-            } else {
-                subList.forEachIndexed { index, subInfo ->
-                    val slot = index + 1
-                    val subIdStr = subInfo.subscriptionId.toString()
-                    subIdToSlotMap[subIdStr] = slot
-                    subInfo.iccId?.takeIf { it.isNotBlank() }?.let { subIdToSlotMap[it] = slot }
-                    if (subInfo.cardId > 0) subIdToSlotMap[subInfo.cardId.toString()] = slot
-                    subIdToSlotMap["sub_${subInfo.subscriptionId}"] = slot
-                    subIdToSlotMap["slot_${subInfo.simSlotIndex}"] = slot
-                    subIdToSlotMap["sim_${subInfo.simSlotIndex}"] = slot
-                    subIdToSlotMap["sim_$slot"] = slot
-                }
+                subIdToSlotMap["sim_$slot"] = slot
             }
         }
     } catch (_: Exception) {}
@@ -435,30 +432,11 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                 val phoneAccountId = if (accountIdIdx != -1) cursor.getString(accountIdIdx) ?: "" else ""
                 val trackedSimSlot = SimCallTracker.getSimSlotForCall(context, num, dateVal)
 
-                val simSlot = when {
-                    trackedSimSlot != null -> trackedSimSlot
-                    phoneAccountId in subIdToSlotMap -> subIdToSlotMap[phoneAccountId] ?: 1
-                    subIdToSlotMap.entries.any { (key, _) -> key.isNotEmpty() && phoneAccountId.contains(key) } -> {
-                        subIdToSlotMap.entries.first { (key, _) -> key.isNotEmpty() && phoneAccountId.contains(key) }.value
-                    }
-                    phoneAccountId.contains("sim_2", ignoreCase = true) ||
-                    phoneAccountId.contains("sim2", ignoreCase = true) ||
-                    phoneAccountId.contains("sub_2", ignoreCase = true) ||
-                    phoneAccountId.contains("slot_2", ignoreCase = true) ||
-                    phoneAccountId.contains("slot2", ignoreCase = true) ||
-                    phoneAccountId.contains(", 2,") ||
-                    phoneAccountId.endsWith("_1") ||
-                    (phoneAccountId.equals("1") && !subIdToSlotMap.containsKey("1")) -> 2
-                    phoneAccountId.contains("sim_1", ignoreCase = true) ||
-                    phoneAccountId.contains("sim1", ignoreCase = true) ||
-                    phoneAccountId.contains("sub_1", ignoreCase = true) ||
-                    phoneAccountId.contains("slot_1", ignoreCase = true) ||
-                    phoneAccountId.contains("slot1", ignoreCase = true) ||
-                    phoneAccountId.contains(", 1,") ||
-                    phoneAccountId.equals("0") ||
-                    phoneAccountId.endsWith("_0") -> 1
-                    else -> 1
-                }
+                val simSlot = MultiSimManager.resolveCallLogSimSlot(
+                    trackedSimSlot = trackedSimSlot,
+                    phoneAccountId = phoneAccountId,
+                    subIdToSlotMap = subIdToSlotMap
+                )
 
                 val typeVal = if (typeIdx != -1) cursor.getInt(typeIdx) else CallLog.Calls.INCOMING_TYPE
                 val type = when (typeVal) {

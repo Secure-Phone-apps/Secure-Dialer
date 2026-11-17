@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.example.CallManager
 import com.example.R
 import com.example.model.getAvatarShape
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.LocalM3Expressive
 import com.example.util.RichHapticEngine
@@ -70,11 +71,12 @@ fun InCallKeypad(
 ) {
     var inCallDialpadInput by remember { mutableStateOf("") }
     val isAmoled = LocalAmoledMode.current
+    val adaptive = LocalAdaptiveLayout.current
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(if (adaptive.isTightVerticalSpace) 6.dp else 16.dp),
         shape = MaterialTheme.shapes.large,
         border = if (isAmoled) BorderStroke(1.dp, Color(0xFF222222)) else null,
         colors = CardDefaults.cardColors(
@@ -83,7 +85,10 @@ fun InCallKeypad(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
+            modifier = Modifier.padding(
+                horizontal = if (adaptive.isVeryNarrowWidth) 12.dp else 20.dp,
+                vertical = if (adaptive.isTightVerticalSpace) 10.dp else 16.dp
+            )
         ) {
             // Header with overflow protection and one-tap clear
             Row(
@@ -142,18 +147,18 @@ fun InCallKeypad(
                                 avatarShapeType = avatarShapeType,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(60.dp)
+                                    .height(adaptive.inCallKeypadButtonHeight)
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(if (adaptive.isTightVerticalSpace) 6.dp else 12.dp))
 
             TextButton(
                 onClick = onClose,
-                modifier = Modifier.height(44.dp)
+                modifier = Modifier.heightIn(min = 48.dp)
             ) {
                 Text(
                     text = stringResource(R.string.close),

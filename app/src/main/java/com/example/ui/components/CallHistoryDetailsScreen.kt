@@ -26,9 +26,11 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -54,6 +57,7 @@ import com.example.model.CallRecord
 import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.ui.theme.AppShapes
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 import kotlinx.coroutines.Dispatchers
@@ -183,14 +187,21 @@ fun CallHistoryDetailsScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        val adaptive = LocalAdaptiveLayout.current
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .consumeWindowInsets(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .consumeWindowInsets(paddingValues),
+            contentAlignment = Alignment.TopCenter
         ) {
+            LazyColumn(
+                modifier = Modifier
+                    .widthIn(max = adaptive.contentMaxWidth)
+                    .fillMaxSize()
+                    .padding(horizontal = if (adaptive.isVeryNarrowWidth) 10.dp else 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
             item {
                 Column(
                     modifier = Modifier
@@ -275,13 +286,17 @@ fun CallHistoryDetailsScreen(
             }
 
             item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                val detailFontScale = LocalDensity.current.fontScale
+                BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                    val useScrollActions = maxWidth < 360.dp || detailFontScale >= 1.3f
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(if (useScrollActions) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
+                            .padding(vertical = 4.dp),
+                        horizontalArrangement = if (useScrollActions) Arrangement.spacedBy(12.dp) else Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     DetailActionItem(
                         icon = Icons.Default.Call,
                         label = stringResource(R.string.action_call),
@@ -367,6 +382,7 @@ fun CallHistoryDetailsScreen(
                             }
                         }
                     )
+                }
                 }
             }
 
@@ -693,6 +709,7 @@ fun CallHistoryDetailsScreen(
                     )
                 }
             }
+        }
         }
     }
 }

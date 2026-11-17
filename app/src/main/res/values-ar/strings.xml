@@ -638,4 +638,13 @@
     <string name="btn_continue">متابعة</string>
     <string name="btn_not_now">ليس الآن</string>
     <string name="about_version_label">Secure Dialer الإصدار %1$s</string>
+    <string name="db_keystore_locked_title">التخزين المشفّر مقفل مؤقتاً</string>
+    <string name="db_keystore_locked_desc">مخزن مفاتيح Android مشغول مؤقتاً أو بانتظار فتح قفل الجهاز. تبقى ملاحظات المكالمات والاتصال السريع وقائمة الحظر المشفّرة محفوظة بأمان على الجهاز.</string>
+    <string name="db_quarantined_title">تم عزل قاعدة البيانات المشفّرة</string>
+    <string name="db_quarantined_desc">تعذر فتح قاعدة البيانات المشفّرة السابقة، لذا تم حفظها بأمان في %1$s بدلاً من حذفها. يمكنك الاستعادة من نسخة احتياطية في الإعدادات.</string>
+    <string name="btn_retry">إعادة المحاولة</string>
+    <string name="header_background_reliability">موثوقية الخلفية ونظام الشركة المصنعة</string>
+    <string name="settings_oem_background_title">استمرارية العمل في الخلفية والبطارية</string>
+    <string name="settings_oem_background_unrestricted">%1$s • البطارية غير مقيدة. انقر لمراجعة إعدادات التشغيل التلقائي</string>
+    <string name="settings_oem_background_restricted">%1$s • البطارية مقيدة. انقر للسماح بتنبيه المكالمات الواردة دون قيود</string>
 </resources>

@@ -22,6 +22,7 @@ import android.media.AudioManager
 import android.os.Build
 import android.telecom.CallAudioState
 import android.telecom.InCallService
+import com.example.CallManager
 
 /**
  * Manages acoustic balancing for call recording.
@@ -64,7 +65,12 @@ object CallAudioHelper {
 
             // Switch to Speakerphone if currently on earpiece
             if (currentRoute == CallAudioState.ROUTE_EARPIECE) {
-                inCallService?.setAudioRoute(CallAudioState.ROUTE_SPEAKER)
+                CallAudioRouteCoordinator.routeAudio(
+                    inCallService = inCallService,
+                    targetRoute = CallAudioState.ROUTE_SPEAKER,
+                    availableEndpoints = CallManager.getAvailableEndpointsSnapshot(),
+                    isUserAction = false
+                )
             }
 
             val maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_VOICE_CALL)
@@ -104,10 +110,15 @@ object CallAudioHelper {
                 } catch (_: SecurityException) {}
             }
 
-            // FIXED: Fully restores ANY previous route (Bluetooth, Wired Headset, or Earpiece)
+            // FIXED: Fully restores ANY previous route (Bluetooth, Wired Headset, or Earpiece) across API 28-37+
             originalRoute?.let { prevRoute ->
                 if (prevRoute != CallAudioState.ROUTE_SPEAKER) {
-                    inCallService?.setAudioRoute(prevRoute)
+                    CallAudioRouteCoordinator.routeAudio(
+                        inCallService = inCallService,
+                        targetRoute = prevRoute,
+                        availableEndpoints = CallManager.getAvailableEndpointsSnapshot(),
+                        isUserAction = false
+                    )
                 }
             }
         } catch (_: Exception) {

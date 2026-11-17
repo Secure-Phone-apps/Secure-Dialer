@@ -638,4 +638,13 @@ Version v%1$s (Stabile Version)
     <string name="btn_continue">Weiter</string>
     <string name="btn_not_now">Jetzt nicht</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">Verschlüsselter Speicher gesperrt</string>
+    <string name="db_keystore_locked_desc">Der Android Keystore ist vorübergehend ausgelastet oder wartet auf die Entsperrung. Ihre verschlüsselten Anrufnotizen, Kurzwahlen und Sperrlisten bleiben sicher gespeichert.</string>
+    <string name="db_quarantined_title">Verschlüsselte Datenbank isoliert</string>
+    <string name="db_quarantined_desc">Ihre vorherige verschlüsselte Datenbank konnte nicht entsperrt werden und wurde sicher nach %1$s verschoben, statt gelöscht zu werden. Sie können ein Backup in den Einstellungen wiederherstellen.</string>
+    <string name="btn_retry">Erneut versuchen</string>
+    <string name="header_background_reliability">HINTERGRUND &amp; OEM-ZUVERLÄSSIGKEIT</string>
+    <string name="settings_oem_background_title">Hintergrund- &amp; Akku-Ausnahmen</string>
+    <string name="settings_oem_background_unrestricted">%1$s • Uneingeschränkt. Tippen, um OEM-Autostart zu prüfen</string>
+    <string name="settings_oem_background_restricted">%1$s • Akku eingeschränkt. Tippen für zuverlässiges Aufwecken bei Anrufen</string>
 </resources>

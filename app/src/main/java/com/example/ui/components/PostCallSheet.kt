@@ -15,7 +15,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -27,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -109,6 +112,7 @@ fun PostCallSheet(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .widthIn(max = 520.dp)
             .padding(horizontal = 12.dp, vertical = 8.dp)
             .testTag("post_call_card"),
         shape = AppShapes.Card,
@@ -219,73 +223,80 @@ fun PostCallSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             // Action Chips: WhatsApp | Call Back | Message | Save
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 1. WhatsApp Action
-                PostCallActionChip(
-                    icon = Icons.Default.Chat,
-                    label = "WhatsApp",
-                    containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
-                    contentColor = Color(0xFF1EBE5D),
-                    modifier = Modifier.weight(1f),
-                    testTag = "post_call_whatsapp"
+            val postCallFontScale = LocalDensity.current.fontScale
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val scrollChips = maxWidth < 360.dp || postCallFontScale >= 1.3f
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(if (scrollChips) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                    WhatsAppHelper.openWhatsAppChat(context, data.number)
-                    onDismiss()
-                }
-
-                // 2. Call Back Action
-                PostCallActionChip(
-                    icon = Icons.Default.Call,
-                    label = "Call Back",
-                    containerColor = getCallGreenColor().copy(alpha = 0.22f),
-                    contentColor = getCallGreenColor(),
-                    modifier = Modifier.weight(1f),
-                    testTag = "post_call_callback"
-                ) {
-                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                    onDismiss()
-                    onCallBack(data.number, data.name)
-                }
-
-                // 3. Message / SMS Action
-                PostCallActionChip(
-                    icon = Icons.Default.Message,
-                    label = "SMS",
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
-                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                    modifier = Modifier.weight(1f),
-                    testTag = "post_call_sms"
-                ) {
-                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                    try {
-                        val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${data.number}")).apply {
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                        }
-                        context.startActivity(intent)
-                    } catch (_: Exception) {
-                        Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
-                    }
-                    onDismiss()
-                }
-
-                // 4. Save Contact Action (if unsaved)
-                if (data.isUnsaved) {
+                    val chipModifier = if (scrollChips) Modifier else Modifier.weight(1f)
+                    // 1. WhatsApp Action
                     PostCallActionChip(
-                        icon = Icons.Default.PersonAdd,
-                        label = "Save",
-                        containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
-                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        modifier = Modifier.weight(1f),
-                        testTag = "post_call_save"
+                        icon = Icons.Default.Chat,
+                        label = "WhatsApp",
+                        containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
+                        contentColor = Color(0xFF1EBE5D),
+                        modifier = chipModifier,
+                        testTag = "post_call_whatsapp"
+                    ) {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        WhatsAppHelper.openWhatsAppChat(context, data.number)
+                        onDismiss()
+                    }
+
+                    // 2. Call Back Action
+                    PostCallActionChip(
+                        icon = Icons.Default.Call,
+                        label = "Call Back",
+                        containerColor = getCallGreenColor().copy(alpha = 0.22f),
+                        contentColor = getCallGreenColor(),
+                        modifier = chipModifier,
+                        testTag = "post_call_callback"
+                    ) {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        onDismiss()
+                        onCallBack(data.number, data.name)
+                    }
+
+                    // 3. Message / SMS Action
+                    PostCallActionChip(
+                        icon = Icons.Default.Message,
+                        label = "SMS",
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = chipModifier,
+                        testTag = "post_call_sms"
                     ) {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        try {
+                            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:${data.number}")).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            context.startActivity(intent)
+                        } catch (_: Exception) {
+                            Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                        }
                         onDismiss()
-                        onSaveContact(data.number)
+                    }
+
+                    // 4. Save Contact Action (if unsaved)
+                    if (data.isUnsaved) {
+                        PostCallActionChip(
+                            icon = Icons.Default.PersonAdd,
+                            label = "Save",
+                            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
+                            contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = chipModifier,
+                            testTag = "post_call_save"
+                        ) {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            onDismiss()
+                            onSaveContact(data.number)
+                        }
                     }
                 }
             }
@@ -324,13 +335,12 @@ private fun PostCallActionChip(
         color = containerColor,
         contentColor = contentColor,
         modifier = modifier
-            .height(38.dp)
+            .heightIn(min = 48.dp)
             .testTag(testTag)
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 4.dp),
+                .padding(horizontal = 8.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {

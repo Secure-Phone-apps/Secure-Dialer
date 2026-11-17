@@ -45,6 +45,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +65,8 @@ import androidx.compose.ui.draw.shadow
 fun HeaderSearchBar(
     searchQuery: String,
     onQueryChange: (String) -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val searchShape = RoundedCornerShape(16.dp)
     val isExpressive = LocalM3Expressive.current
@@ -78,7 +80,7 @@ fun HeaderSearchBar(
     }
 
     Surface(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 4.dp),
         shape = searchShape,
@@ -89,7 +91,7 @@ fun HeaderSearchBar(
         Row(
             modifier = Modifier
                 .padding(horizontal = 16.dp, vertical = 4.dp)
-                .height(44.dp),
+                .heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
@@ -97,13 +99,15 @@ fun HeaderSearchBar(
                 contentDescription = stringResource(R.string.search_placeholder),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Box(modifier = Modifier.weight(1.0f)) {
                 if (searchQuery.isEmpty()) {
                     Text(
                         text = stringResource(R.string.search_placeholder),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
                 BasicTextField(
@@ -147,7 +151,9 @@ fun BottomNavBar(
     val context = androidx.compose.ui.platform.LocalContext.current
 
     NavigationBar(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .testTag("bottom_nav_bar"),
         containerColor = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
         tonalElevation = if (isAmoled) 0.dp else 3.dp
     ) {
@@ -157,10 +163,11 @@ fun BottomNavBar(
                 "DIALPAD" -> R.string.tab_dialpad to Icons.Default.Dialpad
                 else -> R.string.tab_recents to Icons.Default.History
             }
-            Triple(index, stringResource(labelRes), icon)
+            Triple(index, slotKey to stringResource(labelRes), icon)
         }
 
-        items.forEach { (index, label, icon) ->
+        items.forEach { (index, keyAndLabel, icon) ->
+            val (slotKey, label) = keyAndLabel
             val isSelected = selectedTab == index
             val animatedScale by animateFloatAsState(
                 targetValue = if (isSelected) 1.18f else 1.0f,
@@ -194,9 +201,13 @@ fun BottomNavBar(
                     Text(
                         text = label,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
+                modifier = Modifier.testTag("bottom_nav_item_$slotKey"),
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = MaterialTheme.colorScheme.primary,
                     selectedTextColor = MaterialTheme.colorScheme.primary,
@@ -205,6 +216,102 @@ fun BottomNavBar(
                     unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             )
+        }
+    }
+}
+
+@Composable
+fun AppNavigationRail(
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    tabSlots: List<String> = listOf("RECENTS", "CONTACTS", "DIALPAD"),
+    onSettingsClick: (() -> Unit)? = null
+) {
+    val haptic = LocalHapticFeedback.current
+    val isAmoled = LocalAmoledMode.current
+    val context = LocalContext.current
+
+    NavigationRail(
+        modifier = Modifier
+            .fillMaxHeight()
+            .testTag("app_navigation_rail"),
+        containerColor = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
+    ) {
+        Spacer(modifier = Modifier.weight(1f))
+
+        tabSlots.forEachIndexed { index, slotKey ->
+            val (labelRes, icon) = when (slotKey) {
+                "CONTACTS" -> R.string.tab_contacts to Icons.Default.Person
+                "DIALPAD" -> R.string.tab_dialpad to Icons.Default.Dialpad
+                else -> R.string.tab_recents to Icons.Default.History
+            }
+            val label = stringResource(labelRes)
+            val isSelected = selectedTab == index
+            val animatedScale by animateFloatAsState(
+                targetValue = if (isSelected) 1.14f else 1.0f,
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessMediumLow,
+                    dampingRatio = Spring.DampingRatioMediumBouncy
+                ),
+                label = "rail_icon_scale"
+            )
+
+            NavigationRailItem(
+                selected = isSelected,
+                onClick = {
+                    if (!isSelected) {
+                        if (com.example.util.RichHapticEngine.isHapticsEnabled(context)) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        onTabSelected(index)
+                    }
+                },
+                icon = {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        modifier = Modifier
+                            .size(24.dp)
+                            .scale(animatedScale)
+                    )
+                },
+                label = {
+                    Text(
+                        text = label,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                modifier = Modifier.testTag("nav_rail_item_$slotKey"),
+                colors = NavigationRailItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        if (onSettingsClick != null) {
+            IconButton(
+                onClick = onSettingsClick,
+                modifier = Modifier
+                    .padding(bottom = 12.dp)
+                    .size(48.dp)
+                    .testTag("nav_rail_settings_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = stringResource(R.string.settings_title),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }

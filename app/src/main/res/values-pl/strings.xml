@@ -638,4 +638,13 @@ Wersja v%1$s (Wydanie stabilne)
     <string name="btn_continue">Kontynuuj</string>
     <string name="btn_not_now">Nie teraz</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">Zaszyfrowana pamięć zablokowana</string>
+    <string name="db_keystore_locked_desc">Android Keystore jest chwilowo zajęty lub oczekuje na odblokowanie urządzenia. Twoje zaszyfrowane notatki, szybkie wybieranie i lista blokowanych pozostają bezpieczne.</string>
+    <string name="db_quarantined_title">Zaszyfrowana baza w kwarantannie</string>
+    <string name="db_quarantined_desc">Poprzednia zaszyfrowana baza danych nie mogła zostać odblokowana i została bezpiecznie przeniesiona do %1$s zamiast usunięcia. Możesz przywrócić kopię zapasową w Ustawieniach.</string>
+    <string name="btn_retry">Ponów</string>
+    <string name="header_background_reliability">DZIAŁANIE W TLE I NIEZAWODNOŚĆ OEM</string>
+    <string name="settings_oem_background_title">Praca w tle i oszczędzanie baterii</string>
+    <string name="settings_oem_background_unrestricted">%1$s • Bateria bez ograniczeń. Stuknij, aby sprawdzić autostart OEM</string>
+    <string name="settings_oem_background_restricted">%1$s • Bateria ograniczona. Stuknij, aby zezwolić na wybudzanie połączeń</string>
 </resources>

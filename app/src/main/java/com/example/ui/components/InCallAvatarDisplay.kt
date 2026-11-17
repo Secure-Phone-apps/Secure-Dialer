@@ -40,6 +40,7 @@ import com.example.model.Contact
 import com.example.model.getAvatarShape
 import com.example.model.getInitials
 import com.example.ui.theme.AppShapes
+import com.example.ui.theme.LocalAdaptiveLayout
 
 @Composable
 fun InCallAvatarDisplay(
@@ -82,14 +83,17 @@ fun InCallAvatarDisplay(
         else -> MaterialTheme.colorScheme.onSurfaceVariant
     }
 
+    val avatarSize = LocalAdaptiveLayout.current.inCallAvatarSize
+    val iconSize = avatarSize * 0.5f
+
     Surface(
-        modifier = Modifier.size(120.dp),
+        modifier = Modifier.size(avatarSize),
         shape = AppShapes.Avatar,
         color = bgColor
     ) {
         Box(contentAlignment = Alignment.Center) {
             if (isMultiParty) {
-                Text(text = "👥", fontSize = 48.sp)
+                Text(text = "👥", fontSize = if (avatarSize < 90.dp) 32.sp else 48.sp)
             } else if (matchedContact != null && matchedContact.photoUri.isNotEmpty() && !imageLoadFailed) {
                 AsyncImage(
                     model = ImageRequest.Builder(context)
@@ -106,7 +110,9 @@ fun InCallAvatarDisplay(
                 if (isSaved) {
                     Text(
                         text = getInitials(pName),
-                        style = MaterialTheme.typography.displayLarge.copy(fontSize = 44.sp),
+                        style = MaterialTheme.typography.displayLarge.copy(
+                            fontSize = if (avatarSize < 90.dp) 28.sp else 44.sp
+                        ),
                         color = textColor
                     )
                 } else {
@@ -114,7 +120,7 @@ fun InCallAvatarDisplay(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = textColor,
-                        modifier = Modifier.size(60.dp)
+                        modifier = Modifier.size(iconSize)
                     )
                 }
             }

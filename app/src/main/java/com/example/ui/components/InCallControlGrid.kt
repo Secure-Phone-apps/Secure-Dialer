@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.theme.AppShapes
+import com.example.ui.theme.LocalAdaptiveLayout
 
 @Composable
 fun InCallControlGrid(
@@ -51,19 +52,22 @@ fun InCallControlGrid(
     onOpenNoteDialog: () -> Unit,
     avatarShapeType: String = "squircle"
 ) {
+    val adaptive = LocalAdaptiveLayout.current
     val btnShape = AppShapes.Keypad
-    val buttonHeight = 68.dp
+    val buttonHeight = adaptive.inCallControlButtonHeight
+    val horizontalPad = if (adaptive.isVeryNarrowWidth) 4.dp else 24.dp
+    val gridSpacing = if (adaptive.isVeryNarrowWidth || adaptive.isTightVerticalSpace) 8.dp else 12.dp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+            .padding(horizontal = horizontalPad, vertical = if (adaptive.isTightVerticalSpace) 4.dp else 8.dp),
+        verticalArrangement = Arrangement.spacedBy(gridSpacing)
     ) {
         // Row 1: Keypad, Mute, Speaker
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(gridSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
             InCallButton(

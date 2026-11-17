@@ -5,6 +5,7 @@
 
 package com.example
 
+import android.Manifest
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -14,31 +15,40 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.media.AudioAttributes
+import android.media.AudioDeviceCallback
+import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import android.media.Ringtone
 import android.media.RingtoneManager
 import android.media.ToneGenerator
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.telecom.Call
 import android.telecom.CallAudioState
+import android.telecom.CallEndpoint
 import android.telecom.DisconnectCause
 import android.telecom.InCallService
 import android.telephony.PhoneNumberUtils
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
+import androidx.core.content.ContextCompat
 import com.example.data.AppDatabase
 import com.example.model.AppSetting
 import com.example.model.CallRecording
 import com.example.ui.components.getCurrentLocale
+import com.example.util.BlockedNumberContractManager
 import com.example.util.CallAudioHelper
 import com.example.util.CallAudioRecorder
+import com.example.util.CallAudioRouteCoordinator
 import com.example.util.DynamicIslandOverlayManager
 import com.example.util.FlashLightManager
 import com.example.util.PhoneFormatHelper
@@ -50,7 +60,10 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.text.SimpleDateFormat
+import java.util.Collections
 import java.util.Date
 import java.util.IdentityHashMap
 
@@ -65,13 +78,108 @@ class MyInCallService : InCallService() {
     private var vibrator: Vibrator? = null
     private var callWaitingToneGenerator: ToneGenerator? = null
     private var isScreenOffReceiverRegistered = false
+    private var isAudioMonitorsRegistered = false
     private val serviceCallbacks = IdentityHashMap<Call, Call.Callback>()
+    private val blockedRejectedCalls: MutableSet<Call> =
+        Collections.synchronizedSet(Collections.newSetFromMap(IdentityHashMap()))
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
                 silence()
             }
         }
+    }
+
+    private val scoStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            if (intent?.action == AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED) {
+                val state = intent.getIntExtra(
+                    AudioManager.EXTRA_SCO_AUDIO_STATE,
+                    AudioManager.SCO_AUDIO_STATE_DISCONNECTED
+                )
+                val previousState = intent.getIntExtra(
+                    AudioManager.EXTRA_SCO_AUDIO_PREVIOUS_STATE,
+                    AudioManager.SCO_AUDIO_STATE_DISCONNECTED
+                )
+                if (state == AudioManager.SCO_AUDIO_STATE_DISCONNECTED &&
+                    previousState == AudioManager.SCO_AUDIO_STATE_CONNECTED
+                ) {
+                    handleHardwareAudioDisconnect(isBluetooth = true)
+                }
+            }
+        }
+    }
+
+    private val audioDeviceCallback = object : AudioDeviceCallback() {
+        override fun onAudioDevicesRemoved(removedDevices: Array<out AudioDeviceInfo>?) {
+            val removed = removedDevices ?: return
+            val lostBt = removed.any { CallAudioRouteCoordinator.isCommunicationBluetoothDevice(it.type) }
+            val lostWired = removed.any { CallAudioRouteCoordinator.isWiredHeadsetDevice(it.type) }
+            if (lostBt) {
+                handleHardwareAudioDisconnect(isBluetooth = true)
+            } else if (lostWired) {
+                handleHardwareAudioDisconnect(isBluetooth = false)
+            }
+        }
+    }
+
+    private fun handleHardwareAudioDisconnect(isBluetooth: Boolean) {
+        if (CallManager.calls.value.none { it.state != Call.STATE_DISCONNECTED }) return
+        if (isBluetooth) {
+            CallAudioRouteCoordinator.clearStaleBluetoothHal(this)
+        }
+        val state = CallManager.audioState.value ?: return
+        val expectedRoute = if (isBluetooth) CallAudioState.ROUTE_BLUETOOTH else CallAudioState.ROUTE_WIRED_HEADSET
+        if (state.route != expectedRoute) return
+
+        val fallback = CallAudioRouteCoordinator.selectScoDropRecoveryRoute(
+            currentRoute = state.route,
+            supportedRouteMask = state.supportedRouteMask
+        ) ?: return
+
+        serviceScope.launch {
+            delay(200)
+            val nowState = CallManager.audioState.value
+            val hasLiveCall = CallManager.calls.value.any { it.state != Call.STATE_DISCONNECTED }
+            if (hasLiveCall && nowState != null && nowState.route == expectedRoute) {
+                withContext(Dispatchers.Main) {
+                    CallAudioRouteCoordinator.routeAudio(
+                        inCallService = this@MyInCallService,
+                        targetRoute = fallback,
+                        availableEndpoints = CallManager.getAvailableEndpointsSnapshot(),
+                        isUserAction = false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun registerActiveCallAudioMonitors() {
+        if (isAudioMonitorsRegistered) return
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            am?.registerAudioDeviceCallback(audioDeviceCallback, mainHandler)
+            val filter = IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(scoStateReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(scoStateReceiver, filter)
+            }
+            isAudioMonitorsRegistered = true
+        } catch (_: Exception) {}
+    }
+
+    private fun unregisterActiveCallAudioMonitors() {
+        if (!isAudioMonitorsRegistered) return
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            am?.unregisterAudioDeviceCallback(audioDeviceCallback)
+        } catch (_: Exception) {}
+        try {
+            unregisterReceiver(scoStateReceiver)
+        } catch (_: Exception) {}
+        isAudioMonitorsRegistered = false
     }
 
     private fun registerScreenOffReceiver() {
@@ -252,12 +360,24 @@ class MyInCallService : InCallService() {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val isRecording = CallAudioRecorder.isRecording.value
-                val fgsType = if (isRecording) {
+                val hasMicPermission = ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.RECORD_AUDIO
+                ) == PackageManager.PERMISSION_GRANTED
+                val fgsType = if (isRecording && hasMicPermission) {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL or ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE
                 } else {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
                 }
-                startForeground(NOTIFICATION_ID_ACTIVE, notification, fgsType)
+                try {
+                    startForeground(NOTIFICATION_ID_ACTIVE, notification, fgsType)
+                } catch (_: SecurityException) {
+                    startForeground(
+                        NOTIFICATION_ID_ACTIVE,
+                        notification,
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_PHONE_CALL
+                    )
+                }
             } else {
                 startForeground(NOTIFICATION_ID_ACTIVE, notification)
             }
@@ -289,6 +409,7 @@ class MyInCallService : InCallService() {
 
     override fun onDestroy() {
         unregisterScreenOffReceiver()
+        unregisterActiveCallAudioMonitors()
         stopRinging()
         stopCallWaitingTone()
         releaseAllWakeLocks()
@@ -304,6 +425,7 @@ class MyInCallService : InCallService() {
 
     override fun onUnbind(intent: Intent?): Boolean {
         unregisterScreenOffReceiver()
+        unregisterActiveCallAudioMonitors()
         stopRinging()
         stopCallWaitingTone()
         releaseAllWakeLocks()
@@ -392,23 +514,10 @@ class MyInCallService : InCallService() {
 
     override fun onCallAdded(call: Call) {
         super.onCallAdded(call)
-        acquireScreenWakeLock()
-        acquireCpuWakeLock()
         CallManager.inCallService = this
         CallManager.addCall(call)
 
         val wasAutoCancelled = CallManager.isPreCancelledCall(call) || CallManager.isDisconnectRequested(call)
-
-        if (!wasAutoCancelled) {
-            val num = call.details?.handle?.schemeSpecificPart ?: ""
-            val resolvedName = resolveCallerDisplayName(call, num)
-            if (resolvedName.isNotBlank() && resolvedName != num && resolvedName != "Unknown") {
-                CallManager.setCallerName(resolvedName)
-            }
-            DynamicIslandOverlayManager.startCallMonitoring(this)
-            persistCnapIfPresent(call)
-            handleCallState(call)
-        }
 
         val callback = object : Call.Callback() {
             private var wasRinging = (call.state == Call.STATE_RINGING)
@@ -416,6 +525,10 @@ class MyInCallService : InCallService() {
             override fun onStateChanged(c: Call, state: Int) {
                 super.onStateChanged(c, state)
                 if (state == Call.STATE_RINGING) wasRinging = true
+
+                if (blockedRejectedCalls.contains(c) && state != Call.STATE_DISCONNECTED) {
+                    return
+                }
 
                 if (CallManager.isPreCancelledCall(c) && state != Call.STATE_DISCONNECTED) {
                     return
@@ -447,13 +560,14 @@ class MyInCallService : InCallService() {
 
                 if (state == Call.STATE_DISCONNECTED) {
                     stopRinging()
+                    val wasBlocked = blockedRejectedCalls.remove(c)
                     val remaining = CallManager.calls.value.filter { it !== c && it.state != Call.STATE_DISCONNECTED }
                     if (remaining.isEmpty()) {
                         releaseAllWakeLocks()
                         stopInCallForeground()
                         nm.cancel(NOTIFICATION_ID_ACTIVE)
                     }
-                    if (wasRinging && !CallManager.isPreCancelledCall(c)) {
+                    if (wasRinging && !wasBlocked && !CallManager.isPreCancelledCall(c)) {
                         val cause = c.details?.disconnectCause?.code
                         if (cause != DisconnectCause.REJECTED && cause != DisconnectCause.LOCAL) {
                             showMissedCallNotification(c)
@@ -471,10 +585,67 @@ class MyInCallService : InCallService() {
         }
         serviceCallbacks[call] = callback
         call.registerCallback(callback)
+
+        if (wasAutoCancelled) {
+            return
+        }
+
+        val num = call.details?.handle?.schemeSpecificPart ?: ""
+        val isEmergency = num.isNotEmpty() && CallManager.isEmergencyNumber(num, this)
+
+        if (call.state == Call.STATE_RINGING && !isEmergency && num.isNotBlank()) {
+            // Pre-presentation blocklist + offline spam screening fallback across Android 9-17 and all OEMs
+            serviceScope.launch {
+                val shouldBlock = try {
+                    withTimeoutOrNull(350L) {
+                        val dao = AppDatabase.getDatabase(applicationContext).dialerDao()
+                        BlockedNumberContractManager.shouldBlockIncomingCall(applicationContext, num, dao)
+                    } ?: false
+                } catch (_: Exception) {
+                    false
+                }
+
+                withContext(Dispatchers.Main) {
+                    if (call.state == Call.STATE_DISCONNECTED || CallManager.isPreCancelledCall(call)) {
+                        return@withContext
+                    }
+                    if (shouldBlock) {
+                        blockedRejectedCalls.add(call)
+                        stopRinging()
+                        FlashLightManager.stopFlashing(this@MyInCallService)
+                        nm.cancel(NOTIFICATION_ID_INCOMING)
+                        try {
+                            call.reject(false, null)
+                        } catch (_: Exception) {
+                            try { call.disconnect() } catch (_: Exception) {}
+                        }
+                        return@withContext
+                    }
+                    presentAllowedCall(call, num)
+                }
+            }
+        } else {
+            presentAllowedCall(call, num)
+        }
+    }
+
+    private fun presentAllowedCall(call: Call, num: String) {
+        if (call.state == Call.STATE_DISCONNECTED || blockedRejectedCalls.contains(call)) return
+        acquireScreenWakeLock()
+        acquireCpuWakeLock()
+        registerActiveCallAudioMonitors()
+        val resolvedName = resolveCallerDisplayName(call, num)
+        if (resolvedName.isNotBlank() && resolvedName != num && resolvedName != "Unknown") {
+            CallManager.setCallerName(resolvedName)
+        }
+        DynamicIslandOverlayManager.startCallMonitoring(this)
+        persistCnapIfPresent(call)
+        handleCallState(call)
     }
 
     override fun onCallRemoved(call: Call) {
         super.onCallRemoved(call)
+        blockedRejectedCalls.remove(call)
         stopRinging()
         serviceCallbacks.remove(call)?.let { cb ->
             try { call.unregisterCallback(cb) } catch (_: Exception) {}
@@ -485,6 +656,10 @@ class MyInCallService : InCallService() {
 
         val remainingActiveCalls = CallManager.calls.value.filter { it.state != Call.STATE_DISCONNECTED }
         if (remainingActiveCalls.isEmpty()) {
+            unregisterActiveCallAudioMonitors()
+            CallAudioRouteCoordinator.clearStaleBluetoothHal(this)
+            CallAudioRouteCoordinator.clearUserIntent()
+            lastAudioRoute = CallAudioState.ROUTE_EARPIECE
             releaseAllWakeLocks()
             stopInCallForeground()
             DynamicIslandOverlayManager.stopCallMonitoring()
@@ -507,27 +682,76 @@ class MyInCallService : InCallService() {
     }
 
     private var lastAudioRoute = CallAudioState.ROUTE_EARPIECE
+    private val cachedApi34Endpoints = ArrayList<Any>()
 
+    override fun onAvailableCallEndpointsChanged(availableEndpoints: MutableList<CallEndpoint>) {
+        super.onAvailableCallEndpointsChanged(availableEndpoints)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            cachedApi34Endpoints.clear()
+            cachedApi34Endpoints.addAll(availableEndpoints)
+            CallManager.updateAvailableEndpoints(cachedApi34Endpoints.toList())
+        }
+    }
+
+    override fun onCallEndpointChanged(callEndpoint: CallEndpoint) {
+        super.onCallEndpointChanged(callEndpoint)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val typedList = cachedApi34Endpoints.filterIsInstance<CallEndpoint>()
+            val synthesized = CallAudioRouteCoordinator.Api34EndpointBridge.synthesizeCallAudioState(
+                previousState = CallManager.audioState.value,
+                currentEndpoint = callEndpoint,
+                availableEndpoints = typedList
+            )
+            processUpdatedCallAudioState(synthesized)
+        }
+    }
+
+    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
     override fun onCallAudioStateChanged(audioState: CallAudioState?) {
         super.onCallAudioStateChanged(audioState)
+        processUpdatedCallAudioState(audioState)
+    }
+
+    private fun processUpdatedCallAudioState(audioState: CallAudioState?) {
         val currentRoute = audioState?.route ?: CallAudioState.ROUTE_EARPIECE
+        val supportedMask = audioState?.supportedRouteMask ?: 0
+
         if (lastAudioRoute == CallAudioState.ROUTE_BLUETOOTH && currentRoute != CallAudioState.ROUTE_BLUETOOTH) {
-            // Defensive fallback retry to ROUTE_EARPIECE upon Bluetooth disconnect events
-            if (currentRoute != CallAudioState.ROUTE_SPEAKER && currentRoute != CallAudioState.ROUTE_WIRED_HEADSET) {
+            CallAudioRouteCoordinator.clearStaleBluetoothHal(this)
+        }
+
+        val recoveryRoute = CallAudioRouteCoordinator.selectRecoveryRoute(
+            previousRoute = lastAudioRoute,
+            currentRoute = currentRoute,
+            supportedRouteMask = supportedMask
+        )
+        if (recoveryRoute != null) {
+            CallAudioRouteCoordinator.routeAudio(
+                inCallService = this,
+                targetRoute = recoveryRoute,
+                availableEndpoints = CallManager.getAvailableEndpointsSnapshot(),
+                isUserAction = false
+            )
+            serviceScope.launch {
+                delay(250)
                 try {
-                    setAudioRoute(CallAudioState.ROUTE_EARPIECE)
-                } catch (_: Exception) {}
-                serviceScope.launch {
-                    delay(250)
-                    try {
-                        val stateNow = CallManager.audioState.value
-                        if (stateNow != null && stateNow.route != CallAudioState.ROUTE_SPEAKER &&
-                            stateNow.route != CallAudioState.ROUTE_WIRED_HEADSET &&
-                            stateNow.route != CallAudioState.ROUTE_EARPIECE) {
-                            setAudioRoute(CallAudioState.ROUTE_EARPIECE)
+                    val stateNow = CallManager.audioState.value
+                    val hasLiveCall = CallManager.calls.value.any { it.state != Call.STATE_DISCONNECTED }
+                    if (hasLiveCall && stateNow != null && stateNow.route != recoveryRoute &&
+                        stateNow.route != CallAudioState.ROUTE_BLUETOOTH &&
+                        stateNow.route != CallAudioState.ROUTE_WIRED_HEADSET &&
+                        stateNow.route != CallAudioState.ROUTE_SPEAKER
+                    ) {
+                        withContext(Dispatchers.Main) {
+                            CallAudioRouteCoordinator.routeAudio(
+                                inCallService = this@MyInCallService,
+                                targetRoute = recoveryRoute,
+                                availableEndpoints = CallManager.getAvailableEndpointsSnapshot(),
+                                isUserAction = false
+                            )
                         }
-                    } catch (_: Exception) {}
-                }
+                    }
+                } catch (_: Exception) {}
             }
         }
         lastAudioRoute = currentRoute
@@ -837,8 +1061,7 @@ class MyInCallService : InCallService() {
                 val durationSec = result.durationSeconds.coerceAtLeast(1L)
                 val number = CallManager.callerNumber.value.ifEmpty { "Unknown" }
                 val name = CallManager.callerName.value.ifEmpty { number }
-                val locale = getCurrentLocale(this)
-                val timestamp = SimpleDateFormat("MMM d, HH:mm", locale).format(Date())
+                val timestamp = CallAudioRecorder.formatRecordingTimestamp(this)
 
                 val recording = CallRecording(
                     number = number,

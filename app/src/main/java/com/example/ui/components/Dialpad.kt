@@ -22,7 +22,10 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.*
@@ -37,6 +40,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.platform.testTag
@@ -102,34 +106,44 @@ fun DialpadTabContent(
     val keyShape = AppShapes.Keypad
     val chipShape = AppShapes.Chip
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        // T9 Search Match Results (Anchored to Bottom to eliminate empty void)
-        if (inputValue.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
-            ) {
-                if (dialpadMatches.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            text = stringResource(R.string.dialpad_no_matches),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.Bottom)
-                    ) {
+    val isUnsavedNumber = remember(inputValue) {
+        if (inputValue.isBlank()) false
+        else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
+    }
+
+    var expandedClipboardMenu by remember { mutableStateOf(false) }
+    val clipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
+    val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val fontScale = LocalDensity.current.fontScale
+        val adaptive = remember(maxWidth, maxHeight, fontScale) {
+            computeAdaptiveLayoutMetrics(maxWidth, maxHeight, fontScale)
+        }
+        val useScrollForKeypad = adaptive.useTwoPaneDialpad || maxHeight < 520.dp || fontScale >= 1.45f
+
+        val t9MatchesSection: @Composable (Modifier) -> Unit = { sectionModifier ->
+            if (inputValue.isNotEmpty()) {
+                Box(
+                    modifier = sectionModifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                ) {
+                    if (dialpadMatches.isEmpty()) {
+                        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            Text(
+                                text = stringResource(R.string.dialpad_no_matches),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(
+                                4.dp,
+                                if (adaptive.useTwoPaneDialpad) Alignment.Top else Alignment.Bottom
+                            )
+                        ) {
                         itemsIndexed(
                             items = dialpadMatches,
                             key = { index, match -> if (match.number.isNotBlank()) "${match.number}_$index" else "match_$index" },
@@ -246,136 +260,146 @@ fun DialpadTabContent(
                         }
                     }
                 }
+                }
+            } else if (adaptive.useTwoPaneDialpad) {
+                Box(
+                    modifier = sectionModifier.padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    EmptyStateIllustration(
+                        title = stringResource(R.string.tab_dialpad),
+                        subtitle = stringResource(R.string.dialpad_enter_number)
+                    )
+                }
+            } else {
+                Spacer(modifier = sectionModifier)
             }
-        } else {
-            Spacer(modifier = Modifier.weight(1f))
         }
 
-        val isUnsavedNumber = remember(inputValue) {
-            if (inputValue.isBlank()) false
-            else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
-        }
-
-        var expandedClipboardMenu by remember { mutableStateOf(false) }
-        val clipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
-        val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
-        val keyboardController = LocalSoftwareKeyboardController.current
-
-        // Action Chips for Unsaved Number (Subtle & compact)
-        if (isUnsavedNumber && inputValue.isNotBlank()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+        val dialpadKeypadControlsSection: @Composable (Modifier) -> Unit = { controlsModifier ->
+            Column(
+                modifier = if (useScrollForKeypad) controlsModifier.verticalScroll(rememberScrollState()) else controlsModifier,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Surface(
-                    onClick = {
-                        if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                        }
-                        viewModel?.openAddContactWithNumber(inputValue)
-                    },
-                    shape = chipShape,
-                    color = dialKeyColor,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(38.dp)
-                        .testTag("dialpad_create_contact_chip")
-                ) {
+                // Action Chips for Unsaved Number (Minimum 48dp accessible height + horizontal overflow protection)
+                if (isUnsavedNumber && inputValue.isNotBlank()) {
+                    val useHorizontalChipsScroll = adaptive.isVeryNarrowWidth || fontScale >= 1.3f
                     Row(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .then(if (useHorizontalChipsScroll) Modifier.horizontalScroll(rememberScrollState()) else Modifier)
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.PersonAdd,
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = stringResource(R.string.dialpad_create_contact),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1
-                        )
-                    }
-                }
+                        Surface(
+                            onClick = {
+                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                }
+                                viewModel?.openAddContactWithNumber(inputValue)
+                            },
+                            shape = chipShape,
+                            color = dialKeyColor,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            modifier = (if (useHorizontalChipsScroll) Modifier else Modifier.weight(1f))
+                                .heightIn(min = 48.dp)
+                                .testTag("dialpad_create_contact_chip")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.PersonAdd,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = stringResource(R.string.dialpad_create_contact),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
 
-                Surface(
-                    onClick = {
-                        if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                        Surface(
+                            onClick = {
+                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                }
+                                viewModel?.addToExistingPendingNumber?.value = inputValue
+                                viewModel?.isAddToExistingSheetVisible?.value = true
+                            },
+                            shape = chipShape,
+                            color = dialKeyColor,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            modifier = (if (useHorizontalChipsScroll) Modifier else Modifier.weight(1f))
+                                .heightIn(min = 48.dp)
+                                .testTag("dialpad_add_to_existing_chip")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.GroupAdd,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Text(
+                                    text = stringResource(R.string.dialpad_add_to_existing),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
-                        viewModel?.addToExistingPendingNumber?.value = inputValue
-                        viewModel?.isAddToExistingSheetVisible?.value = true
-                    },
-                    shape = chipShape,
-                    color = dialKeyColor,
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(38.dp)
-                        .testTag("dialpad_add_to_existing_chip")
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxSize().padding(horizontal = 6.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.GroupAdd,
-                            contentDescription = null,
-                            modifier = Modifier.size(15.dp),
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                        Text(
-                            text = stringResource(R.string.dialpad_add_to_existing),
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            maxLines = 1
-                        )
-                    }
-                }
 
-                Surface(
-                    onClick = {
-                        if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        Surface(
+                            onClick = {
+                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                }
+                                com.example.util.WhatsAppHelper.openWhatsAppChat(context, inputValue)
+                            },
+                            shape = chipShape,
+                            color = Color(0xFF25D366).copy(alpha = 0.18f),
+                            contentColor = Color(0xFF1EBE5D),
+                            modifier = Modifier
+                                .heightIn(min = 48.dp)
+                                .testTag("dialpad_whatsapp_chip")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Chat,
+                                    contentDescription = "WhatsApp",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color(0xFF1EBE5D)
+                                )
+                                Text(
+                                    text = "WhatsApp",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
-                        com.example.util.WhatsAppHelper.openWhatsAppChat(context, inputValue)
-                    },
-                    shape = chipShape,
-                    color = Color(0xFF25D366).copy(alpha = 0.18f),
-                    contentColor = Color(0xFF1EBE5D),
-                    modifier = Modifier
-                        .height(38.dp)
-                        .testTag("dialpad_whatsapp_chip")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Chat,
-                            contentDescription = "WhatsApp",
-                            modifier = Modifier.size(15.dp),
-                            tint = Color(0xFF1EBE5D)
-                        )
-                        Text(
-                            text = "WhatsApp",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1
-                        )
                     }
                 }
-            }
-        }
 
         val countryIso = remember(context) { com.example.util.PhoneFormatHelper.getCountryIso(context) }
         val phoneVisualTransformation = remember(countryIso) { com.example.util.PhoneFormatHelper.createVisualTransformation(countryIso) }
@@ -525,7 +549,7 @@ fun DialpadTabContent(
                             voicemailNumber = voicemailNumber,
                             modifier = Modifier
                                 .weight(1f)
-                                .height(58.dp),
+                                .height(adaptive.dialButtonHeight),
                             viewModel = viewModel
                         )
                     }
@@ -572,7 +596,7 @@ fun DialpadTabContent(
                 interactionSource = pasteInteractionSource,
                 modifier = Modifier
                     .weight(1f)
-                    .height(60.dp)
+                    .height(adaptive.dialActionHeight)
                     .scale(pasteScale)
             ) {
                 Box(contentAlignment = Alignment.Center) {
@@ -612,7 +636,7 @@ fun DialpadTabContent(
                 interactionSource = callInteractionSource,
                 modifier = Modifier
                     .weight(1f)
-                    .height(60.dp)
+                    .height(adaptive.dialActionHeight)
                     .scale(callScale)
                     .testTag("dialpad_call_button")
             ) {
@@ -629,7 +653,7 @@ fun DialpadTabContent(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .height(60.dp),
+                    .height(adaptive.dialActionHeight),
                 contentAlignment = Alignment.Center
             ) {
                 if (inputValue.isNotEmpty()) {
@@ -676,6 +700,57 @@ fun DialpadTabContent(
                             )
                         }
                     }
+                }
+            }
+        }
+            }
+        }
+
+        if (adaptive.useTwoPaneDialpad) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                t9MatchesSection(
+                    Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                )
+                dialpadKeypadControlsSection(
+                    Modifier
+                        .weight(1f)
+                        .widthIn(max = 440.dp)
+                        .fillMaxHeight()
+                )
+            }
+        } else {
+            val horizontalPad = if (adaptive.isVeryNarrowWidth) 8.dp else 16.dp
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = 480.dp)
+                        .fillMaxSize()
+                        .padding(horizontal = horizontalPad),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (inputValue.isNotEmpty() || !adaptive.isTightVerticalSpace) {
+                        t9MatchesSection(
+                            Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .heightIn(min = if (inputValue.isNotEmpty()) 56.dp else 0.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    dialpadKeypadControlsSection(Modifier.fillMaxWidth())
                 }
             }
         }

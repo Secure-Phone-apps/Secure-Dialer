@@ -22,8 +22,10 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.Call
@@ -40,6 +42,7 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.platform.testTag
@@ -48,6 +51,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.ContactCache
 import com.example.R
@@ -80,104 +84,134 @@ fun DialpadOverlay(
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
 
-    Surface(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(AppShapes.BottomSheet),
-        color = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
-        border = if (isAmoled) BorderStroke(1.dp, Color(0xFF222222)) else null,
-        tonalElevation = if (isAmoled) 0.dp else 8.dp
+            .widthIn(max = 500.dp)
     ) {
-        Column(
+        val fontScale = LocalDensity.current.fontScale
+        val adaptive = remember(maxWidth, maxHeight, fontScale) {
+            computeAdaptiveLayoutMetrics(maxWidth, maxHeight, fontScale)
+        }
+        val rowSpacing = when {
+            adaptive.maxHeight < 420.dp -> 6.dp
+            adaptive.isTightVerticalSpace -> 10.dp
+            else -> 16.dp
+        }
+        val horizontalPadding = if (adaptive.isVeryNarrowWidth) 12.dp else 24.dp
+
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .clip(AppShapes.BottomSheet),
+            color = if (isAmoled) Color.Black else MaterialTheme.colorScheme.surface,
+            border = if (isAmoled) BorderStroke(1.dp, Color(0xFF222222)) else null,
+            tonalElevation = if (isAmoled) 0.dp else 8.dp
         ) {
-            Box(
+            Column(
                 modifier = Modifier
-                    .width(40.dp)
-                    .height(4.dp)
-                    .clip(AppShapes.Chip)
-                    .background(MaterialTheme.colorScheme.outlineVariant)
-                    .clickable {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        onClose()
-                    }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val isUnsavedNumber = remember(inputValue) {
-                if (inputValue.isBlank()) false
-                else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
-            }
-
-            if (isUnsavedNumber && inputValue.isNotBlank()) {
-                Row(
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = horizontalPadding, vertical = 12.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        onClick = {
-                            if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                            }
-                            viewModel?.openAddContactWithNumber(inputValue)
-                        },
-                        shape = AppShapes.Chip,
-                        color = dialKeyColor,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(46.dp)
-                            .testTag("overlay_create_contact_chip")
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                            Text(stringResource(R.string.dialpad_create_contact), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                        .width(40.dp)
+                        .height(4.dp)
+                        .clip(AppShapes.Chip)
+                        .background(MaterialTheme.colorScheme.outlineVariant)
+                        .clickable {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            onClose()
                         }
-                    }
+                )
 
-                    Surface(
-                        onClick = {
-                            if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                            }
-                            viewModel?.addToExistingPendingNumber?.value = inputValue
-                            viewModel?.isAddToExistingSheetVisible?.value = true
-                        },
-                        shape = AppShapes.Chip,
-                        color = dialKeyColor,
-                        contentColor = MaterialTheme.colorScheme.onSurface,
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val isUnsavedNumber = remember(inputValue) {
+                    if (inputValue.isBlank()) false
+                    else viewModel?.isNumberUnsaved(inputValue) ?: (ContactCache.getContact(inputValue) == null)
+                }
+
+                if (isUnsavedNumber && inputValue.isNotBlank()) {
+                    Row(
                         modifier = Modifier
-                            .weight(1f)
-                            .height(46.dp)
-                            .testTag("overlay_add_to_existing_chip")
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
+                        Surface(
+                            onClick = {
+                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                }
+                                viewModel?.openAddContactWithNumber(inputValue)
+                            },
+                            shape = AppShapes.Chip,
+                            color = dialKeyColor,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                            verticalAlignment = Alignment.CenterVertically
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .testTag("overlay_create_contact_chip")
                         ) {
-                            Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
-                            Text(stringResource(R.string.dialpad_add_to_existing), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                Text(
+                                    text = stringResource(R.string.dialpad_create_contact),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+
+                        Surface(
+                            onClick = {
+                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                }
+                                viewModel?.addToExistingPendingNumber?.value = inputValue
+                                viewModel?.isAddToExistingSheetVisible?.value = true
+                            },
+                            shape = AppShapes.Chip,
+                            color = dialKeyColor,
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp)
+                                .testTag("overlay_add_to_existing_chip")
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                                Text(
+                                    text = stringResource(R.string.dialpad_add_to_existing),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
             var expandedOverlayClipboardMenu by remember { mutableStateOf(false) }
             val overlayClipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
@@ -187,7 +221,7 @@ fun DialpadOverlay(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp)
+                    .height(if (adaptive.maxHeight < 420.dp) 44.dp else 56.dp)
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -305,12 +339,12 @@ fun DialpadOverlay(
             // Dialer Grid
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(rowSpacing)
             ) {
                 for (i in 0 until 4) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(rowSpacing)
                     ) {
                         for (j in 0 until 3) {
                             val index = i * 3 + j
@@ -322,7 +356,9 @@ fun DialpadOverlay(
                                 onSpeedDialCall = onSpeedDialCall,
                                 speedDialMap = speedDialMap,
                                 voicemailNumber = voicemailNumber,
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = adaptive.overlayDialButtonHeight),
                                 viewModel = viewModel
                             )
                         }
@@ -330,7 +366,7 @@ fun DialpadOverlay(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(if (adaptive.isTightVerticalSpace) 12.dp else 24.dp))
 
             val activeSims = remember(context) { com.example.util.MultiSimManager.getActiveSimAccounts(context) }
             val preferredSim = viewModel?.preferredSim?.value ?: "Ask"
@@ -372,7 +408,7 @@ fun DialpadOverlay(
                         interactionSource = call1InteractionSource,
                         modifier = Modifier
                             .weight(1f)
-                            .height(64.dp)
+                            .height(adaptive.overlayCallButtonHeight)
                             .scale(call1Scale)
                             .testTag("dialpad_call_sim1_button")
                     ) {
@@ -414,7 +450,7 @@ fun DialpadOverlay(
                         interactionSource = call2InteractionSource,
                         modifier = Modifier
                             .weight(1f)
-                            .height(64.dp)
+                            .height(adaptive.overlayCallButtonHeight)
                             .scale(call2Scale)
                             .testTag("dialpad_call_sim2_button")
                     ) {
@@ -457,7 +493,7 @@ fun DialpadOverlay(
                     interactionSource = callInteractionSource,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(64.dp)
+                        .height(adaptive.overlayCallButtonHeight)
                         .scale(callScale)
                         .testTag("dialpad_call_button")
                 ) {
@@ -467,7 +503,8 @@ fun DialpadOverlay(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(if (adaptive.isTightVerticalSpace) 8.dp else 16.dp))
+        }
         }
     }
 }

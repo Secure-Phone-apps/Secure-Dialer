@@ -216,8 +216,11 @@ fun DirectRecordingPlayerDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                val displayTimestamp = remember(currentRecording.timestamp) {
+                    com.example.util.CallAudioRecorder.formatStoredTimestampForDisplay(context, currentRecording.timestamp)
+                }
                 Text(
-                    text = "${currentRecording.name.ifEmpty { currentRecording.number }} • ${currentRecording.timestamp}",
+                    text = "${currentRecording.name.ifEmpty { currentRecording.number }} • $displayTimestamp",
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface

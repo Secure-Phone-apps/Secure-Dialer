@@ -638,4 +638,13 @@
     <string name="btn_continue">जारी रखें</string>
     <string name="btn_not_now">अभी नहीं</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">एन्क्रिप्टेड स्टोरेज लॉक है</string>
+    <string name="db_keystore_locked_desc">Android Keystore अस्थायी रूप से व्यस्त है या अनलॉक होने की प्रतीक्षा कर रहा है। आपके एन्क्रिप्टेड कॉल नोट्स, स्पीड डायल और ब्लॉकलिस्ट डिवाइस पर सुरक्षित हैं।</string>
+    <string name="db_quarantined_title">एन्क्रिप्टेड डेटाबेस क्वारंटीन किया गया</string>
+    <string name="db_quarantined_desc">आपका पिछला एन्क्रिप्टेड डेटाबेस अनलॉक नहीं हो सका और हटाने के बजाय सुरक्षित रूप से %1$s में सहेजा गया है। आप सेटिंग्स से बैकअप पुनर्स्थापित कर सकते हैं।</string>
+    <string name="btn_retry">पुनः प्रयास करें</string>
+    <string name="header_background_reliability">बैकग्राउंड और OEM विश्वसनीयता</string>
+    <string name="settings_oem_background_title">बैकग्राउंड और बैटरी सुरक्षा</string>
+    <string name="settings_oem_background_unrestricted">%1$s • बैटरी अप्रतिबंधित है। OEM ऑटोस्टार्ट सेटिंग्स देखने के लिए टैप करें</string>
+    <string name="settings_oem_background_restricted">%1$s • बैटरी प्रतिबंधित है। निर्बाध कॉल अलर्ट की अनुमति देने के लिए टैप करें</string>
 </resources>

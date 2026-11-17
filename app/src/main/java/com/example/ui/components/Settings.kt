@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
@@ -99,7 +100,9 @@ fun SettingsPanel(
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 },
                 navigationIcon = {
@@ -119,12 +122,19 @@ fun SettingsPanel(
             )
         }
     ) { paddingValues ->
-        Column(
+        val adaptive = LocalAdaptiveLayout.current
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .consumeWindowInsets(paddingValues)
+                .consumeWindowInsets(paddingValues),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = adaptive.contentMaxWidth)
+                    .fillMaxSize()
+            ) {
             AnimatedContent(
                 targetState = activeTab,
                 transitionSpec = {
@@ -192,6 +202,7 @@ fun SettingsPanel(
                     )
                 }
             }
+        }
         }
     }
 

@@ -266,10 +266,34 @@ object CallAudioRecorder {
             .sortedByDescending { it.lastModified() }
     }
 
+    fun formatRecordingTimestamp(context: Context, timeMs: Long = System.currentTimeMillis()): String {
+        val locale = com.example.ui.components.getCurrentLocale(context)
+        return SimpleDateFormat("MMM d, HH:mm", locale).format(Date(timeMs))
+    }
+
+    fun formatStoredTimestampForDisplay(context: Context, storedTimestamp: String): String {
+        val trimmed = storedTimestamp.trim()
+        if (trimmed.length >= 10 && trimmed.all { it.isDigit() }) {
+            val epochMs = trimmed.toLongOrNull()
+            if (epochMs != null && epochMs > 0L) {
+                return formatRecordingTimestamp(context, epochMs)
+            }
+        }
+        return storedTimestamp
+    }
+
+    fun hasLegacyStorageWritePermission(context: Context): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return true
+        return androidx.core.content.ContextCompat.checkSelfPermission(
+            context,
+            android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
     fun recoverRecordingsFromDisk(context: Context): List<CallRecording> {
         val files = getRecordedFiles(context)
         val result = mutableListOf<CallRecording>()
-        val displayFormat = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
+        val displayFormat = SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
         val nameParseFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
 
         for (file in files) {
@@ -331,6 +355,9 @@ object CallAudioRecorder {
 
     fun exportRecordingToPublicDownloads(context: Context, sourceFile: File): Boolean {
         if (!sourceFile.exists()) return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && !hasLegacyStorageWritePermission(context)) {
+            return false
+        }
         try {
             val fileName = sourceFile.name
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -351,7 +378,8 @@ object CallAudioRecorder {
                 return true
             } else {
                 @Suppress("DEPRECATION")
-                val publicDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "SecureDialer").apply {
+                val downloadsRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                val publicDir = File(downloadsRoot, "SecureDialer").apply {
                     if (!exists()) mkdirs()
                 }
                 val destFile = File(publicDir, fileName)
@@ -367,6 +395,9 @@ object CallAudioRecorder {
     }
 
     fun exportAllRecordingsToDownloads(context: Context): Int {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && !hasLegacyStorageWritePermission(context)) {
+            return 0
+        }
         var count = 0
         for (f in getRecordedFiles(context)) {
             if (f.exists() && f.length() > 128L) {

@@ -638,4 +638,13 @@
     <string name="btn_continue">続ける</string>
     <string name="btn_not_now">後で</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">暗号化ストレージがロックされています</string>
+    <string name="db_keystore_locked_desc">Android Keystore が一時的に使用中か、ロック解除を待機しています。暗号化された通話メモ、短縮ダイヤル、着信拒否リストは安全に保持されています。</string>
+    <string name="db_quarantined_title">暗号化データベースを隔離しました</string>
+    <string name="db_quarantined_desc">以前の暗号化データベースを復号できなかったため、削除せずに %1$s へ安全に退避しました。設定からバックアップを復元できます。</string>
+    <string name="btn_retry">再試行</string>
+    <string name="header_background_reliability">バックグラウンドとメーカー固有の信頼性</string>
+    <string name="settings_oem_background_title">バックグラウンド動作とバッテリー最適化</string>
+    <string name="settings_oem_background_unrestricted">%1$s • 制限なし。タップして自動起動設定を確認</string>
+    <string name="settings_oem_background_restricted">%1$s • バッテリー制限中。タップして着信復帰を許可</string>
 </resources>

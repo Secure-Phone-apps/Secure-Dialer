@@ -17,22 +17,30 @@
 
 package com.example.ui.components
 
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.CallScreenPermissionHelper
+import com.example.util.RichHapticEngine
 
 @Composable
 fun CallBlockingSettings(
@@ -40,9 +48,28 @@ fun CallBlockingSettings(
     cardBgColor: Color,
     highlightedTitle: String? = null
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
     val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
     val spamList by viewModel.spamFlow.collectAsStateWithLifecycle()
+
+    var isScreeningGranted by remember { mutableStateOf(CallScreenPermissionHelper.isCallScreeningRoleHeld(context)) }
+    val screeningRoleLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { _ ->
+        isScreeningGranted = CallScreenPermissionHelper.isCallScreeningRoleHeld(context)
+    }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                isScreeningGranted = CallScreenPermissionHelper.isCallScreeningRoleHeld(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Column(
         modifier = Modifier
@@ -51,6 +78,69 @@ fun CallBlockingSettings(
             .padding(vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isScreeningGranted) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                    } else {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.45f)
+                    }
+                ),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.VerifiedUser,
+                            contentDescription = null,
+                            tint = if (isScreeningGranted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        )
+                        Column {
+                            Text(
+                                text = stringResource(R.string.service_health_header),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(
+                                    if (isScreeningGranted) R.string.service_health_role_granted
+                                    else R.string.service_health_role_not_granted
+                                ),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    if (!isScreeningGranted) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        FilledTonalButton(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                CallScreenPermissionHelper.requestCallScreeningRole(context, screeningRoleLauncher)
+                            }
+                        ) {
+                            Text(stringResource(R.string.btn_configure))
+                        }
+                    }
+                }
+            }
+        }
+
         // Expandable Blocklist
         HighlightableCard(
             modifier = Modifier
@@ -58,8 +148,8 @@ fun CallBlockingSettings(
                 .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
             isHighlighted = isMatchTitle("Blocked Numbers & Blacklist", highlightedTitle) ||
-                    isMatchTitle("Block Unknown & Private Calls", highlightedTitle) ||
-                    isMatchTitle("Blocked Numbers", highlightedTitle),
+                isMatchTitle("Block Unknown & Private Calls", highlightedTitle) ||
+                isMatchTitle("Blocked Numbers", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(
@@ -83,7 +173,7 @@ fun CallBlockingSettings(
                 .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
             isHighlighted = isMatchTitle("Offline Spam Database & Protection", highlightedTitle) ||
-                    isMatchTitle("Spam", highlightedTitle),
+                isMatchTitle("Spam", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {
             ExpandableSettingsCard(

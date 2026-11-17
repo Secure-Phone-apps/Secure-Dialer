@@ -145,7 +145,10 @@ interface DialerDao {
     @Delete
     suspend fun deleteBlockedNumber(blockedNumber: BlockedNumber)
 
-    @Query("SELECT EXISTS(SELECT 1 FROM blocked_numbers WHERE number = :number OR (:number LIKE REPLACE(number, '*', '%')))")
+    @Query(
+        "SELECT EXISTS(SELECT 1 FROM blocked_numbers WHERE number = :number " +
+            "OR (:number LIKE REPLACE(REPLACE(REPLACE(REPLACE(number, '\\', '\\\\'), '%', '\\%'), '_', '\\_'), '*', '%') ESCAPE '\\'))"
+    )
     suspend fun isBlockedSql(number: String): Boolean
 
     @Query("SELECT EXISTS(SELECT 1 FROM blocked_numbers WHERE number = :number)")

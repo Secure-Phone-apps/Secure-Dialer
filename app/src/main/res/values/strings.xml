@@ -702,4 +702,13 @@ Version v%1$s (Stable Release)
     <string name="btn_continue">Continue</string>
     <string name="btn_not_now">Not Now</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">Encrypted Storage Locked</string>
+    <string name="db_keystore_locked_desc">Android Keystore is temporarily busy or awaiting unlock. Your encrypted call notes, speed dials, and blocklist remain safe on disk.</string>
+    <string name="db_quarantined_title">Encrypted Database Quarantined</string>
+    <string name="db_quarantined_desc">Your previous encrypted database could not be unlocked and was safely backed up to %1$s instead of being deleted. You can restore from an exported backup in Settings.</string>
+    <string name="btn_retry">Retry</string>
+    <string name="header_background_reliability">BACKGROUND &amp; OEM RELIABILITY</string>
+    <string name="settings_oem_background_title">Background &amp; Battery Survivability</string>
+    <string name="settings_oem_background_unrestricted">%1$s • Battery unrestricted. Tap to review OEM autostart settings</string>
+    <string name="settings_oem_background_restricted">%1$s • Battery restricted. Tap to allow unrestricted incoming call wakes</string>
 </resources>

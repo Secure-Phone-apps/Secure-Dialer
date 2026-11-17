@@ -57,9 +57,10 @@ fun InCallQuickDeclineSheet(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // FIXED: Constrain LazyColumn height so Cancel button is never pushed off-screen
             LazyColumn(
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 260.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(quickResponses, key = { it }) { resp ->

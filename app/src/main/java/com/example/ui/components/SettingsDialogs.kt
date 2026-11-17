@@ -85,44 +85,14 @@ fun exportRecordingToDownloads(context: android.content.Context, filePath: Strin
     try {
         val file = java.io.File(filePath)
         if (!file.exists()) {
-            android.widget.Toast.makeText(context, "Recording source file not found", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, context.getString(R.string.file_save_failed), android.widget.Toast.LENGTH_SHORT).show()
             return
         }
-        val fileName = file.name
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            val attributionContext = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-                context.createAttributionContext("default")
-            } else {
-                context
-            }
-            val resolver = attributionContext.contentResolver
-            val contentValues = android.content.ContentValues().apply {
-                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "audio/mp4")
-                put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, android.os.Environment.DIRECTORY_DOWNLOADS)
-            }
-            val uri = resolver.insert(android.provider.MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
-            if (uri != null) {
-                resolver.openOutputStream(uri)?.use { out ->
-                    file.inputStream().use { input -> input.copyTo(out) }
-                }
-                android.widget.Toast.makeText(context, "Exported successfully to Downloads!", android.widget.Toast.LENGTH_LONG).show()
-            } else {
-                android.widget.Toast.makeText(context, "Failed to create public downloads entry", android.widget.Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            val publicDir = android.os.Environment.getExternalStoragePublicDirectory(android.os.Environment.DIRECTORY_DOWNLOADS)
-            val destFile = java.io.File(publicDir, fileName)
-            file.inputStream().use { input ->
-                destFile.outputStream().use { out ->
-                    input.copyTo(out)
-                }
-            }
-            android.widget.Toast.makeText(context, "Exported to ${destFile.absolutePath}", android.widget.Toast.LENGTH_LONG).show()
-        }
+        val success = com.example.util.CallAudioRecorder.exportRecordingToPublicDownloads(context, file)
+        val msg = if (success) context.getString(R.string.file_saved_success) else context.getString(R.string.file_save_failed)
+        android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_LONG).show()
     } catch (e: Exception) {
-        android.widget.Toast.makeText(context, "Export failed: ${e.localizedMessage}", android.widget.Toast.LENGTH_LONG).show()
+        android.widget.Toast.makeText(context, context.getString(R.string.file_save_failed), android.widget.Toast.LENGTH_LONG).show()
     }
 }
 

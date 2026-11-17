@@ -3,17 +3,23 @@ package com.example.data
 import android.content.Context
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.security.keystore.StrongBoxUnavailableException
 import android.util.Base64
 import java.io.File
 import java.security.KeyStore
+import java.security.ProviderException
 import java.security.SecureRandom
 import java.util.Arrays
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
+
+class TransientKeystoreException(message: String, cause: Throwable? = null) :
+    IllegalStateException(message, cause)
 
 object DatabaseKeyManager {
     private const val KEY_ALIAS = "DialerDbMasterKey"
@@ -26,6 +32,35 @@ object DatabaseKeyManager {
     // In-memory key cache to eliminate 50ms Keystore IPC overhead on every DB query
     @Volatile
     private var cachedKey: ByteArray? = null
+
+    fun hasStoredWrappedKey(context: Context): Boolean {
+        val directBootContext = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            context.createDeviceProtectedStorageContext()
+        } else {
+            context
+        }
+        val prefs = directBootContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getString(ENCRYPTED_DB_KEY, null) != null &&
+            prefs.getString(GCM_IV, null) != null
+    }
+
+    internal fun isPermanentKeyInvalidation(error: Throwable, keyExistsInStore: Boolean): Boolean {
+        if (!keyExistsInStore) return true
+        return when (error) {
+            is AEADBadTagException -> true
+            is IllegalArgumentException -> true
+            is ProviderException -> false
+            else -> {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    error is KeyPermanentlyInvalidatedException
+                ) {
+                    true
+                } else {
+                    false
+                }
+            }
+        }
+    }
 
     @Synchronized
     fun getDatabaseKey(context: Context): ByteArray {
@@ -47,25 +82,55 @@ object DatabaseKeyManager {
 
         val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
 
-        // 3. Decrypt existing key
+        // 3. Decrypt existing key (with bounded retries on transient Keystore IPC hiccups)
         if (encryptedKeyBase64 != null && ivBase64 != null) {
-            try {
-                val encryptedKey = Base64.decode(encryptedKeyBase64, Base64.NO_WRAP)
-                val iv = Base64.decode(ivBase64, Base64.NO_WRAP)
-                val secretKey = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
-                if (secretKey != null) {
-                    val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-                    val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
-                    cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
-                    val decrypted = cipher.doFinal(encryptedKey)
+            var lastError: Exception? = null
+            var keyPresent = false
 
-                    cachedKey = decrypted.copyOf()
-                    return decrypted.copyOf()
+            for (attempt in 0 until 3) {
+                try {
+                    val encryptedKey = Base64.decode(encryptedKeyBase64, Base64.NO_WRAP)
+                    val iv = Base64.decode(ivBase64, Base64.NO_WRAP)
+                    keyPresent = keyStore.containsAlias(KEY_ALIAS)
+                    val secretKey = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+                    if (secretKey != null) {
+                        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                        val spec = GCMParameterSpec(GCM_TAG_LENGTH, iv)
+                        cipher.init(Cipher.DECRYPT_MODE, secretKey, spec)
+                        val decrypted = cipher.doFinal(encryptedKey)
+
+                        cachedKey = decrypted.copyOf()
+                        return decrypted.copyOf()
+                    } else {
+                        keyPresent = false
+                        lastError = IllegalStateException("Keystore entry missing for $KEY_ALIAS")
+                        break
+                    }
+                } catch (e: Exception) {
+                    lastError = e
+                    if (isPermanentKeyInvalidation(e, keyPresent)) {
+                        break
+                    }
+                    if (attempt < 2) {
+                        try { Thread.sleep(50L * (attempt + 1)) } catch (_: InterruptedException) {}
+                    }
                 }
-            } catch (_: Exception) {
-                // If hardware key or prefs were corrupted/invalidated, proceed to regenerate fresh key
             }
-            // Clear unrecoverable prefs entries
+
+            val err = lastError
+            if (err != null && !isPermanentKeyInvalidation(err, keyPresent)) {
+                // Transient failure (TEE busy, lock transition, Direct Boot not yet ready):
+                // DO NOT delete wrapped key or reset master key! Preserve stored key for recovery.
+                throw TransientKeystoreException(
+                    "Android Keystore temporarily unavailable (${err.javaClass.simpleName})",
+                    err
+                )
+            }
+
+            // Only clear wrapped key when hardware key was genuinely permanently invalidated/deleted
+            prefs.edit().remove(ENCRYPTED_DB_KEY).remove(GCM_IV).commit()
+        } else if (encryptedKeyBase64 != null || ivBase64 != null) {
+            // Partial prefs entry missing half the pair; clean broken pair before regeneration
             prefs.edit().remove(ENCRYPTED_DB_KEY).remove(GCM_IV).commit()
         }
 
@@ -84,19 +149,20 @@ object DatabaseKeyManager {
             prefs.edit()
                 .putString(ENCRYPTED_DB_KEY, Base64.encodeToString(encryptedKey, Base64.NO_WRAP))
                 .putString(GCM_IV, Base64.encodeToString(iv, Base64.NO_WRAP))
-                .commit() // Commit immediately to ensure durability before opening DB
+                .commit()
 
             cachedKey = rawDbKey.copyOf()
             return rawDbKey.copyOf()
         } catch (e: Exception) {
             Arrays.fill(rawDbKey, 0.toByte())
-            throw IllegalStateException("Hardware-backed master key generation failed.", e)
+            throw TransientKeystoreException("Hardware-backed master key generation failed.", e)
         }
     }
 
     private fun getOrCreateMasterKey(keyStore: KeyStore): SecretKey {
         if (keyStore.containsAlias(KEY_ALIAS)) {
-            return keyStore.getKey(KEY_ALIAS, null) as SecretKey
+            val existing = keyStore.getKey(KEY_ALIAS, null) as? SecretKey
+            if (existing != null) return existing
         }
 
         // Try StrongBox HSM first, fallback to standard TEE if unavailable

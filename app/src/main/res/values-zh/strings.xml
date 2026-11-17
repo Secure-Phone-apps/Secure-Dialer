@@ -638,4 +638,13 @@
     <string name="btn_continue">继续</string>
     <string name="btn_not_now">暂不</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">加密存储已锁定</string>
+    <string name="db_keystore_locked_desc">Android 密钥库暂时繁忙或正在等待解锁。您加密的通话笔记、快速拨号和黑名单数据仍安全保存在本地。</string>
+    <string name="db_quarantined_title">加密数据库已隔离备份</string>
+    <string name="db_quarantined_desc">无法解锁先前的加密数据库，系统已将其安全备份至 %1$s 而未删除。您可以在设置中恢复备份。</string>
+    <string name="btn_retry">重试</string>
+    <string name="header_background_reliability">后台运行与厂商系统可靠性</string>
+    <string name="settings_oem_background_title">后台保活与电池白名单</string>
+    <string name="settings_oem_background_unrestricted">%1$s • 电池无限制。轻触检查自启动与后台权限</string>
+    <string name="settings_oem_background_restricted">%1$s • 电池受限。轻触以允许来电唤醒与后台接听</string>
 </resources>

@@ -22,10 +22,12 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
@@ -41,14 +43,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.ui.theme.AppShapes
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
@@ -91,12 +96,13 @@ fun RecentsTabContent(
         }
     }
 
-    if (selectedHistoryNumber != null) {
-        val filteredLogs = remember(callRecords, selectedHistoryNumber) {
-            callRecords.filter { it.number == selectedHistoryNumber }
+    val activeHistoryNumber = selectedHistoryNumber
+    if (activeHistoryNumber != null) {
+        val filteredLogs = remember(callRecords, activeHistoryNumber) {
+            callRecords.filter { it.number == activeHistoryNumber }
         }
         CallHistoryDetailsScreen(
-            number = selectedHistoryNumber!!,
+            number = activeHistoryNumber,
             logs = filteredLogs,
             viewModel = viewModel,
             onCallClick = onCallClick,
@@ -106,11 +112,16 @@ fun RecentsTabContent(
             }
         )
     } else {
-        Box(modifier = Modifier.fillMaxSize()) {
+        val adaptive = LocalAdaptiveLayout.current
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
+        ) {
             Column(
                 modifier = Modifier
+                    .widthIn(max = adaptive.contentMaxWidth)
                     .fillMaxSize()
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = if (adaptive.isVeryNarrowWidth) 8.dp else 12.dp)
             ) {
                 if (!hasPermission && !isLoading) {
                     Card(
@@ -192,89 +203,99 @@ fun RecentsTabContent(
                             )
                         }
 
-                        Row(
+                        val filterFontScale = LocalDensity.current.fontScale
+                        BoxWithConstraints(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(vertical = 4.dp)
                         ) {
+                            val useScrollChips = maxWidth < 360.dp || filterFontScale >= 1.25f
                             Row(
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                val filterOptions = listOf(
-                                    RecentsFilterItem(stringResource(R.string.filter_all), RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
-                                    RecentsFilterItem(stringResource(R.string.filter_missed), RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
-                                    RecentsFilterItem(stringResource(R.string.filter_dialed), RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, getDialedCallColor()),
-                                    RecentsFilterItem(stringResource(R.string.filter_received), RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
-                                )
-
-                                filterOptions.forEach { item ->
-                                    val isSelected = currentFilter == item.filter
-
-                                    val containerColor by animateColorAsState(
-                                        targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                                        animationSpec = tween(150),
-                                        label = "filterChipBg"
+                                Row(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .then(if (useScrollChips) Modifier.horizontalScroll(rememberScrollState()) else Modifier),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    val filterOptions = listOf(
+                                        RecentsFilterItem(stringResource(R.string.filter_all), RecentsFilter.ALL, Icons.Default.History, MaterialTheme.colorScheme.primary),
+                                        RecentsFilterItem(stringResource(R.string.filter_missed), RecentsFilter.MISSED, Icons.Default.CallMissed, Color(0xFFD32F2F)),
+                                        RecentsFilterItem(stringResource(R.string.filter_dialed), RecentsFilter.DIALED, Icons.AutoMirrored.Filled.CallMade, getDialedCallColor()),
+                                        RecentsFilterItem(stringResource(R.string.filter_received), RecentsFilter.RECEIVED, Icons.AutoMirrored.Filled.CallReceived, Color(0xFF388E3C))
                                     )
 
-                                    val contentColor by animateColorAsState(
-                                        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
-                                        animationSpec = tween(150),
-                                        label = "filterChipText"
-                                    )
+                                    filterOptions.forEach { item ->
+                                        val isSelected = currentFilter == item.filter
 
-                                    val iconTint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else item.iconColor
+                                        val containerColor by animateColorAsState(
+                                            targetValue = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                                            animationSpec = tween(150),
+                                            label = "filterChipBg"
+                                        )
 
-                                    Row(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .clip(AppShapes.Chip)
-                                            .background(containerColor)
-                                            .clickable {
-                                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                                currentFilter = item.filter
-                                            }
-                                            .padding(horizontal = 4.dp, vertical = 7.dp),
-                                        horizontalArrangement = Arrangement.Center,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = item.icon,
-                                            contentDescription = item.label,
-                                            tint = iconTint,
-                                            modifier = Modifier.size(13.dp)
+                                        val contentColor by animateColorAsState(
+                                            targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface,
+                                            animationSpec = tween(150),
+                                            label = "filterChipText"
                                         )
-                                        Spacer(modifier = Modifier.width(3.dp))
-                                        Text(
-                                            text = item.label,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = contentColor,
-                                            maxLines = 1
-                                        )
+
+                                        val iconTint = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else item.iconColor
+
+                                        Row(
+                                            modifier = Modifier
+                                                .then(if (useScrollChips) Modifier else Modifier.weight(1f))
+                                                .heightIn(min = 40.dp)
+                                                .clip(AppShapes.Chip)
+                                                .background(containerColor)
+                                                .clickable {
+                                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                                    currentFilter = item.filter
+                                                }
+                                                .padding(horizontal = if (useScrollChips) 10.dp else 4.dp, vertical = 7.dp),
+                                            horizontalArrangement = Arrangement.Center,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = item.label,
+                                                tint = iconTint,
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(3.dp))
+                                            Text(
+                                                text = item.label,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = contentColor,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
+                                            )
+                                        }
                                     }
                                 }
-                            }
 
-                            IconButton(
-                                onClick = {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    showClearConfirmDialog = true
-                                },
-                                modifier = Modifier.size(36.dp),
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
-                                    contentColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = stringResource(R.string.btn_clear_all),
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                IconButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        showClearConfirmDialog = true
+                                    },
+                                    modifier = Modifier.size(48.dp),
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f),
+                                        contentColor = MaterialTheme.colorScheme.error
+                                    )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = stringResource(R.string.btn_clear_all),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }

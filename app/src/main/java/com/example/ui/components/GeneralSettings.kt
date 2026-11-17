@@ -158,6 +158,7 @@ fun GeneralSettings(
             SettingsSearchItem("Hide Caller ID (CLIR)", "Suppress outgoing number so recipient sees Private or Unknown Caller", "SIM & Calling", 3, Icons.Default.VisibilityOff),
             SettingsSearchItem("Caller ID Prefix & Codes", "Select carrier CLIR prefix: #31#, *67, 141, 1831 or custom dial code", "SIM & Calling", 3, Icons.Default.Pin),
             SettingsSearchItem("Carrier SIM Hardware Caller ID", "Direct system shortcut to per-SIM network Caller ID settings", "SIM & Calling", 3, Icons.Default.SimCard),
+            SettingsSearchItem("Background & Battery Survivability", "Allow unrestricted background wakes & OEM autostart across Samsung, Xiaomi, Oppo, Vivo & Huawei", "SIM & Calling", 3, Icons.Default.BatteryChargingFull),
 
             // 4. SPEED DIAL & QUICK REPLY
             SettingsSearchItem("Speed Dial & Quick Reply Settings", "Number key shortcuts and quick decline SMS responses", "Speed Dial & Quick Reply", 4, Icons.Default.TouchApp),

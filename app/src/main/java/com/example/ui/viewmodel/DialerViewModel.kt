@@ -1047,6 +1047,21 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun updateContactWithDetails(
+        oldContact: Contact,
+        name: String,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail> = emptyList(),
+        addresses: List<LabeledAddress> = emptyList(),
+        accountName: String = "",
+        accountType: String = ""
+    ) {
+        viewModelScope.launch {
+            repository.updateContactWithDetails(oldContact, name, numbers, emails, addresses, accountName, accountType)
+            refreshAvailableAccounts()
+        }
+    }
+
     fun saveCallNote(number: String, note: String) = spamAndBackupCoordinator.saveCallNote(number, note)
     suspend fun getCallNote(number: String): CallNote? = spamAndBackupCoordinator.getCallNote(number)
     fun deleteCallNote(number: String) = spamAndBackupCoordinator.deleteCallNote(number)

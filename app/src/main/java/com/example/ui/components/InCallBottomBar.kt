@@ -52,20 +52,26 @@ fun InCallBottomBar(
     isDisconnecting: Boolean = false
 ) {
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveLayout.current
     val buttonShape = AppShapes.Keypad
 
     Column(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .widthIn(max = 440.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         if (isIncoming) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = if (adaptive.isTightVerticalSpace) 0.dp else 4.dp),
                 horizontalArrangement = Arrangement.Center
             ) {
-                TextButton(onClick = onToggleQuickDeclineMenu) {
+                TextButton(
+                    onClick = onToggleQuickDeclineMenu,
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
                     Text(
                         text = stringResource(R.string.send_quick_response),
                         style = MaterialTheme.typography.labelLarge
@@ -77,7 +83,10 @@ fun InCallBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = if (adaptive.isVeryNarrowWidth) 12.dp else 24.dp,
+                    vertical = if (adaptive.isTightVerticalSpace) 8.dp else 16.dp
+                ),
             horizontalArrangement = if (isIncoming) Arrangement.SpaceBetween else Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {

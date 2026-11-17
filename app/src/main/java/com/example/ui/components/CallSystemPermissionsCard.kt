@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -117,6 +118,7 @@ fun CallSystemPermissionsCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
+            .testTag("permissions_warning_card")
             .clickable { executeAction() },
         colors = CardDefaults.cardColors(
             containerColor = cardBgColor,
@@ -184,6 +186,7 @@ fun CallSystemPermissionsCard(
 
             Button(
                 onClick = { executeAction() },
+                modifier = Modifier.testTag("permissions_warning_action_button"),
                 shape = AppShapes.current.buttonShape,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,

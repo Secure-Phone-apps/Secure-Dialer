@@ -21,7 +21,9 @@ import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.*
@@ -91,6 +93,8 @@ fun SimSelectDialog(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .widthIn(max = 480.dp)
+                    .navigationBarsPadding()
                     .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) {}
                     .padding(16.dp),
                 shape = AppShapes.Dialog,
@@ -100,6 +104,7 @@ fun SimSelectDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
                         .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -141,7 +146,7 @@ fun SimSelectDialog(
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(100.dp)
+                                    .heightIn(min = 100.dp)
                                     .clip(AppShapes.Keypad)
                                     .clickable {
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -203,7 +208,9 @@ fun SimSelectDialog(
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             onDismiss()
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp),
                         shape = AppShapes.Keypad
                     ) {
                         Text(

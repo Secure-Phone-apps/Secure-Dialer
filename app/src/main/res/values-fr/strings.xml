@@ -638,4 +638,13 @@ Version v%1$s (Version stable)
     <string name="btn_continue">Continuer</string>
     <string name="btn_not_now">Plus tard</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
+    <string name="db_keystore_locked_title">Stockage chiffré verrouillé</string>
+    <string name="db_keystore_locked_desc">Le keystore Android est temporairement indisponible ou en attente de déverrouillage. Vos notes d\'appel, raccourcis et liste de blocage chiffrés restent en sécurité.</string>
+    <string name="db_quarantined_title">Base de données chiffrée mise en quarantaine</string>
+    <string name="db_quarantined_desc">Votre précédente base de données chiffrée n\'a pas pu être déverrouillée et a été sauvegardée vers %1$s au lieu d\'être supprimée. Vous pouvez restaurer une sauvegarde dans les Paramètres.</string>
+    <string name="btn_retry">Réessayer</string>
+    <string name="header_background_reliability">ARRIÈRE-PLAN ET FIABILITÉ CONSTRUCTEUR</string>
+    <string name="settings_oem_background_title">Maintien en arrière-plan et batterie</string>
+    <string name="settings_oem_background_unrestricted">%1$s • Batterie sans restriction. Toucher pour vérifier le démarrage auto</string>
+    <string name="settings_oem_background_restricted">%1$s • Batterie restreinte. Toucher pour autoriser les réveils d\'appels</string>
 </resources>

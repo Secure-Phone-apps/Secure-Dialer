@@ -38,8 +38,7 @@ class DialerRecordingsCoordinator(
             val file = result.file
             if (file != null && file.exists() && file.length() > 0L) {
                 val durationSec = result.durationSeconds.coerceAtLeast(1L)
-                val sdf = SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
-                val timestamp = sdf.format(Date())
+                val timestamp = CallAudioRecorder.formatRecordingTimestamp(context)
                 val recording = CallRecording(
                     number = phoneNumber,
                     name = if (callerName.isBlank()) phoneNumber else callerName,

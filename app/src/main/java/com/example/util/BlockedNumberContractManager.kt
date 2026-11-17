@@ -22,20 +22,103 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.BlockedNumberContract
-import android.telephony.PhoneNumberUtils
 import com.example.data.DialerDao
 import com.example.model.BlockedNumber
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Native integration for system-wide and local call blocking.
- * Integrates with Android's system BlockedNumberContract with automatic fallback
- * to Room DB for maximum reliability across custom ROMs and older Android versions.
+ * Native integration for system-wide and local call blocking + offline spam screening.
+ * Combines Android's BlockedNumberContract with Room DB blocklist and spam_numbers
+ * using normalized digits, suffix matching, and safe wildcard matching for maximum
+ * compatibility across Android 9-17 and all OEM ROMs.
  */
 object BlockedNumberContractManager {
 
-    suspend fun isBlocked(context: Context, number: String, dao: DialerDao? = null): Boolean =
+    /**
+     * Pure deterministic matcher supporting:
+     * - Exact trimmed matches
+     * - Formatted vs digit-normalized matches (e.g. "+1 (555) 123-4567" vs "5551234567")
+     * - Trailing country-code agnostic suffix comparison when both have >= 7 digits
+     * - Safe wildcard rules using '*' (e.g. "+1800*", "*555*", "800*")
+     */
+    fun matchesRule(candidateNumber: String, rulePattern: String): Boolean {
+        val candidate = candidateNumber.trim()
+        val rule = rulePattern.trim()
+        if (candidate.isEmpty() || rule.isEmpty()) return false
+
+        if (candidate.equals(rule, ignoreCase = true)) return true
+
+        val candidateDialable = candidate.filter { it.isDigit() || it == '+' }
+        val candidateDigits = candidate.filter { it.isDigit() }
+
+        if (rule.contains('*')) {
+            if (matchesWildcard(candidate, rule)) return true
+            val ruleDialable = rule.filter { it.isDigit() || it == '+' || it == '*' }
+            val ruleDigitsWild = rule.filter { it.isDigit() || it == '*' }
+            if (ruleDialable.isNotEmpty() && candidateDialable.isNotEmpty() && matchesWildcard(candidateDialable, ruleDialable)) {
+                return true
+            }
+            if (ruleDigitsWild.isNotEmpty() && candidateDigits.isNotEmpty() && matchesWildcard(candidateDigits, ruleDigitsWild)) {
+                return true
+            }
+            return false
+        }
+
+        val ruleDialable = rule.filter { it.isDigit() || it == '+' }
+        val ruleDigits = rule.filter { it.isDigit() }
+
+        if (candidateDialable.isNotEmpty() && candidateDialable == ruleDialable) return true
+        if (candidateDigits.isNotEmpty() && candidateDigits == ruleDigits) return true
+
+        if (candidateDigits.length >= 7 && ruleDigits.length >= 7) {
+            val minLen = minOf(candidateDigits.length, ruleDigits.length, 10)
+            if (minLen >= 7 && candidateDigits.takeLast(minLen) == ruleDigits.takeLast(minLen)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun matchesWildcard(value: String, wildcardPattern: String): Boolean {
+        val regexString = wildcardPattern
+            .split('*')
+            .joinToString(".*") { Regex.escape(it) }
+        return try {
+            Regex("^$regexString$", RegexOption.IGNORE_CASE).matches(value)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun matchesAnyRule(
+        number: String,
+        rules: List<String>,
+        context: Context? = null
+    ): Boolean {
+        val trimmed = number.trim()
+        if (trimmed.isEmpty() || rules.isEmpty()) return false
+        try {
+            if (context != null && com.example.CallManager.isEmergencyNumber(trimmed, context)) {
+                return false
+            }
+        } catch (_: Exception) {}
+
+        return rules.any { rule -> matchesRule(trimmed, rule) }
+    }
+
+    suspend fun shouldBlockIncomingCall(
+        context: Context,
+        number: String,
+        dao: DialerDao? = null
+    ): Boolean = isBlocked(context = context, number = number, dao = dao, includeSpam = true)
+
+    suspend fun isBlocked(
+        context: Context,
+        number: String,
+        dao: DialerDao? = null,
+        includeSpam: Boolean = false
+    ): Boolean =
         withContext(Dispatchers.IO) {
             val trimmed = number.trim()
             if (trimmed.isEmpty()) return@withContext false
@@ -47,25 +130,43 @@ object BlockedNumberContractManager {
 
             val cleanNum = trimmed.filter { it.isDigit() || it == '+' }
 
-            // 1. Check System BlockedNumberContract (requires default dialer role)
+            // 1. Check System BlockedNumberContract (requires default dialer or screening role)
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && BlockedNumberContract.canCurrentUserBlockNumbers(context)) {
-                    val isSystemBlocked = BlockedNumberContract.isBlocked(context, cleanNum) || 
-                                          BlockedNumberContract.isBlocked(context, trimmed)
+                    val isSystemBlocked = BlockedNumberContract.isBlocked(context, cleanNum) ||
+                        BlockedNumberContract.isBlocked(context, trimmed)
                     if (isSystemBlocked) return@withContext true
                 }
             } catch (_: Exception) {}
 
-            // 2. Check Local Room Database (handles exact match, formatted match, and wildcard rules)
-            try {
-                if (dao != null) {
-                    val isLocalBlocked = dao.isBlocked(cleanNum) || 
-                                         dao.isBlocked(trimmed) || 
-                                         dao.isBlockedSql(cleanNum) ||
-                                         dao.isBlockedSql(trimmed)
+            // 2. Check Local Room Blocklist (SQL fast path + normalized/wildcard fallback)
+            if (dao != null) {
+                try {
+                    val isLocalBlocked = dao.isBlocked(cleanNum) ||
+                        dao.isBlocked(trimmed) ||
+                        dao.isBlockedSql(cleanNum) ||
+                        dao.isBlockedSql(trimmed)
                     if (isLocalBlocked) return@withContext true
+
+                    val allBlocked = dao.getBlockedNumbersList()
+                    if (allBlocked.any { matchesRule(trimmed, it.number) }) {
+                        return@withContext true
+                    }
+                } catch (_: Exception) {}
+
+                // 3. Check Offline Spam Database when screening incoming calls
+                if (includeSpam) {
+                    try {
+                        if (dao.isSpamNumber(cleanNum) || dao.isSpamNumber(trimmed)) {
+                            return@withContext true
+                        }
+                        val allSpam = dao.getAllSpamNumbersList()
+                        if (allSpam.any { matchesRule(trimmed, it.number) }) {
+                            return@withContext true
+                        }
+                    } catch (_: Exception) {}
                 }
-            } catch (_: Exception) {}
+            }
 
             false
         }
@@ -99,9 +200,11 @@ object BlockedNumberContractManager {
                 systemSuccess = false
             }
 
-            // FIXED: Always insert both normalized and raw formats into Room to ensure incoming calls match 100%
+            // Always insert both normalized and raw formats into Room to ensure calls match across OEMs
             try {
-                dao?.insertBlockedNumber(BlockedNumber(number = cleanNum))
+                if (cleanNum.isNotEmpty()) {
+                    dao?.insertBlockedNumber(BlockedNumber(number = cleanNum))
+                }
                 if (cleanNum != trimmed) {
                     dao?.insertBlockedNumber(BlockedNumber(number = trimmed))
                 }
@@ -115,7 +218,7 @@ object BlockedNumberContractManager {
             val trimmed = number.trim()
             if (trimmed.isEmpty()) return@withContext false
 
-            val cleanNum = trimmed.filter { it.isDigit() || it == '+' }
+            val cleanNum = if (trimmed.contains("*")) trimmed else trimmed.filter { it.isDigit() || it == '+' }
             var systemSuccess = false
 
             try {
@@ -131,10 +234,17 @@ object BlockedNumberContractManager {
                 systemSuccess = false
             }
 
-            // Delete both raw and normalized entries from local DB
+            // Delete matching entries from local DB (including formatted equivalents)
             try {
-                dao?.deleteBlockedNumber(BlockedNumber(number = cleanNum))
+                if (cleanNum.isNotEmpty()) {
+                    dao?.deleteBlockedNumber(BlockedNumber(number = cleanNum))
+                }
                 dao?.deleteBlockedNumber(BlockedNumber(number = trimmed))
+                dao?.getBlockedNumbersList()?.filter {
+                    it.number == trimmed || it.number == cleanNum || (!trimmed.contains("*") && matchesRule(trimmed, it.number) && !it.number.contains("*"))
+                }?.forEach { existing ->
+                    dao.deleteBlockedNumber(existing)
+                }
             } catch (_: Exception) {}
 
             systemSuccess
