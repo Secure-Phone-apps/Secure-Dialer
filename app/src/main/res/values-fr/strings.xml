@@ -703,4 +703,10 @@ Version v%1$s (Version stable)
     <string name="battery_why_recording_desc">Le mode Sans restriction évite que le système n\'interrompe un long enregistrement d\'appel ou le service audio en cours d\'appel.</string>
     <string name="btn_open_oem_battery_settings">Ouvrir Batterie &amp; Démarrage auto</string>
     <string name="btn_open_app_details_settings">Ouvrir Info sur l\'application</string>
+    <string name="settings_rename_sims">Rename SIM Cards</string>
+    <string name="settings_rename_sims_sub">Customize SIM labels for Work, Personal, etc.</string>
+    <string name="dialog_rename_sim_title">Rename SIM Card</string>
+    <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
+    <string name="sim_label_placeholder">e.g. Work, Personal</string>
+    <string name="toast_sim_renamed">SIM card renamed successfully</string>
 </resources>

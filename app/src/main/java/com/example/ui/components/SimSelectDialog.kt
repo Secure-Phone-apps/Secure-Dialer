@@ -41,6 +41,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.R
 import com.example.ui.theme.AppShapes
+import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.MultiSimManager
 import com.example.util.RichHapticEngine
 import com.example.util.SimAccountInfo
@@ -48,6 +49,7 @@ import com.example.util.SimAccountInfo
 @Composable
 fun SimSelectDialog(
     context: Context,
+    viewModel: DialerViewModel? = null,
     pendingCallNumber: String,
     onDismiss: () -> Unit,
     onSimSelected: (simLabel: String) -> Unit
@@ -142,7 +144,8 @@ fun SimSelectDialog(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         displaySimList.forEachIndexed { index, sim ->
-                            val simLabel = "SIM ${sim.slotIndex + 1}"
+                            val customLabel = viewModel?.customSimLabels?.get(sim.subscriptionId)
+                            val simLabel = customLabel?.takeIf { it.isNotBlank() } ?: "SIM ${sim.slotIndex + 1}"
                             Surface(
                                 modifier = Modifier
                                     .weight(1f)

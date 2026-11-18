@@ -703,4 +703,10 @@ Version v%1$s (Stabile Version)
     <string name="battery_why_recording_desc">Uneingeschränkter Akku verhindert auf strengen OEMs, dass Audio-Dienste bei langen Aufnahmen im Hintergrund gestoppt werden.</string>
     <string name="btn_open_oem_battery_settings">Akku- &amp; Autostart-Einstellungen öffnen</string>
     <string name="btn_open_app_details_settings">System-App-Info öffnen</string>
+    <string name="settings_rename_sims">Rename SIM Cards</string>
+    <string name="settings_rename_sims_sub">Customize SIM labels for Work, Personal, etc.</string>
+    <string name="dialog_rename_sim_title">Rename SIM Card</string>
+    <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
+    <string name="sim_label_placeholder">e.g. Work, Personal</string>
+    <string name="toast_sim_renamed">SIM card renamed successfully</string>
 </resources>

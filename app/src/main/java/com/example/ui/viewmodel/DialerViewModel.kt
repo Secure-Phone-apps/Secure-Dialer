@@ -57,6 +57,31 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     private val repository = DialerRepository(application)
     private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
 
+    val customSimLabels = mutableStateMapOf<Int, String>()
+
+    init {
+        val allPrefs = prefs.all
+        for ((key, value) in allPrefs) {
+            if (key.startsWith("custom_sim_label_") && value is String) {
+                val subId = key.removePrefix("custom_sim_label_").toIntOrNull()
+                if (subId != null) {
+                    customSimLabels[subId] = value
+                }
+            }
+        }
+    }
+
+    fun updateSimCustomLabel(subscriptionId: Int, label: String) {
+        val trimmed = label.trim()
+        if (trimmed.isEmpty()) {
+            customSimLabels.remove(subscriptionId)
+            prefs.edit().remove("custom_sim_label_$subscriptionId").apply()
+        } else {
+            customSimLabels[subscriptionId] = trimmed
+            prefs.edit().putString("custom_sim_label_$subscriptionId", trimmed).apply()
+        }
+    }
+
     var pendingSettingsTab = mutableIntStateOf(0)
     var pendingSettingsHighlight = mutableStateOf<String?>(null)
 

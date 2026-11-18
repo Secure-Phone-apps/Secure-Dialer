@@ -703,4 +703,10 @@
     <string name="battery_why_recording_desc">在后台策略较严格的系统中，“无限制”模式有助于防止长时间通话录音或音频服务中途被暂停。</string>
     <string name="btn_open_oem_battery_settings">打开电池与自启动设置</string>
     <string name="btn_open_app_details_settings">打开系统应用信息</string>
+    <string name="settings_rename_sims">Rename SIM Cards</string>
+    <string name="settings_rename_sims_sub">Customize SIM labels for Work, Personal, etc.</string>
+    <string name="dialog_rename_sim_title">Rename SIM Card</string>
+    <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
+    <string name="sim_label_placeholder">e.g. Work, Personal</string>
+    <string name="toast_sim_renamed">SIM card renamed successfully</string>
 </resources>

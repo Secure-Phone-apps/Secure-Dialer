@@ -27,10 +27,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import android.widget.Toast
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 
 @Composable
 fun AboutDialog(onDismiss: () -> Unit) {
@@ -94,5 +106,154 @@ fun exportRecordingToDownloads(context: android.content.Context, filePath: Strin
     } catch (e: Exception) {
         android.widget.Toast.makeText(context, context.getString(R.string.file_save_failed), android.widget.Toast.LENGTH_LONG).show()
     }
+}
+
+@Composable
+fun SimRenameDialog(
+    viewModel: DialerViewModel,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val activeSims = remember(context) { com.example.util.MultiSimManager.getActiveSimAccounts(context) }
+    val displaySims = remember(activeSims) {
+        if (activeSims.size >= 2) activeSims.take(2)
+        else {
+            val sim1 = activeSims.getOrNull(0) ?: com.example.util.SimAccountInfo(0, 1, "SIM 1", "SIM 1", "", null)
+            val sim2 = activeSims.getOrNull(1) ?: com.example.util.SimAccountInfo(1, 2, "SIM 2", "SIM 2", "", null)
+            listOf(sim1, sim2)
+        }
+    }
+
+    var editingSim by remember { mutableStateOf<com.example.util.SimAccountInfo?>(null) }
+    var customLabelInput by remember(editingSim) {
+        mutableStateOf(editingSim?.let { viewModel.customSimLabels[it.subscriptionId] } ?: "")
+    }
+
+    val simRenamedMsg = stringResource(R.string.toast_sim_renamed)
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_rename_sims)) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                if (editingSim == null) {
+                    Text(
+                        text = stringResource(R.string.settings_rename_sims_sub),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    displaySims.forEach { sim ->
+                        val currentCustom = viewModel.customSimLabels[sim.subscriptionId]
+                        val defaultLabel = "SIM ${sim.slotIndex + 1}"
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    editingSim = sim
+                                    customLabelInput = currentCustom ?: ""
+                                },
+                            shape = MaterialTheme.shapes.small,
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = currentCustom?.takeIf { it.isNotBlank() } ?: defaultLabel,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "System: ${sim.carrierName.ifEmpty { sim.displayName }} (Slot ${sim.slotIndex + 1})",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    val sim = editingSim!!
+                    val defaultLabel = "SIM ${sim.slotIndex + 1}"
+                    Text(
+                        text = stringResource(R.string.dialog_rename_sim_prompt, defaultLabel),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = customLabelInput,
+                        onValueChange = { customLabelInput = it },
+                        label = { Text(defaultLabel) },
+                        placeholder = { Text(stringResource(R.string.sim_label_placeholder)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            if (editingSim != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            viewModel.updateSimCustomLabel(editingSim!!.subscriptionId, "")
+                            Toast.makeText(context, "Reset to default SIM label", Toast.LENGTH_SHORT).show()
+                            editingSim = null
+                        }
+                    ) {
+                        Text("Reset")
+                    }
+                    Button(
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                            viewModel.updateSimCustomLabel(editingSim!!.subscriptionId, customLabelInput.trim())
+                            Toast.makeText(context, simRenamedMsg, Toast.LENGTH_SHORT).show()
+                            editingSim = null
+                        }
+                    ) {
+                        Text(stringResource(R.string.btn_save))
+                    }
+                }
+            } else {
+                TextButton(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        onDismiss()
+                    }
+                ) {
+                    Text(stringResource(R.string.close))
+                }
+            }
+        },
+        dismissButton = {
+            if (editingSim != null) {
+                TextButton(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        editingSim = null
+                    }
+                ) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        }
+    )
 }
 

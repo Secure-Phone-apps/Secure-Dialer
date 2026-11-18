@@ -703,4 +703,10 @@
     <string name="battery_why_recording_desc">अप्रतिबंधित बैटरी सख्त OEM फ़ोन पर लंबी बैकग्राउंड कॉल रिकॉर्डिंग या ऑडियो सेवा को रुकने से बचाती है।</string>
     <string name="btn_open_oem_battery_settings">बैटरी और ऑटोस्टार्ट सेटिंग्स खोलें</string>
     <string name="btn_open_app_details_settings">सिस्टम ऐप जानकारी खोलें</string>
+    <string name="settings_rename_sims">Rename SIM Cards</string>
+    <string name="settings_rename_sims_sub">Customize SIM labels for Work, Personal, etc.</string>
+    <string name="dialog_rename_sim_title">Rename SIM Card</string>
+    <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
+    <string name="sim_label_placeholder">e.g. Work, Personal</string>
+    <string name="toast_sim_renamed">SIM card renamed successfully</string>
 </resources>

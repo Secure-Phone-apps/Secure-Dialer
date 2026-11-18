@@ -96,6 +96,34 @@ fun CallingAccountsSettings(
             }
         }
 
+        // Rename SIM Cards
+        item {
+            var showSimRenameDialog by remember { mutableStateOf(false) }
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("Rename SIM Cards", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_rename_sims),
+                    subtitle = stringResource(R.string.settings_rename_sims_sub),
+                    onClick = { showSimRenameDialog = true },
+                    icon = Icons.Default.Edit,
+                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.primary
+                )
+            }
+            if (showSimRenameDialog) {
+                SimRenameDialog(
+                    viewModel = viewModel,
+                    onDismiss = { showSimRenameDialog = false }
+                )
+            }
+        }
+
         // Carrier Call Settings
         item {
             HighlightableCard(

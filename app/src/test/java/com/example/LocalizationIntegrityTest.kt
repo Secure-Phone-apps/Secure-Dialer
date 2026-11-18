@@ -44,7 +44,7 @@ class LocalizationIntegrityTest {
         return map
     }
 
-    private val supportedLocales = listOf("ar", "de", "es", "fr", "hi", "ja", "pl", "pt", "zh")
+    private val supportedLocales = listOf("ar", "de", "es", "fr", "hi", "ja", "pl", "pt", "tr", "zh")
 
     private fun loadOrderedKeys(file: File): List<String> {
         val factory = DocumentBuilderFactory.newInstance()

@@ -411,6 +411,7 @@ fun MainScreen(
             if (showSimSelectDialog) {
                 SimSelectDialog(
                     context = context,
+                    viewModel = viewModel,
                     pendingCallNumber = pendingCallNumber,
                     onDismiss = { showSimSelectDialog = false },
                     onSimSelected = { simLabel ->

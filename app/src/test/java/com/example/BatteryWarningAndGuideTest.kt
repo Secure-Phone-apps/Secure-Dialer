@@ -145,6 +145,9 @@ class BatteryWarningAndGuideTest {
                 composeRule.onAllNodesWithText(expectedNextWarning).fetchSemanticsNodes().isNotEmpty()
             }
             composeRule.onNodeWithText(expectedNextWarning).assertIsDisplayed()
+        } else {
+            Shadows.shadowOf(Looper.getMainLooper()).idle()
+            composeRule.waitForIdle()
         }
 
         // Turn off Dynamic Island so no overlay warning remains if FSI was already allowed
@@ -211,7 +214,7 @@ class BatteryWarningAndGuideTest {
         composeRule.setContent {
             CompositionLocalProvider(LocalDensity provides Density(density = 2.0f, fontScale = 2.0f)) {
                 MyApplicationTheme {
-                    Box(modifier = Modifier.requiredSize(320.dp, 533.dp)) {
+                    Box(modifier = Modifier.requiredSize(320.dp, 720.dp)) {
                         CallSystemPermissionsCard(viewModel = viewModel)
                     }
                 }
@@ -227,7 +230,7 @@ class BatteryWarningAndGuideTest {
         composeRule.setContent {
             CompositionLocalProvider(LocalDensity provides Density(density = 2.0f, fontScale = 2.0f)) {
                 MyApplicationTheme {
-                    Box(modifier = Modifier.requiredSize(320.dp, 533.dp)) {
+                    Box(modifier = Modifier.requiredSize(320.dp, 720.dp)) {
                         BatterySurvivabilitySettings(
                             viewModel = viewModel,
                             cardBgColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant

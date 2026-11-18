@@ -703,4 +703,10 @@ Versão v%1$s (Versão estável)
     <string name="battery_why_recording_desc">A bateria sem restrições evita que gestores OEM interrompam gravações longas ou o serviço de áudio durante uma ligação.</string>
     <string name="btn_open_oem_battery_settings">Abrir ajustes de bateria e início</string>
     <string name="btn_open_app_details_settings">Abrir info do app no sistema</string>
+    <string name="settings_rename_sims">Rename SIM Cards</string>
+    <string name="settings_rename_sims_sub">Customize SIM labels for Work, Personal, etc.</string>
+    <string name="dialog_rename_sim_title">Rename SIM Card</string>
+    <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
+    <string name="sim_label_placeholder">e.g. Work, Personal</string>
+    <string name="toast_sim_renamed">SIM card renamed successfully</string>
 </resources>

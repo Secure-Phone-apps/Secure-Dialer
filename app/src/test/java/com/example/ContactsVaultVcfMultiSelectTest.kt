@@ -410,9 +410,10 @@ class ContactsVaultVcfMultiSelectTest {
         shadowOf(Looper.getMainLooper()).idle()
 
         val viewModel = DialerViewModel(app)
+        composeRule.mainClock.autoAdvance = true
         composeRule.setContent {
             MyApplicationTheme {
-                Box(modifier = Modifier.requiredSize(360.dp, 720.dp)) {
+                Box(modifier = Modifier.requiredSize(360.dp, 800.dp)) {
                     val paged = viewModel.contactsPaged.collectAsLazyPagingItems()
                     val favs = emptyList<Contact>()
                     ContactsTabContent(
@@ -432,6 +433,8 @@ class ContactsVaultVcfMultiSelectTest {
             }
         }
 
+        shadowOf(Looper.getMainLooper()).idle()
+        composeRule.waitForIdle()
         composeRule.waitUntil(timeoutMillis = 5_000) {
             shadowOf(Looper.getMainLooper()).idle()
             composeRule.onAllNodesWithText("Alpha Vault").fetchSemanticsNodes().isNotEmpty()
