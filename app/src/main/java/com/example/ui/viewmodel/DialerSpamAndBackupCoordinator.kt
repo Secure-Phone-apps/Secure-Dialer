@@ -69,9 +69,9 @@ class DialerSpamAndBackupCoordinator(
         }
     }
 
-    fun exportContactsVcf(onResult: (String) -> Unit) {
+    fun exportContactsVcf(contactsOverride: List<com.example.model.Contact>? = null, onResult: (String) -> Unit) {
         scope.launch {
-            val data = BackupRestoreManager.exportContactsToVcf(application)
+            val data = BackupRestoreManager.exportContactsToVcf(application, contactsOverride)
             onResult(data)
         }
     }
@@ -81,6 +81,26 @@ class DialerSpamAndBackupCoordinator(
             val success = BackupRestoreManager.importContactsFromVcf(application, rawData)
             if (success) onDataChanged()
             onResult(success)
+        }
+    }
+
+    fun importContactsVcfDetailed(
+        rawData: String,
+        saveToPrivateVault: Boolean,
+        accountName: String = "",
+        accountType: String = "",
+        onResult: (BackupRestoreManager.VcfImportResult) -> Unit
+    ) {
+        scope.launch {
+            val result = BackupRestoreManager.importContactsFromVcfDetailed(
+                context = application,
+                vcfContent = rawData,
+                saveToPrivateVault = saveToPrivateVault,
+                accountName = accountName,
+                accountType = accountType
+            )
+            if (result.importedCount > 0 && !saveToPrivateVault) onDataChanged()
+            onResult(result)
         }
     }
 

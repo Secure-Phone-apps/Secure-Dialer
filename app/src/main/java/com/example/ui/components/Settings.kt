@@ -57,10 +57,20 @@ fun SettingsPanel(
     viewModel: DialerViewModel,
     onClose: () -> Unit
 ) {
-    var activeTab by remember { mutableIntStateOf(0) }
-    var highlightedTitle by remember { mutableStateOf<String?>(null) }
+    var activeTab by remember { mutableIntStateOf(viewModel.pendingSettingsTab.intValue) }
+    var highlightedTitle by remember { mutableStateOf(viewModel.pendingSettingsHighlight.value) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showPrivacyDialog by remember { mutableStateOf(false) }
+
+    val pendingTab by viewModel.pendingSettingsTab
+    LaunchedEffect(pendingTab) {
+        if (pendingTab != 0) {
+            activeTab = pendingTab
+            highlightedTitle = viewModel.pendingSettingsHighlight.value
+            viewModel.pendingSettingsTab.intValue = 0
+            viewModel.pendingSettingsHighlight.value = null
+        }
+    }
 
     BackHandler(enabled = true) {
         if (activeTab != 0) {
@@ -97,6 +107,7 @@ fun SettingsPanel(
                             6 -> stringResource(R.string.cat_contacts_data)
                             7 -> stringResource(R.string.cat_advanced_features)
                             8 -> stringResource(R.string.cat_privacy_security_about)
+                            9 -> stringResource(R.string.cat_background_survivability)
                             else -> stringResource(R.string.settings_title)
                         },
                         style = MaterialTheme.typography.titleLarge,
@@ -171,7 +182,8 @@ fun SettingsPanel(
                     3 -> CallingAccountsSettings(
                         viewModel = viewModel,
                         cardBgColor = cardBgColor,
-                        highlightedTitle = highlightedTitle
+                        highlightedTitle = highlightedTitle,
+                        onOpenBatteryGuide = { activeTab = 9 }
                     )
                     4 -> SpeedDialAndQuickResponsesSettings(
                         viewModel = viewModel,
@@ -199,6 +211,10 @@ fun SettingsPanel(
                         highlightedTitle = highlightedTitle,
                         onShowAbout = { showAboutDialog = true },
                         onShowPrivacy = { showPrivacyDialog = true }
+                    )
+                    9 -> BatterySurvivabilitySettings(
+                        viewModel = viewModel,
+                        cardBgColor = cardBgColor
                     )
                 }
             }

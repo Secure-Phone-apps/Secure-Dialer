@@ -44,8 +44,70 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 class DialerViewModel(application: Application) : AndroidViewModel(application) {
+    companion object {
+        const val PREF_BATTERY_WARNING_MODE = "battery_warning_mode"
+        const val PREF_BATTERY_WARNING_SNOOZE_UNTIL = "battery_warning_snooze_until_ms"
+        const val BATTERY_WARNING_ENABLED = "ENABLED"
+        const val BATTERY_WARNING_SNOOZED = "SNOOZED"
+        const val BATTERY_WARNING_DISABLED = "DISABLED"
+        const val ONE_DAY_MS = 24L * 60L * 60L * 1000L
+        const val ONE_WEEK_MS = 7L * 24L * 60L * 60L * 1000L
+    }
+
     private val repository = DialerRepository(application)
     private val prefs = repository.context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+
+    var pendingSettingsTab = mutableIntStateOf(0)
+    var pendingSettingsHighlight = mutableStateOf<String?>(null)
+
+    var batteryWarningMode = mutableStateOf(
+        prefs.getString(PREF_BATTERY_WARNING_MODE, BATTERY_WARNING_ENABLED) ?: BATTERY_WARNING_ENABLED
+    )
+    var batteryWarningSnoozeUntilMs = mutableLongStateOf(
+        prefs.getLong(PREF_BATTERY_WARNING_SNOOZE_UNTIL, 0L)
+    )
+
+    fun openSettingsToTab(tab: Int, highlightTitle: String? = null) {
+        pendingSettingsHighlight.value = highlightTitle
+        pendingSettingsTab.intValue = tab
+        isSettingsVisible.value = true
+    }
+
+    fun shouldShowBatteryWarning(nowMs: Long = System.currentTimeMillis()): Boolean {
+        return when (batteryWarningMode.value) {
+            BATTERY_WARNING_DISABLED -> false
+            BATTERY_WARNING_SNOOZED -> nowMs >= batteryWarningSnoozeUntilMs.longValue
+            else -> true
+        }
+    }
+
+    fun setBatteryWarningEnabled(enabled: Boolean) {
+        val nextMode = if (enabled) BATTERY_WARNING_ENABLED else BATTERY_WARNING_DISABLED
+        setBatteryWarningPreference(nextMode, 0L)
+    }
+
+    fun snoozeBatteryWarning(durationMs: Long, nowMs: Long = System.currentTimeMillis()) {
+        setBatteryWarningPreference(BATTERY_WARNING_SNOOZED, nowMs + durationMs)
+    }
+
+    @Volatile
+    private var batteryWarningEditedByUser = false
+
+    private fun setBatteryWarningPreference(mode: String, snoozeUntilMs: Long) {
+        batteryWarningEditedByUser = true
+        batteryWarningMode.value = mode
+        batteryWarningSnoozeUntilMs.longValue = snoozeUntilMs
+        prefs.edit()
+            .putString(PREF_BATTERY_WARNING_MODE, mode)
+            .putLong(PREF_BATTERY_WARNING_SNOOZE_UNTIL, snoozeUntilMs)
+            .apply()
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                repository.dao.insertSetting(AppSetting(PREF_BATTERY_WARNING_MODE, mode))
+                repository.dao.insertSetting(AppSetting(PREF_BATTERY_WARNING_SNOOZE_UNTIL, snoozeUntilMs.toString()))
+            } catch (_: Exception) {}
+        }
+    }
 
     private val recordingsCoordinator = DialerRecordingsCoordinator(
         repository = repository,
@@ -260,6 +322,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     val allContactsFlow: StateFlow<List<Contact>> = _contactNameFormatFlow.flatMapLatest { format ->
         repository.getAllContactsFlow(format == ContactNameFormat.LAST_NAME_FIRST)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val privateContactsCountFlow: StateFlow<Int> = repository.dao.getPrivateContactsCountFlow()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     val allCallHistoryFlow: StateFlow<List<CallRecord>> = repository.getAllCallHistoryFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -600,6 +665,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings["default_contact_account_name"]?.let {
                     defaultContactAccountName.value = it
                     editor.putString("default_contact_account_name", it)
+                }
+                if (!batteryWarningEditedByUser) {
+                    settings[PREF_BATTERY_WARNING_MODE]?.let { savedMode ->
+                        batteryWarningMode.value = savedMode
+                        editor.putString(PREF_BATTERY_WARNING_MODE, savedMode)
+                    }
+                    settings[PREF_BATTERY_WARNING_SNOOZE_UNTIL]?.toLongOrNull()?.let { savedSnooze ->
+                        batteryWarningSnoozeUntilMs.longValue = savedSnooze
+                        editor.putLong(PREF_BATTERY_WARNING_SNOOZE_UNTIL, savedSnooze)
+                    }
                 }
 
                 editor.apply()
@@ -952,11 +1027,27 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun importBackup(rawData: String, password: String = "", onResult: (Boolean) -> Unit) =
         spamAndBackupCoordinator.importBackup(rawData, password, onResult)
 
-    fun exportContactsVcf(onResult: (String) -> Unit) =
-        spamAndBackupCoordinator.exportContactsVcf(onResult)
+    fun exportContactsVcf(
+        contactsOverride: List<Contact>? = null,
+        onResult: (String) -> Unit
+    ) = spamAndBackupCoordinator.exportContactsVcf(contactsOverride, onResult)
 
     fun importContactsVcf(rawData: String, onResult: (Boolean) -> Unit) =
         spamAndBackupCoordinator.importContactsVcf(rawData, onResult)
+
+    fun importContactsVcfDetailed(
+        rawData: String,
+        saveToPrivateVault: Boolean,
+        accountName: String = "",
+        accountType: String = "",
+        onResult: (com.example.data.BackupRestoreManager.VcfImportResult) -> Unit
+    ) = spamAndBackupCoordinator.importContactsVcfDetailed(
+        rawData = rawData,
+        saveToPrivateVault = saveToPrivateVault,
+        accountName = accountName,
+        accountType = accountType,
+        onResult = onResult
+    )
 
     fun saveSpeedDial(key: Int, num: String, name: String) =
         spamAndBackupCoordinator.saveSpeedDial(key, num, name)
@@ -1039,10 +1130,21 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         emails: List<LabeledEmail> = emptyList(),
         addresses: List<LabeledAddress> = emptyList(),
         accountName: String = "",
-        accountType: String = ""
+        accountType: String = "",
+        note: String = "",
+        saveToPrivateVault: Boolean = false
     ) {
         viewModelScope.launch {
-            repository.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
+            repository.addContactWithDetails(
+                name = name,
+                numbers = numbers,
+                emails = emails,
+                addresses = addresses,
+                accountName = accountName,
+                accountType = accountType,
+                note = note,
+                saveToPrivateVault = saveToPrivateVault || accountType == PRIVATE_VAULT_ACCOUNT_TYPE
+            )
             refreshAvailableAccounts()
         }
     }
@@ -1054,10 +1156,20 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         emails: List<LabeledEmail> = emptyList(),
         addresses: List<LabeledAddress> = emptyList(),
         accountName: String = "",
-        accountType: String = ""
+        accountType: String = "",
+        note: String? = null
     ) {
         viewModelScope.launch {
-            repository.updateContactWithDetails(oldContact, name, numbers, emails, addresses, accountName, accountType)
+            repository.updateContactWithDetails(
+                oldContact = oldContact,
+                name = name,
+                numbers = numbers,
+                emails = emails,
+                addresses = addresses,
+                accountName = accountName,
+                accountType = accountType,
+                note = note
+            )
             refreshAvailableAccounts()
         }
     }
@@ -1111,6 +1223,34 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         }
     }
 
+    fun deleteContacts(contacts: List<Contact>, onComplete: (Int) -> Unit = {}) {
+        viewModelScope.launch {
+            val count = repository.deleteContacts(contacts)
+            refreshAvailableAccounts()
+            onComplete(count)
+        }
+    }
+
+    fun moveContactsToPrivateVault(contacts: List<Contact>, onComplete: (Int) -> Unit = {}) {
+        viewModelScope.launch {
+            val moved = repository.moveContactsToPrivateVault(contacts)
+            refreshAvailableAccounts()
+            onComplete(moved)
+        }
+    }
+
+    fun exportPrivateContactToSystem(contact: Contact, onComplete: () -> Unit = {}) {
+        viewModelScope.launch {
+            repository.exportPrivateContactToSystem(
+                contact = contact,
+                accountName = defaultContactAccountName.value,
+                accountType = defaultContactAccountType.value
+            )
+            refreshAvailableAccounts()
+            onComplete()
+        }
+    }
+
     fun deleteContact(number: String) {
         viewModelScope.launch {
             repository.deleteContact(number)
@@ -1124,6 +1264,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun clearAllCallLogs() {
         viewModelScope.launch { repository.clearAllCallLogs() }
+    }
+
+    fun toggleFavorite(contact: Contact, isFavorite: Boolean) {
+        viewModelScope.launch { repository.toggleFavorite(contact, isFavorite) }
     }
 
     fun toggleFavorite(number: String, isFavorite: Boolean) {

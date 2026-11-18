@@ -25,12 +25,18 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface DialerDao {
 
-    // ================= CONTACTS =================
+    // ================= CONTACTS (SYSTEM CACHE + PRIVATE VAULT) =================
 
     @Query("""
-        SELECT * FROM contacts 
+        SELECT * FROM (
+            SELECT id, rawContactId, contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM contacts
+            UNION ALL
+            SELECT -id AS id, 0 AS rawContactId, 0 AS contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM private_contacts
+        )
         WHERE (:accountName = '' 
-           OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE)) 
+           OR (:accountName = 'Phone' AND ((accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE) AND accountType != 'com.securedialer.privatevault')) 
            OR accountName = :accountName COLLATE NOCASE) 
         ORDER BY 
             CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
@@ -41,7 +47,13 @@ interface DialerDao {
     fun getContactsPaged(accountName: String = "", isLastNameFirst: Boolean = false): PagingSource<Int, Contact>
 
     @Query("""
-        SELECT * FROM contacts 
+        SELECT * FROM (
+            SELECT id, rawContactId, contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM contacts
+            UNION ALL
+            SELECT -id AS id, 0 AS rawContactId, 0 AS contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM private_contacts
+        )
         ORDER BY 
             CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
                  THEN substr(name, instr(name, ' ') + 1) 
@@ -50,14 +62,27 @@ interface DialerDao {
     """)
     fun getAllContactsFlow(isLastNameFirst: Boolean = false): Flow<List<Contact>>
 
-    @Query("SELECT * FROM contacts")
+    @Query("""
+        SELECT id, rawContactId, contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+        FROM contacts
+        UNION ALL
+        SELECT -id AS id, 0 AS rawContactId, 0 AS contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+        FROM private_contacts
+    """)
     suspend fun getAllContactsList(): List<Contact>
 
     @Query("SELECT COUNT(*) FROM contacts")
     suspend fun getContactsCount(): Int
 
     @Query("""
-        SELECT * FROM contacts WHERE favorite = 1 
+        SELECT * FROM (
+            SELECT id, rawContactId, contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM contacts
+            UNION ALL
+            SELECT -id AS id, 0 AS rawContactId, 0 AS contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM private_contacts
+        )
+        WHERE favorite = 1 
         ORDER BY 
             CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
                  THEN substr(name, instr(name, ' ') + 1) 
@@ -67,11 +92,17 @@ interface DialerDao {
     fun getFavoriteContacts(isLastNameFirst: Boolean = false): Flow<List<Contact>>
 
     @Query("""
-        SELECT * FROM contacts 
+        SELECT * FROM (
+            SELECT id, rawContactId, contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM contacts
+            UNION ALL
+            SELECT -id AS id, 0 AS rawContactId, 0 AS contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM private_contacts
+        )
         WHERE (:accountName = '' 
-           OR (:accountName = 'Phone' AND (accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE)) 
+           OR (:accountName = 'Phone' AND ((accountName = '' OR accountName IS NULL OR accountName = 'Phone' COLLATE NOCASE OR accountType LIKE '%local%' COLLATE NOCASE) AND accountType != 'com.securedialer.privatevault')) 
            OR accountName = :accountName COLLATE NOCASE) 
-          AND (name LIKE :query ESCAPE '\' OR number LIKE :query ESCAPE '\' OR t9Mapping LIKE :query ESCAPE '\') 
+          AND (name LIKE :query ESCAPE '\' OR number LIKE :query ESCAPE '\' OR t9Mapping LIKE :query ESCAPE '\' OR note LIKE :query ESCAPE '\') 
         ORDER BY 
             CASE WHEN :isLastNameFirst = 1 AND instr(name, ' ') > 0 
                  THEN substr(name, instr(name, ' ') + 1) 
@@ -96,13 +127,66 @@ interface DialerDao {
     @Query("DELETE FROM contacts WHERE id = :id")
     suspend fun deleteContactById(id: Long)
 
+    @Query("DELETE FROM contacts WHERE id IN (:ids)")
+    suspend fun deleteContactsByIds(ids: List<Long>)
+
     @Query("""
-        SELECT * FROM contacts 
+        SELECT * FROM (
+            SELECT id, rawContactId, contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM contacts
+            UNION ALL
+            SELECT -id AS id, 0 AS rawContactId, 0 AS contactId, number, name, label, favorite, avatarText, avatarBgValue, avatarTextColorValue, t9Mapping, email, photoUri, accountName, accountType, numbers, emails, addresses, note
+            FROM private_contacts
+        )
         WHERE number = :number 
-           OR (length(:number) >= 7 AND number LIKE '%' || substr(:number, -7)) 
+           OR REPLACE(REPLACE(REPLACE(REPLACE(number, ' ', ''), '-', ''), '(', ''), ')', '') = REPLACE(REPLACE(REPLACE(REPLACE(:number, ' ', ''), '-', ''), '(', ''), ')', '')
+           OR (length(REPLACE(REPLACE(REPLACE(REPLACE(:number, ' ', ''), '-', ''), '(', ''), ')', '')) >= 7 
+               AND REPLACE(REPLACE(REPLACE(REPLACE(number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE '%' || substr(REPLACE(REPLACE(REPLACE(REPLACE(:number, ' ', ''), '-', ''), '(', ''), ')', ''), -7)) 
         LIMIT 1
     """)
     suspend fun getContactByNumber(number: String): Contact?
+
+    // ================= PRIVATE ENCRYPTED VAULT CONTACTS =================
+
+    @Query("SELECT * FROM private_contacts ORDER BY name COLLATE NOCASE ASC")
+    suspend fun getAllPrivateContactsList(): List<PrivateContact>
+
+    @Query("SELECT COUNT(*) FROM private_contacts")
+    suspend fun getPrivateContactsCount(): Int
+
+    @Query("SELECT COUNT(*) FROM private_contacts")
+    fun getPrivateContactsCountFlow(): Flow<Int>
+
+    @Query("SELECT * FROM private_contacts WHERE id = :id LIMIT 1")
+    suspend fun getPrivateContactById(id: Long): PrivateContact?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPrivateContact(contact: PrivateContact): Long
+
+    @Transaction
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPrivateContacts(contacts: List<PrivateContact>): List<Long>
+
+    @Update
+    suspend fun updatePrivateContact(contact: PrivateContact)
+
+    @Query("DELETE FROM private_contacts WHERE id = :id")
+    suspend fun deletePrivateContactById(id: Long)
+
+    @Query("DELETE FROM private_contacts WHERE id IN (:ids)")
+    suspend fun deletePrivateContactsByIds(ids: List<Long>)
+
+    @Query("UPDATE private_contacts SET favorite = :isFavorite WHERE id = :id")
+    suspend fun updatePrivateFavoriteById(id: Long, isFavorite: Boolean)
+
+    @Query("""
+        UPDATE private_contacts SET favorite = :isFavorite 
+        WHERE number = :number 
+           OR REPLACE(REPLACE(REPLACE(REPLACE(number, ' ', ''), '-', ''), '(', ''), ')', '') = REPLACE(REPLACE(REPLACE(REPLACE(:number, ' ', ''), '-', ''), '(', ''), ')', '')
+           OR (length(REPLACE(REPLACE(REPLACE(REPLACE(:number, ' ', ''), '-', ''), '(', ''), ')', '')) >= 7 
+               AND REPLACE(REPLACE(REPLACE(REPLACE(number, ' ', ''), '-', ''), '(', ''), ')', '') LIKE '%' || substr(REPLACE(REPLACE(REPLACE(REPLACE(:number, ' ', ''), '-', ''), '(', ''), ')', ''), -7))
+    """)
+    suspend fun updatePrivateFavoriteByNumber(number: String, isFavorite: Boolean)
 
     // ================= CALL HISTORY =================
 

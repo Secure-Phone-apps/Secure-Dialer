@@ -17,8 +17,11 @@
 
 package com.example.ui.components
 
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -29,6 +32,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
@@ -38,6 +46,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -46,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.itemContentType
@@ -54,9 +64,13 @@ import com.example.R
 import com.example.model.Contact
 import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.RichHapticEngine
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ContactsTabContent(
     viewModel: DialerViewModel,
@@ -71,19 +85,54 @@ fun ContactsTabContent(
     onEditContact: (Contact) -> Unit = {},
     onDeleteContact: (Contact) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    val allContacts by viewModel.allContactsFlow.collectAsState()
+    val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
+    val privateContactsCount by viewModel.privateContactsCountFlow.collectAsStateWithLifecycle()
     val selectedAccountFilter by viewModel.selectedAccountFilter
+    val searchQuery by viewModel.searchQuery
     var showOnlyFavorites by remember { mutableStateOf(false) }
     val nameFormat by viewModel.contactNameFormat
-    val sortedFavorites = remember(favoriteContacts, nameFormat) { 
-        favoriteContacts.sortedBy { com.example.getContactSortKey(it.name, nameFormat) } 
+    val sortedFavorites = remember(favoriteContacts, nameFormat) {
+        favoriteContacts.sortedBy { com.example.getContactSortKey(it.name, nameFormat) }
+    }
+
+    var isSelectionMode by remember { mutableStateOf(false) }
+    var selectedContactIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    var pendingDeleteContacts by remember { mutableStateOf<List<Contact>?>(null) }
+    var pendingExportVcfData by remember { mutableStateOf<String?>(null) }
+
+    BackHandler(enabled = isSelectionMode) {
+        isSelectionMode = false
+        selectedContactIds = emptySet()
+    }
+
+    val saveSelectedVcfLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/x-vcard")
+    ) { uri: Uri? ->
+        val payload = pendingExportVcfData
+        if (uri != null && payload != null) {
+            viewModel.writeTextToUri(uri, payload) { success ->
+                Toast.makeText(
+                    context,
+                    context.getString(if (success) R.string.file_saved_success else R.string.file_save_failed),
+                    Toast.LENGTH_LONG
+                ).show()
+                pendingExportVcfData = null
+                if (success) {
+                    isSelectionMode = false
+                    selectedContactIds = emptySet()
+                }
+            }
+        } else {
+            pendingExportVcfData = null
+        }
     }
 
     // Unified contacts pipeline eliminates duplicate filtering
-    val activeContactsList = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter, nameFormat) {
+    val activeContactsList = remember(allContacts, showOnlyFavorites, sortedFavorites, selectedAccountFilter, searchQuery, nameFormat) {
         val baseList = if (showOnlyFavorites) {
             sortedFavorites
         } else if (selectedAccountFilter.isBlank()) {
@@ -95,7 +144,23 @@ fun ContactsTabContent(
         } else {
             allContacts.filter { it.accountName == selectedAccountFilter }
         }
-        baseList.sortedBy { com.example.getContactSortKey(it.name, nameFormat) }
+        val queryTrimmed = searchQuery.trim()
+        val queryFiltered = if (queryTrimmed.isEmpty()) {
+            baseList
+        } else {
+            baseList.filter {
+                it.name.contains(queryTrimmed, ignoreCase = true) ||
+                    it.number.contains(queryTrimmed, ignoreCase = true) ||
+                    it.t9Mapping.contains(queryTrimmed, ignoreCase = true) ||
+                    it.note.contains(queryTrimmed, ignoreCase = true)
+            }
+        }
+        queryFiltered.sortedBy { com.example.getContactSortKey(it.name, nameFormat) }
+    }
+
+    val selectedContactsList = remember(selectedContactIds, activeContactsList, sortedFavorites) {
+        val pool = (activeContactsList + sortedFavorites).distinctBy { it.id }
+        pool.filter { it.id in selectedContactIds }
     }
 
     val alphabet = remember(activeContactsList, nameFormat) {
@@ -159,6 +224,19 @@ fun ContactsTabContent(
 
     val adaptive = LocalAdaptiveLayout.current
 
+    fun toggleSelectionFor(contact: Contact) {
+        selectedContactIds = if (contact.id in selectedContactIds) {
+            val next = selectedContactIds - contact.id
+            if (next.isEmpty()) {
+                isSelectionMode = false
+            }
+            next
+        } else {
+            isSelectionMode = true
+            selectedContactIds + contact.id
+        }
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter
@@ -177,7 +255,8 @@ fun ContactsTabContent(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 8.dp)
+                        .testTag("contacts_permission_card"),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onTertiaryContainer
@@ -185,12 +264,12 @@ fun ContactsTabContent(
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(14.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             text = stringResource(R.string.permissions_required),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -199,7 +278,7 @@ fun ContactsTabContent(
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
                         Button(
                             onClick = onRequestPermission,
                             modifier = Modifier.heightIn(min = 48.dp)
@@ -210,77 +289,249 @@ fun ContactsTabContent(
                 }
             }
 
-            if (hasPermission && !isLoading) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { showOnlyFavorites = !showOnlyFavorites },
-                        shape = RoundedCornerShape(16.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
+            if (!isLoading) {
+                if (isSelectionMode) {
+                    Surface(
                         modifier = Modifier
-                            .weight(1f, fill = false)
-                            .heightIn(min = 48.dp)
-                            .testTag("favorites_toggle_fab")
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp)
+                            .testTag("multi_select_bar"),
+                        shape = RoundedCornerShape(18.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f),
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                     ) {
-                        Icon(
-                            imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
-                            contentDescription = stringResource(R.string.tab_favorites),
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = stringResource(R.string.tab_favorites),
-                            style = MaterialTheme.typography.labelLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                            isSelectionMode = false
+                                            selectedContactIds = emptySet()
+                                        },
+                                        modifier = Modifier.size(48.dp).testTag("multi_select_close_btn")
+                                    ) {
+                                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
+                                    }
+                                    Text(
+                                        text = stringResource(R.string.multi_select_title, selectedContactIds.size),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
 
-                    Button(
-                        onClick = onAddContactClick,
-                        shape = RoundedCornerShape(16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                val allVisibleIds = remember(activeContactsList) { activeContactsList.map { it.id }.toSet() }
+                                val isAllSelected = allVisibleIds.isNotEmpty() && selectedContactIds.containsAll(allVisibleIds)
+                                TextButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        selectedContactIds = if (isAllSelected) emptySet() else allVisibleIds
+                                    },
+                                    modifier = Modifier.heightIn(min = 48.dp).testTag("multi_select_all_btn")
+                                ) {
+                                    Text(
+                                        text = stringResource(
+                                            if (isAllSelected) R.string.action_deselect_all else R.string.action_select_all
+                                        ),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
+
+                            FlowRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                        if (selectedContactsList.isNotEmpty()) {
+                                            pendingDeleteContacts = selectedContactsList
+                                        }
+                                    },
+                                    enabled = selectedContactsList.isNotEmpty(),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    ),
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier.heightIn(min = 48.dp).testTag("multi_select_delete_btn"),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(stringResource(R.string.btn_delete), maxLines = 1)
+                                }
+
+                                FilledTonalButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                        if (selectedContactsList.isNotEmpty()) {
+                                            viewModel.exportContactsVcf(selectedContactsList) { vcfData ->
+                                                pendingExportVcfData = vcfData
+                                                val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                                                saveSelectedVcfLauncher.launch("selected_contacts_$stamp.vcf")
+                                            }
+                                        }
+                                    },
+                                    enabled = selectedContactsList.isNotEmpty(),
+                                    shape = RoundedCornerShape(14.dp),
+                                    modifier = Modifier.heightIn(min = 48.dp).testTag("multi_select_export_vcf_btn"),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(stringResource(R.string.action_export_vcf), maxLines = 1)
+                                }
+
+                                val hasNonPrivateSelected = selectedContactsList.any { !it.isPrivateVault }
+                                if (hasNonPrivateSelected) {
+                                    FilledTonalButton(
+                                        onClick = {
+                                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                            val toMove = selectedContactsList.filter { !it.isPrivateVault }
+                                            if (toMove.isNotEmpty()) {
+                                                viewModel.moveContactsToPrivateVault(toMove) { movedCount ->
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.toast_moved_to_private_vault, movedCount),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                                isSelectionMode = false
+                                                selectedContactIds = emptySet()
+                                            }
+                                        },
+                                        shape = RoundedCornerShape(14.dp),
+                                        modifier = Modifier.heightIn(min = 48.dp).testTag("multi_select_move_vault_btn"),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(stringResource(R.string.move_to_private_vault), maxLines = 1)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Row(
                         modifier = Modifier
-                            .weight(1f, fill = false)
-                            .heightIn(min = 48.dp)
-                            .testTag("add_contact_fab")
+                            .fillMaxWidth()
+                            .padding(bottom = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Button(
+                            onClick = { showOnlyFavorites = !showOnlyFavorites },
+                            shape = RoundedCornerShape(16.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (showOnlyFavorites) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            modifier = Modifier
+                                .weight(1f, fill = false)
+                                .heightIn(min = 48.dp)
+                                .testTag("favorites_toggle_fab")
+                        ) {
                             Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = stringResource(R.string.action_add_contact),
+                                imageVector = if (showOnlyFavorites) Icons.Default.Star else Icons.Default.StarBorder,
+                                contentDescription = stringResource(R.string.tab_favorites),
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = stringResource(R.string.action_add_contact),
+                                text = stringResource(R.string.tab_favorites),
                                 style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
+                        }
+
+                        if (activeContactsList.isNotEmpty() || contactsPaged.itemCount > 0) {
+                            FilledTonalButton(
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    isSelectionMode = true
+                                    selectedContactIds = emptySet()
+                                },
+                                shape = RoundedCornerShape(16.dp),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp),
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .testTag("multi_select_toggle_btn")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Checklist,
+                                    contentDescription = stringResource(R.string.action_select_contacts),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                if (!adaptive.isVeryNarrowWidth) {
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = stringResource(R.string.action_select_contacts),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Button(
+                            onClick = onAddContactClick,
+                            shape = RoundedCornerShape(16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .heightIn(min = 48.dp)
+                                .testTag("add_contact_fab")
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = stringResource(R.string.action_add_contact),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = stringResource(R.string.action_add_contact),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            val listItemsCount = if (showOnlyFavorites) sortedFavorites.size else contactsPaged.itemCount
+            val listItemsCount = if (showOnlyFavorites) sortedFavorites.size else maxOf(contactsPaged.itemCount, activeContactsList.size)
             val isRefreshNotLoading = contactsPaged.loadState.refresh is LoadState.NotLoading
 
-            if (listItemsCount == 0 && (showOnlyFavorites || (!showOnlyFavorites && isRefreshNotLoading))) {
+            if (listItemsCount == 0 && (hasPermission || privateContactsCount > 0) && (showOnlyFavorites || (!showOnlyFavorites && isRefreshNotLoading))) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -292,7 +543,7 @@ fun ContactsTabContent(
                         subtitle = if (showOnlyFavorites) stringResource(R.string.no_favorites_subtitle) else stringResource(R.string.no_contacts_subtitle)
                     )
                 }
-            } else {
+            } else if (hasPermission || privateContactsCount > 0 || activeContactsList.isNotEmpty() || contactsPaged.itemCount > 0) {
                 LazyColumn(
                     state = listState,
                     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -324,11 +575,36 @@ fun ContactsTabContent(
                                 onCallClick = onCallClick,
                                 onToggleFavorite = onToggleFavorite,
                                 onEditContact = onEditContact,
-                                onDeleteContact = onDeleteContact,
-                                viewModel = viewModel
+                                onDeleteContact = { pendingDeleteContacts = listOf(it) },
+                                viewModel = viewModel,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = contact.id in selectedContactIds,
+                                onToggleSelect = { toggleSelectionFor(contact) },
+                                onLongPress = {
+                                    isSelectionMode = true
+                                    selectedContactIds = selectedContactIds + contact.id
+                                },
+                                onMoveToPrivateVault = { c ->
+                                    viewModel.moveContactsToPrivateVault(listOf(c)) { count ->
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.toast_moved_to_private_vault, count),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                },
+                                onExportPrivateToSystem = { c ->
+                                    viewModel.exportPrivateContactToSystem(c) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.toast_copied_to_device, c.name),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                             )
                         }
-                    } else {
+                    } else if (contactsPaged.itemCount > 0) {
                         items(
                             count = contactsPaged.itemCount,
                             key = contactsPaged.itemKey { "${it.id}_${it.number}" },
@@ -356,10 +632,89 @@ fun ContactsTabContent(
                                     onCallClick = onCallClick,
                                     onToggleFavorite = onToggleFavorite,
                                     onEditContact = onEditContact,
-                                    onDeleteContact = onDeleteContact,
-                                    viewModel = viewModel
+                                    onDeleteContact = { pendingDeleteContacts = listOf(it) },
+                                    viewModel = viewModel,
+                                    isSelectionMode = isSelectionMode,
+                                    isSelected = contact.id in selectedContactIds,
+                                    onToggleSelect = { toggleSelectionFor(contact) },
+                                    onLongPress = {
+                                        isSelectionMode = true
+                                        selectedContactIds = selectedContactIds + contact.id
+                                    },
+                                    onMoveToPrivateVault = { c ->
+                                        viewModel.moveContactsToPrivateVault(listOf(c)) { count ->
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.toast_moved_to_private_vault, count),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    },
+                                    onExportPrivateToSystem = { c ->
+                                        viewModel.exportPrivateContactToSystem(c) {
+                                            Toast.makeText(
+                                                context,
+                                                context.getString(R.string.toast_copied_to_device, c.name),
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
                                 )
                             }
+                        }
+                    } else {
+                        itemsIndexed(
+                            items = activeContactsList,
+                            key = { _, contact -> "${contact.id}_${contact.number}" }
+                        ) { index, contact ->
+                            val currentDisplayName = com.example.formatContactName(contact.name, nameFormat).trim()
+                            val firstLetter = currentDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
+                            val prevContact = if (index > 0) activeContactsList[index - 1] else null
+                            val prevDisplayName = if (prevContact != null) com.example.formatContactName(prevContact.name, nameFormat).trim() else ""
+                            val prevLetter = prevDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: ""
+
+                            if (firstLetter != prevLetter) {
+                                Text(
+                                    text = firstLetter,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 10.dp, top = 8.dp, bottom = 2.dp)
+                                )
+                            }
+                            ContactRow(
+                                contact = contact,
+                                onCallClick = onCallClick,
+                                onToggleFavorite = onToggleFavorite,
+                                onEditContact = onEditContact,
+                                onDeleteContact = { pendingDeleteContacts = listOf(it) },
+                                viewModel = viewModel,
+                                isSelectionMode = isSelectionMode,
+                                isSelected = contact.id in selectedContactIds,
+                                onToggleSelect = { toggleSelectionFor(contact) },
+                                onLongPress = {
+                                    isSelectionMode = true
+                                    selectedContactIds = selectedContactIds + contact.id
+                                },
+                                onMoveToPrivateVault = { c ->
+                                    viewModel.moveContactsToPrivateVault(listOf(c)) { count ->
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.toast_moved_to_private_vault, count),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                },
+                                onExportPrivateToSystem = { c ->
+                                    viewModel.exportPrivateContactToSystem(c) {
+                                        Toast.makeText(
+                                            context,
+                                            context.getString(R.string.toast_copied_to_device, c.name),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                            )
                         }
                     }
 
@@ -450,5 +805,65 @@ fun ContactsTabContent(
             }
         }
         }
+    }
+
+    val targetsToDelete = pendingDeleteContacts
+    if (targetsToDelete != null && targetsToDelete.isNotEmpty()) {
+        val isBulk = targetsToDelete.size > 1
+        AlertDialog(
+            onDismissRequest = { pendingDeleteContacts = null },
+            title = {
+                Text(
+                    text = if (isBulk) {
+                        stringResource(R.string.confirm_delete_contacts_title, targetsToDelete.size)
+                    } else {
+                        stringResource(R.string.confirm_delete_contact_title)
+                    }
+                )
+            },
+            text = {
+                Text(
+                    text = if (isBulk) {
+                        stringResource(R.string.confirm_delete_contacts_msg, targetsToDelete.size)
+                    } else {
+                        stringResource(R.string.confirm_delete_contact_msg, targetsToDelete.first().name)
+                    }
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                        val countToDelete = targetsToDelete.size
+                        pendingDeleteContacts = null
+                        if (countToDelete == 1) {
+                            onDeleteContact(targetsToDelete.first())
+                        } else {
+                            viewModel.deleteContacts(targetsToDelete) { deleted ->
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.toast_deleted_contacts, deleted),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                        isSelectionMode = false
+                        selectedContactIds = emptySet()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    modifier = Modifier.testTag("confirm_delete_contacts_btn")
+                ) {
+                    Text(stringResource(R.string.btn_delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDeleteContacts = null }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }

@@ -157,6 +157,33 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
         }
     } catch (_: Exception) {}
 
+    val noteMap = mutableMapOf<String, String>()
+    try {
+        context.contentResolver.query(
+            ContactsContract.Data.CONTENT_URI,
+            arrayOf(
+                ContactsContract.Data.CONTACT_ID,
+                ContactsContract.CommonDataKinds.Note.NOTE
+            ),
+            "${ContactsContract.Data.MIMETYPE} = ?",
+            arrayOf(ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE),
+            null
+        )?.use { cursor ->
+            val idIdx = cursor.getColumnIndex(ContactsContract.Data.CONTACT_ID)
+            val noteIdx = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Note.NOTE)
+            while (cursor.moveToNext()) {
+                if (idIdx != -1 && noteIdx != -1) {
+                    val cid = cursor.getString(idIdx) ?: ""
+                    val noteVal = cursor.getString(noteIdx)?.trim() ?: ""
+                    if (cid.isNotEmpty() && noteVal.isNotEmpty()) {
+                        val existing = noteMap[cid]
+                        noteMap[cid] = if (existing.isNullOrBlank()) noteVal else "$existing\n$noteVal"
+                    }
+                }
+            }
+        }
+    } catch (_: Exception) {}
+
     // Safe cursor query that falls back to standard projection if OEM ROM rejects RawContacts columns
     val primaryProjection = arrayOf(
         Phone._ID,
@@ -218,6 +245,7 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
             val contactIdStr = if (cidIdx != -1) c.getString(cidIdx) ?: "" else ""
             val emailsForContact = emailMap[contactIdStr] ?: emptyList()
             val addressesForContact = addressMap[contactIdStr] ?: emptyList()
+            val noteForContact = noteMap[contactIdStr] ?: ""
             val accName = if (accNameIdx != -1) c.getString(accNameIdx) ?: "" else ""
             val accType = if (accTypeIdx != -1) c.getString(accTypeIdx) ?: "" else ""
             val phoneType = if (typeIdx != -1) c.getInt(typeIdx) else Phone.TYPE_MOBILE
@@ -255,7 +283,8 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
                     accountType = accType,
                     numbers = if (num.isNotBlank()) listOf(labeledNum) else emptyList(),
                     emails = emailsForContact,
-                    addresses = addressesForContact
+                    addresses = addressesForContact,
+                    note = noteForContact
                 )
             } else {
                 val existingNumbers = existing.numbers.toMutableList()
@@ -281,7 +310,8 @@ suspend fun DialerRepository.fetchSystemContacts(): List<Contact> = withContext(
                     accountType = existing.accountType.ifEmpty { accType },
                     numbers = existingNumbers,
                     emails = if (existing.emails.isNotEmpty()) existing.emails else emailsForContact,
-                    addresses = if (existing.addresses.isNotEmpty()) existing.addresses else addressesForContact
+                    addresses = if (existing.addresses.isNotEmpty()) existing.addresses else addressesForContact,
+                    note = existing.note.ifEmpty { noteForContact }
                 )
             }
         }

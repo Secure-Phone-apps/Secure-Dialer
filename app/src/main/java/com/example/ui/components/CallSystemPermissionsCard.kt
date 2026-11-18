@@ -17,6 +17,7 @@
 
 package com.example.ui.components
 
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
@@ -24,6 +25,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.PhoneInTalk
 import androidx.compose.material.icons.filled.PictureInPicture
@@ -36,27 +38,37 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.ui.theme.AppShapes
+import com.example.ui.theme.LocalAdaptiveLayout
 import com.example.ui.theme.LocalAmoledMode
 import com.example.ui.theme.LocalM3Expressive
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.CallScreenPermissionHelper
 import com.example.util.RichHapticEngine
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CallSystemPermissionsCard(
     viewModel: DialerViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLearnMoreBattery: (() -> Unit)? = null
 ) {
     val context = LocalContext.current
+    val adaptive = LocalAdaptiveLayout.current
     val isDefaultDialer by viewModel.isDefaultDialer
     val isDynamicIslandEnabled by viewModel.isDynamicIslandEnabled
+    val batteryWarningMode by viewModel.batteryWarningMode
+    val batterySnoozeUntil by viewModel.batteryWarningSnoozeUntilMs
 
     var canFullScreen by remember { mutableStateOf(CallScreenPermissionHelper.canUseFullScreenIntent(context)) }
     var canOverlay by remember { mutableStateOf(CallScreenPermissionHelper.canDrawOverlays(context)) }
-    var isBatteryOptimizationIgnored by remember { mutableStateOf(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context)) }
+    var isBatteryOptimizationIgnored by remember {
+        mutableStateOf(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context))
+    }
+    var checkNowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     // Native Activity Result Launcher guarantees system role prompt opens & updates state immediately
     val defaultDialerLauncher = rememberLauncherForActivityResult(
@@ -75,14 +87,19 @@ fun CallSystemPermissionsCard(
                 canFullScreen = CallScreenPermissionHelper.canUseFullScreenIntent(context)
                 canOverlay = CallScreenPermissionHelper.canDrawOverlays(context)
                 isBatteryOptimizationIgnored = CallScreenPermissionHelper.isIgnoringBatteryOptimizations(context)
+                checkNowMs = System.currentTimeMillis()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    val isBatteryWarningAllowed = remember(batteryWarningMode, batterySnoozeUntil, checkNowMs) {
+        viewModel.shouldShowBatteryWarning(checkNowMs)
+    }
+
     val needsDefaultDialer = !isDefaultDialer
-    val needsBatteryExemption = !isBatteryOptimizationIgnored
+    val needsBatteryExemption = !isBatteryOptimizationIgnored && isBatteryWarningAllowed
     val needsFullScreen = !canFullScreen
     val needsOverlay = isDynamicIslandEnabled && !canOverlay
 
@@ -90,11 +107,12 @@ fun CallSystemPermissionsCard(
         return
     }
 
+    val isShowingBatteryBanner = !needsDefaultDialer && needsBatteryExemption
     val isAmoled = LocalAmoledMode.current
     val isExpressive = LocalM3Expressive.current
     val cardBgColor = when {
         isAmoled -> Color(0xFF000000)
-        isExpressive -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+        isExpressive -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.30f)
         else -> MaterialTheme.colorScheme.surfaceColorAtElevation(2.dp)
     }
 
@@ -108,16 +126,39 @@ fun CallSystemPermissionsCard(
         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
         when {
             needsDefaultDialer -> CallScreenPermissionHelper.requestDefaultDialer(context, defaultDialerLauncher)
-            needsBatteryExemption -> CallScreenPermissionHelper.requestIgnoreBatteryOptimizations(context)
+            isShowingBatteryBanner -> CallScreenPermissionHelper.requestIgnoreBatteryOptimizations(context)
             needsFullScreen -> CallScreenPermissionHelper.requestFullScreenIntentPermission(context)
             else -> CallScreenPermissionHelper.requestOverlayPermission(context)
         }
     }
 
+    val openLearnMore = {
+        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+        if (onLearnMoreBattery != null) {
+            onLearnMoreBattery()
+        } else {
+            viewModel.openSettingsToTab(9)
+        }
+    }
+
+    val dismissBatteryBanner = {
+        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+        viewModel.setBatteryWarningEnabled(false)
+        checkNowMs = System.currentTimeMillis()
+        Toast.makeText(
+            context,
+            context.getString(R.string.toast_battery_warning_dismissed),
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .padding(
+                horizontal = if (adaptive.isVeryNarrowWidth) 10.dp else 14.dp,
+                vertical = 4.dp
+            )
             .testTag("permissions_warning_card")
             .clickable { executeAction() },
         colors = CardDefaults.cardColors(
@@ -127,83 +168,152 @@ fun CallSystemPermissionsCard(
         border = cardBorder,
         shape = AppShapes.current.cardShape
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isShowingBatteryBanner) 6.dp else 0.dp)
         ) {
-            Surface(
-                shape = AppShapes.current.chipShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                modifier = Modifier.size(42.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                    Icon(
-                        imageVector = when {
-                            needsDefaultDialer -> Icons.Default.PhoneInTalk
-                            needsBatteryExemption -> Icons.Default.BatteryChargingFull
-                            needsFullScreen -> Icons.Default.LockOpen
-                            else -> Icons.Default.PictureInPicture
-                        },
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
+                Surface(
+                    shape = AppShapes.current.chipShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = when {
+                                needsDefaultDialer -> Icons.Default.PhoneInTalk
+                                isShowingBatteryBanner -> Icons.Default.BatteryChargingFull
+                                needsFullScreen -> Icons.Default.LockOpen
+                                else -> Icons.Default.PictureInPicture
+                            },
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.width(14.dp))
+                Spacer(modifier = Modifier.width(10.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = when {
                         needsDefaultDialer -> stringResource(R.string.default_dialer_warning)
-                        needsBatteryExemption -> stringResource(R.string.battery_optimization_warning)
+                        isShowingBatteryBanner -> stringResource(R.string.battery_warning_short_banner)
                         needsFullScreen -> stringResource(R.string.settings_full_screen_intent_warning)
                         else -> stringResource(R.string.settings_overlay_permission_warning)
                     },
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = when {
-                        needsDefaultDialer -> stringResource(R.string.btn_set_default)
-                        needsBatteryExemption -> stringResource(R.string.btn_unrestricted)
-                        needsFullScreen -> stringResource(R.string.btn_configure)
-                        else -> stringResource(R.string.btn_grant)
-                    },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium
-                )
+
+                if (isShowingBatteryBanner) {
+                    IconButton(
+                        onClick = dismissBatteryBanner,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .testTag("battery_warning_dismiss_icon")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.btn_dismiss),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
+                        onClick = { executeAction() },
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("permissions_warning_action_button"),
+                        shape = AppShapes.current.buttonShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = when {
+                                needsDefaultDialer -> stringResource(R.string.btn_set_default)
+                                needsFullScreen -> stringResource(R.string.btn_configure)
+                                else -> stringResource(R.string.btn_grant)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.width(10.dp))
+            if (isShowingBatteryBanner) {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    TextButton(
+                        onClick = dismissBatteryBanner,
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("battery_warning_dismiss_button"),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_dismiss),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1
+                        )
+                    }
 
-            Button(
-                onClick = { executeAction() },
-                modifier = Modifier.testTag("permissions_warning_action_button"),
-                shape = AppShapes.current.buttonShape,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = when {
-                        needsDefaultDialer -> stringResource(R.string.btn_set_default)
-                        needsBatteryExemption -> stringResource(R.string.btn_unrestricted)
-                        needsFullScreen -> stringResource(R.string.btn_configure)
-                        else -> stringResource(R.string.btn_grant)
-                    },
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                    TextButton(
+                        onClick = openLearnMore,
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("battery_warning_learn_more_button"),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_learn_more),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
+                    }
+
+                    Button(
+                        onClick = { executeAction() },
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("permissions_warning_action_button"),
+                        shape = AppShapes.current.buttonShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.btn_unrestricted),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
             }
         }
     }

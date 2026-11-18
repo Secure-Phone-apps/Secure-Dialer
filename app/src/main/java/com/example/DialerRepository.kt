@@ -243,7 +243,9 @@ class DialerRepository(rawContext: Context) {
         label: String,
         email: String = "",
         accountName: String = "",
-        accountType: String = ""
+        accountType: String = "",
+        note: String = "",
+        saveToPrivateVault: Boolean = false
     ) {
         val numbers = if (number.isNotBlank()) listOf(LabeledNumber(number, label.ifBlank { "Mobile" }, true)) else emptyList()
         val emails = if (email.isNotBlank()) listOf(LabeledEmail(email, "Home")) else emptyList()
@@ -253,7 +255,9 @@ class DialerRepository(rawContext: Context) {
             emails = emails,
             addresses = emptyList(),
             accountName = accountName,
-            accountType = accountType
+            accountType = accountType,
+            note = note,
+            saveToPrivateVault = saveToPrivateVault || accountType == PRIVATE_VAULT_ACCOUNT_TYPE
         )
     }
 
@@ -274,14 +278,101 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
+    private fun buildPrivateContactEntity(
+        id: Long = 0L,
+        name: String,
+        numbers: List<LabeledNumber>,
+        emails: List<LabeledEmail>,
+        addresses: List<LabeledAddress>,
+        note: String,
+        favorite: Boolean = false,
+        photoUri: String = ""
+    ): PrivateContact {
+        val primaryNumber = numbers.firstOrNull { it.isPrimary }?.number
+            ?: numbers.firstOrNull()?.number
+            ?: ""
+        val primaryLabel = numbers.firstOrNull { it.isPrimary }?.label
+            ?: numbers.firstOrNull()?.label
+            ?: "Mobile"
+        val cleanName = name.trim().ifBlank { primaryNumber.ifBlank { "Unknown" } }
+        val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
+        val pair = colors[Math.abs(cleanName.hashCode()) % colors.size]
+        return PrivateContact(
+            id = id,
+            number = primaryNumber,
+            name = cleanName,
+            label = primaryLabel,
+            favorite = favorite,
+            avatarText = getInitials(cleanName),
+            avatarBgValue = pair.first.value.toLong(),
+            avatarTextColorValue = pair.second.value.toLong(),
+            t9Mapping = nameToT9(cleanName),
+            email = emails.firstOrNull()?.email ?: "",
+            photoUri = photoUri,
+            accountName = PRIVATE_VAULT_ACCOUNT_NAME,
+            accountType = PRIVATE_VAULT_ACCOUNT_TYPE,
+            numbers = numbers,
+            emails = emails,
+            addresses = addresses,
+            note = note.trim()
+        )
+    }
+
     suspend fun addContactWithDetails(
         name: String,
         numbers: List<LabeledNumber>,
         emails: List<LabeledEmail> = emptyList(),
         addresses: List<LabeledAddress> = emptyList(),
         accountName: String = "",
-        accountType: String = ""
+        accountType: String = "",
+        note: String = "",
+        organization: String = "",
+        title: String = "",
+        birthday: String = "",
+        website: String = "",
+        nickname: String = "",
+        saveToPrivateVault: Boolean = false,
+        syncAfter: Boolean = true
     ) {
+        val isPrivate = saveToPrivateVault ||
+                accountType == PRIVATE_VAULT_ACCOUNT_TYPE ||
+                accountName == PRIVATE_VAULT_ACCOUNT_NAME
+
+        if (isPrivate) {
+            val combinedNote = buildString {
+                if (note.isNotBlank()) append(note.trim())
+                if (organization.isNotBlank() && !note.contains(organization.trim())) {
+                    if (isNotEmpty()) append("\n")
+                    append("Company: ").append(organization.trim())
+                }
+                if (title.isNotBlank() && !note.contains(title.trim())) {
+                    if (isNotEmpty()) append("\n")
+                    append("Title: ").append(title.trim())
+                }
+                if (birthday.isNotBlank() && !note.contains(birthday.trim())) {
+                    if (isNotEmpty()) append("\n")
+                    append("Birthday: ").append(birthday.trim())
+                }
+                if (website.isNotBlank() && !note.contains(website.trim())) {
+                    if (isNotEmpty()) append("\n")
+                    append("Website: ").append(website.trim())
+                }
+                if (nickname.isNotBlank() && !note.contains(nickname.trim())) {
+                    if (isNotEmpty()) append("\n")
+                    append("Nickname: ").append(nickname.trim())
+                }
+            }
+            val entity = buildPrivateContactEntity(
+                name = name,
+                numbers = numbers,
+                emails = emails,
+                addresses = addresses,
+                note = combinedNote
+            )
+            dao.insertPrivateContact(entity)
+            return
+        }
+
         val (givenName, familyName) = splitFullNameParts(name)
         val ops = arrayListOf<ContentProviderOperation>()
         val rawInsert = ContentProviderOperation.newInsert(ContactsContract.RawContacts.CONTENT_URI)
@@ -309,17 +400,22 @@ class DialerRepository(rawContext: Context) {
             backRefIndex = 0,
             numbers = numbers,
             emails = emails,
-            addresses = addresses
+            addresses = addresses,
+            note = note.takeIf { it.isNotBlank() },
+            organization = organization.takeIf { it.isNotBlank() },
+            title = title.takeIf { it.isNotBlank() },
+            birthday = birthday.takeIf { it.isNotBlank() },
+            website = website.takeIf { it.isNotBlank() },
+            nickname = nickname.takeIf { it.isNotBlank() }
         )
 
         try { context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ops) } catch (_: Exception) {}
-        syncContacts(true)
+        if (syncAfter) syncContacts(true)
     }
 
     /**
-     * Atomically updates an existing contact in-place using its RAW_CONTACT_ID,
-     * preserving Contact _ID, photo, company/organization, birthday, custom ringtone,
-     * notes, starred status, and linked third-party RawContacts.
+     * Atomically updates an existing contact in-place using its RAW_CONTACT_ID (for system contacts)
+     * or directly in the SQLCipher Private Vault table (for private contacts).
      */
     suspend fun updateContactWithDetails(
         oldContact: Contact,
@@ -328,14 +424,55 @@ class DialerRepository(rawContext: Context) {
         emails: List<LabeledEmail> = emptyList(),
         addresses: List<LabeledAddress> = emptyList(),
         accountName: String = "",
-        accountType: String = ""
+        accountType: String = "",
+        note: String? = null
     ) = withContext(Dispatchers.IO) {
+        val targetIsPrivate = accountType == PRIVATE_VAULT_ACCOUNT_TYPE || accountName == PRIVATE_VAULT_ACCOUNT_NAME
+        if (oldContact.isPrivateVault && (targetIsPrivate || accountType.isBlank())) {
+            val localId = if (oldContact.id < 0L) -oldContact.id else oldContact.id
+            val updated = buildPrivateContactEntity(
+                id = localId,
+                name = name,
+                numbers = numbers,
+                emails = emails,
+                addresses = addresses,
+                note = note ?: oldContact.note,
+                favorite = oldContact.favorite,
+                photoUri = oldContact.photoUri
+            )
+            dao.insertPrivateContact(updated)
+            return@withContext
+        }
+
+        if (!oldContact.isPrivateVault && targetIsPrivate) {
+            moveContactsToPrivateVault(listOf(oldContact.copy(
+                name = name,
+                numbers = numbers,
+                emails = emails,
+                addresses = addresses,
+                note = note ?: oldContact.note
+            )))
+            return@withContext
+        }
+
         val rawId = resolveEditableRawContactId(oldContact)
         if (rawId == null || rawId <= 0L) {
-            addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
+            addContactWithDetails(
+                name = name,
+                numbers = numbers,
+                emails = emails,
+                addresses = addresses,
+                accountName = accountName,
+                accountType = accountType,
+                note = note ?: oldContact.note,
+                saveToPrivateVault = targetIsPrivate
+            )
             if (oldContact.favorite) {
                 val primaryNum = numbers.firstOrNull()?.number ?: oldContact.number
                 if (primaryNum.isNotBlank()) toggleFavorite(primaryNum, true)
+            }
+            if (oldContact.isPrivateVault && !targetIsPrivate) {
+                dao.deletePrivateContactById(-oldContact.id)
             }
             return@withContext
         }
@@ -349,7 +486,8 @@ class DialerRepository(rawContext: Context) {
             familyName = familyName,
             numbers = numbers,
             emails = emails,
-            addresses = addresses
+            addresses = addresses,
+            note = note
         )
 
         try {
@@ -367,7 +505,8 @@ class DialerRepository(rawContext: Context) {
         familyName: String,
         numbers: List<LabeledNumber>,
         emails: List<LabeledEmail>,
-        addresses: List<LabeledAddress>
+        addresses: List<LabeledAddress>,
+        note: String? = null
     ): ArrayList<ContentProviderOperation> {
         val ops = arrayListOf<ContentProviderOperation>()
 
@@ -392,20 +531,37 @@ class DialerRepository(rawContext: Context) {
             )
         }
 
-        // Only replace phones, emails, and postal addresses for this raw contact; preserve all other metadata rows
-        ops.add(
-            ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
-                .withSelection(
-                    "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} IN (?, ?, ?)",
-                    arrayOf(
-                        rawContactId.toString(),
-                        Phone.CONTENT_ITEM_TYPE,
-                        ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE,
-                        ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
+        // Only replace phones, emails, postal addresses (and Note only if explicitly edited); preserve all other metadata rows
+        if (note != null) {
+            ops.add(
+                ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
+                    .withSelection(
+                        "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} IN (?, ?, ?, ?)",
+                        arrayOf(
+                            rawContactId.toString(),
+                            Phone.CONTENT_ITEM_TYPE,
+                            ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE,
+                            ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE,
+                            ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE
+                        )
                     )
-                )
-                .build()
-        )
+                    .build()
+            )
+        } else {
+            ops.add(
+                ContentProviderOperation.newDelete(ContactsContract.Data.CONTENT_URI)
+                    .withSelection(
+                        "${ContactsContract.Data.RAW_CONTACT_ID} = ? AND ${ContactsContract.Data.MIMETYPE} IN (?, ?, ?)",
+                        arrayOf(
+                            rawContactId.toString(),
+                            Phone.CONTENT_ITEM_TYPE,
+                            ContactsContract.CommonDataKinds.Email.CONTENT_ITEM_TYPE,
+                            ContactsContract.CommonDataKinds.StructuredPostal.CONTENT_ITEM_TYPE
+                        )
+                    )
+                    .build()
+            )
+        }
 
         appendContactDetailInsertOps(
             ops = ops,
@@ -413,7 +569,8 @@ class DialerRepository(rawContext: Context) {
             backRefIndex = null,
             numbers = numbers,
             emails = emails,
-            addresses = addresses
+            addresses = addresses,
+            note = note?.trim()?.takeIf { it.isNotEmpty() }
         )
 
         return ops
@@ -425,7 +582,13 @@ class DialerRepository(rawContext: Context) {
         backRefIndex: Int?,
         numbers: List<LabeledNumber>,
         emails: List<LabeledEmail>,
-        addresses: List<LabeledAddress>
+        addresses: List<LabeledAddress>,
+        note: String? = null,
+        organization: String? = null,
+        title: String? = null,
+        birthday: String? = null,
+        website: String? = null,
+        nickname: String? = null
     ) {
         fun baseDataInsert(): ContentProviderOperation.Builder {
             val builder = ContentProviderOperation.newInsert(ContactsContract.Data.CONTENT_URI)
@@ -491,6 +654,57 @@ class DialerRepository(rawContext: Context) {
                     .build()
             )
         }
+
+        if (!note.isNullOrBlank()) {
+            ops.add(
+                baseDataInsert()
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Note.NOTE, note.trim())
+                    .build()
+            )
+        }
+
+        if (!organization.isNullOrBlank() || !title.isNullOrBlank()) {
+            val orgBuilder = baseDataInsert()
+                .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Organization.CONTENT_ITEM_TYPE)
+                .withValue(ContactsContract.CommonDataKinds.Organization.TYPE, ContactsContract.CommonDataKinds.Organization.TYPE_WORK)
+            if (!organization.isNullOrBlank()) {
+                orgBuilder.withValue(ContactsContract.CommonDataKinds.Organization.COMPANY, organization.trim())
+            }
+            if (!title.isNullOrBlank()) {
+                orgBuilder.withValue(ContactsContract.CommonDataKinds.Organization.TITLE, title.trim())
+            }
+            ops.add(orgBuilder.build())
+        }
+
+        if (!website.isNullOrBlank()) {
+            ops.add(
+                baseDataInsert()
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Website.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Website.URL, website.trim())
+                    .withValue(ContactsContract.CommonDataKinds.Website.TYPE, ContactsContract.CommonDataKinds.Website.TYPE_OTHER)
+                    .build()
+            )
+        }
+
+        if (!birthday.isNullOrBlank()) {
+            ops.add(
+                baseDataInsert()
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Event.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Event.START_DATE, birthday.trim())
+                    .withValue(ContactsContract.CommonDataKinds.Event.TYPE, ContactsContract.CommonDataKinds.Event.TYPE_BIRTHDAY)
+                    .build()
+            )
+        }
+
+        if (!nickname.isNullOrBlank()) {
+            ops.add(
+                baseDataInsert()
+                    .withValue(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Nickname.CONTENT_ITEM_TYPE)
+                    .withValue(ContactsContract.CommonDataKinds.Nickname.NAME, nickname.trim())
+                    .build()
+            )
+        }
     }
 
     private fun resolveEditableRawContactId(contact: Contact): Long? {
@@ -553,26 +767,136 @@ class DialerRepository(rawContext: Context) {
         }
     }
 
-    suspend fun deleteContact(contact: Contact) {
-        try {
-            if (contact.rawContactId > 0) {
-                context.contentResolver.delete(
-                    ContactsContract.RawContacts.CONTENT_URI,
-                    "${ContactsContract.RawContacts._ID} = ?",
-                    arrayOf(contact.rawContactId.toString())
-                )
-            } else {
-                getContactIdFromNumber(contact.number)?.let { id ->
-                    context.contentResolver.delete(
-                        ContactsContract.RawContacts.CONTENT_URI,
-                        "${ContactsContract.RawContacts.CONTACT_ID} = ?",
-                        arrayOf(id)
+    internal fun buildBatchDeleteOperations(contacts: List<Contact>): ArrayList<ContentProviderOperation> {
+        val ops = arrayListOf<ContentProviderOperation>()
+        val seenRawIds = mutableSetOf<Long>()
+        val seenContactIds = mutableSetOf<String>()
+
+        for (contact in contacts) {
+            if (contact.isPrivateVault) continue
+            when {
+                contact.rawContactId > 0L && seenRawIds.add(contact.rawContactId) -> {
+                    ops.add(
+                        ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                            .withSelection("${ContactsContract.RawContacts._ID} = ?", arrayOf(contact.rawContactId.toString()))
+                            .build()
                     )
                 }
+                contact.contactId > 0L && seenContactIds.add(contact.contactId.toString()) -> {
+                    ops.add(
+                        ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                            .withSelection("${ContactsContract.RawContacts.CONTACT_ID} = ?", arrayOf(contact.contactId.toString()))
+                            .build()
+                    )
+                }
+                else -> {
+                    getContactIdFromNumber(contact.number)?.let { resolvedId ->
+                        if (seenContactIds.add(resolvedId)) {
+                            ops.add(
+                                ContentProviderOperation.newDelete(ContactsContract.RawContacts.CONTENT_URI)
+                                    .withSelection("${ContactsContract.RawContacts.CONTACT_ID} = ?", arrayOf(resolvedId))
+                                    .build()
+                            )
+                        }
+                    }
+                }
             }
-        } catch (_: Exception) {}
-        dao.deleteContact(contact)
-        syncContacts()
+        }
+        return ops
+    }
+
+    suspend fun deleteContact(contact: Contact) {
+        deleteContacts(listOf(contact))
+    }
+
+    suspend fun deleteContacts(contacts: List<Contact>): Int = withContext(Dispatchers.IO) {
+        if (contacts.isEmpty()) return@withContext 0
+
+        val privateIds = contacts.filter { it.isPrivateVault && it.id < 0L }.map { -it.id }.distinct()
+        val systemContacts = contacts.filter { !it.isPrivateVault }
+
+        if (privateIds.isNotEmpty()) {
+            privateIds.chunked(500).forEach { chunk ->
+                dao.deletePrivateContactsByIds(chunk)
+            }
+        }
+
+        if (systemContacts.isNotEmpty()) {
+            val ops = buildBatchDeleteOperations(systemContacts)
+            // Chunk ContentProviderOperation batches under Android's 1MB Binder transaction limit
+            ops.chunked(150).forEach { batch ->
+                try {
+                    context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ArrayList(batch))
+                } catch (_: Exception) {
+                    // Fallback per-op if OEM provider rejects one read-only account row in the chunk
+                    for (singleOp in batch) {
+                        try {
+                            context.contentResolver.applyBatch(ContactsContract.AUTHORITY, arrayListOf(singleOp))
+                        } catch (_: Exception) {}
+                    }
+                }
+            }
+
+            val systemCacheIds = systemContacts.map { it.id }.filter { it > 0L }.distinct()
+            if (systemCacheIds.isNotEmpty()) {
+                systemCacheIds.chunked(500).forEach { chunk ->
+                    dao.deleteContactsByIds(chunk)
+                }
+            }
+            syncContacts(true)
+        }
+
+        contacts.size
+    }
+
+    suspend fun moveContactsToPrivateVault(contacts: List<Contact>): Int = withContext(Dispatchers.IO) {
+        val candidates = contacts.filter { !it.isPrivateVault }
+        if (candidates.isEmpty()) return@withContext 0
+
+        val privateEntities = candidates.map { it.toPrivateContact(preserveLocalId = false) }
+        val insertedIds = db.withTransaction {
+            dao.insertPrivateContacts(privateEntities)
+        }
+        if (insertedIds.size != candidates.size) return@withContext 0
+
+        // Remove originals from public system storage now that they are safely persisted in SQLCipher
+        val ops = buildBatchDeleteOperations(candidates)
+        ops.chunked(150).forEach { batch ->
+            try {
+                context.contentResolver.applyBatch(ContactsContract.AUTHORITY, ArrayList(batch))
+            } catch (_: Exception) {
+                for (singleOp in batch) {
+                    try {
+                        context.contentResolver.applyBatch(ContactsContract.AUTHORITY, arrayListOf(singleOp))
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        val cacheIds = candidates.map { it.id }.filter { it > 0L }.distinct()
+        if (cacheIds.isNotEmpty()) {
+            cacheIds.chunked(500).forEach { chunk -> dao.deleteContactsByIds(chunk) }
+        }
+        syncContacts(true)
+        candidates.size
+    }
+
+    suspend fun exportPrivateContactToSystem(
+        contact: Contact,
+        accountName: String = "",
+        accountType: String = ""
+    ) = withContext(Dispatchers.IO) {
+        if (!contact.isPrivateVault) return@withContext
+        addContactWithDetails(
+            name = contact.name,
+            numbers = contact.getAllNumbers(),
+            emails = contact.getAllEmails(),
+            addresses = contact.getAllAddresses(),
+            accountName = accountName,
+            accountType = accountType,
+            note = contact.note,
+            saveToPrivateVault = false,
+            syncAfter = true
+        )
     }
 
     suspend fun deleteContact(number: String) {
@@ -613,6 +937,14 @@ class DialerRepository(rawContext: Context) {
 
     suspend fun getCallHistoryByNumber(number: String): List<CallRecord> = dao.getCallHistoryByNumber(number)
 
+    suspend fun toggleFavorite(contact: Contact, isFavorite: Boolean) = withContext(Dispatchers.IO) {
+        if (contact.isPrivateVault && contact.id < 0L) {
+            dao.updatePrivateFavoriteById(-contact.id, isFavorite)
+        } else {
+            toggleFavorite(contact.number, isFavorite)
+        }
+    }
+
     suspend fun toggleFavorite(number: String, isFavorite: Boolean) {
         try {
             getContactIdFromNumber(number)?.let { contactId ->
@@ -625,7 +957,13 @@ class DialerRepository(rawContext: Context) {
                 )
             }
         } catch (_: Exception) {}
-        dao.getContactByNumber(number)?.let { dao.updateContact(it.copy(favorite = isFavorite)) }
+        dao.getContactByNumber(number)?.let { matched ->
+            if (matched.isPrivateVault && matched.id < 0L) {
+                dao.updatePrivateFavoriteById(-matched.id, isFavorite)
+            } else {
+                dao.updateContact(matched.copy(favorite = isFavorite))
+            }
+        }
     }
 
     private fun getContactIdFromNumber(number: String): String? {

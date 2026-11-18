@@ -76,6 +76,19 @@ private fun getFirstTwoGraphemes(text: String): String {
     return text.substring(0, index)
 }
 
+internal fun decodeStoredColor(storedValue: Long): Color {
+    if (storedValue == 0L) return Color.Transparent
+    if ((storedValue ushr 32) == 0L) {
+        return Color(storedValue.toInt())
+    }
+    val colorSpaceId = (storedValue and 0x3FL).toInt()
+    return if (colorSpaceId in 0..17) {
+        Color(storedValue.toULong())
+    } else {
+        Color((storedValue ushr 32).toInt())
+    }
+}
+
 @Immutable
 @Entity(
     tableName = "call_history",
@@ -98,8 +111,8 @@ data class CallRecord(
     val isVerified: Boolean = false,
     val simSlot: Int = 1
 ) {
-    @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
-    @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
+    @Ignore val avatarBg: Color = decodeStoredColor(avatarBgValue)
+    @Ignore val avatarTextColor: Color = decodeStoredColor(avatarTextColorValue)
 }
 
 enum class CallType {
@@ -131,6 +144,9 @@ data class LabeledAddress(
     val address: String,
     val label: String = "Home"
 )
+
+const val PRIVATE_VAULT_ACCOUNT_NAME = "__secure_private_vault__"
+const val PRIVATE_VAULT_ACCOUNT_TYPE = "com.securedialer.privatevault"
 
 @Immutable
 @Entity(
@@ -165,8 +181,10 @@ data class Contact(
     val addresses: List<LabeledAddress> = emptyList(),
     val note: String = ""
 ) {
-    @Ignore val avatarBg: Color = Color(avatarBgValue.toULong())
-    @Ignore val avatarTextColor: Color = Color(avatarTextColorValue.toULong())
+    @Ignore val avatarBg: Color = decodeStoredColor(avatarBgValue)
+    @Ignore val avatarTextColor: Color = decodeStoredColor(avatarTextColorValue)
+    val isPrivateVault: Boolean
+        get() = accountType == PRIVATE_VAULT_ACCOUNT_TYPE || id < 0L
 
     fun getAllNumbers(): List<LabeledNumber> {
         if (numbers.isNotEmpty()) return numbers
@@ -186,6 +204,77 @@ data class Contact(
 
     fun getAllAddresses(): List<LabeledAddress> = addresses
 }
+
+@Immutable
+@Entity(
+    tableName = "private_contacts",
+    indices = [
+        Index(value = ["number"]),
+        Index(value = ["name"]),
+        Index(value = ["t9Mapping"])
+    ]
+)
+data class PrivateContact(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    val number: String,
+    val name: String,
+    val label: String,
+    val favorite: Boolean = false,
+    val avatarText: String,
+    val avatarBgValue: Long,
+    val avatarTextColorValue: Long,
+    val t9Mapping: String = "",
+    val email: String = "",
+    val photoUri: String = "",
+    val accountName: String = PRIVATE_VAULT_ACCOUNT_NAME,
+    val accountType: String = PRIVATE_VAULT_ACCOUNT_TYPE,
+    val numbers: List<LabeledNumber> = emptyList(),
+    val emails: List<LabeledEmail> = emptyList(),
+    val addresses: List<LabeledAddress> = emptyList(),
+    val note: String = ""
+) {
+    fun toContact(): Contact = Contact(
+        id = if (id > 0L) -id else 0L,
+        rawContactId = 0L,
+        contactId = 0L,
+        number = number,
+        name = name,
+        label = label,
+        favorite = favorite,
+        avatarText = avatarText,
+        avatarBgValue = avatarBgValue,
+        avatarTextColorValue = avatarTextColorValue,
+        t9Mapping = t9Mapping,
+        email = email,
+        photoUri = photoUri,
+        accountName = PRIVATE_VAULT_ACCOUNT_NAME,
+        accountType = PRIVATE_VAULT_ACCOUNT_TYPE,
+        numbers = numbers,
+        emails = emails,
+        addresses = addresses,
+        note = note
+    )
+}
+
+fun Contact.toPrivateContact(preserveLocalId: Boolean = false): PrivateContact = PrivateContact(
+    id = if (preserveLocalId && id < 0L) -id else 0L,
+    number = number,
+    name = name,
+    label = label,
+    favorite = favorite,
+    avatarText = avatarText,
+    avatarBgValue = avatarBgValue,
+    avatarTextColorValue = avatarTextColorValue,
+    t9Mapping = t9Mapping,
+    email = email,
+    photoUri = photoUri,
+    accountName = PRIVATE_VAULT_ACCOUNT_NAME,
+    accountType = PRIVATE_VAULT_ACCOUNT_TYPE,
+    numbers = getAllNumbers(),
+    emails = getAllEmails(),
+    addresses = getAllAddresses(),
+    note = note
+)
 
 @Immutable
 @Entity(tableName = "call_notes")
@@ -268,8 +357,8 @@ data class DialpadMatch(
     val isFromRecents: Boolean,
     val photoUri: String = ""
 ) {
-    val avatarBg: Color get() = Color(avatarBgValue.toULong())
-    val avatarTextColor: Color get() = Color(avatarTextColorValue.toULong())
+    val avatarBg: Color get() = decodeStoredColor(avatarBgValue)
+    val avatarTextColor: Color get() = decodeStoredColor(avatarTextColorValue)
 }
 
 @Immutable

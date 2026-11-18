@@ -26,8 +26,10 @@ import android.os.Build
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +43,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -61,6 +64,7 @@ import com.example.util.WhatsAppHelper
 
 private enum class NumberPickerAction { CALL, MESSAGE, WHATSAPP }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContactRow(
     contact: Contact,
@@ -68,12 +72,22 @@ fun ContactRow(
     onToggleFavorite: (Contact) -> Unit,
     onEditContact: (Contact) -> Unit,
     onDeleteContact: (Contact) -> Unit,
-    viewModel: DialerViewModel
+    viewModel: DialerViewModel,
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {},
+    onLongPress: () -> Unit = {},
+    onMoveToPrivateVault: (Contact) -> Unit = {},
+    onExportPrivateToSystem: (Contact) -> Unit = {}
 ) {
     val context = LocalContext.current
     val nameFormat by viewModel.contactNameFormat
     var isExpanded by remember { mutableStateOf(false) }
     var numberPickerAction by remember { mutableStateOf<NumberPickerAction?>(null) }
+
+    LaunchedEffect(isSelectionMode) {
+        if (isSelectionMode) isExpanded = false
+    }
 
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
@@ -84,18 +98,19 @@ fun ContactRow(
     } else {
         MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
     }
-    val containerColor = if (isExpanded) {
-        if (isAmoled) Color(0xFF141414) else searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
-    } else {
-        searchBarColor
+    val containerColor = when {
+        isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+        isExpanded -> if (isAmoled) Color(0xFF141414) else searchBarColor.copy(alpha = minOf(1f, searchBarColor.alpha + 0.15f))
+        else -> searchBarColor
     }
 
     val allNumbers = remember(contact) { contact.getAllNumbers() }
     val allEmails = remember(contact) { contact.getAllEmails() }
     val allAddresses = remember(contact) { contact.getAllAddresses() }
 
-    val accountBadgeText = remember(contact.accountName, contact.accountType) {
+    val accountBadgeText = remember(contact.accountName, contact.accountType, contact.isPrivateVault) {
         when {
+            contact.isPrivateVault -> ""
             contact.accountType.equals("com.google", ignoreCase = true) -> {
                 if (contact.accountName.isNotBlank()) "Google • ${contact.accountName}" else "Google"
             }
@@ -109,12 +124,27 @@ fun ContactRow(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                isExpanded = !isExpanded
-            },
+            .testTag("contact_card_${contact.id}")
+            .combinedClickable(
+                onClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                    if (isSelectionMode) {
+                        onToggleSelect()
+                    } else {
+                        isExpanded = !isExpanded
+                    }
+                },
+                onLongClick = {
+                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.HEAVY_CLICK)
+                    onLongPress()
+                }
+            ),
         colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = if (isAmoled) BorderStroke(1.dp, Color(0xFF1C1C1C)) else null,
+        border = when {
+            isSelected -> BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+            isAmoled -> BorderStroke(1.dp, Color(0xFF1C1C1C))
+            else -> null
+        },
         shape = AppShapes.Card
     ) {
         Column {
@@ -164,7 +194,33 @@ fun ContactRow(
                             }
                         }
 
-                        if (accountBadgeText.isNotBlank()) {
+                        if (contact.isPrivateVault) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Surface(
+                                shape = AppShapes.Chip,
+                                color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Lock,
+                                        contentDescription = stringResource(R.string.private_vault_badge),
+                                        tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.size(11.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.private_vault_badge),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                        fontWeight = FontWeight.SemiBold,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        } else if (accountBadgeText.isNotBlank()) {
                             Text(
                                 text = accountBadgeText,
                                 style = MaterialTheme.typography.labelSmall,
@@ -216,22 +272,33 @@ fun ContactRow(
                     }
                 },
                 trailingContent = {
-                    IconButton(onClick = {
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        onToggleFavorite(contact)
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = stringResource(R.string.tab_favorites),
-                            tint = if (contact.favorite) Color(0xFFEAB308) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    if (isSelectionMode) {
+                        Checkbox(
+                            checked = isSelected,
+                            onCheckedChange = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                onToggleSelect()
+                            },
+                            modifier = Modifier.testTag("contact_checkbox_${contact.id}")
                         )
+                    } else {
+                        IconButton(onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            onToggleFavorite(contact)
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = stringResource(R.string.tab_favorites),
+                                tint = if (contact.favorite) Color(0xFFEAB308) else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                            )
+                        }
                     }
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)
             )
 
             AnimatedVisibility(
-                visible = isExpanded,
+                visible = isExpanded && !isSelectionMode,
                 enter = expandVertically() + fadeIn(),
                 exit = shrinkVertically() + fadeOut()
             ) {
@@ -419,7 +486,62 @@ fun ContactRow(
                         }
                     }
 
-                    // 4. Hero Quick-Action Row (Call, WhatsApp, Message, Edit, Delete placed LOWER than numbers)
+                    // 4. Notes section (if any — imported from VCF / Android Notes / entered in-app)
+                    if (contact.note.isNotBlank()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(AppShapes.Chip)
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.Top,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = stringResource(R.string.label_notes),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp).padding(top = 2.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.label_notes),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = contact.note,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                            IconButton(
+                                onClick = {
+                                    try {
+                                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                        clipboard?.setPrimaryClip(ClipData.newPlainText("Contact Notes", contact.note))
+                                    } catch (_: Exception) {}
+                                },
+                                modifier = Modifier.size(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = stringResource(R.string.dialpad_copy),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    // 5. Hero Quick-Action Row (Call, WhatsApp, Message, Edit, Delete placed LOWER than numbers)
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -505,6 +627,39 @@ fun ContactRow(
                             onClick = {
                                 onDeleteContact(contact)
                             }
+                        )
+                    }
+
+                    // 6. Privacy Storage Migration Action (Move to Private Vault <-> Copy to Device)
+                    OutlinedButton(
+                        onClick = {
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                            if (contact.isPrivateVault) {
+                                onExportPrivateToSystem(contact)
+                            } else {
+                                onMoveToPrivateVault(contact)
+                            }
+                        },
+                        shape = AppShapes.Chip,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .testTag("contact_privacy_action_${contact.id}"),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (contact.isPrivateVault) Icons.Default.PhoneAndroid else Icons.Default.Lock,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(
+                                if (contact.isPrivateVault) R.string.export_to_system_contacts else R.string.move_to_private_vault
+                            ),
+                            style = MaterialTheme.typography.labelLarge,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

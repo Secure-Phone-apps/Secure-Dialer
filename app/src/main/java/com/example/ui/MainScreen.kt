@@ -532,7 +532,7 @@ fun MainScreen(
                                     favoriteContacts = favoriteContacts,
                                     onCallClick = { initiateCall(it.name, it.number, it.label) },
                                     onAddContactClick = { isAddContactDialogVisible = true },
-                                    onToggleFavorite = { contact -> viewModel.toggleFavorite(contact.number, !contact.favorite) },
+                                    onToggleFavorite = { contact -> viewModel.toggleFavorite(contact, !contact.favorite) },
                                     hasPermission = hasContactsPermission,
                                     isLoading = isLoadingPermissions,
                                     onRequestPermission = { showProminentDisclosure = true },

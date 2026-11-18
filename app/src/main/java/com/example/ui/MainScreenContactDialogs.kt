@@ -19,6 +19,7 @@ package com.example.ui
 
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.model.PRIVATE_VAULT_ACCOUNT_TYPE
 import com.example.ui.components.AddContactDialog
 import com.example.ui.components.AddToExistingContactSheet
 import com.example.ui.viewmodel.DialerViewModel
@@ -56,12 +57,23 @@ fun MainScreenContactDialogs(
             initialNumber = newContactNumber,
             initialLabel = newContactLabel,
             initialEmail = "",
+            initialNote = "",
+            isEditing = false,
             availableAccounts = viewModel.availableAccounts,
             selectedAccountFilter = viewModel.selectedAccountFilter.value,
             defaultAccountName = viewModel.defaultContactAccountName.value,
             onDismiss = { isAddContactDialogVisible = false },
-            onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
-                viewModel.addContactWithDetails(name, numbers, emails, addresses, accountName, accountType)
+            onConfirmWithFullDetails = { name, numbers, emails, addresses, accountName, accountType, note ->
+                viewModel.addContactWithDetails(
+                    name = name,
+                    numbers = numbers,
+                    emails = emails,
+                    addresses = addresses,
+                    accountName = accountName,
+                    accountType = accountType,
+                    note = note,
+                    saveToPrivateVault = accountType == PRIVATE_VAULT_ACCOUNT_TYPE
+                )
                 isAddContactDialogVisible = false
             }
         )
@@ -74,6 +86,8 @@ fun MainScreenContactDialogs(
             initialNumber = contactToEdit.number,
             initialLabel = contactToEdit.label,
             initialEmail = contactToEdit.email,
+            initialNote = contactToEdit.note,
+            isEditing = true,
             initialNumbers = contactToEdit.getAllNumbers(),
             initialEmails = contactToEdit.getAllEmails(),
             initialAddresses = contactToEdit.getAllAddresses(),
@@ -84,7 +98,7 @@ fun MainScreenContactDialogs(
                 isEditContactDialogVisible = false
                 oldContactToEdit = null
             },
-            onConfirmWithDetails = { name, numbers, emails, addresses, accountName, accountType ->
+            onConfirmWithFullDetails = { name, numbers, emails, addresses, accountName, accountType, note ->
                 viewModel.updateContactWithDetails(
                     oldContact = contactToEdit,
                     name = name,
@@ -92,7 +106,8 @@ fun MainScreenContactDialogs(
                     emails = emails,
                     addresses = addresses,
                     accountName = accountName,
-                    accountType = accountType
+                    accountType = accountType,
+                    note = note
                 )
                 isEditContactDialogVisible = false
                 oldContactToEdit = null

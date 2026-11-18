@@ -20,6 +20,8 @@ package com.example.data
 import android.content.Context
 import android.os.Build
 import androidx.room.*
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.model.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -151,6 +153,7 @@ class Converters {
 @Database(
     entities = [
         Contact::class,
+        PrivateContact::class,
         CallRecord::class,
         BlockedNumber::class,
         SpeedDial::class,
@@ -161,7 +164,7 @@ class Converters {
         SpamNumber::class,
         CallReminder::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -170,6 +173,37 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "dialer_database"
+
+        val MIGRATION_9_10 = object : Migration(9, 10) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE TABLE IF NOT EXISTS `private_contacts` (
+                        `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        `number` TEXT NOT NULL,
+                        `name` TEXT NOT NULL,
+                        `label` TEXT NOT NULL,
+                        `favorite` INTEGER NOT NULL,
+                        `avatarText` TEXT NOT NULL,
+                        `avatarBgValue` INTEGER NOT NULL,
+                        `avatarTextColorValue` INTEGER NOT NULL,
+                        `t9Mapping` TEXT NOT NULL,
+                        `email` TEXT NOT NULL,
+                        `photoUri` TEXT NOT NULL,
+                        `accountName` TEXT NOT NULL,
+                        `accountType` TEXT NOT NULL,
+                        `numbers` TEXT NOT NULL,
+                        `emails` TEXT NOT NULL,
+                        `addresses` TEXT NOT NULL,
+                        `note` TEXT NOT NULL
+                    )
+                    """.trimIndent()
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_private_contacts_number` ON `private_contacts` (`number`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_private_contacts_name` ON `private_contacts` (`name`)")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_private_contacts_t9Mapping` ON `private_contacts` (`t9Mapping`)")
+            }
+        }
 
         @Volatile
         private var INSTANCE: AppDatabase? = null
@@ -251,6 +285,7 @@ abstract class AppDatabase : RoomDatabase() {
                     DATABASE_NAME
                 )
                     .openHelperFactory(factory)
+                    .addMigrations(MIGRATION_9_10)
                     .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build()

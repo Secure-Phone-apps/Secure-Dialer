@@ -24,6 +24,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.example.ContactNameFormat
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -33,11 +35,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.model.PRIVATE_VAULT_ACCOUNT_NAME
+import com.example.model.PRIVATE_VAULT_ACCOUNT_TYPE
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 import java.text.SimpleDateFormat
@@ -63,6 +68,7 @@ fun ContactsAndDataSettings(
     var pendingEncryptedRestoreContent by remember { mutableStateOf<String?>(null) }
     var restorePasswordInput by remember { mutableStateOf("") }
     var showPasswordPromptDialog by remember { mutableStateOf(false) }
+    var pendingVcfImportContent by remember { mutableStateOf<String?>(null) }
 
     val saveBackupFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -128,13 +134,7 @@ fun ContactsAndDataSettings(
         if (uri != null) {
             viewModel.readTextFromUri(uri) { rawVcf ->
                 if (!rawVcf.isNullOrBlank()) {
-                    viewModel.importContactsVcf(rawVcf) { success ->
-                        if (success) {
-                            Toast.makeText(context, context.getString(R.string.vcf_import_count_success), Toast.LENGTH_LONG).show()
-                        } else {
-                            Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_LONG).show()
-                        }
-                    }
+                    pendingVcfImportContent = rawVcf
                 } else {
                     Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_LONG).show()
                 }
@@ -164,10 +164,10 @@ fun ContactsAndDataSettings(
                 shape = MaterialTheme.shapes.medium
             ) {
                 val currentFilter = viewModel.selectedAccountFilter.value
-                val filterSub = if (currentFilter.isBlank()) {
-                    stringResource(R.string.account_filter_all)
-                } else {
-                    viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
+                val filterSub = when {
+                    currentFilter.isBlank() -> stringResource(R.string.account_filter_all)
+                    currentFilter == PRIVATE_VAULT_ACCOUNT_NAME -> stringResource(R.string.contact_source_private_vault)
+                    else -> viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
                 }
                 SettingsRowNav(
                     title = stringResource(R.string.settings_contacts_to_display),
@@ -192,10 +192,10 @@ fun ContactsAndDataSettings(
                 shape = MaterialTheme.shapes.medium
             ) {
                 val defaultAccName = viewModel.defaultContactAccountName.value
-                val defaultAccSub = if (defaultAccName.isBlank()) {
-                    stringResource(R.string.contact_source_phone)
-                } else {
-                    viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
+                val defaultAccSub = when {
+                    defaultAccName.isBlank() -> stringResource(R.string.contact_source_phone)
+                    defaultAccName == PRIVATE_VAULT_ACCOUNT_NAME -> stringResource(R.string.contact_source_private_vault)
+                    else -> viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
                 }
                 SettingsRowNav(
                     title = stringResource(R.string.settings_default_account_for_new),
@@ -396,12 +396,18 @@ fun ContactsAndDataSettings(
             onDismissRequest = { showContactsToDisplayDialog = false },
             title = { Text(stringResource(R.string.settings_contacts_to_display)) },
             text = {
-                Column {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     val accounts = viewModel.availableAccounts
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .heightIn(min = 48.dp)
+                            .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.onAccountFilterChange("")
+                                showContactsToDisplayDialog = false
+                            }
+                            .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -415,11 +421,47 @@ fun ContactsAndDataSettings(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.account_filter_all))
                     }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.onAccountFilterChange(PRIVATE_VAULT_ACCOUNT_NAME)
+                                showContactsToDisplayDialog = false
+                            }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = viewModel.selectedAccountFilter.value == PRIVATE_VAULT_ACCOUNT_NAME,
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.onAccountFilterChange(PRIVATE_VAULT_ACCOUNT_NAME)
+                                showContactsToDisplayDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.contact_source_private_vault))
+                    }
                     accounts.forEach { acc ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .heightIn(min = 48.dp)
+                                .clickable {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    viewModel.onAccountFilterChange(acc.name)
+                                    showContactsToDisplayDialog = false
+                                }
+                                .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
@@ -449,12 +491,18 @@ fun ContactsAndDataSettings(
             onDismissRequest = { showDefaultAccountDialog = false },
             title = { Text(stringResource(R.string.settings_default_account_for_new)) },
             text = {
-                Column {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                     val accounts = viewModel.availableAccounts
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .heightIn(min = 48.dp)
+                            .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.updateDefaultContactAccount("", "")
+                                showDefaultAccountDialog = false
+                            }
+                            .padding(vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         RadioButton(
@@ -468,11 +516,47 @@ fun ContactsAndDataSettings(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(stringResource(R.string.contact_source_phone))
                     }
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 48.dp)
+                            .clickable {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.updateDefaultContactAccount(PRIVATE_VAULT_ACCOUNT_NAME, PRIVATE_VAULT_ACCOUNT_TYPE)
+                                showDefaultAccountDialog = false
+                            }
+                            .padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = viewModel.defaultContactAccountName.value == PRIVATE_VAULT_ACCOUNT_NAME,
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                viewModel.updateDefaultContactAccount(PRIVATE_VAULT_ACCOUNT_NAME, PRIVATE_VAULT_ACCOUNT_TYPE)
+                                showDefaultAccountDialog = false
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(stringResource(R.string.contact_source_private_vault))
+                    }
                     accounts.forEach { acc ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(vertical = 8.dp),
+                                .heightIn(min = 48.dp)
+                                .clickable {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    viewModel.updateDefaultContactAccount(acc.name, acc.type)
+                                    showDefaultAccountDialog = false
+                                }
+                                .padding(vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
@@ -612,4 +696,150 @@ fun ContactsAndDataSettings(
             }
         )
     }
+
+    val rawVcfToImport = pendingVcfImportContent
+    if (rawVcfToImport != null) {
+        VcfImportDestinationDialog(
+            viewModel = viewModel,
+            rawVcf = rawVcfToImport,
+            onDismiss = { pendingVcfImportContent = null }
+        )
+    }
+}
+
+@Composable
+internal fun VcfImportDestinationDialog(
+    viewModel: DialerViewModel,
+    rawVcf: String,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Default.UploadFile,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = { Text(stringResource(R.string.vcf_import_dest_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = stringResource(R.string.vcf_import_dest_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Surface(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        onDismiss()
+                        viewModel.importContactsVcfDetailed(
+                            rawData = rawVcf,
+                            saveToPrivateVault = true
+                        ) { res ->
+                            Toast.makeText(
+                                context,
+                                if (res.importedCount > 0) {
+                                    context.getString(R.string.vcf_imported_summary, res.importedCount)
+                                } else {
+                                    context.getString(R.string.file_read_failed)
+                                },
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                    modifier = Modifier.fillMaxWidth().testTag("vcf_import_dest_private_btn")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.vcf_import_dest_private),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = stringResource(R.string.vcf_import_dest_private_sub),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+
+                Surface(
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                        onDismiss()
+                        val defName = viewModel.defaultContactAccountName.value.takeUnless { it == PRIVATE_VAULT_ACCOUNT_NAME } ?: ""
+                        val defType = viewModel.defaultContactAccountType.value.takeUnless { it == PRIVATE_VAULT_ACCOUNT_TYPE } ?: ""
+                        viewModel.importContactsVcfDetailed(
+                            rawData = rawVcf,
+                            saveToPrivateVault = false,
+                            accountName = defName,
+                            accountType = defType
+                        ) { res ->
+                            Toast.makeText(
+                                context,
+                                if (res.importedCount > 0) {
+                                    context.getString(R.string.vcf_imported_summary, res.importedCount)
+                                } else {
+                                    context.getString(R.string.file_read_failed)
+                                },
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    modifier = Modifier.fillMaxWidth().testTag("vcf_import_dest_system_btn")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Contacts,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(R.string.vcf_import_dest_system),
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = stringResource(R.string.vcf_import_dest_system_sub),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.btn_cancel))
+            }
+        }
+    )
 }

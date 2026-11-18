@@ -26,6 +26,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -43,6 +45,8 @@ import com.example.model.ContactAccount
 import com.example.model.LabeledAddress
 import com.example.model.LabeledEmail
 import com.example.model.LabeledNumber
+import com.example.model.PRIVATE_VAULT_ACCOUNT_NAME
+import com.example.model.PRIVATE_VAULT_ACCOUNT_TYPE
 import com.example.util.RichHapticEngine
 import java.util.UUID
 
@@ -59,12 +63,15 @@ data class EmailInputState(
     val label: String = "Home"
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AddContactDialog(
     initialName: String,
     initialNumber: String,
     initialLabel: String,
     initialEmail: String = "",
+    initialNote: String = "",
+    isEditing: Boolean = false,
     initialNumbers: List<LabeledNumber> = emptyList(),
     initialEmails: List<LabeledEmail> = emptyList(),
     initialAddresses: List<LabeledAddress> = emptyList(),
@@ -73,7 +80,8 @@ fun AddContactDialog(
     defaultAccountName: String = "",
     onDismiss: () -> Unit,
     onConfirm: (name: String, number: String, label: String, email: String, accountName: String, accountType: String) -> Unit = { _, _, _, _, _, _ -> },
-    onConfirmWithDetails: ((name: String, numbers: List<LabeledNumber>, emails: List<LabeledEmail>, addresses: List<LabeledAddress>, accountName: String, accountType: String) -> Unit)? = null
+    onConfirmWithDetails: ((name: String, numbers: List<LabeledNumber>, emails: List<LabeledEmail>, addresses: List<LabeledAddress>, accountName: String, accountType: String) -> Unit)? = null,
+    onConfirmWithFullDetails: ((name: String, numbers: List<LabeledNumber>, emails: List<LabeledEmail>, addresses: List<LabeledAddress>, accountName: String, accountType: String, note: String) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val fieldShape = RoundedCornerShape(18.dp)
@@ -82,23 +90,37 @@ fun AddContactDialog(
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var addressInput by remember { mutableStateOf(initialAddresses.firstOrNull()?.address ?: "") }
+    var noteInput by remember { mutableStateOf(initialNote) }
 
-    val phoneAccount = remember(availableAccounts) {
-        availableAccounts.firstOrNull { it.name == "Phone" || it.type.contains("local") || it.displayName.contains("Phone", ignoreCase = true) }
-            ?: ContactAccount(name = "Phone", type = "com.android.localphone", displayName = "Phone storage")
+    val privateVaultDisplayName = stringResource(R.string.contact_source_private_vault)
+    val privateVaultAccount = remember(privateVaultDisplayName) {
+        ContactAccount(
+            name = PRIVATE_VAULT_ACCOUNT_NAME,
+            type = PRIVATE_VAULT_ACCOUNT_TYPE,
+            displayName = privateVaultDisplayName
+        )
     }
 
-    val accountsToPick = remember(availableAccounts, phoneAccount) {
-        val list = availableAccounts.toMutableList()
+    val phoneAccount = remember(availableAccounts) {
+        availableAccounts.firstOrNull {
+            it.name == "Phone" || it.type.contains("local") || it.displayName.contains("Phone", ignoreCase = true)
+        } ?: ContactAccount(name = "Phone", type = "com.android.localphone", displayName = "Phone storage")
+    }
+
+    val accountsToPick = remember(availableAccounts, phoneAccount, privateVaultAccount) {
+        val list = availableAccounts.filterNot { it.type == PRIVATE_VAULT_ACCOUNT_TYPE || it.name == PRIVATE_VAULT_ACCOUNT_NAME }.toMutableList()
         if (list.none { it.name == phoneAccount.name && it.type == phoneAccount.type }) {
             list.add(0, phoneAccount)
         }
+        list.add(0, privateVaultAccount)
         list
     }
 
-    val defaultSaveAccount = remember(accountsToPick, defaultAccountName, selectedAccountFilter) {
-        val isLocalSelected = selectedAccountFilter.isBlank() ||
-                selectedAccountFilter.equals("Phone", ignoreCase = true) ||
+    val defaultSaveAccount = remember(accountsToPick, defaultAccountName, selectedAccountFilter, privateVaultAccount, phoneAccount) {
+        val isPrivateSelected = selectedAccountFilter == PRIVATE_VAULT_ACCOUNT_NAME
+        val isPrivateDefault = defaultAccountName == PRIVATE_VAULT_ACCOUNT_NAME
+
+        val isLocalSelected = selectedAccountFilter.equals("Phone", ignoreCase = true) ||
                 selectedAccountFilter.equals("Phone storage", ignoreCase = true) ||
                 selectedAccountFilter.contains("local", ignoreCase = true)
 
@@ -107,20 +129,22 @@ fun AddContactDialog(
                 defaultAccountName.equals("Phone storage", ignoreCase = true) ||
                 defaultAccountName.contains("local", ignoreCase = true)
 
-        if (selectedAccountFilter.isNotBlank() && !isLocalSelected) {
-            accountsToPick.firstOrNull { it.name == selectedAccountFilter }
-                ?: accountsToPick.firstOrNull { it.type == "com.google" }
-                ?: phoneAccount
-        } else if (isLocalSelected && selectedAccountFilter.isNotBlank()) {
-            phoneAccount
-        } else if (defaultAccountName.isNotBlank() && !isLocalDefault) {
-            accountsToPick.firstOrNull { it.name == defaultAccountName }
-                ?: accountsToPick.firstOrNull { it.type == "com.google" }
-                ?: phoneAccount
-        } else if (isLocalDefault) {
-            phoneAccount
-        } else {
-            accountsToPick.firstOrNull { it.type == "com.google" } ?: phoneAccount
+        when {
+            isPrivateSelected -> privateVaultAccount
+            selectedAccountFilter.isNotBlank() && !isLocalSelected -> {
+                accountsToPick.firstOrNull { it.name == selectedAccountFilter }
+                    ?: accountsToPick.firstOrNull { it.type == "com.google" }
+                    ?: phoneAccount
+            }
+            selectedAccountFilter.isNotBlank() && isLocalSelected -> phoneAccount
+            isPrivateDefault -> privateVaultAccount
+            defaultAccountName.isNotBlank() && !isLocalDefault -> {
+                accountsToPick.firstOrNull { it.name == defaultAccountName }
+                    ?: accountsToPick.firstOrNull { it.type == "com.google" }
+                    ?: phoneAccount
+            }
+            isLocalDefault -> phoneAccount
+            else -> accountsToPick.firstOrNull { it.type == "com.google" } ?: phoneAccount
         }
     }
 
@@ -129,6 +153,7 @@ fun AddContactDialog(
 
     var showEmailField by remember { mutableStateOf(initialEmails.isNotEmpty() || initialEmail.isNotBlank()) }
     var showAddressField by remember { mutableStateOf(initialAddresses.isNotEmpty() || addressInput.isNotBlank()) }
+    var showNoteField by remember { mutableStateOf(initialNote.isNotBlank()) }
 
     val phoneInputs = remember {
         mutableStateListOf<PhoneInputState>().apply {
@@ -178,20 +203,22 @@ fun AddContactDialog(
         disabledIndicatorColor = Color.Transparent
     )
 
+    val isPrivateVaultSelected = selectedAccount?.type == PRIVATE_VAULT_ACCOUNT_TYPE
+
     AlertDialog(
         onDismissRequest = onDismiss,
         shape = RoundedCornerShape(28.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         title = {
             Text(
-                text = if (initialName.isEmpty() && initialNumber.isEmpty()) stringResource(R.string.add_contact_dialog_title) else stringResource(R.string.edit_contact_dialog_title),
+                text = if (!isEditing && initialName.isEmpty() && initialNumber.isEmpty()) stringResource(R.string.add_contact_dialog_title) else stringResource(R.string.edit_contact_dialog_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
             LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag("dialog_fields_list"),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 if (accountsToPick.isNotEmpty()) {
@@ -199,12 +226,19 @@ fun AddContactDialog(
                         Box(modifier = Modifier.fillMaxWidth()) {
                             Surface(
                                 onClick = {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    accountMenuExpanded = true
+                                    if (!isEditing) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        accountMenuExpanded = true
+                                    }
                                 },
-                                modifier = Modifier.fillMaxWidth(),
+                                enabled = !isEditing,
+                                modifier = Modifier.fillMaxWidth().testTag("dialog_account_selector"),
                                 shape = fieldShape,
-                                color = MaterialTheme.colorScheme.surfaceContainerHigh
+                                color = if (isPrivateVaultSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.55f)
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHigh
+                                }
                             ) {
                                 Row(
                                     modifier = Modifier
@@ -219,7 +253,7 @@ fun AddContactDialog(
                                         modifier = Modifier.weight(1f)
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Outlined.AccountCircle,
+                                            imageVector = if (isPrivateVaultSelected) Icons.Default.Lock else Icons.Outlined.AccountCircle,
                                             contentDescription = null,
                                             tint = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.size(22.dp)
@@ -239,11 +273,13 @@ fun AddContactDialog(
                                             )
                                         }
                                     }
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = stringResource(R.string.contact_source_select),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
+                                    if (!isEditing) {
+                                        Icon(
+                                            imageVector = Icons.Default.ArrowDropDown,
+                                            contentDescription = stringResource(R.string.contact_source_select),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                 }
                             }
 
@@ -252,7 +288,16 @@ fun AddContactDialog(
                                 onDismissRequest = { accountMenuExpanded = false }
                             ) {
                                 accountsToPick.forEach { account ->
+                                    val isVault = account.type == PRIVATE_VAULT_ACCOUNT_TYPE
                                     DropdownMenuItem(
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (isVault) Icons.Default.Lock else Icons.Outlined.AccountCircle,
+                                                contentDescription = null,
+                                                tint = if (isVault) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        },
                                         text = {
                                             Text(
                                                 text = account.displayName,
@@ -267,6 +312,16 @@ fun AddContactDialog(
                                     )
                                 }
                             }
+                        }
+
+                        if (isPrivateVaultSelected) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = stringResource(R.string.contact_source_private_vault_desc),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
                         }
                     }
                 }
@@ -455,7 +510,7 @@ fun AddContactDialog(
                             label = { Text(stringResource(R.string.label_address)) },
                             singleLine = false,
                             maxLines = 2,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth().testTag("dialog_address_input"),
                             shape = fieldShape,
                             colors = expressiveFieldColors,
                             trailingIcon = {
@@ -479,11 +534,51 @@ fun AddContactDialog(
                     }
                 }
 
+                if (showNoteField) {
+                    item {
+                        TextField(
+                            value = noteInput,
+                            onValueChange = { noteInput = it },
+                            label = { Text(stringResource(R.string.label_notes)) },
+                            singleLine = false,
+                            minLines = 2,
+                            maxLines = 5,
+                            modifier = Modifier.fillMaxWidth().testTag("dialog_note_input"),
+                            shape = fieldShape,
+                            colors = expressiveFieldColors,
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Description,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        noteInput = ""
+                                        showNoteField = false
+                                    },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = stringResource(R.string.btn_delete),
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+
                 item {
-                    Row(
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (!showEmailField || emailInputs.isEmpty()) {
                             FilledTonalButton(
@@ -542,6 +637,26 @@ fun AddContactDialog(
                                 Text(stringResource(R.string.label_address), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
                             }
                         }
+
+                        if (!showNoteField) {
+                            FilledTonalButton(
+                                onClick = {
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    showNoteField = true
+                                },
+                                modifier = Modifier.testTag("dialog_add_notes_btn"),
+                                shape = buttonShape,
+                                colors = ButtonDefaults.filledTonalButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+                                ),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            ) {
+                                Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(stringResource(R.string.add_notes), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
                     }
                 }
             }
@@ -568,17 +683,25 @@ fun AddContactDialog(
 
                     val accName = selectedAccount?.name ?: ""
                     val accType = selectedAccount?.type ?: ""
+                    val cleanNote = noteInput.trim()
 
-                    if (onConfirmWithDetails != null) {
-                        onConfirmWithDetails(finalName, numbersList, emailsList, addressesList, accName, accType)
-                    } else {
-                        val primaryNum = numbersList.firstOrNull()?.number ?: ""
-                        val primaryLabel = numbersList.firstOrNull()?.label ?: "Mobile"
-                        val primaryEmail = emailsList.firstOrNull()?.email ?: ""
-                        onConfirm(finalName, primaryNum, primaryLabel, primaryEmail, accName, accType)
+                    when {
+                        onConfirmWithFullDetails != null -> {
+                            onConfirmWithFullDetails(finalName, numbersList, emailsList, addressesList, accName, accType, cleanNote)
+                        }
+                        onConfirmWithDetails != null -> {
+                            onConfirmWithDetails(finalName, numbersList, emailsList, addressesList, accName, accType)
+                        }
+                        else -> {
+                            val primaryNum = numbersList.firstOrNull()?.number ?: ""
+                            val primaryLabel = numbersList.firstOrNull()?.label ?: "Mobile"
+                            val primaryEmail = emailsList.firstOrNull()?.email ?: ""
+                            onConfirm(finalName, primaryNum, primaryLabel, primaryEmail, accName, accType)
+                        }
                     }
                 },
                 enabled = (firstName.trim().isNotEmpty() || lastName.trim().isNotEmpty()) && hasValidNumber,
+                modifier = Modifier.testTag("dialog_save_contact_button"),
                 shape = buttonShape
             ) {
                 Text(stringResource(R.string.btn_save))

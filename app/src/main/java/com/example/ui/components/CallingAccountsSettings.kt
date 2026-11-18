@@ -47,7 +47,8 @@ import com.example.util.RichHapticEngine
 fun CallingAccountsSettings(
     viewModel: DialerViewModel,
     cardBgColor: Color,
-    highlightedTitle: String? = null
+    highlightedTitle: String? = null,
+    onOpenBatteryGuide: () -> Unit = { viewModel.openSettingsToTab(9) }
 ) {
     val context = LocalContext.current
     val callWaitingEnabled by viewModel.callWaitingEnabled
@@ -212,7 +213,7 @@ fun CallingAccountsSettings(
                     } else {
                         stringResource(R.string.settings_oem_background_restricted, oemName)
                     },
-                    onClick = { CallScreenPermissionHelper.openOemBackgroundSettings(context, oemFamily) },
+                    onClick = { onOpenBatteryGuide() },
                     icon = Icons.Default.BatteryChargingFull,
                     iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                     iconTint = MaterialTheme.colorScheme.secondary

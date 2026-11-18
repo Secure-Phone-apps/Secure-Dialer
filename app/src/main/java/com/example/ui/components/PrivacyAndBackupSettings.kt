@@ -42,6 +42,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.R
+import com.example.model.PRIVATE_VAULT_ACCOUNT_NAME
+import com.example.model.PRIVATE_VAULT_ACCOUNT_TYPE
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 import com.example.util.VaultBiometricAuthHelper
@@ -240,10 +242,10 @@ private fun ContactsManagementSection(
                 shape = MaterialTheme.shapes.medium
             ) {
                 val currentFilter = viewModel.selectedAccountFilter.value
-                val filterSub = if (currentFilter.isBlank()) {
-                    stringResource(R.string.account_filter_all)
-                } else {
-                    viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
+                val filterSub = when {
+                    currentFilter.isBlank() -> stringResource(R.string.account_filter_all)
+                    currentFilter == PRIVATE_VAULT_ACCOUNT_NAME -> stringResource(R.string.contact_source_private_vault)
+                    else -> viewModel.availableAccounts.firstOrNull { it.name == currentFilter }?.displayName ?: currentFilter
                 }
                 SettingsRowNav(
                     title = stringResource(R.string.settings_contacts_to_display),
@@ -266,10 +268,10 @@ private fun ContactsManagementSection(
                 shape = MaterialTheme.shapes.medium
             ) {
                 val defaultAccName = viewModel.defaultContactAccountName.value
-                val defaultAccSub = if (defaultAccName.isBlank()) {
-                    "Default / Same as Filter"
-                } else {
-                    viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
+                val defaultAccSub = when {
+                    defaultAccName.isBlank() -> stringResource(R.string.contact_source_phone)
+                    defaultAccName == PRIVATE_VAULT_ACCOUNT_NAME -> stringResource(R.string.contact_source_private_vault)
+                    else -> viewModel.availableAccounts.firstOrNull { it.name == defaultAccName }?.displayName ?: defaultAccName
                 }
                 SettingsRowNav(
                     title = stringResource(R.string.settings_default_account_for_new),
@@ -318,6 +320,26 @@ private fun ContactsManagementSection(
                             text = stringResource(R.string.account_filter_all),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = if (currentFilter.isBlank()) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                viewModel.onAccountFilterChange(PRIVATE_VAULT_ACCOUNT_NAME)
+                                showContactsToDisplayDialog = false
+                            }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = currentFilter == PRIVATE_VAULT_ACCOUNT_NAME, onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.contact_source_private_vault),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (currentFilter == PRIVATE_VAULT_ACCOUNT_NAME) FontWeight.Bold else FontWeight.Normal
                         )
                     }
 
@@ -384,9 +406,29 @@ private fun ContactsManagementSection(
                         RadioButton(selected = defaultAccName.isBlank(), onClick = null)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = "Default / Same as Filter",
+                            text = stringResource(R.string.contact_source_phone),
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = if (defaultAccName.isBlank()) FontWeight.Bold else FontWeight.Normal
+                        )
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                viewModel.updateDefaultContactAccount(PRIVATE_VAULT_ACCOUNT_NAME, PRIVATE_VAULT_ACCOUNT_TYPE)
+                                showDefaultAccountDialog = false
+                            }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = defaultAccName == PRIVATE_VAULT_ACCOUNT_NAME, onClick = null)
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = stringResource(R.string.contact_source_private_vault),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (defaultAccName == PRIVATE_VAULT_ACCOUNT_NAME) FontWeight.Bold else FontWeight.Normal
                         )
                     }
 
@@ -436,6 +478,7 @@ private fun DataAndBackupSection(
     var showPasswordPromptDialog by remember { mutableStateOf(false) }
     var restorePasswordInput by remember { mutableStateOf("") }
     var pendingEncryptedRestoreContent by remember { mutableStateOf<String?>(null) }
+    var pendingVcfImportContent by remember { mutableStateOf<String?>(null) }
 
     val saveBackupFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -500,13 +543,7 @@ private fun DataAndBackupSection(
         if (uri != null) {
             viewModel.readTextFromUri(uri) { rawVcf ->
                 if (!rawVcf.isNullOrBlank()) {
-                    viewModel.importContactsVcf(rawVcf) { success ->
-                        if (success) {
-                            Toast.makeText(context, context.getString(R.string.vcf_import_count_success), Toast.LENGTH_LONG).show()
-                        } else {
-                            Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_LONG).show()
-                        }
-                    }
+                    pendingVcfImportContent = rawVcf
                 } else {
                     Toast.makeText(context, context.getString(R.string.file_read_failed), Toast.LENGTH_LONG).show()
                 }
@@ -729,6 +766,15 @@ private fun DataAndBackupSection(
                     Text(stringResource(R.string.close))
                 }
             }
+        )
+    }
+
+    val rawVcfToImport = pendingVcfImportContent
+    if (rawVcfToImport != null) {
+        VcfImportDestinationDialog(
+            viewModel = viewModel,
+            rawVcf = rawVcfToImport,
+            onDismiss = { pendingVcfImportContent = null }
         )
     }
 }
