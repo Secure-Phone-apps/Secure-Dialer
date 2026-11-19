@@ -111,6 +111,19 @@
                 <data android:scheme="tel" />
             </intent-filter>
 
+            <!-- System Call Log & Missed Call Notification Contracts -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.dir/calls" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/calls" />
+            </intent-filter>
+
             <!-- Physical & Bluetooth headset button handling -->
             <intent-filter>
                 <action android:name="android.intent.action.CALL_BUTTON" />
@@ -157,6 +170,15 @@
                 <action android:name="android.telecom.CallScreeningService" />
             </intent-filter>
         </service>
+
+        <!-- Telecom Missed Call Notification Delegation (API 24+ / Android 7-17+) -->
+        <receiver
+            android:name=".util.MissedCallNotificationReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.telecom.action.SHOW_MISSED_CALLS_NOTIFICATION" />
+            </intent-filter>
+        </receiver>
 
         <!-- Call Reminders Alarm Receiver -->
         <receiver

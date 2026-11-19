@@ -22,6 +22,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.CallLog
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
@@ -80,13 +81,14 @@ fun CallHistoryDetailsScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val primaryRecord = logs.firstOrNull() ?: return
+    val hasValidNumber = number.isNotBlank()
 
     val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
     val isBlocked = remember(blockedNumbersEntities, number) {
-        blockedNumbersEntities.any { it.number == number }
+        hasValidNumber && blockedNumbersEntities.any { it.number == number }
     }
 
-    val isContact = primaryRecord.name != primaryRecord.number
+    val isContact = hasValidNumber && primaryRecord.name != primaryRecord.number && primaryRecord.name != "Unknown"
 
     var showNoteDialog by remember { mutableStateOf(false) }
     var editingNoteText by remember { mutableStateOf("") }
@@ -122,66 +124,68 @@ fun CallHistoryDetailsScreen(
                     }
                 },
                 actions = {
-                    var showMenu by remember { mutableStateOf(false) }
-                    IconButton(onClick = { showMenu = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = null
-                        )
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.action_copy_number)) },
-                            onClick = {
-                                showMenu = false
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                                val clip = ClipData.newPlainText("Phone Number", number)
-                                clipboard?.setPrimaryClip(clip)
-                                Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.ContentCopy,
-                                    contentDescription = null
-                                )
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.delete_all_history)) },
-                            onClick = {
-                                showMenu = false
-                                deleteAllLogsWithNumber()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text(if (isBlocked) stringResource(R.string.unblock_number) else stringResource(R.string.block_number)) },
-                            onClick = {
-                                showMenu = false
-                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                if (isBlocked) {
-                                    viewModel.removeBlockedNumber(number)
-                                } else {
-                                    viewModel.addBlockedNumber(number)
+                    if (hasValidNumber) {
+                        var showMenu by remember { mutableStateOf(false) }
+                        IconButton(onClick = { showMenu = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = null
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.action_copy_number)) },
+                                onClick = {
+                                    showMenu = false
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                                    val clip = ClipData.newPlainText("Phone Number", number)
+                                    clipboard?.setPrimaryClip(clip)
+                                    Toast.makeText(context, context.getString(R.string.toast_number_copied), Toast.LENGTH_SHORT).show()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.ContentCopy,
+                                        contentDescription = null
+                                    )
                                 }
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Block,
-                                    contentDescription = null
-                                )
-                            }
-                        )
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.delete_all_history)) },
+                                onClick = {
+                                    showMenu = false
+                                    deleteAllLogsWithNumber()
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (isBlocked) stringResource(R.string.unblock_number) else stringResource(R.string.block_number)) },
+                                onClick = {
+                                    showMenu = false
+                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                    if (isBlocked) {
+                                        viewModel.removeBlockedNumber(number)
+                                    } else {
+                                        viewModel.addBlockedNumber(number)
+                                    }
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Block,
+                                        contentDescription = null
+                                    )
+                                }
+                            )
+                        }
                     }
                 }
             )
@@ -251,20 +255,28 @@ fun CallHistoryDetailsScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val headerTitle = when {
+                        primaryRecord.numberPresentation == CallLog.Calls.PRESENTATION_RESTRICTED &&
+                                (primaryRecord.name == "Unknown" || primaryRecord.name.isBlank()) -> stringResource(R.string.private_number)
+                        primaryRecord.name == "Unknown" || primaryRecord.name.isBlank() -> stringResource(R.string.unknown)
+                        else -> com.example.formatContactName(primaryRecord.name, viewModel.contactNameFormat.value)
+                    }
                     Text(
-                        text = if (primaryRecord.name == "Unknown") stringResource(R.string.unknown) else com.example.formatContactName(primaryRecord.name, viewModel.contactNameFormat.value),
+                        text = headerTitle,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
-                    Text(
-                        text = primaryRecord.number,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 1.dp)
-                    )
+                    if (primaryRecord.number.isNotBlank()) {
+                        Text(
+                            text = primaryRecord.number,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 1.dp)
+                        )
+                    }
 
                     if (primaryRecord.label.isNotEmpty()) {
                         Surface(
@@ -285,6 +297,7 @@ fun CallHistoryDetailsScreen(
                 }
             }
 
+            if (hasValidNumber) {
             item {
                 val detailFontScale = LocalDensity.current.fontScale
                 BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
@@ -385,12 +398,13 @@ fun CallHistoryDetailsScreen(
                 }
                 }
             }
+            }
 
             item {
                 CallLogSummaryDashboard(callRecords = logs)
             }
 
-            if (viewModel.isCallNotesEnabled.value) {
+            if (hasValidNumber && viewModel.isCallNotesEnabled.value) {
                 item {
                     val numberNotesFlow = remember(number) { viewModel.getCallNotesForNumberFlow(number) }
                     val numberNotes by numberNotesFlow.collectAsStateWithLifecycle(initialValue = emptyList())

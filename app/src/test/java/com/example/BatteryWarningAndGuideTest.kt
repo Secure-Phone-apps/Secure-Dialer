@@ -104,6 +104,7 @@ class BatteryWarningAndGuideTest {
     }
 
     @Test
+    @Config(qualifiers = "w400dp-h700dp-port-hdpi", sdk = [34])
     fun `dismissing battery banner hides card persists preference and unmasks overlay permission`() {
         assertFalse(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(app))
 
@@ -119,6 +120,7 @@ class BatteryWarningAndGuideTest {
             }
         }
 
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("permissions_warning_card").assertIsDisplayed()
         composeRule.onNodeWithTag("battery_warning_learn_more_button").assertIsDisplayed()
@@ -160,6 +162,7 @@ class BatteryWarningAndGuideTest {
     }
 
     @Test
+    @Config(qualifiers = "w420dp-h820dp-port-hdpi", sdk = [34])
     fun `learn more opens dedicated BatterySurvivabilitySettings screen with controls and explanation`() {
         assertFalse(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(app))
 
@@ -180,8 +183,10 @@ class BatteryWarningAndGuideTest {
             }
         }
 
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("battery_warning_learn_more_button").performClick()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
         composeRule.waitForIdle()
 
         assertTrue(viewModel.isSettingsVisible.value)
@@ -191,6 +196,7 @@ class BatteryWarningAndGuideTest {
 
         // Tap 1-Week Snooze chip
         composeRule.onNodeWithTag("battery_snooze_7d_chip").performClick()
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
         composeRule.waitForIdle()
         assertEquals(DialerViewModel.BATTERY_WARNING_SNOOZED, viewModel.batteryWarningMode.value)
         assertFalse(viewModel.shouldShowBatteryWarning())
@@ -205,41 +211,40 @@ class BatteryWarningAndGuideTest {
     }
 
     @Test
+    @Config(qualifiers = "w320dp-h720dp-port-hdpi", sdk = [34])
     fun `banner and battery guide render cleanly on 320dp narrow cover screen at 2x font scale`() {
         assertFalse(CallScreenPermissionHelper.isIgnoringBatteryOptimizations(app))
 
         val viewModel = DialerViewModel(app)
         viewModel.isDefaultDialer.value = true
+        val showGuideScreen = androidx.compose.runtime.mutableStateOf(false)
 
         composeRule.setContent {
             CompositionLocalProvider(LocalDensity provides Density(density = 2.0f, fontScale = 2.0f)) {
                 MyApplicationTheme {
                     Box(modifier = Modifier.requiredSize(320.dp, 720.dp)) {
-                        CallSystemPermissionsCard(viewModel = viewModel)
+                        if (!showGuideScreen.value) {
+                            CallSystemPermissionsCard(viewModel = viewModel)
+                        } else {
+                            BatterySurvivabilitySettings(
+                                viewModel = viewModel,
+                                cardBgColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        }
                     }
                 }
             }
         }
 
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("permissions_warning_card").assertIsDisplayed()
         composeRule.onNodeWithTag("battery_warning_dismiss_button").assertIsDisplayed()
         composeRule.onNodeWithTag("battery_warning_learn_more_button").assertIsDisplayed()
         composeRule.onNodeWithTag("permissions_warning_action_button").assertIsDisplayed()
 
-        composeRule.setContent {
-            CompositionLocalProvider(LocalDensity provides Density(density = 2.0f, fontScale = 2.0f)) {
-                MyApplicationTheme {
-                    Box(modifier = Modifier.requiredSize(320.dp, 720.dp)) {
-                        BatterySurvivabilitySettings(
-                            viewModel = viewModel,
-                            cardBgColor = androidx.compose.material3.MaterialTheme.colorScheme.surfaceVariant
-                        )
-                    }
-                }
-            }
-        }
-
+        showGuideScreen.value = true
+        Shadows.shadowOf(Looper.getMainLooper()).idle()
         composeRule.waitForIdle()
         composeRule.onNodeWithTag("battery_survivability_screen").assertIsDisplayed()
         composeRule.onNodeWithTag("battery_survivability_screen")

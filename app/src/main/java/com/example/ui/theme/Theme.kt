@@ -70,6 +70,12 @@ fun getReceivedCallColor(): Color {
     return if (isDark) Color(0xFF4CAF50) else Color(0xFF2E7D32)
 }
 
+@Composable
+fun getBlockedCallColor(): Color {
+    val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    return if (isDark) Color(0xFFFFB74D) else Color(0xFFE65100)
+}
+
 fun parseHexColor(hex: String, fallback: Color = Color(0xFF68A500)): Color {
     return try {
         val clean = hex.removePrefix("#").trim()

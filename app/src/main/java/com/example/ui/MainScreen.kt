@@ -344,6 +344,12 @@ fun MainScreen(
         }
         val currentSlotKey = tabSlots.getOrElse(selectedTab) { "RECENTS" }
 
+        LaunchedEffect(currentSlotKey) {
+            if (currentSlotKey == "RECENTS") {
+                com.example.util.MissedCallNotificationReceiver.clearMissedCallNotifications(context)
+            }
+        }
+
         BackHandler(enabled = isDialpadVisible || isSettingsVisible) {
             if (isDialpadVisible) {
                 isDialpadVisible = false

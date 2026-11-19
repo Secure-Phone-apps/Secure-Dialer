@@ -99,6 +99,8 @@ fun computeAdaptiveLayoutMetrics(
     }
     val inCallControlButtonHeight = when {
         maxHeight < 420.dp -> 50.dp
+        isTightVerticalSpace && fontScale >= 1.35f && maxHeight >= 560.dp -> 74.dp
+        isTightVerticalSpace && fontScale >= 1.35f -> 66.dp
         isTightVerticalSpace -> 58.dp
         else -> 68.dp
     }

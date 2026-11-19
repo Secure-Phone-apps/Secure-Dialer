@@ -193,7 +193,7 @@ interface DialerDao {
     @Query("SELECT * FROM call_history ORDER BY id DESC")
     fun getCallHistoryPaged(): PagingSource<Int, CallRecord>
 
-    @Query("SELECT * FROM call_history ORDER BY id DESC LIMIT 1500")
+    @Query("SELECT * FROM call_history ORDER BY timestampMs DESC, id DESC LIMIT 5000")
     fun getAllCallHistoryFlow(): Flow<List<CallRecord>>
 
     @Query("SELECT COUNT(*) FROM call_history")

@@ -101,12 +101,18 @@ fun HeaderSearchBar(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Box(modifier = Modifier.weight(1.0f)) {
+                val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+                val placeholderStyle = if (fontScale >= 1.3f) {
+                    MaterialTheme.typography.bodyMedium
+                } else {
+                    MaterialTheme.typography.bodyLarge
+                }
                 if (searchQuery.isEmpty()) {
                     Text(
                         text = stringResource(R.string.search_placeholder),
-                        style = MaterialTheme.typography.bodyLarge,
+                        style = placeholderStyle,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
+                        maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -202,8 +208,9 @@ fun BottomNavBar(
                         text = label,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        softWrap = false,
+                        maxLines = 2,
+                        softWrap = true,
+                        textAlign = TextAlign.Center,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
@@ -280,8 +287,9 @@ fun AppNavigationRail(
                         text = label,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         style = MaterialTheme.typography.labelMedium,
-                        maxLines = 1,
-                        softWrap = false,
+                        maxLines = 2,
+                        softWrap = true,
+                        textAlign = TextAlign.Center,
                         overflow = TextOverflow.Ellipsis
                     )
                 },
@@ -321,25 +329,39 @@ fun EmptyStateIllustration(
     title: String,
     subtitle: String
 ) {
+    val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+    val titleStyle = if (fontScale >= 1.3f) {
+        MaterialTheme.typography.titleMedium
+    } else {
+        MaterialTheme.typography.titleLarge
+    }
+    val subtitleStyle = if (fontScale >= 1.3f) {
+        MaterialTheme.typography.bodyMedium
+    } else {
+        MaterialTheme.typography.bodyLarge
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 96.dp, bottom = 32.dp, start = 32.dp, end = 32.dp),
+            .padding(vertical = 12.dp, horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            style = titleStyle,
             color = MaterialTheme.colorScheme.onSurface,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodyLarge,
+            style = subtitleStyle,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
@@ -446,7 +468,7 @@ fun ExpandableSettingsCard(
                         text = title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         color = if (hasSwitch && !isSwitchChecked) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurface
                     )
@@ -454,7 +476,7 @@ fun ExpandableSettingsCard(
                         Text(
                             text = subtitle,
                             style = MaterialTheme.typography.bodySmall,
-                            maxLines = 2,
+                            maxLines = 4,
                             overflow = TextOverflow.Ellipsis,
                             color = if (hasSwitch && !isSwitchChecked) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
                         )

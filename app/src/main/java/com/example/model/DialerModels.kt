@@ -109,14 +109,17 @@ data class CallRecord(
     val photoUri: String = "",
     val timestampMs: Long = 0L,
     val isVerified: Boolean = false,
-    val simSlot: Int = 1
+    val simSlot: Int = 1,
+    val numberPresentation: Int = 1,
+    val blockReason: Int = 0,
+    val callScreeningAppName: String = ""
 ) {
     @Ignore val avatarBg: Color = decodeStoredColor(avatarBgValue)
     @Ignore val avatarTextColor: Color = decodeStoredColor(avatarTextColorValue)
 }
 
 enum class CallType {
-    MISSED, OUTGOING, INCOMING
+    MISSED, OUTGOING, INCOMING, REJECTED, BLOCKED
 }
 
 @Immutable

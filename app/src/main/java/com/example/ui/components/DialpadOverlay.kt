@@ -59,7 +59,7 @@ import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun DialpadOverlay(
     inputValue: String,
@@ -136,77 +136,153 @@ fun DialpadOverlay(
                 }
 
                 if (isUnsavedNumber && inputValue.isNotBlank()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            onClick = {
-                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                                }
-                                viewModel?.openAddContactWithNumber(inputValue)
-                            },
-                            shape = AppShapes.Chip,
-                            color = dialKeyColor,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
+                    val useFlowChips = adaptive.isVeryNarrowWidth || fontScale >= 1.25f
+                    if (useFlowChips) {
+                        FlowRow(
                             modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 48.dp)
-                                .testTag("overlay_create_contact_chip")
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Row(
+                            Surface(
+                                onClick = {
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    }
+                                    viewModel?.openAddContactWithNumber(inputValue)
+                                },
+                                shape = AppShapes.Chip,
+                                color = dialKeyColor,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .heightIn(min = 48.dp)
+                                    .testTag("overlay_create_contact_chip")
                             ) {
-                                Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
-                                Text(
-                                    text = stringResource(R.string.dialpad_create_contact),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text(
+                                        text = stringResource(R.string.dialpad_create_contact),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                    }
+                                    viewModel?.addToExistingPendingNumber?.value = inputValue
+                                    viewModel?.isAddToExistingSheetVisible?.value = true
+                                },
+                                shape = AppShapes.Chip,
+                                color = dialKeyColor,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .testTag("overlay_add_to_existing_chip")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                                    Text(
+                                        text = stringResource(R.string.dialpad_add_to_existing),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
-
-                        Surface(
-                            onClick = {
-                                if (viewModel?.vibrateOnClickEnabled?.value != false) {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
-                                }
-                                viewModel?.addToExistingPendingNumber?.value = inputValue
-                                viewModel?.isAddToExistingSheetVisible?.value = true
-                            },
-                            shape = AppShapes.Chip,
-                            color = dialKeyColor,
-                            contentColor = MaterialTheme.colorScheme.onSurface,
+                    } else {
+                        Row(
                             modifier = Modifier
-                                .weight(1f)
-                                .heightIn(min = 48.dp)
-                                .testTag("overlay_add_to_existing_chip")
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
+                            Surface(
+                                onClick = {
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    }
+                                    viewModel?.openAddContactWithNumber(inputValue)
+                                },
+                                shape = AppShapes.Chip,
+                                color = dialKeyColor,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 8.dp, vertical = 8.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                                verticalAlignment = Alignment.CenterVertically
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
+                                    .testTag("overlay_create_contact_chip")
                             ) {
-                                Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
-                                Text(
-                                    text = stringResource(R.string.dialpad_add_to_existing),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Text(
+                                        text = stringResource(R.string.dialpad_create_contact),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.CLICK)
+                                    }
+                                    viewModel?.addToExistingPendingNumber?.value = inputValue
+                                    viewModel?.isAddToExistingSheetVisible?.value = true
+                                },
+                                shape = AppShapes.Chip,
+                                color = dialKeyColor,
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 48.dp)
+                                    .testTag("overlay_add_to_existing_chip")
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 8.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                                    Text(
+                                        text = stringResource(R.string.dialpad_add_to_existing),
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
                             }
                         }
                     }
@@ -221,13 +297,13 @@ fun DialpadOverlay(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(if (adaptive.maxHeight < 420.dp) 44.dp else 56.dp)
+                    .heightIn(min = if (adaptive.maxHeight < 420.dp) 44.dp else 56.dp)
                     .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Box(
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    modifier = Modifier.weight(1f).defaultMinSize(minHeight = 48.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     @Suppress("DEPRECATION")
@@ -260,7 +336,13 @@ fun DialpadOverlay(
                             decorationBox = { innerTextField ->
                                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                                     if (currentTfv.text.isEmpty()) {
-                                        Text(stringResource(R.string.dialpad_enter_number), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), textAlign = TextAlign.Center)
+                                        Text(
+                                            text = stringResource(R.string.dialpad_enter_number),
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            textAlign = TextAlign.Center,
+                                            maxLines = 2
+                                        )
                                     }
                                     innerTextField()
                                 }
@@ -423,7 +505,8 @@ fun DialpadOverlay(
                                 text = sim1Label,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }
@@ -465,7 +548,8 @@ fun DialpadOverlay(
                                 text = sim2Label,
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 1,
+                                textAlign = TextAlign.Center,
+                                maxLines = 2,
                                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                             )
                         }

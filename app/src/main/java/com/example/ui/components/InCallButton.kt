@@ -114,12 +114,18 @@ fun InCallButton(
         tonalElevation = 0.dp,
         shadowElevation = 0.dp
     ) {
+        val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+        val iconSize = if (fontScale >= 1.35f) 20.dp else 24.dp
+        val labelFontSize = if (fontScale >= 1.35f) 10.sp else 11.sp
+        val labelLineHeight = if (fontScale >= 1.35f) 12.sp else 14.sp
+        val spacing = if (fontScale >= 1.35f) 2.dp else 4.dp
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(4.dp)
+                .padding(horizontal = 2.dp, vertical = 2.dp)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 if (isPulsingRecording) {
@@ -128,10 +134,10 @@ fun InCallButton(
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(iconSize)
                 )
             }
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(spacing))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -150,10 +156,13 @@ fun InCallButton(
                 }
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = labelFontSize,
+                        lineHeight = labelLineHeight
+                    ),
                     textAlign = TextAlign.Center,
                     color = contentColor,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }

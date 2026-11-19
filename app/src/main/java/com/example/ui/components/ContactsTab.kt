@@ -23,6 +23,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -433,6 +435,7 @@ fun ContactsTabContent(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
                             .padding(bottom = 6.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -446,7 +449,6 @@ fun ContactsTabContent(
                                 contentColor = if (showOnlyFavorites) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             modifier = Modifier
-                                .weight(1f, fill = false)
                                 .heightIn(min = 48.dp)
                                 .testTag("favorites_toggle_fab")
                         ) {
@@ -493,8 +495,6 @@ fun ContactsTabContent(
                                 }
                             }
                         }
-
-                        Spacer(modifier = Modifier.weight(1f))
 
                         Button(
                             onClick = onAddContactClick,

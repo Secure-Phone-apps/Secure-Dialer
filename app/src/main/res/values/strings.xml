@@ -773,4 +773,11 @@ Version v%1$s (Stable Release)
     <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
     <string name="sim_label_placeholder">e.g. Work, Personal</string>
     <string name="toast_sim_renamed">SIM card renamed successfully</string>
+    <string name="filter_blocked">Blocked</string>
+    <string name="call_type_rejected">Rejected call</string>
+    <string name="call_type_blocked">Blocked call</string>
+    <string name="screened_by_app">Screened by %1$s</string>
+    <string name="private_number">Private number</string>
+    <string name="missed_calls_notification_title">%1$d missed calls</string>
+    <string name="tap_to_view_call_log">Tap to view call log</string>
 </resources>

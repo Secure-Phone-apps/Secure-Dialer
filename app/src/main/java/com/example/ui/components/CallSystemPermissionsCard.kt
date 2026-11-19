@@ -35,9 +35,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
@@ -152,6 +154,8 @@ fun CallSystemPermissionsCard(
         ).show()
     }
 
+    val fontScale = LocalDensity.current.fontScale
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -168,11 +172,13 @@ fun CallSystemPermissionsCard(
         border = cardBorder,
         shape = AppShapes.current.cardShape
     ) {
+        val stackActionButton = isShowingBatteryBanner || adaptive.isVeryNarrowWidth || adaptive.maxWidth < 360.dp || fontScale >= 1.25f
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(if (isShowingBatteryBanner) 6.dp else 0.dp)
+            verticalArrangement = Arrangement.spacedBy(if (stackActionButton) 8.dp else 0.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -228,7 +234,7 @@ fun CallSystemPermissionsCard(
                             modifier = Modifier.size(18.dp)
                         )
                     }
-                } else {
+                } else if (!stackActionButton) {
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = { executeAction() },
@@ -250,7 +256,8 @@ fun CallSystemPermissionsCard(
                             },
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            maxLines = 1,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }
@@ -258,17 +265,17 @@ fun CallSystemPermissionsCard(
             }
 
             if (isShowingBatteryBanner) {
-                FlowRow(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     TextButton(
                         onClick = dismissBatteryBanner,
                         modifier = Modifier
                             .heightIn(min = 48.dp)
                             .testTag("battery_warning_dismiss_button"),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.btn_dismiss),
@@ -283,7 +290,7 @@ fun CallSystemPermissionsCard(
                         modifier = Modifier
                             .heightIn(min = 48.dp)
                             .testTag("battery_warning_learn_more_button"),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.btn_learn_more),
@@ -303,13 +310,46 @@ fun CallSystemPermissionsCard(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = stringResource(R.string.btn_unrestricted),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+            } else if (stackActionButton) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Button(
+                        onClick = { executeAction() },
+                        modifier = Modifier
+                            .heightIn(min = 48.dp)
+                            .testTag("permissions_warning_action_button"),
+                        shape = AppShapes.current.buttonShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = when {
+                                needsDefaultDialer -> stringResource(R.string.btn_set_default)
+                                needsFullScreen -> stringResource(R.string.btn_configure)
+                                else -> stringResource(R.string.btn_grant)
+                            },
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
                     }

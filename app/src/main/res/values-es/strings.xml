@@ -709,4 +709,11 @@ Versión v%1$s (Versión estable)
     <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
     <string name="sim_label_placeholder">e.g. Work, Personal</string>
     <string name="toast_sim_renamed">SIM card renamed successfully</string>
+    <string name="filter_blocked">Bloqueadas</string>
+    <string name="call_type_rejected">Llamada rechazada</string>
+    <string name="call_type_blocked">Llamada bloqueada</string>
+    <string name="screened_by_app">Filtrada por %1$s</string>
+    <string name="private_number">Número privado</string>
+    <string name="missed_calls_notification_title">%1$d llamadas perdidas</string>
+    <string name="tap_to_view_call_log">Toca para ver el registro de llamadas</string>
 </resources>

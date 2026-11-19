@@ -291,6 +291,9 @@ fun SettingsRowToggle(
     val context = LocalContext.current
     val isExpressive = LocalM3Expressive.current
 
+    val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+    val titleStyle = if (fontScale >= 1.3f) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge
+
     ListItem(
         modifier = Modifier.clickable(enabled = enabled) {
             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
@@ -300,9 +303,9 @@ fun SettingsRowToggle(
             Text(
                 text = title,
                 fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge,
+                style = titleStyle,
                 color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
-                maxLines = 1,
+                maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
         },
@@ -311,7 +314,7 @@ fun SettingsRowToggle(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f),
-                maxLines = 3,
+                maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
         },
@@ -360,6 +363,8 @@ fun SettingsRowNav(
     iconTint: Color = Color.Unspecified
 ) {
     val context = LocalContext.current
+    val fontScale = androidx.compose.ui.platform.LocalDensity.current.fontScale
+    val titleStyle = if (fontScale >= 1.3f) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge
 
     ListItem(
         modifier = Modifier.clickable {
@@ -370,8 +375,8 @@ fun SettingsRowNav(
             Text(
                 text = title,
                 fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyLarge,
-                maxLines = 1,
+                style = titleStyle,
+                maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
         },
@@ -380,7 +385,7 @@ fun SettingsRowNav(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 2,
+                maxLines = 4,
                 overflow = TextOverflow.Ellipsis
             )
         },

@@ -164,7 +164,7 @@ class Converters {
         SpamNumber::class,
         CallReminder::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -202,6 +202,14 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_private_contacts_number` ON `private_contacts` (`number`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_private_contacts_name` ON `private_contacts` (`name`)")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_private_contacts_t9Mapping` ON `private_contacts` (`t9Mapping`)")
+            }
+        }
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `call_history` ADD COLUMN `numberPresentation` INTEGER NOT NULL DEFAULT 1")
+                db.execSQL("ALTER TABLE `call_history` ADD COLUMN `blockReason` INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE `call_history` ADD COLUMN `callScreeningAppName` TEXT NOT NULL DEFAULT ''")
             }
         }
 
@@ -285,7 +293,7 @@ abstract class AppDatabase : RoomDatabase() {
                     DATABASE_NAME
                 )
                     .openHelperFactory(factory)
-                    .addMigrations(MIGRATION_9_10)
+                    .addMigrations(MIGRATION_9_10, MIGRATION_10_11)
                     .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                     .fallbackToDestructiveMigrationOnDowngrade()
                     .build()

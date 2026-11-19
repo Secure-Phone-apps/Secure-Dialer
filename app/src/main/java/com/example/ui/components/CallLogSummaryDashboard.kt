@@ -49,6 +49,7 @@ import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.ui.theme.AppShapes
 import com.example.ui.theme.LocalM3Expressive
+import com.example.ui.theme.getBlockedCallColor
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
@@ -116,6 +117,9 @@ fun CallLogSummaryDashboard(
     val missedCallsCount = remember(filteredRecords) { filteredRecords.count { it.type == CallType.MISSED } }
     val outgoingCallsCount = remember(filteredRecords) { filteredRecords.count { it.type == CallType.OUTGOING } }
     val receivedCallsCount = remember(filteredRecords) { filteredRecords.count { it.type == CallType.INCOMING } }
+    val blockedCallsCount = remember(filteredRecords) {
+        filteredRecords.count { it.type == CallType.REJECTED || it.type == CallType.BLOCKED }
+    }
     val totalDurationSeconds = remember(filteredRecords) { filteredRecords.sumOf { it.duration } }
 
     val formattedTotalDuration = remember(totalDurationSeconds) {
@@ -283,6 +287,41 @@ fun CallLogSummaryDashboard(
                         )
                     }
 
+                    if (blockedCallsCount > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(AppShapes.Small)
+                                .background(getBlockedCallColor().copy(alpha = 0.12f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Block,
+                                    contentDescription = null,
+                                    tint = getBlockedCallColor(),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = stringResource(R.string.filter_blocked),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = getBlockedCallColor(),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                            Text(
+                                text = blockedCallsCount.toString(),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
                     if (dashboardMode == "FULL") {
                         Spacer(modifier = Modifier.height(4.dp))
 
@@ -403,7 +442,7 @@ fun SummaryBox(
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
                 fontSize = 10.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }

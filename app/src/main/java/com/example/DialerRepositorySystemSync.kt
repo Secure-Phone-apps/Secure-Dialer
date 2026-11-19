@@ -372,6 +372,16 @@ suspend fun DialerRepository.fetchAvailableAccounts(): List<ContactAccount> = wi
     list
 }
 
+internal fun mapSystemCallType(systemType: Int): CallType {
+    return when (systemType) {
+        CallLog.Calls.MISSED_TYPE -> CallType.MISSED
+        CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
+        CallLog.Calls.REJECTED_TYPE -> CallType.REJECTED
+        CallLog.Calls.BLOCKED_TYPE -> CallType.BLOCKED
+        else -> CallType.INCOMING
+    }
+}
+
 suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withContext(Dispatchers.IO) {
     val logs = mutableListOf<CallRecord>()
     val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
@@ -406,38 +416,107 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
         }
     } catch (_: Exception) {}
 
+    val baseProjection = arrayOf(
+        CallLog.Calls._ID,
+        CallLog.Calls.CACHED_NAME,
+        CallLog.Calls.NUMBER,
+        CallLog.Calls.TYPE,
+        CallLog.Calls.DATE,
+        CallLog.Calls.DURATION,
+        CallLog.Calls.PHONE_ACCOUNT_ID,
+        CallLog.Calls.NUMBER_PRESENTATION
+    )
+    val api29Projection = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+        arrayOf(
+            CallLog.Calls._ID,
+            CallLog.Calls.CACHED_NAME,
+            CallLog.Calls.NUMBER,
+            CallLog.Calls.TYPE,
+            CallLog.Calls.DATE,
+            CallLog.Calls.DURATION,
+            CallLog.Calls.PHONE_ACCOUNT_ID,
+            CallLog.Calls.NUMBER_PRESENTATION,
+            CallLog.Calls.BLOCK_REASON,
+            CallLog.Calls.CALL_SCREENING_APP_NAME
+        )
+    } else {
+        baseProjection
+    }
+    val minimalFallbackProjection = arrayOf(
+        CallLog.Calls._ID,
+        CallLog.Calls.CACHED_NAME,
+        CallLog.Calls.NUMBER,
+        CallLog.Calls.TYPE,
+        CallLog.Calls.DATE,
+        CallLog.Calls.DURATION,
+        CallLog.Calls.PHONE_ACCOUNT_ID
+    )
+
+    var cursor: Cursor? = null
     try {
-        context.contentResolver.query(
+        cursor = context.contentResolver.query(
             CallLog.Calls.CONTENT_URI,
-            arrayOf(
-                CallLog.Calls._ID,
-                CallLog.Calls.CACHED_NAME,
-                CallLog.Calls.NUMBER,
-                CallLog.Calls.TYPE,
-                CallLog.Calls.DATE,
-                CallLog.Calls.DURATION,
-                CallLog.Calls.PHONE_ACCOUNT_ID
-            ),
-            null, null, "${CallLog.Calls.DATE} DESC"
-        )?.use { cursor ->
-            val idIdx = cursor.getColumnIndex(CallLog.Calls._ID)
-            val nameIdx = cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)
-            val numIdx = cursor.getColumnIndex(CallLog.Calls.NUMBER)
-            val typeIdx = cursor.getColumnIndex(CallLog.Calls.TYPE)
-            val dateIdx = cursor.getColumnIndex(CallLog.Calls.DATE)
-            val durIdx = cursor.getColumnIndex(CallLog.Calls.DURATION)
-            val accountIdIdx = cursor.getColumnIndex(CallLog.Calls.PHONE_ACCOUNT_ID)
+            api29Projection,
+            null,
+            null,
+            "${CallLog.Calls.DATE} DESC"
+        )
+    } catch (_: Exception) {
+        try {
+            cursor = context.contentResolver.query(
+                CallLog.Calls.CONTENT_URI,
+                baseProjection,
+                null,
+                null,
+                "${CallLog.Calls.DATE} DESC"
+            )
+        } catch (_: Exception) {
+            try {
+                cursor = context.contentResolver.query(
+                    CallLog.Calls.CONTENT_URI,
+                    minimalFallbackProjection,
+                    null,
+                    null,
+                    "${CallLog.Calls.DATE} DESC"
+                )
+            } catch (_: Exception) {}
+        }
+    }
 
-            while (cursor.moveToNext()) {
-                val num = if (numIdx != -1) cursor.getString(numIdx) ?: "" else ""
-                val cachedName = if (nameIdx != -1) cursor.getString(nameIdx) else null
+    try {
+        cursor?.use { c ->
+            val idIdx = c.getColumnIndex(CallLog.Calls._ID)
+            val nameIdx = c.getColumnIndex(CallLog.Calls.CACHED_NAME)
+            val numIdx = c.getColumnIndex(CallLog.Calls.NUMBER)
+            val typeIdx = c.getColumnIndex(CallLog.Calls.TYPE)
+            val dateIdx = c.getColumnIndex(CallLog.Calls.DATE)
+            val durIdx = c.getColumnIndex(CallLog.Calls.DURATION)
+            val accountIdIdx = c.getColumnIndex(CallLog.Calls.PHONE_ACCOUNT_ID)
+            val presentationIdx = c.getColumnIndex(CallLog.Calls.NUMBER_PRESENTATION)
+            val blockReasonIdx = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                c.getColumnIndex(CallLog.Calls.BLOCK_REASON)
+            } else {
+                -1
+            }
+            val screeningAppIdx = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                c.getColumnIndex(CallLog.Calls.CALL_SCREENING_APP_NAME)
+            } else {
+                -1
+            }
 
-                // FIXED: Uses instant in-memory ContactCache instead of querying SQLite on every loop
-                val matchingContact = if (num.isNotBlank()) ContactCache.getContact(num) else null
-                val matchingCnapName = if (num.isNotBlank()) ContactCache.getCnapName(num) else null
+            while (c.moveToNext()) {
+                val num = if (numIdx != -1) c.getString(numIdx) ?: "" else ""
+                val cachedName = if (nameIdx != -1) c.getString(nameIdx) else null
+                val presentationVal = if (presentationIdx != -1) c.getInt(presentationIdx) else CallLog.Calls.PRESENTATION_ALLOWED
+                val blockReasonVal = if (blockReasonIdx != -1) c.getInt(blockReasonIdx) else 0
+                val screeningAppVal = if (screeningAppIdx != -1) c.getString(screeningAppIdx)?.trim() ?: "" else ""
 
                 val rawNumTrimmed = num.trim()
-                val isUnknownNum = rawNumTrimmed.isBlank() ||
+                val isNonAllowedPresentation = presentationVal == CallLog.Calls.PRESENTATION_RESTRICTED ||
+                        presentationVal == CallLog.Calls.PRESENTATION_UNKNOWN ||
+                        presentationVal == CallLog.Calls.PRESENTATION_PAYPHONE
+                val isUnknownNum = isNonAllowedPresentation ||
+                        rawNumTrimmed.isBlank() ||
                         rawNumTrimmed == "-1" || rawNumTrimmed == "-2" || rawNumTrimmed == "-3" ||
                         rawNumTrimmed.equals("unknown", ignoreCase = true) ||
                         rawNumTrimmed.equals("private", ignoreCase = true) ||
@@ -446,20 +525,24 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                         rawNumTrimmed.equals("p", ignoreCase = true) ||
                         rawNumTrimmed.equals("0", ignoreCase = true)
 
+                // Uses instant in-memory ContactCache instead of querying SQLite on every loop
+                val matchingContact = if (!isUnknownNum && num.isNotBlank()) ContactCache.getContact(num) else null
+                val matchingCnapName = if (!isUnknownNum && num.isNotBlank()) ContactCache.getCnapName(num) else null
+
                 val isSavedContact = (matchingContact != null) || (!cachedName.isNullOrBlank() && !cachedName.equals(num, ignoreCase = true) && !isUnknownNum)
                 val isVerified = !isSavedContact && !matchingCnapName.isNullOrBlank()
 
                 val name = when {
                     matchingContact != null -> matchingContact.name
-                    !cachedName.isNullOrBlank() && !cachedName.equals(num, ignoreCase = true) -> cachedName
+                    !cachedName.isNullOrBlank() && !cachedName.equals(num, ignoreCase = true) && !isUnknownNum -> cachedName
                     !matchingCnapName.isNullOrBlank() -> matchingCnapName
                     isUnknownNum -> "Unknown"
                     else -> num
                 }
 
                 val finalNum = if (isUnknownNum) "" else num
-                val dateVal = if (dateIdx != -1) cursor.getLong(dateIdx) else 0L
-                val phoneAccountId = if (accountIdIdx != -1) cursor.getString(accountIdIdx) ?: "" else ""
+                val dateVal = if (dateIdx != -1) c.getLong(dateIdx) else 0L
+                val phoneAccountId = if (accountIdIdx != -1) c.getString(accountIdIdx) ?: "" else ""
                 val trackedSimSlot = SimCallTracker.getSimSlotForCall(context, num, dateVal)
 
                 val simSlot = MultiSimManager.resolveCallLogSimSlot(
@@ -468,14 +551,10 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                     subIdToSlotMap = subIdToSlotMap
                 )
 
-                val typeVal = if (typeIdx != -1) cursor.getInt(typeIdx) else CallLog.Calls.INCOMING_TYPE
-                val type = when (typeVal) {
-                    CallLog.Calls.MISSED_TYPE -> CallType.MISSED
-                    CallLog.Calls.OUTGOING_TYPE -> CallType.OUTGOING
-                    else -> CallType.INCOMING
-                }
-                val idVal = if (idIdx != -1) cursor.getInt(idIdx) else 0
-                val durVal = if (durIdx != -1) cursor.getLong(durIdx) else 0L
+                val typeVal = if (typeIdx != -1) c.getInt(typeIdx) else CallLog.Calls.INCOMING_TYPE
+                val type = mapSystemCallType(typeVal)
+                val idVal = if (idIdx != -1) c.getInt(idIdx) else 0
+                val durVal = if (durIdx != -1) c.getLong(durIdx) else 0L
 
                 val contactLabel = matchingContact?.label ?: ""
                 val pair = colors[Math.abs(name.hashCode()) % colors.size]
@@ -496,7 +575,10 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                         photoUri = photoUriVal,
                         timestampMs = dateVal,
                         isVerified = isVerified,
-                        simSlot = simSlot
+                        simSlot = simSlot,
+                        numberPresentation = presentationVal,
+                        blockReason = blockReasonVal,
+                        callScreeningAppName = screeningAppVal
                     )
                 )
             }

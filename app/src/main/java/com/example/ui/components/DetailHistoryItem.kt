@@ -20,12 +20,15 @@ package com.example.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import android.provider.CallLog
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CallMissed
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PhoneDisabled
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -42,6 +45,7 @@ import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
 import com.example.ui.theme.AppShapes
+import com.example.ui.theme.getBlockedCallColor
 import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
@@ -55,6 +59,8 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
         CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
         CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
         CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
+        CallType.REJECTED -> Icons.Default.PhoneDisabled to getBlockedCallColor()
+        CallType.BLOCKED -> Icons.Default.Block to getBlockedCallColor()
     }
 
     Card(
@@ -112,6 +118,8 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     CallType.MISSED -> stringResource(R.string.call_type_missed)
                     CallType.OUTGOING -> stringResource(R.string.call_type_outgoing)
                     CallType.INCOMING -> stringResource(R.string.call_type_incoming)
+                    CallType.REJECTED -> stringResource(R.string.call_type_rejected)
+                    CallType.BLOCKED -> stringResource(R.string.call_type_blocked)
                 }
 
                 val durationText = if (record.duration > 0) {
@@ -173,13 +181,18 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                     } else {
                         val isUnsavedWithoutCnap = record.name == record.number || record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3")
                         if (isUnsavedWithoutCnap) {
+                            val badgeLabel = if (record.numberPresentation == CallLog.Calls.PRESENTATION_RESTRICTED) {
+                                stringResource(R.string.private_number)
+                            } else {
+                                stringResource(R.string.unknown)
+                            }
                             Surface(
                                 shape = AppShapes.Small,
                                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
                                 border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                             ) {
                                 Text(
-                                    text = stringResource(R.string.unknown),
+                                    text = badgeLabel,
                                     style = MaterialTheme.typography.labelSmall,
                                     fontSize = 8.5.sp,
                                     fontWeight = FontWeight.SemiBold,
@@ -197,13 +210,19 @@ fun DetailHistoryItem(record: CallRecord, onDeleteClick: () -> Unit) {
                         fontWeight = FontWeight.Medium
                     )
 
-                    if (durationText != null) {
+                    if (record.callScreeningAppName.isNotBlank()) {
+                        Text(
+                            text = "• " + stringResource(R.string.screened_by_app, record.callScreeningAppName),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = getBlockedCallColor()
+                        )
+                    } else if (durationText != null) {
                         Text(
                             text = "• $durationText",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    } else if (record.type != CallType.MISSED) {
+                    } else if (record.type != CallType.MISSED && record.type != CallType.REJECTED && record.type != CallType.BLOCKED) {
                         Text(
                             text = "• " + stringResource(R.string.no_answer),
                             style = MaterialTheme.typography.bodySmall,

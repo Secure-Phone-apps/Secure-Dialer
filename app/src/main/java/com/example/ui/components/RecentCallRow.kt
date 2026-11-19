@@ -22,6 +22,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.CallLog
 import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
@@ -165,16 +166,22 @@ fun RecentCallRow(
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
+                                val displayNameText = when {
+                                    record.numberPresentation == CallLog.Calls.PRESENTATION_RESTRICTED &&
+                                            (record.name == "Unknown" || record.name.isBlank()) -> stringResource(R.string.private_number)
+                                    record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3") -> stringResource(R.string.unknown)
+                                    else -> com.example.formatContactName(record.name, viewModel.contactNameFormat.value)
+                                }
                                 Text(
-                                    text = if (record.name == "Unknown" || record.name.isBlank() || record.name in listOf("-1", "-2", "-3")) {
-                                        stringResource(R.string.unknown)
-                                    } else {
-                                        com.example.formatContactName(record.name, viewModel.contactNameFormat.value)
-                                    },
+                                    text = displayNameText,
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     lineHeight = 18.sp,
-                                    color = if (record.type == CallType.MISSED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                                    color = when (record.type) {
+                                        CallType.MISSED -> MaterialTheme.colorScheme.error
+                                        CallType.REJECTED, CallType.BLOCKED -> getBlockedCallColor()
+                                        else -> MaterialTheme.colorScheme.onSurface
+                                    },
                                     modifier = Modifier.weight(1f, fill = false),
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis
@@ -195,6 +202,8 @@ fun RecentCallRow(
                                     CallType.MISSED -> Icons.Default.CallMissed to getMissedCallColor()
                                     CallType.OUTGOING -> Icons.AutoMirrored.Filled.CallMade to getDialedCallColor()
                                     CallType.INCOMING -> Icons.AutoMirrored.Filled.CallReceived to getReceivedCallColor()
+                                    CallType.REJECTED -> Icons.Default.PhoneDisabled to getBlockedCallColor()
+                                    CallType.BLOCKED -> Icons.Default.Block to getBlockedCallColor()
                                 }
                                 Icon(
                                     imageVector = icon,
@@ -218,6 +227,43 @@ fun RecentCallRow(
                                             fontWeight = FontWeight.ExtraBold,
                                             color = if (isSim1) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 0.5.dp)
+                                        )
+                                    }
+                                }
+
+                                if (record.callScreeningAppName.isNotBlank()) {
+                                    Surface(
+                                        shape = AppShapes.Chip,
+                                        color = getBlockedCallColor().copy(alpha = 0.14f),
+                                        border = BorderStroke(0.5.dp, getBlockedCallColor().copy(alpha = 0.4f))
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.screened_by_app, record.callScreeningAppName),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = getBlockedCallColor(),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                } else if (record.type == CallType.REJECTED || record.type == CallType.BLOCKED) {
+                                    Surface(
+                                        shape = AppShapes.Chip,
+                                        color = getBlockedCallColor().copy(alpha = 0.14f),
+                                        border = BorderStroke(0.5.dp, getBlockedCallColor().copy(alpha = 0.4f))
+                                    ) {
+                                        Text(
+                                            text = stringResource(
+                                                if (record.type == CallType.REJECTED) R.string.call_type_rejected else R.string.call_type_blocked
+                                            ),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontSize = 8.5.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = getBlockedCallColor(),
+                                            maxLines = 1,
+                                            modifier = Modifier.padding(horizontal = 4.5.dp, vertical = 1.dp)
                                         )
                                     }
                                 }
@@ -339,16 +385,18 @@ fun RecentCallRow(
                         }
                     },
                     trailingContent = {
-                        IconButton(onClick = {
-                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                            onCallClick()
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Call,
-                                contentDescription = stringResource(R.string.call_status_ongoing),
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
+                        if (record.number.isNotBlank()) {
+                            IconButton(onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                onCallClick()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Call,
+                                    contentDescription = stringResource(R.string.call_status_ongoing),
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
                         }
                     },
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent)
@@ -382,51 +430,65 @@ fun RecentCallRow(
                             horizontalArrangement = Arrangement.SpaceEvenly,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            val isContact = record.name != record.number
+                            val hasValidNumber = record.number.isNotBlank()
+                            val isContact = hasValidNumber && record.name != record.number && record.name != "Unknown"
 
-                            DetailActionItem(
-                                icon = Icons.Default.Chat,
-                                label = "WhatsApp",
-                                containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
-                                contentColor = Color(0xFF1EBE5D),
-                                onClick = {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                                    com.example.util.WhatsAppHelper.openWhatsAppChat(context, record.number)
-                                }
-                            )
+                            if (hasValidNumber) {
+                                DetailActionItem(
+                                    icon = Icons.Default.Chat,
+                                    label = "WhatsApp",
+                                    containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
+                                    contentColor = Color(0xFF1EBE5D),
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                        com.example.util.WhatsAppHelper.openWhatsAppChat(context, record.number)
+                                    }
+                                )
 
-                            DetailActionItem(
-                                icon = Icons.Default.Message,
-                                label = stringResource(R.string.send_sms),
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                                onClick = {
-                                    try {
-                                        val intent = Intent(Intent.ACTION_SENDTO).apply {
-                                            data = Uri.parse("smsto:${record.number}")
-                                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                DetailActionItem(
+                                    icon = Icons.Default.Message,
+                                    label = stringResource(R.string.send_sms),
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    onClick = {
+                                        try {
+                                            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                data = Uri.parse("smsto:${record.number}")
+                                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                            }
+                                            context.startActivity(intent)
+                                        } catch (_: Exception) {
+                                            Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                                         }
-                                        context.startActivity(intent)
-                                    } catch (_: Exception) {
-                                        Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
                                     }
-                                }
-                            )
+                                )
 
-                            DetailActionItem(
-                                icon = Icons.Default.Block,
-                                label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
-                                containerColor = if (isBlocked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
-                                contentColor = if (isBlocked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error,
-                                onClick = {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    if (isBlocked) {
-                                        viewModel.removeBlockedNumber(record.number)
-                                    } else {
-                                        viewModel.addBlockedNumber(record.number)
+                                DetailActionItem(
+                                    icon = Icons.Default.Block,
+                                    label = if (isBlocked) stringResource(R.string.unblock) else stringResource(R.string.block),
+                                    containerColor = if (isBlocked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
+                                    contentColor = if (isBlocked) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error,
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        if (isBlocked) {
+                                            viewModel.removeBlockedNumber(record.number)
+                                        } else {
+                                            viewModel.addBlockedNumber(record.number)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            } else {
+                                DetailActionItem(
+                                    icon = Icons.Default.Delete,
+                                    label = stringResource(R.string.btn_delete),
+                                    containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
+                                    contentColor = MaterialTheme.colorScheme.error,
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                        onDeleteRecord(record.id)
+                                    }
+                                )
+                            }
 
                             DetailActionItem(
                                 icon = Icons.Default.History,
@@ -435,40 +497,42 @@ fun RecentCallRow(
                                 contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                 onClick = {
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    onHistoryClick(record.number)
+                                    onHistoryClick(if (hasValidNumber) record.number else "$RECORD_HISTORY_PREFIX${record.id}")
                                 }
                             )
 
-                            DetailActionItem(
-                                icon = if (isContact) Icons.Default.Edit else Icons.Default.PersonAdd,
-                                label = if (isContact) stringResource(R.string.btn_edit) else stringResource(R.string.action_add_contact),
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                                onClick = {
-                                    RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    if (isContact) {
-                                        viewModel.oldContactToEdit.value = Contact(
-                                            number = record.number,
-                                            name = record.name,
-                                            label = record.label,
-                                            favorite = false,
-                                            avatarText = record.avatarText,
-                                            avatarBgValue = record.avatarBgValue,
-                                            avatarTextColorValue = record.avatarTextColorValue,
-                                            email = ""
-                                        )
-                                        viewModel.editContactName.value = record.name
-                                        viewModel.editContactNumber.value = record.number
-                                        viewModel.editContactLabel.value = record.label
-                                        viewModel.isEditContactDialogVisible.value = true
-                                    } else {
-                                        viewModel.newContactName.value = ""
-                                        viewModel.newContactNumber.value = record.number
-                                        viewModel.newContactLabel.value = "Mobile"
-                                        viewModel.isAddContactDialogVisible.value = true
+                            if (hasValidNumber) {
+                                DetailActionItem(
+                                    icon = if (isContact) Icons.Default.Edit else Icons.Default.PersonAdd,
+                                    label = if (isContact) stringResource(R.string.btn_edit) else stringResource(R.string.action_add_contact),
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    onClick = {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        if (isContact) {
+                                            viewModel.oldContactToEdit.value = Contact(
+                                                number = record.number,
+                                                name = record.name,
+                                                label = record.label,
+                                                favorite = false,
+                                                avatarText = record.avatarText,
+                                                avatarBgValue = record.avatarBgValue,
+                                                avatarTextColorValue = record.avatarTextColorValue,
+                                                email = ""
+                                            )
+                                            viewModel.editContactName.value = record.name
+                                            viewModel.editContactNumber.value = record.number
+                                            viewModel.editContactLabel.value = record.label
+                                            viewModel.isEditContactDialogVisible.value = true
+                                        } else {
+                                            viewModel.newContactName.value = ""
+                                            viewModel.newContactNumber.value = record.number
+                                            viewModel.newContactLabel.value = "Mobile"
+                                            viewModel.isAddContactDialogVisible.value = true
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
 
                             if (matchingRecordings.isNotEmpty()) {
                                 DetailActionItem(

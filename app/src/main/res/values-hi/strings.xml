@@ -709,4 +709,11 @@
     <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
     <string name="sim_label_placeholder">e.g. Work, Personal</string>
     <string name="toast_sim_renamed">SIM card renamed successfully</string>
+    <string name="filter_blocked">ब्लॉक की गई</string>
+    <string name="call_type_rejected">अस्वीकृत कॉल</string>
+    <string name="call_type_blocked">ब्लॉक कॉल</string>
+    <string name="screened_by_app">%1$s द्वारा स्क्रीन की गई</string>
+    <string name="private_number">निजी नंबर</string>
+    <string name="missed_calls_notification_title">%1$d मिस्ड कॉल</string>
+    <string name="tap_to_view_call_log">कॉल लॉग देखने के लिए टैप करें</string>
 </resources>

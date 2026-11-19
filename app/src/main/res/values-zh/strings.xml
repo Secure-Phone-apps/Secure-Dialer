@@ -709,4 +709,11 @@
     <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
     <string name="sim_label_placeholder">e.g. Work, Personal</string>
     <string name="toast_sim_renamed">SIM card renamed successfully</string>
+    <string name="filter_blocked">已拦截</string>
+    <string name="call_type_rejected">已拒接电话</string>
+    <string name="call_type_blocked">已拦截电话</string>
+    <string name="screened_by_app">由 %1$s 拦截</string>
+    <string name="private_number">私人号码</string>
+    <string name="missed_calls_notification_title">%1$d 个未接来电</string>
+    <string name="tap_to_view_call_log">轻点查看通话记录</string>
 </resources>

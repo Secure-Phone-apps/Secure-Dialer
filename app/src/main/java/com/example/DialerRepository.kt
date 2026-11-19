@@ -180,28 +180,46 @@ class DialerRepository(rawContext: Context) {
             val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
             var systemCount = 0
             var systemMaxId = 0
+            val sigBuilder = StringBuilder()
             context.contentResolver.query(
                 CallLog.Calls.CONTENT_URI,
-                arrayOf(CallLog.Calls._ID),
-                null, null, "${CallLog.Calls._ID} DESC"
+                arrayOf(CallLog.Calls._ID, CallLog.Calls.TYPE, CallLog.Calls.DATE, CallLog.Calls.DURATION),
+                null, null, "${CallLog.Calls.DATE} DESC"
             )?.use { cursor ->
                 systemCount = cursor.count
-                if (cursor.moveToFirst()) {
-                    val idCol = cursor.getColumnIndex(CallLog.Calls._ID)
-                    if (idCol != -1) {
-                        systemMaxId = cursor.getInt(idCol)
-                    }
+                val idCol = cursor.getColumnIndex(CallLog.Calls._ID)
+                val typeCol = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val dateCol = cursor.getColumnIndex(CallLog.Calls.DATE)
+                val durCol = cursor.getColumnIndex(CallLog.Calls.DURATION)
+                var sampled = 0
+                while (cursor.moveToNext() && sampled < 10) {
+                    val rowId = if (idCol != -1) cursor.getInt(idCol) else 0
+                    val rowType = if (typeCol != -1) cursor.getInt(typeCol) else 0
+                    val rowDate = if (dateCol != -1) cursor.getLong(dateCol) else 0L
+                    val rowDur = if (durCol != -1) cursor.getLong(durCol) else 0L
+                    if (rowId > systemMaxId) systemMaxId = rowId
+                    sigBuilder.append(rowId).append(':').append(rowType).append(':').append(rowDate).append(':').append(rowDur).append(';')
+                    sampled++
                 }
             }
 
+            val systemSignature = sigBuilder.toString()
             val localCount = dao.getCallLogCount()
             val lastSyncedMaxId = prefs.getInt("last_synced_call_log_max_id", -1)
             val lastSyncedCount = prefs.getInt("last_synced_call_log_count", -1)
+            val lastSyncedSignature = prefs.getString("last_synced_call_log_signature", "") ?: ""
             val currentLang = Locale.getDefault().language
             val lastSyncedLang = prefs.getString("last_synced_locale_lang", "")
             val localeChanged = currentLang != lastSyncedLang
 
-            if (!force && localCount > 0 && localCount == systemCount && systemMaxId == lastSyncedMaxId && systemCount == lastSyncedCount && !localeChanged) {
+            if (!force &&
+                localCount > 0 &&
+                localCount == systemCount &&
+                systemMaxId == lastSyncedMaxId &&
+                systemCount == lastSyncedCount &&
+                systemSignature == lastSyncedSignature &&
+                !localeChanged
+            ) {
                 return@withContext
             }
 
@@ -220,6 +238,7 @@ class DialerRepository(rawContext: Context) {
             prefs.edit()
                 .putInt("last_synced_call_log_max_id", systemMaxId)
                 .putInt("last_synced_call_log_count", systemCount)
+                .putString("last_synced_call_log_signature", systemSignature)
                 .putString("last_synced_locale_lang", currentLang)
                 .apply()
         } catch (_: Exception) {
@@ -1022,6 +1041,8 @@ class DialerRepository(rawContext: Context) {
                 CallType.MISSED -> CallLog.Calls.MISSED_TYPE
                 CallType.OUTGOING -> CallLog.Calls.OUTGOING_TYPE
                 CallType.INCOMING -> CallLog.Calls.INCOMING_TYPE
+                CallType.REJECTED -> CallLog.Calls.REJECTED_TYPE
+                CallType.BLOCKED -> CallLog.Calls.BLOCKED_TYPE
             }
             val values = ContentValues().apply {
                 put(CallLog.Calls.NUMBER, number)

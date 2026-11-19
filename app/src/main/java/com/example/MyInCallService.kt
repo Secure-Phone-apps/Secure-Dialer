@@ -570,7 +570,26 @@ class MyInCallService : InCallService() {
                     if (wasRinging && !wasBlocked && !CallManager.isPreCancelledCall(c)) {
                         val cause = c.details?.disconnectCause?.code
                         if (cause != DisconnectCause.REJECTED && cause != DisconnectCause.LOCAL) {
-                            showMissedCallNotification(c)
+                            val disconnectedAtMs = System.currentTimeMillis()
+                            val callerNum = c.details?.handle?.schemeSpecificPart ?: ""
+                            val resolvedName = resolveCallerDisplayName(c, callerNum)
+                            serviceScope.launch {
+                                delay(450L)
+                                val prefs = applicationContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                                val lastTelecomBroadcastMs = prefs.getLong(
+                                    com.example.util.MissedCallNotificationReceiver.PREF_LAST_TELECOM_MISSED_BROADCAST_MS,
+                                    0L
+                                )
+                                if (lastTelecomBroadcastMs < disconnectedAtMs - 500L) {
+                                    com.example.util.MissedCallNotificationReceiver.postMissedCallNotification(
+                                        context = applicationContext,
+                                        nm = nm,
+                                        count = 1,
+                                        rawNumber = callerNum,
+                                        displayName = resolvedName
+                                    )
+                                }
+                            }
                         }
                     }
                     if (CallManager.waitingCall.value === c) {
@@ -1011,37 +1030,15 @@ class MyInCallService : InCallService() {
     }
 
     private fun showMissedCallNotification(call: Call) {
-        val number = call.details?.handle?.schemeSpecificPart ?: "Unknown"
+        val number = call.details?.handle?.schemeSpecificPart ?: ""
         val displayName = resolveCallerDisplayName(call, number)
-
-        val contentPendingIntent = PendingIntent.getActivity(
-            this, 301,
-            Intent(this, MainActivity::class.java).apply {
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                putExtra("SHOW_CALL_LOG", true)
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        com.example.util.MissedCallNotificationReceiver.postMissedCallNotification(
+            context = applicationContext,
+            nm = nm,
+            count = 1,
+            rawNumber = number,
+            displayName = displayName
         )
-
-        val callBackPendingIntent = PendingIntent.getActivity(
-            this, 302,
-            Intent(Intent.ACTION_DIAL).apply {
-                data = Uri.parse("tel:$number")
-            },
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val notification = NotificationCompat.Builder(this, CHANNEL_MISSED)
-            .setSmallIcon(android.R.drawable.sym_call_missed)
-            .setContentTitle(getString(R.string.call_type_missed))
-            .setContentText("${getString(R.string.call_type_missed)}: $displayName")
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .setContentIntent(contentPendingIntent)
-            .setAutoCancel(true)
-            .addAction(android.R.drawable.sym_action_call, getString(R.string.btn_call_back), callBackPendingIntent)
-            .build()
-
-        nm.notify(NOTIFICATION_ID_MISSED, notification)
     }
 
     private fun toggleCallRecordingFromNotification() {

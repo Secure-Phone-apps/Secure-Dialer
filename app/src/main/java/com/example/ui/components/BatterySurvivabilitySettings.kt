@@ -277,7 +277,7 @@ fun BatterySurvivabilitySettings(
                             label = {
                                 Text(
                                     text = stringResource(R.string.battery_schedule_show_now),
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             },
@@ -297,7 +297,7 @@ fun BatterySurvivabilitySettings(
                             label = {
                                 Text(
                                     text = stringResource(R.string.battery_schedule_1_day),
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             },
@@ -317,7 +317,7 @@ fun BatterySurvivabilitySettings(
                             label = {
                                 Text(
                                     text = stringResource(R.string.battery_schedule_1_week),
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             },
@@ -336,7 +336,7 @@ fun BatterySurvivabilitySettings(
                             label = {
                                 Text(
                                     text = stringResource(R.string.battery_schedule_disable),
-                                    maxLines = 1,
+                                    maxLines = 2,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             },

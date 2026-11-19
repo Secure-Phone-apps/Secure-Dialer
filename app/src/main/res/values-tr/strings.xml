@@ -767,10 +767,17 @@ Sürüm v%1$s (Kararlı Sürüm)
     <string name="battery_why_recording_desc">Kısıtlanmamış pil, OEM görev sonlandırıcılarının uzun arka plan arama kayıtlarını durdurmasını veya arama sırasında ses hizmetlerini sonlandırmasını önlemeye yardımcı olur.</string>
     <string name="btn_open_oem_battery_settings">Pil ve Otomatik Başlatma Ayarlarını Aç</string>
     <string name="btn_open_app_details_settings">Sistem Uygulama Bilgilerini Aç</string>
-    <string name="settings_rename_sims">Rename SIM Cards</string>
-    <string name="settings_rename_sims_sub">Customize SIM labels for Work, Personal, etc.</string>
-    <string name="dialog_rename_sim_title">Rename SIM Card</string>
-    <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
-    <string name="sim_label_placeholder">e.g. Work, Personal</string>
-    <string name="toast_sim_renamed">SIM card renamed successfully</string>
+    <string name="settings_rename_sims">SIM Kartlarını Yeniden Adlandır</string>
+    <string name="settings_rename_sims_sub">İş, Kişisel vb. için SIM etiketlerini özelleştirin</string>
+    <string name="dialog_rename_sim_title">SIM Kartını Yeniden Adlandır</string>
+    <string name="dialog_rename_sim_prompt">%1$s için özel etiket girin</string>
+    <string name="sim_label_placeholder">örn. İş, Kişisel</string>
+    <string name="toast_sim_renamed">SIM kartı başarıyla yeniden adlandırıldı</string>
+    <string name="filter_blocked">Engellenen</string>
+    <string name="call_type_rejected">Reddedilen arama</string>
+    <string name="call_type_blocked">Engellenen arama</string>
+    <string name="screened_by_app">%1$s tarafından filtrelendi</string>
+    <string name="private_number">Gizli numara</string>
+    <string name="missed_calls_notification_title">%1$d cevapsız arama</string>
+    <string name="tap_to_view_call_log">Arama kaydını görmek için dokunun</string>
 </resources>

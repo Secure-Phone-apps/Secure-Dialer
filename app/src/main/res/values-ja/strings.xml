@@ -709,4 +709,11 @@
     <string name="dialog_rename_sim_prompt">Enter custom label for %1$s</string>
     <string name="sim_label_placeholder">e.g. Work, Personal</string>
     <string name="toast_sim_renamed">SIM card renamed successfully</string>
+    <string name="filter_blocked">着信拒否</string>
+    <string name="call_type_rejected">拒否された通話</string>
+    <string name="call_type_blocked">ブロックされた通話</string>
+    <string name="screened_by_app">%1$s によりスクリーニング</string>
+    <string name="private_number">非通知番号</string>
+    <string name="missed_calls_notification_title">%1$d 件の不在着信</string>
+    <string name="tap_to_view_call_log">タップして通話履歴を表示</string>
 </resources>

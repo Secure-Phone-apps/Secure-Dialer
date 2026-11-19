@@ -336,6 +336,9 @@ class MainActivity : ComponentActivity() {
             this,
             android.Manifest.permission.RECORD_AUDIO
         ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_CALL_LOG) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            viewModel.syncData(force = false)
+        }
         if (AppDatabase.integrityStatus.value is DatabaseIntegrityStatus.TransientKeystoreError) {
             lifecycleScope.launch(Dispatchers.IO) {
                 AppDatabase.retryOpenOnTransientRecovery(applicationContext)
@@ -465,12 +468,25 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        if (intent.getBooleanExtra("SHOW_CALL_LOG", false) || intent.getBooleanExtra("MISSED_CALL", false) || intent.action == "com.example.dialer.ACTION_MISSED_CALLS") {
-            viewModel.selectTabBySlotKey("RECENTS")
-        }
-
         val action = intent.action
         val data = intent.data
+        val isCallLogViewIntent = action == Intent.ACTION_VIEW && (
+                intent.type == android.provider.CallLog.Calls.CONTENT_TYPE ||
+                        intent.type == android.provider.CallLog.Calls.CONTENT_ITEM_TYPE ||
+                        data?.toString()?.startsWith(android.provider.CallLog.Calls.CONTENT_URI.toString()) == true
+                )
+        val isMissedOrCallLogIntent = intent.getBooleanExtra("SHOW_CALL_LOG", false) ||
+                intent.getBooleanExtra("MISSED_CALL", false) ||
+                action == "com.example.dialer.ACTION_MISSED_CALLS" ||
+                action == TelecomManager.ACTION_SHOW_MISSED_CALLS_NOTIFICATION ||
+                isCallLogViewIntent
+
+        if (isMissedOrCallLogIntent) {
+            viewModel.selectTabBySlotKey("RECENTS")
+            viewModel.syncData(force = true)
+            com.example.util.MissedCallNotificationReceiver.clearMissedCallNotifications(this)
+        }
+
         if (action == Intent.ACTION_CALL || action == Intent.ACTION_DIAL || action == Intent.ACTION_VIEW) {
             if (data?.scheme == "tel") {
                 val number = data.schemeSpecificPart ?: ""
