@@ -58,10 +58,33 @@
         android:name="android.hardware.bluetooth"
         android:required="false" />
 
-    <!-- Package visibility queries for WhatsApp & WhatsApp Business (API 30+) -->
+    <!-- Package visibility queries for WhatsApp & OEM Battery/Autostart Settings (API 30+) -->
     <queries>
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
+        <!-- Xiaomi / HyperOS / MIUI -->
+        <package android:name="com.miui.securitycenter" />
+        <package android:name="com.miui.powerkeeper" />
+        <!-- Samsung One UI -->
+        <package android:name="com.samsung.android.lool" />
+        <package android:name="com.samsung.android.sm" />
+        <!-- Oppo / Realme / OnePlus (ColorOS / OxygenOS / Oplus) -->
+        <package android:name="com.coloros.safecenter" />
+        <package android:name="com.oplus.battery" />
+        <package android:name="com.coloros.oppoguardelf" />
+        <package android:name="com.oneplus.security" />
+        <!-- Vivo / iQOO -->
+        <package android:name="com.iqoo.secure" />
+        <package android:name="com.vivo.permissionmanager" />
+        <!-- Huawei / Honor -->
+        <package android:name="com.huawei.systemmanager" />
+        <package android:name="com.hihonor.systemmanager" />
+        <!-- Transsion (Tecno / Infinix / itel) -->
+        <package android:name="com.transsion.phonemaster" />
+        <package android:name="com.itel.autobootmanager" />
+        <!-- ASUS & Lenovo -->
+        <package android:name="com.asus.mobilemanager" />
+        <package android:name="com.lenovo.powersetting" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" android:host="wa.me" />
@@ -75,6 +98,7 @@
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MyApplication">
@@ -83,7 +107,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTop"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|fontScale|locale|layoutDirection|uiMode|keyboardHidden"
             android:windowSoftInputMode="adjustPan">
 
             <intent-filter>
@@ -141,7 +165,7 @@
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:taskAffinity="com.example.incall"
-            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|density|fontScale|locale|layoutDirection|uiMode|keyboardHidden"
             android:windowSoftInputMode="adjustPan" />
 
         <!-- Telecom InCallService Binding -->

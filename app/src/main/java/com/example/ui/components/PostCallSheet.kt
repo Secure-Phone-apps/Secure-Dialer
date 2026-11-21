@@ -100,12 +100,16 @@ fun PostCallSheet(
         PhoneFormatHelper.formatDisplayNumber(data.number, countryIso)
     }
 
-    val durationText = remember(data.durationSeconds) {
-        if (data.durationSeconds <= 0L) "Call ended"
-        else {
-            val mins = data.durationSeconds / 60
-            val secs = data.durationSeconds % 60
-            if (mins > 0) "Call ended • ${mins}m ${secs}s" else "Call ended • ${secs}s"
+    val endedText = stringResource(R.string.call_status_ended)
+    val durationText = if (data.durationSeconds <= 0L) {
+        endedText
+    } else {
+        val mins = data.durationSeconds / 60
+        val secs = data.durationSeconds % 60
+        if (mins > 0) {
+            stringResource(R.string.post_call_ended_min_sec, mins.toInt(), secs.toInt())
+        } else {
+            stringResource(R.string.post_call_ended_sec, secs.toInt())
         }
     }
 
@@ -237,7 +241,7 @@ fun PostCallSheet(
                     // 1. WhatsApp Action
                     PostCallActionChip(
                         icon = Icons.Default.Chat,
-                        label = "WhatsApp",
+                        label = stringResource(R.string.whatsapp_standard),
                         containerColor = Color(0xFF25D366).copy(alpha = 0.20f),
                         contentColor = Color(0xFF1EBE5D),
                         modifier = chipModifier,
@@ -251,7 +255,7 @@ fun PostCallSheet(
                     // 2. Call Back Action
                     PostCallActionChip(
                         icon = Icons.Default.Call,
-                        label = "Call Back",
+                        label = stringResource(R.string.btn_call_back),
                         containerColor = getCallGreenColor().copy(alpha = 0.22f),
                         contentColor = getCallGreenColor(),
                         modifier = chipModifier,
@@ -265,7 +269,7 @@ fun PostCallSheet(
                     // 3. Message / SMS Action
                     PostCallActionChip(
                         icon = Icons.Default.Message,
-                        label = "SMS",
+                        label = stringResource(R.string.post_call_sms_chip),
                         containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = chipModifier,
@@ -287,7 +291,7 @@ fun PostCallSheet(
                     if (data.isUnsaved) {
                         PostCallActionChip(
                             icon = Icons.Default.PersonAdd,
-                            label = "Save",
+                            label = stringResource(R.string.btn_save),
                             containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f),
                             contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
                             modifier = chipModifier,

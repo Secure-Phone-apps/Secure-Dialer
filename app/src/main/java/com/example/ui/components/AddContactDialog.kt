@@ -101,10 +101,11 @@ fun AddContactDialog(
         )
     }
 
-    val phoneAccount = remember(availableAccounts) {
+    val phoneStorageLabel = stringResource(R.string.contact_source_phone)
+    val phoneAccount = remember(availableAccounts, phoneStorageLabel) {
         availableAccounts.firstOrNull {
-            it.name == "Phone" || it.type.contains("local") || it.displayName.contains("Phone", ignoreCase = true)
-        } ?: ContactAccount(name = "Phone", type = "com.android.localphone", displayName = "Phone storage")
+            it.name == "Phone" || it.type.contains("local") || it.displayName.contains("Phone", ignoreCase = true) || it.displayName == phoneStorageLabel
+        } ?: ContactAccount(name = "Phone", type = "com.android.localphone", displayName = phoneStorageLabel)
     }
 
     val accountsToPick = remember(availableAccounts, phoneAccount, privateVaultAccount) {
@@ -116,17 +117,19 @@ fun AddContactDialog(
         list
     }
 
-    val defaultSaveAccount = remember(accountsToPick, defaultAccountName, selectedAccountFilter, privateVaultAccount, phoneAccount) {
+    val defaultSaveAccount = remember(accountsToPick, defaultAccountName, selectedAccountFilter, privateVaultAccount, phoneAccount, phoneStorageLabel) {
         val isPrivateSelected = selectedAccountFilter == PRIVATE_VAULT_ACCOUNT_NAME
         val isPrivateDefault = defaultAccountName == PRIVATE_VAULT_ACCOUNT_NAME
 
         val isLocalSelected = selectedAccountFilter.equals("Phone", ignoreCase = true) ||
                 selectedAccountFilter.equals("Phone storage", ignoreCase = true) ||
+                selectedAccountFilter.equals(phoneStorageLabel, ignoreCase = true) ||
                 selectedAccountFilter.contains("local", ignoreCase = true)
 
         val isLocalDefault = defaultAccountName.isBlank() ||
                 defaultAccountName.equals("Phone", ignoreCase = true) ||
                 defaultAccountName.equals("Phone storage", ignoreCase = true) ||
+                defaultAccountName.equals(phoneStorageLabel, ignoreCase = true) ||
                 defaultAccountName.contains("local", ignoreCase = true)
 
         when {

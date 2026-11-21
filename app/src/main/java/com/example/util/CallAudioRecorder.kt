@@ -25,6 +25,9 @@ import android.media.MediaScannerConnection
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
+import android.text.format.DateFormat
+import androidx.annotation.StringRes
+import com.example.R
 import com.example.model.CallRecording
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,32 +49,32 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 enum class RecordingCompressionProfile(
     val key: String,
-    val title: String,
-    val description: String,
+    @StringRes val titleRes: Int,
+    @StringRes val descriptionRes: Int,
     val bitRate: Int,
     val sampleRate: Int,
     val estMbPerHour: Double
 ) {
     COMPACT(
         key = "COMPACT",
-        title = "Compact Voice (High Compression)",
-        description = "24 kbps AAC • ~11 MB/hr • Maximum storage savings",
+        titleRes = R.string.compression_compact_title,
+        descriptionRes = R.string.compression_compact_desc,
         bitRate = 24000,
         sampleRate = 16000,
         estMbPerHour = 10.8
     ),
     BALANCED(
         key = "BALANCED",
-        title = "Balanced Standard (Recommended)",
-        description = "48 kbps AAC • ~22 MB/hr • Crystal-clear voice clarity",
+        titleRes = R.string.compression_balanced_title,
+        descriptionRes = R.string.compression_balanced_desc,
         bitRate = 48000,
         sampleRate = 16000,
         estMbPerHour = 21.6
     ),
     HIGH_FIDELITY(
         key = "HIGH_FIDELITY",
-        title = "High Fidelity (Studio)",
-        description = "96 kbps AAC @ 44.1 kHz • ~43 MB/hr • Rich acoustic fidelity",
+        titleRes = R.string.compression_high_fidelity_title,
+        descriptionRes = R.string.compression_high_fidelity_desc,
         bitRate = 96000,
         sampleRate = 44100,
         estMbPerHour = 43.2
@@ -137,9 +140,10 @@ object CallAudioRecorder {
             )
 
             for ((src, sampleRate) in candidateConfigs) {
+                var rec: MediaRecorder? = null
                 try {
                     @Suppress("DEPRECATION")
-                    val rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    rec = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         MediaRecorder(context)
                     } else {
                         MediaRecorder()
@@ -159,7 +163,7 @@ object CallAudioRecorder {
                     success = true
                     break
                 } catch (_: Exception) {
-                    try { recorder?.release() } catch (_: Exception) {}
+                    releaseMediaRecorderSafely(rec)
                     recorder = null
                 }
             }
@@ -227,6 +231,12 @@ object CallAudioRecorder {
         return result
     }
 
+    internal fun releaseMediaRecorderSafely(rec: MediaRecorder?) {
+        if (rec == null) return
+        try { rec.reset() } catch (_: Exception) {}
+        try { rec.release() } catch (_: Exception) {}
+    }
+
     fun getSelectedCompressionProfile(context: Context): RecordingCompressionProfile {
         // FIXED: Check dialer_prefs first to eliminate settings drift, with secure_dialer_prefs fallback
         val prefs = context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
@@ -266,9 +276,19 @@ object CallAudioRecorder {
             .sortedByDescending { it.lastModified() }
     }
 
-    fun formatRecordingTimestamp(context: Context, timeMs: Long = System.currentTimeMillis()): String {
+    fun formatShortDateTime(context: Context, timeMs: Long): String {
         val locale = com.example.ui.components.getCurrentLocale(context)
-        return SimpleDateFormat("MMM d, HH:mm", locale).format(Date(timeMs))
+        val skeleton = if (DateFormat.is24HourFormat(context)) "MMM d, HH:mm" else "MMM d, h:mm a"
+        val pattern = try {
+            DateFormat.getBestDateTimePattern(locale, skeleton)
+        } catch (_: Exception) {
+            skeleton
+        }
+        return SimpleDateFormat(pattern, locale).format(Date(timeMs))
+    }
+
+    fun formatRecordingTimestamp(context: Context, timeMs: Long = System.currentTimeMillis()): String {
+        return formatShortDateTime(context, timeMs)
     }
 
     fun formatStoredTimestampForDisplay(context: Context, storedTimestamp: String): String {
@@ -293,7 +313,6 @@ object CallAudioRecorder {
     fun recoverRecordingsFromDisk(context: Context): List<CallRecording> {
         val files = getRecordedFiles(context)
         val result = mutableListOf<CallRecording>()
-        val displayFormat = SimpleDateFormat("MMM d, HH:mm", com.example.ui.components.getCurrentLocale(context))
         val nameParseFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
 
         for (file in files) {
@@ -301,7 +320,7 @@ object CallAudioRecorder {
 
             val name = file.nameWithoutExtension
             var extractedNumber = "Unknown"
-            var timestampStr = displayFormat.format(Date(file.lastModified()))
+            var timestampStr = formatShortDateTime(context, file.lastModified())
 
             if (name.startsWith("REC_")) {
                 val parts = name.removePrefix("REC_").split("_")
@@ -309,13 +328,13 @@ object CallAudioRecorder {
                     extractedNumber = parts[0]
                     try {
                         nameParseFormat.parse(parts[1] + "_" + parts[2])?.let {
-                            timestampStr = displayFormat.format(it)
+                            timestampStr = formatShortDateTime(context, it.time)
                         }
                     } catch (_: Exception) {}
                 } else if (parts.size == 2) {
                     try {
                         nameParseFormat.parse(parts[0] + "_" + parts[1])?.let {
-                            timestampStr = displayFormat.format(it)
+                            timestampStr = formatShortDateTime(context, it.time)
                         }
                     } catch (_: Exception) {
                         extractedNumber = parts[0]
@@ -343,7 +362,7 @@ object CallAudioRecorder {
             result.add(
                 CallRecording(
                     number = extractedNumber,
-                    name = if (extractedNumber == "Unknown") "Call Recording" else extractedNumber,
+                    name = if (extractedNumber == "Unknown") context.getString(R.string.settings_call_recording) else extractedNumber,
                     timestamp = timestampStr,
                     duration = durationSeconds,
                     filePath = file.absolutePath

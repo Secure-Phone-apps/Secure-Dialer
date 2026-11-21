@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +51,7 @@ import com.example.util.RichHapticEngine
 import java.util.Locale
 
 data class SettingsSearchItem(
+    val highlightKey: String,
     val title: String,
     val description: String,
     val categoryName: String,
@@ -131,78 +133,88 @@ fun GeneralSettings(
     val isDefaultDialer = viewModel.isDefaultDialer.value
     var searchQuery by remember { mutableStateOf("") }
 
-    val settingsIndex = remember {
+    val configuration = LocalConfiguration.current
+    val catAppearance = context.getString(R.string.search_cat_appearance)
+    val catSoundGestures = context.getString(R.string.search_cat_sound_gestures)
+    val catSimCalling = context.getString(R.string.search_cat_sim_calling)
+    val catSpeedDialReply = context.getString(R.string.search_cat_speed_dial_reply)
+    val catSpamBlock = context.getString(R.string.search_cat_spam_block)
+    val catContactsData = context.getString(R.string.search_cat_contacts_data)
+    val catAdvancedTools = context.getString(R.string.search_cat_advanced_tools)
+    val catPrivacyAbout = context.getString(R.string.search_cat_privacy_about)
+
+    val settingsIndex = remember(configuration, context) {
         listOf(
             // 1. APPEARANCE
-            SettingsSearchItem("Appearance Settings", "Dark mode, themes, colors & layout styles", "Appearance", 1, Icons.Default.Palette),
-            SettingsSearchItem("Dark Mode & Theme Mode", "Switch between Dark, Light, or System default theme", "Appearance", 1, Icons.Default.DarkMode),
-            SettingsSearchItem("True Black OLED Mode", "Pure pitch-black #000000 theme to maximize battery savings on AMOLED displays", "Appearance", 1, Icons.Default.Contrast),
-            SettingsSearchItem("Expressive Material 3 Layout", "Enable fluid Material 3 Expressive shapes, rounded cards & container layouts", "Appearance", 1, Icons.Default.Style),
-            SettingsSearchItem("Dynamic Colors (Monet)", "Use system wallpaper colors for app accents and container backgrounds", "Appearance", 1, Icons.Default.ColorLens),
-            SettingsSearchItem("Accent Color Palette", "Select custom accent color palette for buttons, sliders & highlights", "Appearance", 1, Icons.Default.Brush),
+            SettingsSearchItem("Appearance Settings", context.getString(R.string.search_item_appearance), context.getString(R.string.search_desc_appearance), catAppearance, 1, Icons.Default.Palette),
+            SettingsSearchItem("Dark Mode & Theme Mode", context.getString(R.string.search_item_dark_mode), context.getString(R.string.search_desc_dark_mode), catAppearance, 1, Icons.Default.DarkMode),
+            SettingsSearchItem("True Black OLED Mode", context.getString(R.string.search_item_true_black_oled), context.getString(R.string.search_desc_true_black_oled), catAppearance, 1, Icons.Default.Contrast),
+            SettingsSearchItem("Expressive Material 3 Layout", context.getString(R.string.search_item_expressive_m3), context.getString(R.string.search_desc_expressive_m3), catAppearance, 1, Icons.Default.Style),
+            SettingsSearchItem("Dynamic Colors (Monet)", context.getString(R.string.search_item_dynamic_colors), context.getString(R.string.search_desc_dynamic_colors), catAppearance, 1, Icons.Default.ColorLens),
+            SettingsSearchItem("Accent Color Palette", context.getString(R.string.search_item_accent_palette), context.getString(R.string.search_desc_accent_palette), catAppearance, 1, Icons.Default.Brush),
 
             // 2. SOUND & GESTURES
-            SettingsSearchItem("Sound & Gestures Settings", "Keypad tones, vibration & gestures", "Sound & Gestures", 2, Icons.Default.VolumeUp),
-            SettingsSearchItem("Dialpad Keypad Tones", "Enable or disable DTMF keypad sounds when dialing numbers", "Sound & Gestures", 2, Icons.Default.Dialpad),
-            SettingsSearchItem("Call Vibration & Haptics", "Configure call vibration, connection feedback & touch haptics", "Sound & Gestures", 2, Icons.Default.Vibration),
-            SettingsSearchItem("Default Startup Tab & Home Layout", "Choose whether app opens to Recents, Contacts, or Dialpad layout", "Sound & Gestures", 2, Icons.Default.Home),
-            SettingsSearchItem("Call Swipe Actions & Gestures", "Configure swipe to answer, swipe to reject, and in-call gestures", "Sound & Gestures", 2, Icons.Default.Gesture),
-            SettingsSearchItem("Call Log Summary Dashboard & Analytics", "Analytics dashboard displaying total call duration, call counts, and stats", "Sound & Gestures", 2, Icons.Default.BarChart),
+            SettingsSearchItem("Sound & Gestures Settings", context.getString(R.string.search_item_sound_gestures), context.getString(R.string.search_desc_sound_gestures), catSoundGestures, 2, Icons.Default.VolumeUp),
+            SettingsSearchItem("Dialpad Keypad Tones", context.getString(R.string.search_item_keypad_tones), context.getString(R.string.search_desc_keypad_tones), catSoundGestures, 2, Icons.Default.Dialpad),
+            SettingsSearchItem("Call Vibration & Haptics", context.getString(R.string.search_item_call_vibration), context.getString(R.string.search_desc_call_vibration), catSoundGestures, 2, Icons.Default.Vibration),
+            SettingsSearchItem("Default Startup Tab & Home Layout", context.getString(R.string.search_item_startup_tab), context.getString(R.string.search_desc_startup_tab), catSoundGestures, 2, Icons.Default.Home),
+            SettingsSearchItem("Call Swipe Actions & Gestures", context.getString(R.string.search_item_swipe_actions), context.getString(R.string.search_desc_swipe_actions), catSoundGestures, 2, Icons.Default.Gesture),
+            SettingsSearchItem("Call Log Summary Dashboard & Analytics", context.getString(R.string.search_item_call_log_summary), context.getString(R.string.search_desc_call_log_summary), catSoundGestures, 2, Icons.Default.BarChart),
 
             // 3. SIM & CALLING
-            SettingsSearchItem("SIM & Calling Accounts", "Dual SIM cards, call waiting, forwarding & voicemail", "SIM & Calling", 3, Icons.Default.SimCard),
-            SettingsSearchItem("Preferred SIM Card", "Set default SIM for outgoing calls in dual SIM devices", "SIM & Calling", 3, Icons.Default.SimCard),
-            SettingsSearchItem("Call Waiting", "Receive notifications for incoming calls while on an active call", "SIM & Calling", 3, Icons.Default.PhoneCallback),
-            SettingsSearchItem("Call Forwarding", "Forward incoming calls to another phone number", "SIM & Calling", 3, Icons.Default.PhoneForwarded),
-            SettingsSearchItem("Carrier Voicemail Setup", "Configure carrier voicemail number and quick dial action", "SIM & Calling", 3, Icons.Default.Voicemail),
-            SettingsSearchItem("Hide Caller ID (CLIR)", "Suppress outgoing number so recipient sees Private or Unknown Caller", "SIM & Calling", 3, Icons.Default.VisibilityOff),
-            SettingsSearchItem("Caller ID Prefix & Codes", "Select carrier CLIR prefix: #31#, *67, 141, 1831 or custom dial code", "SIM & Calling", 3, Icons.Default.Pin),
-            SettingsSearchItem("Carrier SIM Hardware Caller ID", "Direct system shortcut to per-SIM network Caller ID settings", "SIM & Calling", 3, Icons.Default.SimCard),
-            SettingsSearchItem("Background & Battery Survivability", "Manage battery warning, snooze schedule, call recording & OEM autostart", "SIM & Calling", 9, Icons.Default.BatteryChargingFull),
-            SettingsSearchItem("Disable Battery Optimization Warning", "Dismiss, snooze for 1 day/week, or permanently disable battery banner", "SIM & Calling", 9, Icons.Default.NotificationsPaused),
+            SettingsSearchItem("SIM & Calling Accounts", context.getString(R.string.search_item_sim_calling), context.getString(R.string.search_desc_sim_calling), catSimCalling, 3, Icons.Default.SimCard),
+            SettingsSearchItem("Preferred SIM Card", context.getString(R.string.search_item_preferred_sim), context.getString(R.string.search_desc_preferred_sim), catSimCalling, 3, Icons.Default.SimCard),
+            SettingsSearchItem("Call Waiting", context.getString(R.string.search_item_call_waiting), context.getString(R.string.search_desc_call_waiting), catSimCalling, 3, Icons.Default.PhoneCallback),
+            SettingsSearchItem("Call Forwarding", context.getString(R.string.search_item_call_forwarding), context.getString(R.string.search_desc_call_forwarding), catSimCalling, 3, Icons.Default.PhoneForwarded),
+            SettingsSearchItem("Carrier Voicemail Setup", context.getString(R.string.search_item_voicemail_setup), context.getString(R.string.search_desc_voicemail_setup), catSimCalling, 3, Icons.Default.Voicemail),
+            SettingsSearchItem("Hide Caller ID (CLIR)", context.getString(R.string.search_item_hide_caller_id), context.getString(R.string.search_desc_hide_caller_id), catSimCalling, 3, Icons.Default.VisibilityOff),
+            SettingsSearchItem("Caller ID Prefix & Codes", context.getString(R.string.search_item_clir_prefix), context.getString(R.string.search_desc_clir_prefix), catSimCalling, 3, Icons.Default.Pin),
+            SettingsSearchItem("Carrier SIM Hardware Caller ID", context.getString(R.string.search_item_carrier_hardware_clir), context.getString(R.string.search_desc_carrier_hardware_clir), catSimCalling, 3, Icons.Default.SimCard),
+            SettingsSearchItem("Background & Battery Survivability", context.getString(R.string.search_item_battery_survivability), context.getString(R.string.search_desc_battery_survivability), catSimCalling, 9, Icons.Default.BatteryChargingFull),
+            SettingsSearchItem("Disable Battery Optimization Warning", context.getString(R.string.search_item_disable_battery_warning), context.getString(R.string.search_desc_disable_battery_warning), catSimCalling, 9, Icons.Default.NotificationsPaused),
 
             // 4. SPEED DIAL & QUICK REPLY
-            SettingsSearchItem("Speed Dial & Quick Reply Settings", "Number key shortcuts and quick decline SMS responses", "Speed Dial & Quick Reply", 4, Icons.Default.TouchApp),
-            SettingsSearchItem("Speed Dial Shortcuts (Keys 1–9)", "Assign favorite contacts to dialpad number keys for 1-tap quick calling", "Speed Dial & Quick Reply", 4, Icons.Default.Speed),
-            SettingsSearchItem("Quick Decline Text Replies", "Manage predefined SMS messages to decline incoming calls with text", "Speed Dial & Quick Reply", 4, Icons.Default.Sms),
+            SettingsSearchItem("Speed Dial & Quick Reply Settings", context.getString(R.string.search_item_speed_dial_quick_reply), context.getString(R.string.search_desc_speed_dial_quick_reply), catSpeedDialReply, 4, Icons.Default.TouchApp),
+            SettingsSearchItem("Speed Dial Shortcuts (Keys 1–9)", context.getString(R.string.search_item_speed_dial_shortcuts), context.getString(R.string.search_desc_speed_dial_shortcuts), catSpeedDialReply, 4, Icons.Default.Speed),
+            SettingsSearchItem("Quick Decline Text Replies", context.getString(R.string.search_item_quick_decline_replies), context.getString(R.string.search_desc_quick_decline_replies), catSpeedDialReply, 4, Icons.Default.Sms),
 
             // 5. SPAM & CALL BLOCK
-            SettingsSearchItem("Spam & Call Block Settings", "Blocked numbers list, spam database & unknown number blocking", "Spam & Call Block", 5, Icons.Default.Shield),
-            SettingsSearchItem("Blocked Numbers & Blacklist", "Add, manage, or remove phone numbers from your block list", "Spam & Call Block", 5, Icons.Default.Block),
-            SettingsSearchItem("Offline Spam Database & Protection", "Identify spam calls locally without internet using built-in database", "Spam & Call Block", 5, Icons.Default.Security),
-            SettingsSearchItem("Block Unknown & Private Calls", "Automatically decline calls from hidden, private, or unknown numbers", "Spam & Call Block", 5, Icons.Default.PhonelinkErase),
+            SettingsSearchItem("Spam & Call Block Settings", context.getString(R.string.search_item_spam_call_block), context.getString(R.string.search_desc_spam_call_block), catSpamBlock, 5, Icons.Default.Shield),
+            SettingsSearchItem("Blocked Numbers & Blacklist", context.getString(R.string.search_item_blocked_numbers), context.getString(R.string.search_desc_blocked_numbers), catSpamBlock, 5, Icons.Default.Block),
+            SettingsSearchItem("Offline Spam Database & Protection", context.getString(R.string.search_item_offline_spam_db), context.getString(R.string.search_desc_offline_spam_db), catSpamBlock, 5, Icons.Default.Security),
+            SettingsSearchItem("Block Unknown & Private Calls", context.getString(R.string.search_item_block_unknown_private), context.getString(R.string.search_desc_block_unknown_private), catSpamBlock, 5, Icons.Default.PhonelinkErase),
 
             // 6. CONTACTS & DATA
-            SettingsSearchItem("Contacts & Data Settings", "Account filters, vCard import/export & database backup", "Contacts & Data", 6, Icons.Default.Contacts),
-            SettingsSearchItem("Name format & sort order", "Sort contacts by first name or last name and format display names", "Contacts & Data", 6, Icons.Default.SortByAlpha),
-            SettingsSearchItem("Account Display Filters", "Choose which account contacts to display (Google, Phone, SIM)", "Contacts & Data", 6, Icons.Default.FilterList),
-            SettingsSearchItem("Default Save Account", "Set default account location for saving newly created contacts", "Contacts & Data", 6, Icons.Default.AccountBox),
-            SettingsSearchItem("Export Contacts (vCard / .vcf)", "Export all contacts to a standard .vcf backup file", "Contacts & Data", 6, Icons.Default.Upload),
-            SettingsSearchItem("Import Contacts", "Restore contacts from a saved .vcf file", "Contacts & Data", 6, Icons.Default.Download),
-            SettingsSearchItem("Database Backup & Restore", "Backup or restore local call logs, settings, and app data", "Contacts & Data", 6, Icons.Default.Backup),
+            SettingsSearchItem("Contacts & Data Settings", context.getString(R.string.search_item_contacts_data), context.getString(R.string.search_desc_contacts_data), catContactsData, 6, Icons.Default.Contacts),
+            SettingsSearchItem("Name format & sort order", context.getString(R.string.search_item_name_format_sort), context.getString(R.string.search_desc_name_format_sort), catContactsData, 6, Icons.Default.SortByAlpha),
+            SettingsSearchItem("Account Display Filters", context.getString(R.string.search_item_account_filters), context.getString(R.string.search_desc_account_filters), catContactsData, 6, Icons.Default.FilterList),
+            SettingsSearchItem("Default Save Account", context.getString(R.string.search_item_default_save_account), context.getString(R.string.search_desc_default_save_account), catContactsData, 6, Icons.Default.AccountBox),
+            SettingsSearchItem("Export Contacts (vCard / .vcf)", context.getString(R.string.search_item_export_vcard), context.getString(R.string.search_desc_export_vcard), catContactsData, 6, Icons.Default.Upload),
+            SettingsSearchItem("Import Contacts", context.getString(R.string.search_item_import_contacts), context.getString(R.string.search_desc_import_contacts), catContactsData, 6, Icons.Default.Download),
+            SettingsSearchItem("Database Backup & Restore", context.getString(R.string.search_item_db_backup_restore), context.getString(R.string.search_desc_db_backup_restore), catContactsData, 6, Icons.Default.Backup),
 
             // 7. ADVANCED TOOLS
-            SettingsSearchItem("Advanced Tools Settings", "Call recording, callback reminders, call notes & fake call simulator", "Advanced Tools", 7, Icons.Default.AutoAwesome),
-            SettingsSearchItem("Call Recording & Local Audio Storage", "Enable in-call recording controls and view saved local call audio recordings", "Advanced Tools", 7, Icons.Default.Mic),
-            SettingsSearchItem("Scheduled Callback Reminders Dashboard", "Dashboard for viewing and setting scheduled call alarms and reminders", "Advanced Tools", 7, Icons.Default.Schedule),
-            SettingsSearchItem("Call Notes & Memos", "Create, view, and search notes linked to specific phone numbers", "Advanced Tools", 7, Icons.Default.NoteAlt),
-            SettingsSearchItem("Fake Call Simulator", "Schedule simulated incoming phone calls with custom caller name & timer", "Advanced Tools", 7, Icons.Default.PhoneInTalk),
-            SettingsSearchItem("Post-Call Quick Actions", "Show Call Back, Message, WhatsApp, and Note actions after calls end", "Advanced Tools", 7, Icons.Default.CallEnd),
-            SettingsSearchItem("Auto-Dismiss Countdown", "Configure auto-dismiss timer for post-call action sheet (3s, 5s, 10s, Never)", "Advanced Tools", 7, Icons.Default.Timer),
-            SettingsSearchItem("Default WhatsApp Account", "Choose between WhatsApp and WhatsApp Business for chat actions", "Advanced Tools", 7, Icons.Default.Chat),
+            SettingsSearchItem("Advanced Tools Settings", context.getString(R.string.search_item_advanced_tools), context.getString(R.string.search_desc_advanced_tools), catAdvancedTools, 7, Icons.Default.AutoAwesome),
+            SettingsSearchItem("Call Recording & Local Audio Storage", context.getString(R.string.search_item_call_recording_storage), context.getString(R.string.search_desc_call_recording_storage), catAdvancedTools, 7, Icons.Default.Mic),
+            SettingsSearchItem("Scheduled Callback Reminders Dashboard", context.getString(R.string.search_item_callback_reminders), context.getString(R.string.search_desc_callback_reminders), catAdvancedTools, 7, Icons.Default.Schedule),
+            SettingsSearchItem("Call Notes & Memos", context.getString(R.string.search_item_call_notes_memos), context.getString(R.string.search_desc_call_notes_memos), catAdvancedTools, 7, Icons.Default.NoteAlt),
+            SettingsSearchItem("Fake Call Simulator", context.getString(R.string.search_item_fake_call_simulator), context.getString(R.string.search_desc_fake_call_simulator), catAdvancedTools, 7, Icons.Default.PhoneInTalk),
+            SettingsSearchItem("Post-Call Quick Actions", context.getString(R.string.search_item_post_call_actions), context.getString(R.string.search_desc_post_call_actions), catAdvancedTools, 7, Icons.Default.CallEnd),
+            SettingsSearchItem("Auto-Dismiss Countdown", context.getString(R.string.search_item_auto_dismiss_countdown), context.getString(R.string.search_desc_auto_dismiss_countdown), catAdvancedTools, 7, Icons.Default.Timer),
+            SettingsSearchItem("Default WhatsApp Account", context.getString(R.string.search_item_default_whatsapp), context.getString(R.string.search_desc_default_whatsapp), catAdvancedTools, 7, Icons.Default.Chat),
 
             // 8. PRIVACY & ABOUT
-            SettingsSearchItem("Privacy & Security Settings", "Biometric app lock, lock screen answering, pocket protection & app specs", "Privacy & About", 8, Icons.Default.Lock),
-            SettingsSearchItem("Biometric App Lock", "Require fingerprint or PIN lock to open dialer application", "Privacy & About", 8, Icons.Default.Fingerprint),
-            SettingsSearchItem("Require Unlock to Answer Calls", "Require PIN, pattern, or biometrics before answering calls from lock screen", "Privacy & About", 8, Icons.Default.LockPerson),
-            SettingsSearchItem("Pocket Protection Mode", "Prevent accidental pocket touches using proximity sensor", "Privacy & About", 8, Icons.Default.PhonelinkLock),
-            SettingsSearchItem("App Version & Device Specifications", "View application version, build numbers, and system permissions", "Privacy & About", 8, Icons.Default.Info),
-            SettingsSearchItem("Help & Customer Support", "Send feedback or contact developer support", "Privacy & About", 8, Icons.Default.Help)
+            SettingsSearchItem("Privacy & Security Settings", context.getString(R.string.search_item_privacy_security), context.getString(R.string.search_desc_privacy_security), catPrivacyAbout, 8, Icons.Default.Lock),
+            SettingsSearchItem("Biometric App Lock", context.getString(R.string.search_item_biometric_app_lock), context.getString(R.string.search_desc_biometric_app_lock), catPrivacyAbout, 8, Icons.Default.Fingerprint),
+            SettingsSearchItem("Require Unlock to Answer Calls", context.getString(R.string.search_item_require_unlock_answer), context.getString(R.string.search_desc_require_unlock_answer), catPrivacyAbout, 8, Icons.Default.LockPerson),
+            SettingsSearchItem("Pocket Protection Mode", context.getString(R.string.search_item_pocket_protection), context.getString(R.string.search_desc_pocket_protection), catPrivacyAbout, 8, Icons.Default.PhonelinkLock),
+            SettingsSearchItem("App Version & Device Specifications", context.getString(R.string.search_item_app_version_specs), context.getString(R.string.search_desc_app_version_specs), catPrivacyAbout, 8, Icons.Default.Info),
+            SettingsSearchItem("Help & Customer Support", context.getString(R.string.search_item_help_support), context.getString(R.string.search_desc_help_support), catPrivacyAbout, 8, Icons.Default.Help)
         )
     }
 
     // FIXED: Search matches title, description, and category name to enable full discoverability
-    val searchResults = remember(searchQuery) {
+    val searchResults = remember(searchQuery, settingsIndex) {
         if (searchQuery.isBlank()) {
             emptyList()
         } else {
@@ -263,7 +275,7 @@ fun GeneralSettings(
                         shape = MaterialTheme.shapes.medium,
                         onClick = {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                            onNavigateToTab(resultItem.categoryTab, resultItem.title)
+                            onNavigateToTab(resultItem.categoryTab, resultItem.highlightKey)
                             searchQuery = ""
                         }
                     ) {

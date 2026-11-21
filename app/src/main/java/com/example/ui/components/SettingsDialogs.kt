@@ -141,7 +141,8 @@ fun SimRenameDialog(
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                if (editingSim == null) {
+                val activeEditingSim = editingSim
+                if (activeEditingSim == null) {
                     Text(
                         text = stringResource(R.string.settings_rename_sims_sub),
                         style = MaterialTheme.typography.bodyMedium,
@@ -189,8 +190,7 @@ fun SimRenameDialog(
                         }
                     }
                 } else {
-                    val sim = editingSim!!
-                    val defaultLabel = "SIM ${sim.slotIndex + 1}"
+                    val defaultLabel = "SIM ${activeEditingSim.slotIndex + 1}"
                     Text(
                         text = stringResource(R.string.dialog_rename_sim_prompt, defaultLabel),
                         style = MaterialTheme.typography.bodyMedium,
@@ -208,12 +208,13 @@ fun SimRenameDialog(
             }
         },
         confirmButton = {
-            if (editingSim != null) {
+            val activeEditingSim = editingSim
+            if (activeEditingSim != null) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(
                         onClick = {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                            viewModel.updateSimCustomLabel(editingSim!!.subscriptionId, "")
+                            viewModel.updateSimCustomLabel(activeEditingSim.subscriptionId, "")
                             Toast.makeText(context, "Reset to default SIM label", Toast.LENGTH_SHORT).show()
                             editingSim = null
                         }
@@ -223,7 +224,7 @@ fun SimRenameDialog(
                     Button(
                         onClick = {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                            viewModel.updateSimCustomLabel(editingSim!!.subscriptionId, customLabelInput.trim())
+                            viewModel.updateSimCustomLabel(activeEditingSim.subscriptionId, customLabelInput.trim())
                             Toast.makeText(context, simRenamedMsg, Toast.LENGTH_SHORT).show()
                             editingSim = null
                         }

@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.GroupAdd
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.ContactCache
 import com.example.R
 import com.example.ui.theme.*
@@ -95,10 +97,10 @@ fun DialpadOverlay(
         }
         val rowSpacing = when {
             adaptive.maxHeight < 420.dp -> 6.dp
-            adaptive.isTightVerticalSpace -> 10.dp
-            else -> 16.dp
+            adaptive.isTightVerticalSpace -> 8.dp
+            else -> 12.dp
         }
-        val horizontalPadding = if (adaptive.isVeryNarrowWidth) 12.dp else 24.dp
+        val horizontalPadding = if (adaptive.isVeryNarrowWidth) 12.dp else 20.dp
 
         Surface(
             modifier = Modifier
@@ -136,13 +138,13 @@ fun DialpadOverlay(
                 }
 
                 if (isUnsavedNumber && inputValue.isNotBlank()) {
-                    val useFlowChips = adaptive.isVeryNarrowWidth || fontScale >= 1.25f
+                    val useFlowChips = adaptive.isVeryNarrowWidth || fontScale >= 1.3f
                     if (useFlowChips) {
                         FlowRow(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
                             verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Surface(
@@ -160,14 +162,14 @@ fun DialpadOverlay(
                                     .testTag("overlay_create_contact_chip")
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                                     Text(
                                         text = stringResource(R.string.dialpad_create_contact),
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         textAlign = TextAlign.Center,
                                         maxLines = 2,
@@ -192,17 +194,47 @@ fun DialpadOverlay(
                                     .testTag("overlay_add_to_existing_chip")
                             ) {
                                 Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
                                     Text(
                                         text = stringResource(R.string.dialpad_add_to_existing),
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         textAlign = TextAlign.Center,
                                         maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    }
+                                    com.example.util.WhatsAppHelper.openWhatsAppChat(context, inputValue)
+                                },
+                                shape = AppShapes.Chip,
+                                color = Color(0xFF25D366).copy(alpha = 0.18f),
+                                contentColor = Color(0xFF1EBE5D),
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .testTag("overlay_whatsapp_chip")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "WhatsApp", modifier = Modifier.size(16.dp), tint = Color(0xFF1EBE5D))
+                                    Text(
+                                        text = "WhatsApp",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
@@ -213,7 +245,7 @@ fun DialpadOverlay(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
@@ -235,13 +267,13 @@ fun DialpadOverlay(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 8.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
+                                    Icon(Icons.Default.PersonAdd, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                                     Text(
                                         text = stringResource(R.string.dialpad_create_contact),
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         textAlign = TextAlign.Center,
                                         maxLines = 2,
@@ -270,16 +302,46 @@ fun DialpadOverlay(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 8.dp, vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.secondary)
+                                    Icon(Icons.Default.GroupAdd, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.secondary)
                                     Text(
                                         text = stringResource(R.string.dialpad_add_to_existing),
-                                        style = MaterialTheme.typography.labelLarge,
+                                        style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         textAlign = TextAlign.Center,
                                         maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                onClick = {
+                                    if (viewModel?.vibrateOnClickEnabled?.value != false) {
+                                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                                    }
+                                    com.example.util.WhatsAppHelper.openWhatsAppChat(context, inputValue)
+                                },
+                                shape = AppShapes.Chip,
+                                color = Color(0xFF25D366).copy(alpha = 0.18f),
+                                contentColor = Color(0xFF1EBE5D),
+                                modifier = Modifier
+                                    .heightIn(min = 48.dp)
+                                    .testTag("overlay_whatsapp_chip")
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = "WhatsApp", modifier = Modifier.size(16.dp), tint = Color(0xFF1EBE5D))
+                                    Text(
+                                        text = "WhatsApp",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
                                 }
@@ -291,127 +353,165 @@ fun DialpadOverlay(
 
             var expandedOverlayClipboardMenu by remember { mutableStateOf(false) }
             val overlayClipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
-            val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
+            val vmTfv = viewModel?.dialpadTextFieldValue?.value
+            val currentTfv = if (vmTfv != null && vmTfv.text == inputValue) {
+                vmTfv
+            } else {
+                TextFieldValue(inputValue, TextRange(inputValue.length))
+            }
             val keyboardController = LocalSoftwareKeyboardController.current
+            val countryIso = remember(context) { com.example.util.PhoneFormatHelper.getCountryIso(context) }
+            val phoneVisualTransformation = remember(countryIso) { com.example.util.PhoneFormatHelper.createVisualTransformation(countryIso) }
 
-            Row(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = if (adaptive.maxHeight < 420.dp) 44.dp else 56.dp)
-                    .padding(horizontal = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .heightIn(
+                        min = if (adaptive.maxHeight < 420.dp) 52.dp else 60.dp,
+                        max = 88.dp
+                    ),
+                shape = AppShapes.Keypad,
+                color = Color.Transparent,
+                border = BorderStroke(
+                    width = if (isAmoled) 1.5.dp else 2.dp,
+                    color = if (isAmoled) Color(0xFF242424) else dialKeyColor
+                )
             ) {
-                Box(
-                    modifier = Modifier.weight(1f).defaultMinSize(minHeight = 48.dp),
-                    contentAlignment = Alignment.Center
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = if (adaptive.maxHeight < 420.dp) 52.dp else 60.dp)
+                        .combinedClickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                            onClick = {},
+                            onLongClick = { expandedOverlayClipboardMenu = true }
+                        )
+                        .padding(start = 16.dp, end = 6.dp, top = 4.dp, bottom = 4.dp)
+                        .testTag("dialpad_overlay_number_container"),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    @Suppress("DEPRECATION")
-                    CompositionLocalProvider(LocalTextInputService provides null) {
-                        BasicTextField(
-                            value = currentTfv,
-                            onValueChange = { newTfv ->
-                                if (viewModel != null) viewModel.onDialpadTextFieldValueChange(newTfv)
-                                else onValueChange(newTfv.text)
-                            },
-                            textStyle = if (currentTfv.text.isEmpty()) {
-                                MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.Normal,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                    textAlign = TextAlign.Center
-                                )
-                            } else {
-                                MaterialTheme.typography.displaySmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center
-                                )
-                            },
-                            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-                            singleLine = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .onFocusChanged { if (it.isFocused) keyboardController?.hide() }
-                                .testTag("dialpad_overlay_number_field"),
-                            decorationBox = { innerTextField ->
-                                Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                                    if (currentTfv.text.isEmpty()) {
-                                        Text(
-                                            text = stringResource(R.string.dialpad_enter_number),
-                                            style = MaterialTheme.typography.titleMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                            textAlign = TextAlign.Center,
-                                            maxLines = 2
-                                        )
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 48.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        @Suppress("DEPRECATION")
+                        CompositionLocalProvider(LocalTextInputService provides null) {
+                            BasicTextField(
+                                value = currentTfv,
+                                onValueChange = { newTfv ->
+                                    if (viewModel != null) viewModel.onDialpadTextFieldValueChange(newTfv)
+                                    else onValueChange(newTfv.text)
+                                },
+                                visualTransformation = phoneVisualTransformation,
+                                textStyle = if (currentTfv.text.isEmpty()) {
+                                    MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Normal,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                        textAlign = TextAlign.Center
+                                    )
+                                } else {
+                                    MaterialTheme.typography.displaySmall.copy(
+                                        fontSize = when {
+                                            currentTfv.text.length > 16 -> 22.sp
+                                            currentTfv.text.length > 12 -> 26.sp
+                                            else -> 32.sp
+                                        },
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center
+                                    )
+                                },
+                                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .onFocusChanged { if (it.isFocused) keyboardController?.hide() }
+                                    .testTag("dialpad_overlay_number_field"),
+                                decorationBox = { innerTextField ->
+                                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                                        if (currentTfv.text.isEmpty()) {
+                                            Text(
+                                                text = stringResource(R.string.dialpad_enter_number),
+                                                style = MaterialTheme.typography.titleMedium,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                                                textAlign = TextAlign.Center,
+                                                maxLines = 2
+                                            )
+                                        }
+                                        innerTextField()
                                     }
-                                    innerTextField()
+                                }
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = expandedOverlayClipboardMenu,
+                            onDismissRequest = { expandedOverlayClipboardMenu = false }
+                        ) {
+                            val hasClipboardText = overlayClipboardManager?.hasPrimaryClip() == true
+                            if (hasClipboardText) {
+                                val clipText = overlayClipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                                val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
+                                if (filteredDigits.isNotEmpty()) {
+                                    DropdownMenuItem(
+                                        text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
+                                        onClick = {
+                                            if (viewModel != null) viewModel.insertDialpadDigit(filteredDigits)
+                                            else onValueChange(filteredDigits)
+                                            expandedOverlayClipboardMenu = false
+                                        }
+                                    )
                                 }
                             }
-                        )
-                    }
-
-                    DropdownMenu(
-                        expanded = expandedOverlayClipboardMenu,
-                        onDismissRequest = { expandedOverlayClipboardMenu = false }
-                    ) {
-                        val hasClipboardText = overlayClipboardManager?.hasPrimaryClip() == true
-                        if (hasClipboardText) {
-                            val clipText = overlayClipboardManager?.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
-                            val filteredDigits = clipText.filter { it.isDigit() || it == '+' || it == '*' || it == '#' }
-                            if (filteredDigits.isNotEmpty()) {
+                            if (inputValue.isNotEmpty()) {
                                 DropdownMenuItem(
-                                    text = { Text("${stringResource(R.string.dialpad_paste)}: $filteredDigits") },
+                                    text = { Text(stringResource(R.string.dialpad_copy)) },
                                     onClick = {
-                                        if (viewModel != null) viewModel.insertDialpadDigit(filteredDigits)
-                                        else onValueChange(filteredDigits)
+                                        try {
+                                            val clip = ClipData.newPlainText("phone_number", inputValue)
+                                            overlayClipboardManager?.setPrimaryClip(clip)
+                                            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+                                                Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
+                                            }
+                                        } catch (_: Exception) {}
+                                        expandedOverlayClipboardMenu = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.dialpad_clear)) },
+                                    onClick = {
+                                        if (viewModel != null) viewModel.clearDialpad() else onValueChange("")
                                         expandedOverlayClipboardMenu = false
                                     }
                                 )
                             }
                         }
-                        if (inputValue.isNotEmpty()) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.dialpad_copy)) },
-                                onClick = {
-                                    try {
-                                        val clip = ClipData.newPlainText("phone_number", inputValue)
-                                        overlayClipboardManager?.setPrimaryClip(clip)
-                                        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-                                            Toast.makeText(context, context.getString(R.string.number_copied), Toast.LENGTH_SHORT).show()
-                                        }
-                                    } catch (_: Exception) {}
-                                    expandedOverlayClipboardMenu = false
-                                }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(stringResource(R.string.dialpad_clear)) },
-                                onClick = {
-                                    if (viewModel != null) viewModel.clearDialpad() else onValueChange("")
-                                    expandedOverlayClipboardMenu = false
-                                }
-                            )
-                        }
                     }
-                }
 
-                if (inputValue.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clip(AppShapes.Chip)
-                            .combinedClickable(
-                                onClick = {
-                                    if (viewModel?.vibrateOnClickEnabled?.value != false) RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                                    if (viewModel != null) viewModel.backspaceDialpad() else onValueChange(inputValue.dropLast(1))
-                                },
-                                onLongClick = {
-                                    if (viewModel?.vibrateOnClickEnabled?.value != false) RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
-                                    if (viewModel != null) viewModel.clearDialpad() else onValueChange("")
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = stringResource(R.string.dialpad_clear), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (inputValue.isNotEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(AppShapes.Chip)
+                                .combinedClickable(
+                                    onClick = {
+                                        if (viewModel?.vibrateOnClickEnabled?.value != false) RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                        if (viewModel != null) viewModel.backspaceDialpad() else onValueChange(inputValue.dropLast(1))
+                                    },
+                                    onLongClick = {
+                                        if (viewModel?.vibrateOnClickEnabled?.value != false) RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
+                                        if (viewModel != null) viewModel.clearDialpad() else onValueChange("")
+                                    }
+                                )
+                                .testTag("dialpad_overlay_backspace_button"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.Backspace, contentDescription = stringResource(R.string.dialpad_clear), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
                     }
                 }
             }
@@ -606,6 +706,7 @@ fun DialButton(
     viewModel: DialerViewModel? = null
 ) {
     val context = LocalContext.current
+    val fontScale = LocalDensity.current.fontScale
     val isExpressive = LocalM3Expressive.current
     val isAmoled = LocalAmoledMode.current
 
@@ -669,21 +770,34 @@ fun DialButton(
         tonalElevation = if (isExpressive) 4.dp else 2.dp
     ) {
         Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = key.first,
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = if (fontScale >= 1.35f) 24.sp else 28.sp,
+                    lineHeight = if (fontScale >= 1.35f) 26.sp else 32.sp
+                ),
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                maxLines = 1,
+                softWrap = false
             )
             if (key.second.isNotEmpty()) {
                 Text(
                     text = key.second,
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = if (fontScale >= 1.35f) 9.5.sp else 11.sp,
+                        lineHeight = 12.sp
+                    ),
                     color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }

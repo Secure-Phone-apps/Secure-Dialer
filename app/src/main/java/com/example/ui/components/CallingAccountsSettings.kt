@@ -448,7 +448,7 @@ private fun CallerIdClirCard(
                         "#31#" to stringResource(R.string.settings_clir_prefix_gsm),
                         "*67" to stringResource(R.string.settings_clir_prefix_us),
                         "141" to stringResource(R.string.settings_clir_prefix_uk),
-                        "1831" to stringResource(R.string.settings_clir_prefix_japan)
+                        "184" to stringResource(R.string.settings_clir_prefix_japan)
                     )
                     presets.forEach { (code, label) ->
                         val isSelected = clirPrefix == code
@@ -485,7 +485,7 @@ private fun CallerIdClirCard(
                         }
                     }
 
-                    val isCustom = clirPrefix !in listOf("#31#", "*67", "141", "1831")
+                    val isCustom = clirPrefix !in listOf("#31#", "*67", "141", "184")
                     Surface(
                         modifier = Modifier
                             .fillMaxWidth()

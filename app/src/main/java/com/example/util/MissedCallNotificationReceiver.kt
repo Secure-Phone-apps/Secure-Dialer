@@ -47,7 +47,7 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
             .apply()
 
         val nm = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as? NotificationManager ?: return
-        ensureMissedCallChannel(nm)
+        ensureMissedCallChannel(appContext, nm)
 
         if (count <= 0) {
             nm.cancel(MyInCallService.NOTIFICATION_ID_MISSED)
@@ -111,15 +111,15 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
     companion object {
         const val PREF_LAST_TELECOM_MISSED_BROADCAST_MS = "last_telecom_missed_broadcast_ms"
 
-        fun ensureMissedCallChannel(nm: NotificationManager) {
+        fun ensureMissedCallChannel(context: Context, nm: NotificationManager) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 nm.createNotificationChannel(
                     NotificationChannel(
                         MyInCallService.CHANNEL_MISSED,
-                        "Missed Calls",
+                        context.getString(R.string.notif_channel_missed_name),
                         NotificationManager.IMPORTANCE_DEFAULT
                     ).apply {
-                        description = "Missed call notifications"
+                        description = context.getString(R.string.notif_channel_missed_desc)
                     }
                 )
             }
@@ -144,7 +144,7 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
             rawNumber: String?,
             displayName: String
         ) {
-            ensureMissedCallChannel(nm)
+            ensureMissedCallChannel(context, nm)
 
             val contentPendingIntent = PendingIntent.getActivity(
                 context,

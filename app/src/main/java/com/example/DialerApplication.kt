@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import net.sqlcipher.database.SQLiteDatabase
 
 class DialerApplication : Application() {
 
@@ -20,10 +19,16 @@ class DialerApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         com.example.util.DynamicIslandOverlayManager.startCallMonitoring(this)
-        // Fast-path non-blocking database and security warm-up
+        // Fast-path non-blocking native SQLCipher preload and database warm-up
         appScope.launch {
             try {
-                SQLiteDatabase.loadLibs(this@DialerApplication)
+                if (!AppDatabase.isRobolectricEnvironment()) {
+                    try {
+                        System.loadLibrary("sqlcipher")
+                    } catch (_: UnsatisfiedLinkError) {
+                        // AppDatabase.warmUpAsync -> buildDatabase will surface NativeCryptoLoadError
+                    }
+                }
                 AppDatabase.warmUpAsync(this@DialerApplication)
             } catch (_: Throwable) {}
         }

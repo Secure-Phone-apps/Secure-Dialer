@@ -53,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.model.CallRecord
 import com.example.model.CallType
@@ -63,6 +64,7 @@ import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.MultiSimManager
 import com.example.util.RichHapticEngine
 import java.util.Locale
 
@@ -363,6 +365,14 @@ fun RecentsTabContent(
                                 )
                             }
                         } else {
+                            val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
+                            val blockedNumbers = remember(blockedNumbersEntities) {
+                                blockedNumbersEntities.mapTo(HashSet(blockedNumbersEntities.size)) { it.number }
+                            }
+                            val allRecordings by viewModel.recordingsFlow.collectAsStateWithLifecycle()
+                            val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
+                            val physicalSimCount = remember(context) { MultiSimManager.getPhysicalSimCount(context) }
+
                             LazyColumn(
                                 state = listState,
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -382,7 +392,11 @@ fun RecentsTabContent(
                                         getHistory = { viewModel.getCallHistoryByNumber(it) },
                                         viewModel = viewModel,
                                         onHistoryClick = { selectedHistoryNumber = it },
-                                        onCallRecord = onCallClick
+                                        onCallRecord = onCallClick,
+                                        blockedNumbers = blockedNumbers,
+                                        physicalSimCount = physicalSimCount,
+                                        allRecordings = allRecordings,
+                                        allContacts = allContacts
                                     )
                                 }
                             }

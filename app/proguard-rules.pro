@@ -18,10 +18,10 @@
 -keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod,SourceFile,LineNumberTable,MethodParameters,ElementValuePairs,RuntimeVisibleAnnotations,RuntimeVisibleParameterAnnotations
 
 # =========================================================
-# 1. BRUTE-FORCE APP PRESERVATION (Fool-proof safety net)
+# 1. DATA MODELS & SHARED CONTRACTS (Targeted Keep)
 # =========================================================
--keep class com.example.** { *; }
--keepclassmembers class com.example.** { *; }
+-keep class com.example.model.** { *; }
+-keepclassmembers class com.example.model.** { *; }
 
 # =========================================================
 # 2. DATABASE & SQLCIPHER ENCRYPTION (Critical for Vault)
@@ -31,6 +31,10 @@
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Dao interface * { *; }
 -keep @androidx.room.Entity class * { *; }
+-keep class com.example.data.Converters { *; }
+-keepclassmembers class * {
+    @androidx.room.TypeConverter *;
+}
 -keepclassmembers class * extends androidx.room.RoomDatabase {
     public <init>();
 }
@@ -39,17 +43,17 @@
 -dontwarn androidx.room.**
 -dontwarn androidx.sqlite.**
 
-# SQLCipher Hardware Crypto Bindings
--keep class net.sqlcipher.** { *; }
--keepclassmembers class net.sqlcipher.** { *; }
--keep class * extends net.sqlcipher.database.SQLiteOpenHelper { *; }
--keep class net.sqlcipher.database.SQLiteDatabase {
+# SQLCipher Hardware Crypto Bindings (sqlcipher-android 4.20.0)
+-keep class net.zetetic.database.sqlcipher.** { *; }
+-keepclassmembers class net.zetetic.database.sqlcipher.** { *; }
+-keep class * extends net.zetetic.database.sqlcipher.SQLiteOpenHelper { *; }
+-keep class net.zetetic.database.sqlcipher.SQLiteDatabase {
     native <methods>;
 }
 -keepclasseswithmembernames class * {
     native <methods>;
 }
--dontwarn net.sqlcipher.**
+-dontwarn net.zetetic.database.sqlcipher.**
 
 # =========================================================
 # 3. EXTERNAL LIBRARIES (Coil)
@@ -71,9 +75,11 @@
 # =========================================================
 # 5. ANDROID SYSTEM COMPONENTS (Telephony & Broadcasts)
 # =========================================================
+-keep public class * extends android.app.Application
 -keep public class * extends android.app.Service
 -keep public class * extends android.app.Activity
 -keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
 -keep public class * extends android.telecom.InCallService
 -keep public class * extends android.telecom.CallScreeningService
 -keep public class * extends android.telecom.ConnectionService

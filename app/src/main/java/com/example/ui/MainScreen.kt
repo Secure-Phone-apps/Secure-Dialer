@@ -69,6 +69,24 @@ import com.example.util.FakeCallVoicePlayer
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+internal fun buildOnboardingPermissionsList(sdkInt: Int = Build.VERSION.SDK_INT): Array<String> {
+    val perms = mutableListOf(
+        Manifest.permission.READ_CONTACTS,
+        Manifest.permission.WRITE_CONTACTS,
+        Manifest.permission.READ_CALL_LOG,
+        Manifest.permission.WRITE_CALL_LOG,
+        Manifest.permission.CALL_PHONE,
+        Manifest.permission.READ_PHONE_STATE
+    )
+    if (sdkInt >= Build.VERSION_CODES.S) {
+        perms.add(Manifest.permission.BLUETOOTH_CONNECT)
+    }
+    if (sdkInt >= Build.VERSION_CODES.TIRAMISU) {
+        perms.add(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    return perms.toTypedArray()
+}
+
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun MainScreen(
@@ -390,17 +408,7 @@ fun MainScreen(
                         Button(
                             onClick = {
                                 showProminentDisclosure = false
-                                val perms = mutableListOf(
-                                    Manifest.permission.READ_CONTACTS,
-                                    Manifest.permission.WRITE_CONTACTS,
-                                    Manifest.permission.READ_CALL_LOG,
-                                    Manifest.permission.WRITE_CALL_LOG,
-                                    Manifest.permission.CALL_PHONE
-                                )
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    perms.add(Manifest.permission.POST_NOTIFICATIONS)
-                                }
-                                permissionLauncher.launch(perms.toTypedArray())
+                                permissionLauncher.launch(buildOnboardingPermissionsList())
                             }
                         ) {
                             Text(stringResource(R.string.btn_continue))
@@ -921,7 +929,9 @@ fun MainScreen(
                     targetOffsetY = { it },
                     animationSpec = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = Spring.StiffnessMedium)
                 ) + fadeOut(animationSpec = tween(100)),
-                modifier = Modifier.align(Alignment.BottomCenter)
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = if (adaptiveMetrics.useNavigationRail) 80.dp else 0.dp)
             ) {
                 val dialpadTonesEnabled by viewModel.dialpadTonesEnabled
                 val voicemailNumber by viewModel.voicemailNumber

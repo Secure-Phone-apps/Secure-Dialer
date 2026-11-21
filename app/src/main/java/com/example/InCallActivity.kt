@@ -10,6 +10,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.SharedPreferences
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
@@ -20,6 +21,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.VisibleForTesting
 import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
@@ -41,6 +43,25 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@Immutable
+internal data class InCallPreferences(
+    val isDarkTheme: Boolean = true,
+    val isAmoledMode: Boolean = false,
+    val isM3Expressive: Boolean = true,
+    val useDynamicColor: Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S,
+    val themeColor: String = "expressive_lime",
+    val customColorHex: String = "#68A500",
+    val preferredSim: String = "Ask",
+    val avatarShapeType: String = "squircle",
+    val recordingEnabled: Boolean = false,
+    val autoTuneVolume: Boolean = true,
+    val recordingChimeEnabled: Boolean = false,
+    val alwaysRecordEnabled: Boolean = false,
+    val callNotesEnabled: Boolean = true,
+    val isPocketProtectionEnabled: Boolean = false,
+    val isLastNameFirst: Boolean = false
+)
+
 /**
  * Dedicated lockscreen-isolated Activity hosting exclusively the active/incoming call UI.
  * Keeps MainActivity (Contacts, Recents, Recordings, Settings) strictly behind the device lock
@@ -50,7 +71,14 @@ class InCallActivity : ComponentActivity() {
 
     private val activityScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val isDeviceLockedState = mutableStateOf(false)
+    private val uiPreferencesState = mutableStateOf(InCallPreferences())
+    private var sharedPrefs: SharedPreferences? = null
     private var keyguardReceiverRegistered = false
+    private var prefsListenerRegistered = false
+
+    private val prefsChangeListener = SharedPreferences.OnSharedPreferenceChangeListener { sp, _ ->
+        uiPreferencesState.value = readPreferences(sp)
+    }
 
     private val keyguardStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
@@ -76,26 +104,32 @@ class InCallActivity : ComponentActivity() {
         handleLaunchIntent(intent)
 
         val prefs = getSharedPreferences(LockScreenCallPolicy.PREFS_NAME, Context.MODE_PRIVATE)
+        sharedPrefs = prefs
+        refreshPreferences()
+        if (!prefsListenerRegistered) {
+            prefs.registerOnSharedPreferenceChangeListener(prefsChangeListener)
+            prefsListenerRegistered = true
+        }
+
         val dao = AppDatabase.getDatabase(applicationContext).dialerDao()
         val repository = DialerRepository(applicationContext)
 
         setContent {
-            val isDarkTheme by remember { mutableStateOf(prefs.getBoolean("is_dark_theme", true)) }
-            val isAmoledMode by remember { mutableStateOf(prefs.getBoolean("is_amoled_mode", false)) }
-            val isM3Expressive by remember { mutableStateOf(prefs.getBoolean("is_m3_expressive", true)) }
-            val useDynamicColor by remember {
-                mutableStateOf(prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S))
-            }
-            val themeColor by remember { mutableStateOf(prefs.getString("theme_color", "expressive_lime") ?: "expressive_lime") }
-            val customColorHex by remember { mutableStateOf(prefs.getString("custom_color_hex", "#68A500") ?: "#68A500") }
-            val preferredSim by remember { mutableStateOf(prefs.getString("preferred_sim", "Ask") ?: "Ask") }
-            val avatarShapeType by remember { mutableStateOf(prefs.getString("avatar_shape_type", "squircle") ?: "squircle") }
-            val recordingEnabled by remember { mutableStateOf(prefs.getBoolean("recording_enabled", false)) }
-            val autoTuneVolume by remember { mutableStateOf(prefs.getBoolean("auto_tune_recording_volume", true)) }
-            val recordingChimeEnabled by remember { mutableStateOf(prefs.getBoolean("recording_chime_enabled", false)) }
-            val alwaysRecordEnabled by remember { mutableStateOf(prefs.getBoolean("is_auto_record_calls_enabled", false)) }
-            val callNotesEnabled by remember { mutableStateOf(prefs.getBoolean("is_call_notes_enabled", true)) }
-            val isPocketProtectionEnabled by remember { mutableStateOf(prefs.getBoolean("is_pocket_protection_enabled", false)) }
+            val uiPrefs by uiPreferencesState
+            val isDarkTheme = uiPrefs.isDarkTheme
+            val isAmoledMode = uiPrefs.isAmoledMode
+            val isM3Expressive = uiPrefs.isM3Expressive
+            val useDynamicColor = uiPrefs.useDynamicColor
+            val themeColor = uiPrefs.themeColor
+            val customColorHex = uiPrefs.customColorHex
+            val preferredSim = uiPrefs.preferredSim
+            val avatarShapeType = uiPrefs.avatarShapeType
+            val recordingEnabled = uiPrefs.recordingEnabled
+            val autoTuneVolume = uiPrefs.autoTuneVolume
+            val recordingChimeEnabled = uiPrefs.recordingChimeEnabled
+            val alwaysRecordEnabled = uiPrefs.alwaysRecordEnabled
+            val callNotesEnabled = uiPrefs.callNotesEnabled
+            val isPocketProtectionEnabled = uiPrefs.isPocketProtectionEnabled
 
             val currentCall by CallManager.currentCall.collectAsStateWithLifecycle()
             val allCalls by CallManager.calls.collectAsStateWithLifecycle()
@@ -110,9 +144,10 @@ class InCallActivity : ComponentActivity() {
             val quickResponses = remember(quickResponseEntities) { quickResponseEntities.map { it.message } }
 
             // Only expose full contact list for Add Call picker once the keyguard is unlocked
-            val isLastNameFirst = remember { prefs.getString("contact_name_format", "FIRST_NAME_FIRST") == "LAST_NAME_FIRST" }
-            val allContacts by dao.getAllContactsFlow(isLastNameFirst)
-                .collectAsStateWithLifecycle(initialValue = emptyList<Contact>())
+            val contactsFlow = remember(uiPrefs.isLastNameFirst) {
+                dao.getAllContactsFlow(uiPrefs.isLastNameFirst)
+            }
+            val allContacts by contactsFlow.collectAsStateWithLifecycle(initialValue = emptyList<Contact>())
             val visibleContacts = if (isDeviceLocked) emptyList() else allContacts
 
             var resolvedName by remember { mutableStateOf("") }
@@ -137,6 +172,7 @@ class InCallActivity : ComponentActivity() {
                 val observer = LifecycleEventObserver { _, event ->
                     if (event == Lifecycle.Event.ON_RESUME || event == Lifecycle.Event.ON_START) {
                         refreshLockState()
+                        refreshPreferences()
                     }
                 }
                 lifecycleOwner.lifecycle.addObserver(observer)
@@ -253,6 +289,7 @@ class InCallActivity : ComponentActivity() {
         LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = true, keepScreenOn = true)
         registerKeyguardReceiver()
         refreshLockState()
+        refreshPreferences()
     }
 
     override fun onResume() {
@@ -260,6 +297,7 @@ class InCallActivity : ComponentActivity() {
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
         CallManager.setInCallUiVisible(true)
         refreshLockState()
+        refreshPreferences()
     }
 
     override fun onPause() {
@@ -276,6 +314,10 @@ class InCallActivity : ComponentActivity() {
     override fun onDestroy() {
         CallManager.setInCallUiVisible(false)
         unregisterKeyguardReceiver()
+        if (prefsListenerRegistered) {
+            sharedPrefs?.unregisterOnSharedPreferenceChangeListener(prefsChangeListener)
+            prefsListenerRegistered = false
+        }
         activityScope.cancel()
         super.onDestroy()
     }
@@ -285,6 +327,7 @@ class InCallActivity : ComponentActivity() {
         setIntent(intent)
         LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = true, keepScreenOn = true)
         refreshLockState()
+        refreshPreferences()
         handleLaunchIntent(intent)
     }
 
@@ -310,6 +353,36 @@ class InCallActivity : ComponentActivity() {
 
     private fun refreshLockState() {
         isDeviceLockedState.value = LockScreenCallPolicy.isDeviceLocked(this)
+    }
+
+    @VisibleForTesting
+    internal fun currentPreferencesForTest(): InCallPreferences = uiPreferencesState.value
+
+    private fun refreshPreferences() {
+        val sp = sharedPrefs ?: getSharedPreferences(LockScreenCallPolicy.PREFS_NAME, Context.MODE_PRIVATE).also {
+            sharedPrefs = it
+        }
+        uiPreferencesState.value = readPreferences(sp)
+    }
+
+    private fun readPreferences(sp: SharedPreferences): InCallPreferences {
+        return InCallPreferences(
+            isDarkTheme = sp.getBoolean("is_dark_theme", true),
+            isAmoledMode = sp.getBoolean("is_amoled_mode", false),
+            isM3Expressive = sp.getBoolean("is_m3_expressive", true),
+            useDynamicColor = sp.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S),
+            themeColor = sp.getString("theme_color", "expressive_lime") ?: "expressive_lime",
+            customColorHex = sp.getString("custom_color_hex", "#68A500") ?: "#68A500",
+            preferredSim = sp.getString("preferred_sim", "Ask") ?: "Ask",
+            avatarShapeType = sp.getString("avatar_shape_type", "squircle") ?: "squircle",
+            recordingEnabled = sp.getBoolean("recording_enabled", false),
+            autoTuneVolume = sp.getBoolean("auto_tune_recording_volume", true),
+            recordingChimeEnabled = sp.getBoolean("recording_chime_enabled", false),
+            alwaysRecordEnabled = sp.getBoolean("is_auto_record_calls_enabled", false),
+            callNotesEnabled = sp.getBoolean("is_call_notes_enabled", true),
+            isPocketProtectionEnabled = sp.getBoolean("is_pocket_protection_enabled", false),
+            isLastNameFirst = sp.getString("contact_name_format", "FIRST_NAME_FIRST") == "LAST_NAME_FIRST"
+        )
     }
 
     private fun finishCallScreen() {

@@ -30,6 +30,7 @@ import android.media.RingtoneManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.MainActivity
+import com.example.R
 import com.example.model.ScheduledFakeCall
 
 class FakeCallReceiver : BroadcastReceiver() {
@@ -41,8 +42,8 @@ class FakeCallReceiver : BroadcastReceiver() {
         if (!prefs.getBoolean("is_fake_call_simulator_enabled", true)) return
 
         val callId = intent.getStringExtra("call_id")
-        val name = intent.getStringExtra("caller_name") ?: "Unknown"
-        val number = intent.getStringExtra("caller_number") ?: "Unknown"
+        val name = intent.getStringExtra("caller_name") ?: appContext.getString(R.string.unknown)
+        val number = intent.getStringExtra("caller_number") ?: appContext.getString(R.string.unknown)
         val audioUri = intent.getStringExtra("audio_uri")
         val audioVoiceType = intent.getStringExtra("audio_voice_type") ?: "NONE"
 
@@ -78,10 +79,10 @@ class FakeCallReceiver : BroadcastReceiver() {
 
                 val channel = NotificationChannel(
                     channelId,
-                    "Incoming Calls",
+                    appContext.getString(R.string.notif_channel_incoming_name),
                     NotificationManager.IMPORTANCE_HIGH
                 ).apply {
-                    description = "Incoming call alerts"
+                    description = appContext.getString(R.string.notif_channel_incoming_fake_desc)
                     enableVibration(true)
                     lockscreenVisibility = Notification.VISIBILITY_PUBLIC
                     setSound(
@@ -99,7 +100,7 @@ class FakeCallReceiver : BroadcastReceiver() {
             val notification = NotificationCompat.Builder(appContext, channelId)
                 .setSmallIcon(android.R.drawable.sym_action_call)
                 .setContentTitle(name)
-                .setContentText("Incoming call ($number)")
+                .setContentText(appContext.getString(R.string.notif_incoming_call_number, number))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)

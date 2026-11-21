@@ -161,8 +161,7 @@ fun CallRecordingsSettings(
         }
     }
 
-    if (shareSheetRecording != null) {
-        val rec = shareSheetRecording!!
+    shareSheetRecording?.let { rec ->
         val file = remember(rec.filePath) { File(rec.filePath) }
         val fileSizeStr = remember(file) {
             if (file.exists()) "${file.length() / 1024} KB" else "0 KB"
@@ -400,8 +399,7 @@ fun CallRecordingsSettings(
         }
     }
 
-    if (noteEditingRecording != null) {
-        val rec = noteEditingRecording!!
+    noteEditingRecording?.let { rec ->
         var noteInput by remember { mutableStateOf(rec.note) }
         AlertDialog(
             onDismissRequest = { noteEditingRecording = null },
@@ -791,13 +789,13 @@ fun CallRecordingsSettings(
                             ) {
                                 Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                                     Text(
-                                        text = profile.title,
+                                        text = stringResource(profile.titleRes),
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = profile.description,
+                                        text = stringResource(profile.descriptionRes),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         fontSize = 12.sp

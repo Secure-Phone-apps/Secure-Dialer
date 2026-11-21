@@ -51,6 +51,7 @@ class SecureCallScreeningService : CallScreeningService() {
         screeningScope.launch {
             val shouldBlock = try {
                 withTimeoutOrNull(1800L) {
+                    AppDatabase.retryOpenOnTransientRecoveryIfUnlocked(applicationContext)
                     val dao = AppDatabase.getDatabase(applicationContext).dialerDao()
                     BlockedNumberContractManager.shouldBlockIncomingCall(
                         context = applicationContext,

@@ -47,9 +47,20 @@ import com.example.model.PRIVATE_VAULT_ACCOUNT_TYPE
 import com.example.ui.viewmodel.DialerViewModel
 import com.example.util.RichHapticEngine
 import com.example.util.VaultBiometricAuthHelper
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+internal fun isBackupPayloadEncrypted(content: String): Boolean {
+    val trimmed = content.trim()
+    if (!trimmed.startsWith("{")) return true
+    return try {
+        JSONObject(trimmed).optBoolean("encrypted", false)
+    } catch (_: Exception) {
+        true
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,9 +70,9 @@ fun PrivacyAndBackupSettings(
 ) {
     var selectedSubTab by remember { mutableIntStateOf(0) }
     val tabs = listOf(
-        Pair("Privacy & Security", Icons.Default.Lock),
-        Pair("Contacts Source", Icons.Default.Contacts),
-        Pair("Data & Backup", Icons.Default.Backup)
+        Pair(stringResource(R.string.privacy_tab_security), Icons.Default.Lock),
+        Pair(stringResource(R.string.privacy_tab_contacts_source), Icons.Default.Contacts),
+        Pair(stringResource(R.string.backup_service_health_title), Icons.Default.Backup)
     )
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -134,8 +145,8 @@ private fun PrivacyProtectionSection(
                                 } else {
                                     VaultBiometricAuthHelper.authenticate(
                                         activity = activity,
-                                        title = "Enable Biometric Lock",
-                                        subtitle = "Authenticate to confirm enabling App Lock",
+                                        title = context.getString(R.string.biometric_enable_title),
+                                        subtitle = context.getString(R.string.biometric_enable_subtitle),
                                         onSuccess = {
                                             viewModel.updateBiometricLockEnabled(true)
                                         },
@@ -148,8 +159,8 @@ private fun PrivacyProtectionSection(
                             } else {
                                 VaultBiometricAuthHelper.authenticate(
                                     activity = activity,
-                                    title = "Disable Biometric Lock",
-                                    subtitle = "Authenticate to confirm disabling App Lock",
+                                    title = context.getString(R.string.biometric_disable_title),
+                                    subtitle = context.getString(R.string.biometric_disable_subtitle),
                                     onSuccess = {
                                         viewModel.updateBiometricLockEnabled(false)
                                     },
@@ -483,8 +494,9 @@ private fun DataAndBackupSection(
     val saveBackupFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        if (uri != null && pendingBackupData != null) {
-            viewModel.writeTextToUri(uri, pendingBackupData!!) { success ->
+        val backupData = pendingBackupData
+        if (uri != null && backupData != null) {
+            viewModel.writeTextToUri(uri, backupData) { success ->
                 if (success) {
                     Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_LONG).show()
                 } else {
@@ -501,7 +513,7 @@ private fun DataAndBackupSection(
         if (uri != null) {
             viewModel.readTextFromUri(uri) { content ->
                 if (!content.isNullOrBlank()) {
-                    if (content.contains("\"encrypted\":true")) {
+                    if (isBackupPayloadEncrypted(content)) {
                         pendingEncryptedRestoreContent = content
                         restorePasswordInput = ""
                         showPasswordPromptDialog = true
@@ -724,7 +736,7 @@ private fun DataAndBackupSection(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        "This backup file is encrypted. Enter the decryption password to restore your data:",
+                        stringResource(R.string.backup_encrypted_prompt),
                         style = MaterialTheme.typography.bodySmall
                     )
                     OutlinedTextField(

@@ -34,6 +34,7 @@ import androidx.room.withTransaction
 import com.example.data.AppDatabase
 import com.example.model.*
 import com.example.ui.theme.*
+import com.example.util.CallAudioRecorder
 import com.example.util.SimCallTracker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -41,8 +42,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 class DialerRepository(rawContext: Context) {
@@ -1056,14 +1055,13 @@ class DialerRepository(rawContext: Context) {
         } catch (_: Exception) {}
 
         try {
-            val sdf = SimpleDateFormat("MMM d, HH:mm", Locale.getDefault())
             val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
             val pair = colors[Math.abs(name.hashCode()) % colors.size]
             val record = CallRecord(
                 name = name,
                 number = number,
                 label = "Mobile",
-                timestamp = sdf.format(Date(timestampMs)),
+                timestamp = CallAudioRecorder.formatShortDateTime(context, timestampMs),
                 type = type,
                 avatarText = getInitials(name),
                 avatarBgValue = pair.first.value.toLong(),

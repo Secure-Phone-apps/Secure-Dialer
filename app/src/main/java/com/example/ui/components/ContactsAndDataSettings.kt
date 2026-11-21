@@ -73,8 +73,9 @@ fun ContactsAndDataSettings(
     val saveBackupFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
-        if (uri != null && pendingBackupData != null) {
-            viewModel.writeTextToUri(uri, pendingBackupData!!) { success ->
+        val backupData = pendingBackupData
+        if (uri != null && backupData != null) {
+            viewModel.writeTextToUri(uri, backupData) { success ->
                 if (success) {
                     Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_LONG).show()
                 } else {
@@ -91,8 +92,7 @@ fun ContactsAndDataSettings(
         if (uri != null) {
             viewModel.readTextFromUri(uri) { content ->
                 if (!content.isNullOrBlank()) {
-                    // FIXED: Correctly identifies encrypted Base64 payloads vs plaintext JSON
-                    val isEncrypted = !content.trim().startsWith("{")
+                    val isEncrypted = isBackupPayloadEncrypted(content)
                     if (isEncrypted) {
                         pendingEncryptedRestoreContent = content
                         showPasswordPromptDialog = true

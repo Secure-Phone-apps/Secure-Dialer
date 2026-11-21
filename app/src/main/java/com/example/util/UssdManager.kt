@@ -13,6 +13,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.telephony.TelephonyManager
+import com.example.R
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -50,17 +51,19 @@ object UssdManager {
         val trimmed = code.trim()
         if (!isMmiOrUssdCode(trimmed)) return false
 
+        val appContext = context.applicationContext
+
         // 1. Intercept *#06# (IMEI display)
         if (trimmed == "*#06#") {
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+            val tm = appContext.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
             val imeiList = mutableListOf<String>()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 try {
                     val imei1 = tm?.getImei(0)
-                    if (!imei1.isNullOrBlank()) imeiList.add("IMEI 1: $imei1")
+                    if (!imei1.isNullOrBlank()) imeiList.add(context.getString(R.string.ussd_imei_line, 1, imei1))
                     val imei2 = tm?.getImei(1)
-                    if (!imei2.isNullOrBlank()) imeiList.add("IMEI 2: $imei2")
+                    if (!imei2.isNullOrBlank()) imeiList.add(context.getString(R.string.ussd_imei_line, 2, imei2))
                 } catch (_: Exception) {}
             }
 
@@ -69,7 +72,7 @@ object UssdManager {
                     @Suppress("DEPRECATION")
                     val deviceId = tm?.deviceId
                     if (!deviceId.isNullOrBlank()) {
-                        imeiList.add("Device ID / MEID: $deviceId")
+                        imeiList.add(context.getString(R.string.ussd_device_id_line, deviceId))
                     }
                 } catch (_: Exception) {}
             }
@@ -77,11 +80,17 @@ object UssdManager {
             val message = if (imeiList.isNotEmpty()) {
                 imeiList.joinToString("\n\n")
             } else {
-                "Device Model: ${Build.MANUFACTURER.replaceFirstChar { it.uppercase() }} ${Build.MODEL}\nHardware: ${Build.HARDWARE}\nAndroid Version: ${Build.VERSION.RELEASE}"
+                context.getString(
+                    R.string.ussd_device_fallback_info,
+                    Build.MANUFACTURER.replaceFirstChar { it.uppercase() },
+                    Build.MODEL,
+                    Build.HARDWARE,
+                    Build.VERSION.RELEASE
+                )
             }
 
             _ussdDialogData.value = UssdDialogData(
-                title = "Device Information",
+                title = context.getString(R.string.ussd_device_info_title),
                 message = message,
                 code = trimmed
             )
@@ -90,13 +99,31 @@ object UssdManager {
 
         // 2. Carrier USSD Request (API 26+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+            val tm = appContext.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
             if (tm != null) {
                 try {
                     val mainHandler = Handler(Looper.getMainLooper())
+                    val carrierResponseTitle = context.getString(R.string.ussd_carrier_response_title, trimmed)
+                    val failedTitle = context.getString(R.string.ussd_failed_title)
+                    val errReturnFailureMsg = context.getString(
+                        R.string.ussd_failed_message,
+                        context.getString(R.string.ussd_error_return_failure),
+                        trimmed
+                    )
+                    val errServiceUnavailMsg = context.getString(
+                        R.string.ussd_failed_message,
+                        context.getString(R.string.ussd_error_service_unavail),
+                        trimmed
+                    )
+                    val errUnsupportedMsg = context.getString(
+                        R.string.ussd_failed_message,
+                        context.getString(R.string.ussd_error_unsupported),
+                        trimmed
+                    )
+
                     _ussdDialogData.value = UssdDialogData(
-                        title = "Carrier USSD",
-                        message = "Running USSD code $trimmed...",
+                        title = context.getString(R.string.ussd_carrier_title),
+                        message = context.getString(R.string.ussd_running_code, trimmed),
                         code = trimmed
                     )
 
@@ -109,7 +136,7 @@ object UssdManager {
                                 response: CharSequence
                             ) {
                                 _ussdDialogData.value = UssdDialogData(
-                                    title = "Carrier Response ($trimmed)",
+                                    title = carrierResponseTitle,
                                     message = response.toString(),
                                     code = trimmed
                                 )
@@ -120,14 +147,14 @@ object UssdManager {
                                 request: String,
                                 failureCode: Int
                             ) {
-                                val errorDesc = when (failureCode) {
-                                    TelephonyManager.USSD_RETURN_FAILURE -> "Carrier returned failure."
-                                    TelephonyManager.USSD_ERROR_SERVICE_UNAVAIL -> "Carrier USSD service unavailable."
-                                    else -> "USSD code failed or unsupported by SIM."
+                                val errorMsg = when (failureCode) {
+                                    TelephonyManager.USSD_RETURN_FAILURE -> errReturnFailureMsg
+                                    TelephonyManager.USSD_ERROR_SERVICE_UNAVAIL -> errServiceUnavailMsg
+                                    else -> errUnsupportedMsg
                                 }
                                 _ussdDialogData.value = UssdDialogData(
-                                    title = "USSD Failed",
-                                    message = "$errorDesc\nCode: $trimmed",
+                                    title = failedTitle,
+                                    message = errorMsg,
                                     code = trimmed
                                 )
                             }

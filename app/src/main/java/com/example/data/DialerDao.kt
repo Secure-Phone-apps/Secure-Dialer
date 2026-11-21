@@ -277,6 +277,32 @@ interface DialerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSetting(setting: AppSetting)
 
+    @Query("""
+        DELETE FROM app_settings
+        WHERE `key` LIKE 'cnap\_%' ESCAPE '\'
+          AND rowid NOT IN (
+              SELECT rowid FROM app_settings
+              WHERE `key` LIKE 'cnap\_%' ESCAPE '\'
+              ORDER BY rowid DESC
+              LIMIT :maxEntries
+          )
+    """)
+    suspend fun pruneOldCnapSettings(maxEntries: Int = MAX_CACHED_CNAP_ENTRIES)
+
+    @Transaction
+    suspend fun upsertCnapSettingCapped(
+        key: String,
+        value: String,
+        maxEntries: Int = MAX_CACHED_CNAP_ENTRIES
+    ) {
+        insertSetting(AppSetting(key, value))
+        pruneOldCnapSettings(maxEntries.coerceAtLeast(1))
+    }
+
+    companion object {
+        const val MAX_CACHED_CNAP_ENTRIES = 200
+    }
+
     // ================= CALL NOTES =================
 
     @Query("SELECT * FROM call_notes WHERE number = :number ORDER BY id DESC")

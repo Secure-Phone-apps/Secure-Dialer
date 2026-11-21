@@ -45,12 +45,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.R
@@ -59,10 +59,8 @@ import com.example.model.CallRecording
 import com.example.model.CallType
 import com.example.model.Contact
 import com.example.model.LabeledNumber
-import com.example.model.getAvatarShape
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.DialerViewModel
-import com.example.util.MultiSimManager
 import com.example.util.RichHapticEngine
 
 
@@ -75,10 +73,15 @@ fun RecentCallRow(
     getHistory: suspend (String) -> List<CallRecord>,
     viewModel: DialerViewModel,
     onHistoryClick: (String) -> Unit,
-    onCallRecord: ((CallRecord) -> Unit)? = null
+    onCallRecord: ((CallRecord) -> Unit)? = null,
+    blockedNumbers: Set<String> = emptySet(),
+    physicalSimCount: Int = 1,
+    allRecordings: List<CallRecording> = emptyList(),
+    allContacts: List<Contact> = emptyList()
 ) {
     val record = group.primary
     val context = LocalContext.current
+    val rowContentOffsetX = if (LocalDensity.current.fontScale >= 1.3f) 0.dp else (-8).dp
     var isExpanded by remember { mutableStateOf(false) }
 
     val isExpressive = LocalM3Expressive.current
@@ -102,8 +105,6 @@ fun RecentCallRow(
     }
 
     val isRowSwipeEnabled by viewModel.isRowSwipeEnabled
-    val allRecordings by viewModel.recordingsFlow.collectAsStateWithLifecycle()
-    val allContacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
 
     val matchedContact = remember(allContacts, record.number, record.name) {
         val digits = record.number.filter { it.isDigit() }
@@ -162,7 +163,7 @@ fun RecentCallRow(
                 ListItem(
                     headlineContent = {
                         Column(
-                            modifier = Modifier.offset(x = (-8).dp),
+                            modifier = Modifier.offset(x = rowContentOffsetX),
                             verticalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -212,7 +213,6 @@ fun RecentCallRow(
                                     modifier = Modifier.size(13.dp)
                                 )
 
-                                val physicalSimCount = remember(context) { MultiSimManager.getPhysicalSimCount(context) }
                                 if (physicalSimCount > 1) {
                                     val isSim1 = record.simSlot <= 1
                                     Surface(
@@ -317,7 +317,7 @@ fun RecentCallRow(
                                                 modifier = Modifier.size(10.dp)
                                             )
                                             Text(
-                                                text = "Rec",
+                                                text = stringResource(R.string.badge_rec),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 fontSize = 8.5.sp,
                                                 fontWeight = FontWeight.ExtraBold,
@@ -347,7 +347,7 @@ fun RecentCallRow(
                     leadingContent = {
                         Box(
                             modifier = Modifier
-                                .offset(x = (-8).dp)
+                                .offset(x = rowContentOffsetX)
                                 .size(42.dp)
                                 .clip(avatarShape)
                                 .background(record.avatarBg.copy(alpha = 0.85f)),
@@ -402,9 +402,8 @@ fun RecentCallRow(
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent)
                 )
 
-                val blockedNumbersEntities by viewModel.blockedNumbersFlow.collectAsStateWithLifecycle()
-                val isBlocked = remember(blockedNumbersEntities, record.number) {
-                    blockedNumbersEntities.any { it.number == record.number }
+                val isBlocked = remember(blockedNumbers, record.number) {
+                    record.number in blockedNumbers
                 }
 
                 AnimatedVisibility(

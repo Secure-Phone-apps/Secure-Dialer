@@ -243,12 +243,13 @@ object DynamicIslandOverlayManager {
                             },
                             onMinimizedChange = { minimized ->
                                 val currentWm = context.getSystemService(Context.WINDOW_SERVICE) as? WindowManager
-                                if (currentWm != null && overlayComposeView != null) {
+                                val currentView = overlayComposeView
+                                if (currentWm != null && currentView != null) {
                                     layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
                                     layoutParams.x = 0
                                     layoutParams.y = compactY
                                     try {
-                                        currentWm.updateViewLayout(overlayComposeView!!, layoutParams)
+                                        currentWm.updateViewLayout(currentView, layoutParams)
                                     } catch (_: Exception) {}
                                 }
                             },

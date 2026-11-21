@@ -113,7 +113,12 @@ fun DialpadTabContent(
 
     var expandedClipboardMenu by remember { mutableStateOf(false) }
     val clipboardManager = remember { context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager }
-    val currentTfv = viewModel?.dialpadTextFieldValue?.value ?: TextFieldValue(inputValue, TextRange(inputValue.length))
+    val vmTfv = viewModel?.dialpadTextFieldValue?.value
+    val currentTfv = if (vmTfv != null && vmTfv.text == inputValue) {
+        vmTfv
+    } else {
+        TextFieldValue(inputValue, TextRange(inputValue.length))
+    }
     val keyboardController = LocalSoftwareKeyboardController.current
 
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
@@ -529,7 +534,7 @@ fun DialpadTabContent(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 64.dp)
+                .heightIn(min = 64.dp, max = 96.dp)
                 .padding(horizontal = 8.dp),
             shape = keyShape,
             color = Color.Transparent,
@@ -540,8 +545,9 @@ fun DialpadTabContent(
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 64.dp)
+                    .padding(horizontal = 16.dp, vertical = 6.dp)
                     .combinedClickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null,

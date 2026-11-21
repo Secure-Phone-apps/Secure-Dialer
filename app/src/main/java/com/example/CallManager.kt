@@ -88,6 +88,7 @@ object CallManager {
             disconnectWatchdogJob?.cancel()
             disconnectWatchdogJob = null
             disconnectCoordinator.reset()
+            releaseToneGenerator()
         }
     }
 
@@ -544,6 +545,7 @@ object CallManager {
         } else {
             autoStopRecordingIfNeeded()
             stopDtmf()
+            releaseToneGenerator()
             resolveDetailsJob?.cancel()
             resolveDetailsJob = null
             resolveCnapJob?.cancel()
@@ -585,10 +587,13 @@ object CallManager {
     }
 
     private fun persistCnap(number: String, cnap: String) {
+        val digits = number.filter { it.isDigit() }
+        if (digits.isEmpty() || cnap.isBlank()) return
         val ctx = appContext ?: inCallService?.applicationContext ?: return
         scope.launch {
             try {
-                AppDatabase.getDatabase(ctx).dialerDao().insertSetting(AppSetting("cnap_" + number.filter { it.isDigit() }, cnap))
+                AppDatabase.getDatabase(ctx).dialerDao()
+                    .upsertCnapSettingCapped("cnap_$digits", cnap)
             } catch (_: Exception) {}
         }
     }
@@ -910,7 +915,21 @@ object CallManager {
         } catch (_: Exception) {}
     }
 
+    private val toneGeneratorLock = Any()
     private var localToneGenerator: android.media.ToneGenerator? = null
+
+    internal fun hasActiveToneGeneratorForTest(): Boolean = synchronized(toneGeneratorLock) {
+        localToneGenerator != null
+    }
+
+    fun releaseToneGenerator() {
+        synchronized(toneGeneratorLock) {
+            val tg = localToneGenerator ?: return
+            localToneGenerator = null
+            try { tg.stopTone() } catch (_: Exception) {}
+            try { tg.release() } catch (_: Exception) {}
+        }
+    }
 
     private fun getToneType(key: Char): Int {
         return when (key) {
@@ -945,15 +964,17 @@ object CallManager {
         }
 
         // Play local acoustic tone so the caller hears crisp audio feedback across all OEM ROMs
-        try {
-            if (localToneGenerator == null) {
-                localToneGenerator = android.media.ToneGenerator(android.media.AudioManager.STREAM_VOICE_CALL, 75)
-            }
-            val tone = getToneType(key)
-            if (tone != -1) {
-                localToneGenerator?.startTone(tone, 150)
-            }
-        } catch (_: Exception) {}
+        synchronized(toneGeneratorLock) {
+            try {
+                if (localToneGenerator == null) {
+                    localToneGenerator = android.media.ToneGenerator(android.media.AudioManager.STREAM_VOICE_CALL, 75)
+                }
+                val tone = getToneType(key)
+                if (tone != -1) {
+                    localToneGenerator?.startTone(tone, 150)
+                }
+            } catch (_: Exception) {}
+        }
 
         dtmfJob = scope.launch(Dispatchers.Default) {
             delay(150)
@@ -970,7 +991,9 @@ object CallManager {
             try { _currentCall.value?.stopDtmfTone() } catch (_: Exception) {}
             isDtmfPlaying = false
         }
-        try { localToneGenerator?.stopTone() } catch (_: Exception) {}
+        synchronized(toneGeneratorLock) {
+            try { localToneGenerator?.stopTone() } catch (_: Exception) {}
+        }
     }
 
     fun formatOutgoingNumberWithClir(number: String, isHideCallerId: Boolean, clirPrefix: String): String {

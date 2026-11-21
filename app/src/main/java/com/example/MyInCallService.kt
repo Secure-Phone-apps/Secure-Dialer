@@ -428,6 +428,7 @@ class MyInCallService : InCallService() {
         unregisterActiveCallAudioMonitors()
         stopRinging()
         stopCallWaitingTone()
+        CallManager.releaseToneGenerator()
         releaseAllWakeLocks()
         stopInCallForeground()
         DynamicIslandOverlayManager.stopCallMonitoring()
@@ -617,6 +618,7 @@ class MyInCallService : InCallService() {
             serviceScope.launch {
                 val shouldBlock = try {
                     withTimeoutOrNull(350L) {
+                        AppDatabase.retryOpenOnTransientRecoveryIfUnlocked(applicationContext)
                         val dao = AppDatabase.getDatabase(applicationContext).dialerDao()
                         BlockedNumberContractManager.shouldBlockIncomingCall(applicationContext, num, dao)
                     } ?: false
@@ -927,7 +929,7 @@ class MyInCallService : InCallService() {
             NotificationCompat.Builder(this, CHANNEL_INCOMING)
                 .setSmallIcon(android.R.drawable.sym_call_incoming)
                 .setContentTitle(title)
-                .setContentText("Incoming call from $displayName")
+                .setContentText(getString(R.string.notif_incoming_call_from, displayName))
                 .setStyle(NotificationCompat.BigTextStyle().bigText(text))
                 .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
@@ -935,8 +937,8 @@ class MyInCallService : InCallService() {
                 .setOngoing(true)
                 .setAutoCancel(false)
                 .setContentIntent(contentIntent)
-                .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Decline", declinePendingIntent)
-                .addAction(android.R.drawable.sym_action_call, "Answer", answerPendingIntent)
+                .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.btn_decline), declinePendingIntent)
+                .addAction(android.R.drawable.sym_action_call, getString(R.string.btn_answer), answerPendingIntent)
         } else {
             val caller = Person.Builder().setName(displayName).setKey(number).build()
             val style = NotificationCompat.CallStyle.forIncomingCall(caller, declinePendingIntent, answerPendingIntent)
@@ -1003,13 +1005,13 @@ class MyInCallService : InCallService() {
         val isRecording = CallAudioRecorder.isRecording.value
         val isConference = CallManager.isConference(call) || CallManager.isConferenceActive.value
 
-        val recordTitle = if (isRecording) "■ Stop Rec" else "● Record"
-        val speakerTitle = if (isSpeaker) "Earpiece" else "Speaker"
-        val muteTitle = if (isMuted) "Unmute" else "Mute"
+        val recordTitle = if (isRecording) getString(R.string.notif_action_stop_rec) else getString(R.string.notif_action_record)
+        val speakerTitle = if (isSpeaker) getString(R.string.notif_action_earpiece) else getString(R.string.speaker)
+        val muteTitle = if (isMuted) getString(R.string.notif_action_unmute) else getString(R.string.mute)
 
-        val titlePrefix = if (isConference) getString(R.string.call_status_conference) else "Ongoing Call"
-        val contentTitle = if (isRecording) "$titlePrefix • [REC]" else titlePrefix
-        val contentText = if (isConference) "Conference call with $displayName is active" else "Call with $displayName is active"
+        val titlePrefix = if (isConference) getString(R.string.call_status_conference) else getString(R.string.call_status_ongoing)
+        val contentTitle = if (isRecording) getString(R.string.notif_title_recording_suffix, titlePrefix) else titlePrefix
+        val contentText = if (isConference) getString(R.string.notif_conference_active_text, displayName) else getString(R.string.notif_call_active_text, displayName)
 
         val notification = NotificationCompat.Builder(this, CHANNEL_ACTIVE)
             .setSmallIcon(android.R.drawable.sym_action_call)
@@ -1023,7 +1025,7 @@ class MyInCallService : InCallService() {
             .addAction(android.R.drawable.ic_btn_speak_now, recordTitle, recordPendingIntent)
             .addAction(android.R.drawable.stat_notify_call_mute, muteTitle, mutePendingIntent)
             .addAction(android.R.drawable.stat_sys_speakerphone, speakerTitle, speakerPendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "Hang Up", hangUpPendingIntent)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, getString(R.string.btn_hangup), hangUpPendingIntent)
             .build()
 
         startInCallForeground(notification)
@@ -1054,9 +1056,12 @@ class MyInCallService : InCallService() {
                 CallAudioHelper.restoreAudioState(this, this)
             }
             val file = result.file
-            if (file != null && file.exists() && file.length() > 0L) {
+            if (file != null && file.exists() && file.length() > 128L) {
                 val durationSec = result.durationSeconds.coerceAtLeast(1L)
-                val number = CallManager.callerNumber.value.ifEmpty { "Unknown" }
+                val number = CallManager.callerNumber.value.ifEmpty {
+                    file.nameWithoutExtension.removePrefix("REC_").split("_").firstOrNull()
+                        ?.filter { it.isDigit() }?.ifEmpty { "Unknown" } ?: "Unknown"
+                }
                 val name = CallManager.callerName.value.ifEmpty { number }
                 val timestamp = CallAudioRecorder.formatRecordingTimestamp(this)
 
@@ -1068,12 +1073,18 @@ class MyInCallService : InCallService() {
                     filePath = file.absolutePath
                 )
 
+                val autoExportPref = prefs.getBoolean("is_auto_export_recordings_enabled", true)
                 serviceScope.launch {
                     try {
-                        AppDatabase.getDatabase(this@MyInCallService).dialerDao().insertCallRecording(recording)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                        val dao = AppDatabase.getDatabase(this@MyInCallService).dialerDao()
+                        persistNotificationRecording(
+                            context = applicationContext,
+                            dao = dao,
+                            recording = recording,
+                            file = file,
+                            autoExportFallback = autoExportPref
+                        )
+                    } catch (_: Exception) {}
                 }
             }
         } else {
@@ -1088,7 +1099,7 @@ class MyInCallService : InCallService() {
     }
 
     private fun resolveCallerDisplayName(call: Call, number: String): String {
-        if (number.isEmpty()) return "Unknown"
+        if (number.isEmpty()) return getString(R.string.unknown)
         val cnapName = call.details?.callerDisplayName
         val contactName = getContactNameFromNumber(this, number)
         val savedCnap = if (contactName == null && cnapName.isNullOrBlank()) {
@@ -1106,13 +1117,14 @@ class MyInCallService : InCallService() {
     private fun persistCnapIfPresent(call: Call) {
         val number = call.details?.handle?.schemeSpecificPart ?: return
         val cnapName = call.details?.callerDisplayName ?: return
-        if (cnapName.isNotBlank() && number.isNotBlank()) {
+        val digits = number.filter { it.isDigit() }
+        if (cnapName.isNotBlank() && digits.isNotEmpty()) {
             ContactCache.putCnapName(number, cnapName)
             serviceScope.launch {
                 try {
                     AppDatabase.getDatabase(this@MyInCallService)
                         .dialerDao()
-                        .insertSetting(AppSetting("cnap_" + number.filter { it.isDigit() }, cnapName))
+                        .upsertCnapSettingCapped("cnap_$digits", cnapName)
                 } catch (_: Exception) {}
             }
         }
@@ -1138,8 +1150,8 @@ class MyInCallService : InCallService() {
             try { nm.deleteNotificationChannel("incoming_call_channel_v2") } catch (_: Exception) {}
             try { nm.deleteNotificationChannel("incoming_call_channel_v3") } catch (_: Exception) {}
 
-            val incomingChannel = NotificationChannel(CHANNEL_INCOMING, "Incoming Calls", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Incoming call alerts and full screen notifications"
+            val incomingChannel = NotificationChannel(CHANNEL_INCOMING, getString(R.string.notif_channel_incoming_name), NotificationManager.IMPORTANCE_HIGH).apply {
+                description = getString(R.string.notif_channel_incoming_desc)
                 setSound(null, null)
                 enableVibration(false)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
@@ -1148,12 +1160,12 @@ class MyInCallService : InCallService() {
 
             nm.createNotificationChannels(listOf(
                 incomingChannel,
-                NotificationChannel(CHANNEL_ACTIVE, "Active Calls", NotificationManager.IMPORTANCE_LOW).apply {
-                    description = "Ongoing call controls"
+                NotificationChannel(CHANNEL_ACTIVE, getString(R.string.notif_channel_active_name), NotificationManager.IMPORTANCE_LOW).apply {
+                    description = getString(R.string.notif_channel_active_desc)
                     setShowBadge(false)
                 },
-                NotificationChannel(CHANNEL_MISSED, "Missed Calls", NotificationManager.IMPORTANCE_DEFAULT).apply {
-                    description = "Missed call notifications"
+                NotificationChannel(CHANNEL_MISSED, getString(R.string.notif_channel_missed_name), NotificationManager.IMPORTANCE_DEFAULT).apply {
+                    description = getString(R.string.notif_channel_missed_desc)
                 }
             ))
         }
@@ -1180,5 +1192,22 @@ class MyInCallService : InCallService() {
 
         const val EXTRA_SHOW_CALL = "SHOW_CALL_SCREEN"
         const val EXTRA_ANSWER = "ANSWER_ON_LAUNCH"
+
+        internal suspend fun persistNotificationRecording(
+            context: Context,
+            dao: com.example.data.DialerDao,
+            recording: CallRecording,
+            file: java.io.File,
+            autoExportFallback: Boolean = true
+        ) {
+            if (dao.getCallRecordingByPath(file.absolutePath) == null) {
+                dao.insertCallRecording(recording)
+            }
+            val autoExport = dao.getSetting("is_auto_export_recordings_enabled")
+                ?.toBooleanStrictOrNull() ?: autoExportFallback
+            if (autoExport) {
+                CallAudioRecorder.exportRecordingToPublicDownloads(context, file)
+            }
+        }
     }
 }

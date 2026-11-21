@@ -54,6 +54,7 @@ import com.example.ui.theme.getDialedCallColor
 import com.example.ui.theme.getMissedCallColor
 import com.example.ui.theme.getReceivedCallColor
 import com.example.util.RichHapticEngine
+import android.text.format.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -365,26 +366,37 @@ fun CallLogSummaryDashboard(
 
 // PERF FIX: Consolidated threshold filtering avoids repeated Date & Calendar allocations in loops
 private fun filterByThreshold(records: List<CallRecord>, thresholdMs: Long, locale: Locale): List<CallRecord> {
-    val sdf by lazy { SimpleDateFormat("MMM d, HH:mm", locale) }
+    val formatters by lazy {
+        listOf(
+            DateFormat.getBestDateTimePattern(locale, "MMM d, HH:mm"),
+            DateFormat.getBestDateTimePattern(locale, "MMM d, h:mm a"),
+            "MMM d, HH:mm",
+            "MMM d, h:mm a"
+        ).distinct().map { pattern -> SimpleDateFormat(pattern, locale) }
+    }
     val currentYear by lazy { Calendar.getInstance().get(Calendar.YEAR) }
 
     return records.filter { record ->
         if (record.timestampMs != 0L) {
             record.timestampMs >= thresholdMs
         } else {
-            try {
-                val parsed = sdf.parse(record.timestamp)
-                if (parsed != null) {
-                    val cal = Calendar.getInstance().apply {
-                        time = parsed
-                        set(Calendar.YEAR, currentYear)
-                    }
-                    if (cal.timeInMillis > System.currentTimeMillis()) {
-                        cal.add(Calendar.YEAR, -1)
-                    }
-                    cal.timeInMillis >= thresholdMs
-                } else false
-            } catch (_: Exception) {
+            val parsed = formatters.firstNotNullOfOrNull { sdf ->
+                try {
+                    sdf.parse(record.timestamp)
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            if (parsed != null) {
+                val cal = Calendar.getInstance().apply {
+                    time = parsed
+                    set(Calendar.YEAR, currentYear)
+                }
+                if (cal.timeInMillis > System.currentTimeMillis()) {
+                    cal.add(Calendar.YEAR, -1)
+                }
+                cal.timeInMillis >= thresholdMs
+            } else {
                 false
             }
         }

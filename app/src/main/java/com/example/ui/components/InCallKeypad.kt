@@ -33,6 +33,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -90,35 +92,48 @@ fun InCallKeypad(
                 vertical = if (adaptive.isTightVerticalSpace) 10.dp else 16.dp
             )
         ) {
-            // Header with overflow protection and one-tap clear
+            // Header with localized fallback, overflow protection, and 48dp accessible clear button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 12.dp),
+                    .heightIn(min = 48.dp)
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = inCallDialpadInput.ifEmpty { "In-Call Keypad" },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    text = inCallDialpadInput.ifEmpty { stringResource(R.string.in_call_keypad) },
+                    style = if (inCallDialpadInput.isEmpty()) {
+                        MaterialTheme.typography.titleMedium
+                    } else {
+                        MaterialTheme.typography.titleLarge
+                    },
+                    fontWeight = if (inCallDialpadInput.isEmpty()) FontWeight.Medium else FontWeight.Bold,
+                    color = if (inCallDialpadInput.isEmpty()) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("in_call_keypad_input"),
                     textAlign = TextAlign.Start
                 )
 
                 if (inCallDialpadInput.isNotEmpty()) {
                     IconButton(
                         onClick = { inCallDialpadInput = "" },
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier
+                            .size(48.dp)
+                            .testTag("in_call_keypad_clear_button")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Clear Input",
+                            contentDescription = stringResource(R.string.dialpad_clear),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -147,7 +162,7 @@ fun InCallKeypad(
                                 avatarShapeType = avatarShapeType,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(adaptive.inCallKeypadButtonHeight)
+                                    .heightIn(min = adaptive.inCallKeypadButtonHeight)
                             )
                         }
                     }
@@ -158,7 +173,9 @@ fun InCallKeypad(
 
             TextButton(
                 onClick = onClose,
-                modifier = Modifier.heightIn(min = 48.dp)
+                modifier = Modifier
+                    .heightIn(min = 48.dp)
+                    .testTag("in_call_keypad_close_button")
             ) {
                 Text(
                     text = stringResource(R.string.close),
@@ -178,6 +195,7 @@ fun InCallKeypadButton(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val fontScale = LocalDensity.current.fontScale
     val isExpressive = LocalM3Expressive.current
     val buttonShape = getAvatarShape(avatarShapeType)
 
@@ -217,22 +235,32 @@ fun InCallKeypadButton(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 4.dp)
         ) {
             Text(
                 text = key,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontSize = if (fontScale >= 1.35f) 20.sp else 22.sp,
+                    lineHeight = if (fontScale >= 1.35f) 22.sp else 24.sp
+                ),
                 fontWeight = FontWeight.SemiBold,
-                lineHeight = 24.sp
+                maxLines = 1,
+                softWrap = false
             )
             // FIXED: T9 letter hints enable seamless alphanumeric automated phone tree navigation
             if (letters.isNotBlank()) {
                 Text(
                     text = letters,
-                    style = MaterialTheme.typography.labelSmall,
-                    fontSize = 9.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    letterSpacing = 1.sp
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = if (fontScale >= 1.35f) 8.5.sp else 9.sp,
+                        lineHeight = 11.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                    letterSpacing = 0.8.sp,
+                    maxLines = 1,
+                    softWrap = false
                 )
             }
         }

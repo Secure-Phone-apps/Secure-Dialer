@@ -19,6 +19,9 @@ package com.example.data
 
 import android.content.Context
 import android.os.Build
+import android.os.SystemClock
+import android.os.UserManager
+import androidx.annotation.VisibleForTesting
 import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -27,8 +30,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import net.sqlcipher.database.SQLiteDatabase
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SQLiteDatabase
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
@@ -36,6 +39,7 @@ import java.io.File
 sealed interface DatabaseIntegrityStatus {
     data object Healthy : DatabaseIntegrityStatus
     data class TransientKeystoreError(val reason: String) : DatabaseIntegrityStatus
+    data class NativeCryptoLoadError(val reason: String) : DatabaseIntegrityStatus
     data class CorruptedQuarantined(val backupFileName: String) : DatabaseIntegrityStatus
     data class RobolectricTestFallback(val reason: String) : DatabaseIntegrityStatus
 }
@@ -216,6 +220,10 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        @Volatile
+        private var lastRecoveryAttemptAtMs: Long = 0L
+        private const val AUTO_RECOVERY_COOLDOWN_MS = 1_500L
+
         private val _integrityStatus = MutableStateFlow<DatabaseIntegrityStatus>(DatabaseIntegrityStatus.Healthy)
         val integrityStatus: StateFlow<DatabaseIntegrityStatus> = _integrityStatus.asStateFlow()
 
@@ -225,30 +233,105 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        internal fun isDeviceUserUnlocked(context: Context): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) return true
+            return try {
+                val userManager = context.getSystemService(UserManager::class.java)
+                userManager?.isUserUnlocked ?: true
+            } catch (_: Throwable) {
+                true
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildDatabase(context.applicationContext).also { INSTANCE = it }
+            val current = INSTANCE
+            if (current != null) {
+                if (_integrityStatus.value is DatabaseIntegrityStatus.TransientKeystoreError &&
+                    isDeviceUserUnlocked(context)
+                ) {
+                    retryOpenOnTransientRecoveryIfUnlocked(context)
+                    return INSTANCE ?: current
+                }
+                return current
+            }
+            return synchronized(this) {
+                val lockedCurrent = INSTANCE
+                if (lockedCurrent != null) {
+                    if (_integrityStatus.value is DatabaseIntegrityStatus.TransientKeystoreError &&
+                        isDeviceUserUnlocked(context)
+                    ) {
+                        retryOpenOnTransientRecoveryIfUnlocked(context)
+                    }
+                    INSTANCE ?: lockedCurrent
+                } else {
+                    buildDatabase(context.applicationContext).also { INSTANCE = it }
+                }
             }
         }
 
         /**
+         * Attempts to reopen the encrypted on-disk database only when currently in a recoverable
+         * error state and the device has completed credential unlock (Direct Boot safe).
+         */
+        fun retryOpenOnTransientRecoveryIfUnlocked(
+            context: Context,
+            force: Boolean = false
+        ): Boolean {
+            val currentStatus = _integrityStatus.value
+            if (currentStatus !is DatabaseIntegrityStatus.TransientKeystoreError &&
+                currentStatus !is DatabaseIntegrityStatus.NativeCryptoLoadError
+            ) {
+                return true
+            }
+            if (!isDeviceUserUnlocked(context)) {
+                return false
+            }
+            return retryOpenOnTransientRecovery(context, force = force)
+        }
+
+        /**
          * Attempts to reopen the encrypted on-disk database after a TransientKeystoreError
-         * (e.g. device unlocked after Direct Boot or Keystore daemon recovered).
+         * (e.g. device unlocked after Direct Boot or Keystore daemon recovered) or NativeCryptoLoadError.
          */
         @Synchronized
-        fun retryOpenOnTransientRecovery(context: Context): Boolean {
-            if (_integrityStatus.value !is DatabaseIntegrityStatus.TransientKeystoreError) {
+        @JvmOverloads
+        fun retryOpenOnTransientRecovery(context: Context, force: Boolean = false): Boolean {
+            val currentStatus = _integrityStatus.value
+            if (currentStatus !is DatabaseIntegrityStatus.TransientKeystoreError &&
+                currentStatus !is DatabaseIntegrityStatus.NativeCryptoLoadError
+            ) {
                 return true
             }
+            val now = SystemClock.elapsedRealtime()
+            if (!force && lastRecoveryAttemptAtMs != 0L && (now - lastRecoveryAttemptAtMs) < AUTO_RECOVERY_COOLDOWN_MS) {
+                return false
+            }
+            lastRecoveryAttemptAtMs = now
+
             val prevInstance = INSTANCE
-            INSTANCE = null
             val reopened = buildDatabase(context.applicationContext)
-            INSTANCE = reopened
-            if (_integrityStatus.value == DatabaseIntegrityStatus.Healthy) {
-                try { prevInstance?.close() } catch (_: Throwable) {}
-                return true
+            val newStatus = _integrityStatus.value
+            return if (newStatus == DatabaseIntegrityStatus.Healthy ||
+                newStatus is DatabaseIntegrityStatus.CorruptedQuarantined ||
+                newStatus is DatabaseIntegrityStatus.RobolectricTestFallback
+            ) {
+                INSTANCE = reopened
+                if (prevInstance != null && prevInstance !== reopened) {
+                    try { prevInstance.close() } catch (_: Throwable) {}
+                }
+                true
+            } else {
+                // Keep existing fallback instance intact rather than leaking repeated in-memory DBs
+                if (prevInstance != null) {
+                    if (reopened !== prevInstance) {
+                        try { reopened.close() } catch (_: Throwable) {}
+                    }
+                    INSTANCE = prevInstance
+                } else {
+                    INSTANCE = reopened
+                }
+                false
             }
-            return false
         }
 
         fun warmUpAsync(context: Context) {
@@ -265,6 +348,17 @@ abstract class AppDatabase : RoomDatabase() {
                 Build.HARDWARE.equals("robolectric", ignoreCase = true)
         }
 
+        @VisibleForTesting
+        internal fun resetForTesting(status: DatabaseIntegrityStatus = DatabaseIntegrityStatus.Healthy) {
+            synchronized(this) {
+                lastRecoveryAttemptAtMs = 0L
+                val prev = INSTANCE
+                INSTANCE = null
+                try { prev?.close() } catch (_: Throwable) {}
+                _integrityStatus.value = status
+            }
+        }
+
         private fun buildDatabase(appContext: Context): AppDatabase {
             if (isRobolectricEnvironment()) {
                 _integrityStatus.value = DatabaseIntegrityStatus.RobolectricTestFallback("Robolectric JVM test runtime")
@@ -274,18 +368,19 @@ abstract class AppDatabase : RoomDatabase() {
             }
 
             try {
-                SQLiteDatabase.loadLibs(appContext)
+                System.loadLibrary("sqlcipher")
             } catch (e: UnsatisfiedLinkError) {
-                _integrityStatus.value = DatabaseIntegrityStatus.RobolectricTestFallback(e.message ?: "Native SQLCipher missing")
+                _integrityStatus.value = DatabaseIntegrityStatus.NativeCryptoLoadError(
+                    e.message ?: "Native SQLCipher library failed to load"
+                )
                 return Room.inMemoryDatabaseBuilder(appContext, AppDatabase::class.java)
-                    .allowMainThreadQueries()
                     .build()
             }
 
             return try {
                 val dbKey = DatabaseKeyManager.getDatabaseKey(appContext)
                 ensureDatabaseIntegrity(appContext, dbKey)
-                val factory = SupportFactory(dbKey, null, false)
+                val factory = SupportOpenHelperFactory(dbKey.copyOf())
 
                 Room.databaseBuilder(
                     appContext,
@@ -418,12 +513,15 @@ abstract class AppDatabase : RoomDatabase() {
             return try {
                 plaintextDb = SQLiteDatabase.openDatabase(
                     dbFile.absolutePath,
-                    "",
+                    byteArrayOf(),
                     null,
-                    SQLiteDatabase.OPEN_READWRITE
+                    SQLiteDatabase.OPEN_READWRITE,
+                    null,
+                    null
                 )
                 val keyHex = dbKey.joinToString("") { "%02x".format(it) }
-                plaintextDb.execSQL("ATTACH DATABASE '${tempEncryptedFile.absolutePath}' AS encrypted KEY \"x'$keyHex'\";")
+                val escapedPath = tempEncryptedFile.absolutePath.replace("'", "''")
+                plaintextDb.execSQL("ATTACH DATABASE '$escapedPath' AS encrypted KEY \"x'$keyHex'\";")
                 val cursor = plaintextDb.rawQuery("SELECT sqlcipher_export('encrypted');", null)
                 cursor?.moveToFirst()
                 cursor?.close()

@@ -867,13 +867,11 @@ fun DynamicIslandPill(
                                                 val file = result.file
                                                 if (file != null && file.exists() && file.length() > 0L) {
                                                     val dur = result.durationSeconds.coerceAtLeast(1L)
-                                                    val loc = getCurrentLocale(context)
-                                                    val sdf = SimpleDateFormat("MMM d, HH:mm", loc)
                                                     val num = callerNumber.ifEmpty { "Unknown" }
                                                     val rec = CallRecording(
                                                         number = num,
                                                         name = callerName,
-                                                        timestamp = sdf.format(Date()),
+                                                        timestamp = CallAudioRecorder.formatRecordingTimestamp(context),
                                                         duration = dur,
                                                         filePath = file.absolutePath
                                                     )

@@ -25,15 +25,13 @@ import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.telephony.SubscriptionManager
 import com.example.model.*
-import com.example.ui.components.getCurrentLocale
 import com.example.ui.theme.*
+import com.example.util.CallAudioRecorder
 import com.example.util.MultiSimManager
 import com.example.util.SimCallTracker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.text.Normalizer
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 internal fun nameToT9(name: String): String {
@@ -344,7 +342,7 @@ suspend fun DialerRepository.fetchAvailableAccounts(): List<ContactAccount> = wi
                             accType.contains("exchange", ignoreCase = true) -> "Exchange • $accName"
                             accType.contains("whatsapp", ignoreCase = true) -> "WhatsApp • $accName"
                             accType.contains("sim", ignoreCase = true) -> "SIM • $accName"
-                            accName.isBlank() -> "Phone storage"
+                            accName.isBlank() -> context.getString(R.string.contact_source_phone)
                             else -> "$accName (${accType.substringAfterLast('.')})"
                         }
                         list.add(ContactAccount(name = accName, type = accType, displayName = display))
@@ -367,7 +365,7 @@ suspend fun DialerRepository.fetchAvailableAccounts(): List<ContactAccount> = wi
     } catch (_: Exception) {}
 
     if (list.none { it.name.isBlank() || it.type.contains("local") || it.name == "Phone" }) {
-        list.add(ContactAccount(name = "Phone", type = "com.android.localphone", displayName = "Phone storage"))
+        list.add(ContactAccount(name = "Phone", type = "com.android.localphone", displayName = context.getString(R.string.contact_source_phone)))
     }
     list
 }
@@ -385,7 +383,6 @@ internal fun mapSystemCallType(systemType: Int): CallType {
 suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withContext(Dispatchers.IO) {
     val logs = mutableListOf<CallRecord>()
     val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
-    val sdf = SimpleDateFormat("MMM d, HH:mm", getCurrentLocale(context))
 
     val subIdToSlotMap = mutableMapOf<String, Int>()
     try {
@@ -536,7 +533,7 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                     matchingContact != null -> matchingContact.name
                     !cachedName.isNullOrBlank() && !cachedName.equals(num, ignoreCase = true) && !isUnknownNum -> cachedName
                     !matchingCnapName.isNullOrBlank() -> matchingCnapName
-                    isUnknownNum -> "Unknown"
+                    isUnknownNum -> context.getString(R.string.unknown)
                     else -> num
                 }
 
@@ -565,7 +562,7 @@ suspend fun DialerRepository.fetchSystemCallLogs(): List<CallRecord> = withConte
                         name = name,
                         number = finalNum,
                         label = contactLabel,
-                        timestamp = sdf.format(Date(dateVal)),
+                        timestamp = CallAudioRecorder.formatShortDateTime(context, dateVal),
                         type = type,
                         avatarText = getInitials(name),
                         avatarBgValue = pair.first.value.toLong(),

@@ -72,6 +72,7 @@ fun computeAdaptiveLayoutMetrics(
 
     val dialButtonHeight = when {
         maxHeight < 420.dp -> 44.dp
+        fontScale >= 1.35f && maxHeight >= 520.dp -> 56.dp
         maxHeight < 560.dp -> 50.dp
         isTightVerticalSpace -> 52.dp
         else -> 58.dp
@@ -83,6 +84,7 @@ fun computeAdaptiveLayoutMetrics(
     }
     val overlayDialButtonHeight = when {
         maxHeight < 460.dp -> 44.dp
+        fontScale >= 1.35f && maxHeight >= 520.dp -> 54.dp
         maxHeight < 600.dp -> 48.dp
         else -> 52.dp
     }
@@ -106,6 +108,7 @@ fun computeAdaptiveLayoutMetrics(
     }
     val inCallKeypadButtonHeight = when {
         maxHeight < 440.dp -> 44.dp
+        fontScale >= 1.35f && maxHeight >= 500.dp -> 54.dp
         isTightVerticalSpace -> 50.dp
         else -> 60.dp
     }
