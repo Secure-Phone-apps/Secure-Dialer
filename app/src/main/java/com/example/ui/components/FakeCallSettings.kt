@@ -21,7 +21,9 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.net.Uri
 import android.provider.OpenableColumns
+import android.text.format.DateFormat
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
@@ -50,17 +52,17 @@ import com.example.CallManager
 import com.example.R
 import com.example.model.ScheduledFakeCall
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.CallAudioRecorder
 import com.example.util.FakeCallManager
 import com.example.util.FakeCallReceiver
 import com.example.util.FakeCallVoicePlayer
 import com.example.util.RichHapticEngine
-import java.text.SimpleDateFormat
 import java.util.*
 
-private enum class FakeCallDelayUnit(val key: String, val multiplier: Int) {
-    SEC("sec", 1),
-    MIN("min", 60),
-    HOUR("hour", 3600)
+private enum class FakeCallDelayUnit(@StringRes val labelRes: Int, val multiplier: Int) {
+    SEC(R.string.unit_sec, 1),
+    MIN(R.string.unit_min, 60),
+    HOUR(R.string.unit_hour, 3600)
 }
 
 private enum class ScheduleMode {
@@ -98,9 +100,7 @@ fun FakeCallSettings(
         })
     }
 
-    val timeFormatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
-    val dateFormatter = remember { SimpleDateFormat("EEE, MMM dd, yyyy", Locale.getDefault()) }
-    val fullDateTimeFormatter = remember { SimpleDateFormat("MMM dd, hh:mm a", Locale.getDefault()) }
+    // Formatted Date & Time strings use CallAudioRecorder to respect 12h/24h system setting and locale
 
     val computedDelayFromDateTime = remember(targetCalendar) {
         val diff = (targetCalendar.timeInMillis - System.currentTimeMillis()) / 1000
@@ -128,7 +128,7 @@ fun FakeCallSettings(
     ) { uri: Uri? ->
         if (uri != null) {
             customAudioUri = uri.toString()
-            var displayName = "Custom Audio File"
+            var displayName = context.getString(R.string.fake_call_custom_audio_file)
             try {
                 context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
                     val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
@@ -287,18 +287,22 @@ fun FakeCallSettings(
                 }
 
                 if (scheduleMode == ScheduleMode.TIMER_DELAY) {
+                    val unitSec = stringResource(R.string.unit_sec)
+                    val unitMin = stringResource(R.string.unit_min)
+                    val quickTimers = remember(unitSec, unitMin) {
+                        listOf(
+                            "10 $unitSec" to ("10" to FakeCallDelayUnit.SEC),
+                            "30 $unitSec" to ("30" to FakeCallDelayUnit.SEC),
+                            "1 $unitMin" to ("1" to FakeCallDelayUnit.MIN),
+                            "5 $unitMin" to ("5" to FakeCallDelayUnit.MIN),
+                            "15 $unitMin" to ("15" to FakeCallDelayUnit.MIN)
+                        )
+                    }
                     // Quick duration presets
                     LazyRow(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        val quickTimers = listOf(
-                            "10s" to ("10" to FakeCallDelayUnit.SEC),
-                            "30s" to ("30" to FakeCallDelayUnit.SEC),
-                            "1m" to ("1" to FakeCallDelayUnit.MIN),
-                            "5m" to ("5" to FakeCallDelayUnit.MIN),
-                            "15m" to ("15" to FakeCallDelayUnit.MIN)
-                        )
                         items(quickTimers) { (label, config) ->
                             FilterChip(
                                 selected = delayValue == config.first && selectedDelayUnit == config.second,
@@ -338,7 +342,7 @@ fun FakeCallSettings(
                                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                         selectedDelayUnit = unit
                                     },
-                                    label = { Text(unit.key, maxLines = 1) }
+                                    label = { Text(stringResource(unit.labelRes), maxLines = 1) }
                                 )
                             }
                         }
@@ -376,7 +380,7 @@ fun FakeCallSettings(
                         ) {
                             Icon(Icons.Default.DateRange, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(dateFormatter.format(targetCalendar.time), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(CallAudioRecorder.formatDateOnly(context, targetCalendar.timeInMillis), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
 
                         OutlinedButton(
@@ -397,7 +401,7 @@ fun FakeCallSettings(
                                     },
                                     hour,
                                     minute,
-                                    false
+                                    DateFormat.is24HourFormat(context)
                                 ).show()
                             },
                             modifier = Modifier.weight(1f),
@@ -405,7 +409,7 @@ fun FakeCallSettings(
                         ) {
                             Icon(Icons.Default.AccessTime, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(timeFormatter.format(targetCalendar.time), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(CallAudioRecorder.formatTimeOnly(context, targetCalendar.timeInMillis), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
 
@@ -624,7 +628,7 @@ fun FakeCallSettings(
                                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                     selectedIntervalUnit = unit
                                 },
-                                label = { Text(unit.key, maxLines = 1) }
+                                label = { Text(stringResource(unit.labelRes), maxLines = 1) }
                             )
                         }
                     }
@@ -651,7 +655,7 @@ fun FakeCallSettings(
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "Call Waiting & Multi-Call Testing",
+                        text = stringResource(R.string.fake_call_waiting_test_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -659,7 +663,7 @@ fun FakeCallSettings(
                 }
 
                 Text(
-                    text = "Simulate receiving a secondary call while on an active call to test Call Waiting alerts or verify same-caller suppression.",
+                    text = stringResource(R.string.fake_call_waiting_test_desc),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -689,12 +693,16 @@ fun FakeCallSettings(
                                 delayMillis = 3500L,
                                 context = context
                             )
-                            Toast.makeText(context, "📞 Call Waiting simulated from Alice Cooper (+1 555-987-6543) in 3.5s", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.toast_fake_call_waiting_scheduled, "Alice Cooper", "+1 (555) 987-6543"),
+                                Toast.LENGTH_SHORT
+                            ).show()
                         },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Different Caller (Alert)", style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(stringResource(R.string.fake_call_waiting_diff_caller), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
 
                     OutlinedButton(
@@ -731,7 +739,7 @@ fun FakeCallSettings(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Same Caller (Suppress)", style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(stringResource(R.string.fake_call_waiting_same_caller), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -781,7 +789,7 @@ fun FakeCallSettings(
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                         FakeCallManager.cancelAll(context)
                         scheduledCallsVersion++
-                        Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.fake_call_all_cancelled), Toast.LENGTH_SHORT).show()
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp)
@@ -838,15 +846,16 @@ fun FakeCallSettings(
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         scheduledCalls.forEach { call ->
-                            val triggerDate = Date(call.triggerTimeMillis)
-                            val formattedTime = fullDateTimeFormatter.format(triggerDate)
-                            val voiceTag = when (call.audioVoiceType) {
-                                "OFFICE" -> "Office"
-                                "FAMILY" -> "Family"
-                                "FRIEND" -> "Friend"
-                                "CUSTOM" -> "Custom"
-                                else -> "Silent"
-                            }
+                            val formattedTime = CallAudioRecorder.formatShortDateTime(context, call.triggerTimeMillis)
+                            val voiceTag = stringResource(
+                                when (call.audioVoiceType) {
+                                    "OFFICE" -> R.string.fake_call_voice_office
+                                    "FAMILY" -> R.string.fake_call_voice_family
+                                    "FRIEND" -> R.string.fake_call_voice_friend
+                                    "CUSTOM" -> R.string.fake_call_voice_custom
+                                    else -> R.string.fake_call_voice_none
+                                }
+                            )
 
                             Row(
                                 modifier = Modifier
@@ -883,7 +892,7 @@ fun FakeCallSettings(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
-                                        contentDescription = "Cancel call",
+                                        contentDescription = stringResource(R.string.btn_cancel),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }

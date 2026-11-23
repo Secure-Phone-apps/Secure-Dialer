@@ -49,7 +49,7 @@ private class FakeTelecomCallHandle(
 }
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class OutgoingCallDisconnectTest {
 
     @get:Rule

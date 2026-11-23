@@ -16,7 +16,10 @@
     <device-transfer>
         <!-- Block automated device-to-device migration of raw encrypted keys and recordings -->
         <exclude domain="database" path="dialer_database" />
+        <exclude domain="database" path="dialer_database-journal" />
+        <exclude domain="database" path="dialer_database-wal" />
         <exclude domain="sharedpref" path="dialer_secure_device_prefs.xml" />
+        <exclude domain="sharedpref" path="dialer_prefs.xml" />
         <exclude domain="file" path="CallRecordings/" />
     </device-transfer>
 </data-extraction-rules>

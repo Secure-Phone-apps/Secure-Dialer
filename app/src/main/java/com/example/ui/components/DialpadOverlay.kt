@@ -682,7 +682,7 @@ fun DialpadOverlay(
                         .testTag("dialpad_call_button")
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Call, contentDescription = stringResource(R.string.call_status_ongoing), modifier = Modifier.size(28.dp))
+                        Icon(Icons.Default.Call, contentDescription = stringResource(R.string.action_call), modifier = Modifier.size(28.dp))
                     }
                 }
             }

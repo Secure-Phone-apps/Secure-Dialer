@@ -26,7 +26,7 @@ import java.io.File
 import javax.xml.parsers.DocumentBuilderFactory
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class Batch2ManifestAndPermissionsTest {
 
     private lateinit var context: Application

@@ -67,6 +67,7 @@ class MainActivity : ComponentActivity() {
     private val viewModel: DialerViewModel by viewModels()
     private val isAppAuthenticated = mutableStateOf(false)
     private var isAuthenticating = false
+    private var suppressAutoAuthUntilStop = false
     private var isAppStopped = false
     private var isLaunchedForCall = false
 
@@ -140,9 +141,9 @@ class MainActivity : ComponentActivity() {
                             isAppAuthenticated.value = true
                             setLockScreenVisibility(true)
                         } else if (viewModel.isBiometricLockEnabled.value) {
-                            if (!isAuthenticating && !isAppAuthenticated.value) {
+                            if (!isAuthenticating && !isAppAuthenticated.value && !suppressAutoAuthUntilStop) {
                                 window.decorView.post {
-                                    if (!isFinishing && !isDestroyed && viewModel.isBiometricLockEnabled.value && !isAppAuthenticated.value) {
+                                    if (!isFinishing && !isDestroyed && viewModel.isBiometricLockEnabled.value && !isAppAuthenticated.value && !suppressAutoAuthUntilStop) {
                                         triggerDeviceAuthentication()
                                     }
                                 }
@@ -312,6 +313,7 @@ class MainActivity : ComponentActivity() {
 
                                 Button(
                                     onClick = {
+                                        suppressAutoAuthUntilStop = false
                                         isAuthenticating = false
                                         triggerDeviceAuthentication()
                                     },
@@ -344,6 +346,7 @@ class MainActivity : ComponentActivity() {
         super.onStop()
         CallManager.setAppInForeground(false)
         isAppStopped = true
+        suppressAutoAuthUntilStop = false
     }
 
     override fun onResume() {
@@ -404,10 +407,12 @@ class MainActivity : ComponentActivity() {
             subtitle = getString(R.string.device_auth_subtitle),
             onSuccess = {
                 isAuthenticating = false
+                suppressAutoAuthUntilStop = false
                 isAppAuthenticated.value = true
             },
             onError = { _ ->
                 isAuthenticating = false
+                suppressAutoAuthUntilStop = true
                 isAppAuthenticated.value = false
             }
         )

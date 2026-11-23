@@ -17,9 +17,13 @@
 
 package com.example.ui.components
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.telecom.Call
 import android.telecom.CallAudioState
+import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -771,14 +775,14 @@ fun DynamicIslandPill(
                                             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                                                 Icon(
                                                     imageVector = Icons.Default.OpenInFull,
-                                                    contentDescription = "Full Screen",
+                                                    contentDescription = stringResource(R.string.dynamic_island_full_screen),
                                                     tint = Color.White,
                                                     modifier = Modifier.size(24.dp)
                                                 )
                                             }
                                         }
                                         Text(
-                                            text = "Full Screen",
+                                            text = stringResource(R.string.dynamic_island_full_screen),
                                             style = MaterialTheme.typography.labelSmall,
                                             color = Color.White.copy(alpha = 0.8f)
                                         )
@@ -878,7 +882,9 @@ fun DynamicIslandPill(
                                                     coroutineScope.launch(Dispatchers.IO) {
                                                         try {
                                                             val db = AppDatabase.getDatabase(context)
-                                                            db.dialerDao().insertCallRecording(rec)
+                                                            if (db.dialerDao().getCallRecordingByPath(rec.filePath) == null) {
+                                                                db.dialerDao().insertCallRecording(rec)
+                                                            }
                                                             val isAutoExport = db.dialerDao().getSetting("is_auto_export_recordings_enabled")?.toBooleanStrictOrNull() ?: true
                                                             if (isAutoExport) {
                                                                 CallAudioRecorder.exportRecordingToPublicDownloads(context, file)
@@ -887,12 +893,24 @@ fun DynamicIslandPill(
                                                     }
                                                 }
                                             } else {
-                                                RecordingFeedbackHelper.triggerRecordingStartFeedback(context, chimeEnabled)
-                                                if (autoTune) {
-                                                    CallAudioHelper.prepareSpeakerForRecording(context, CallManager.inCallService, audioState)
+                                                val hasAudioPermission = ContextCompat.checkSelfPermission(
+                                                    context,
+                                                    Manifest.permission.RECORD_AUDIO
+                                                ) == PackageManager.PERMISSION_GRANTED
+                                                if (!hasAudioPermission) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        context.getString(R.string.toast_mic_permission_required),
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                } else {
+                                                    RecordingFeedbackHelper.triggerRecordingStartFeedback(context, chimeEnabled)
+                                                    if (autoTune) {
+                                                        CallAudioHelper.prepareSpeakerForRecording(context, CallManager.inCallService, audioState)
+                                                    }
+                                                    val num = callerNumber.ifEmpty { "Unknown" }
+                                                    CallAudioRecorder.startRecording(context, num)
                                                 }
-                                                val num = callerNumber.ifEmpty { "Unknown" }
-                                                CallAudioRecorder.startRecording(context, num)
                                             }
                                         }
                                     )

@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">Sie sind auf dem neuesten Stand</string>
     <string name="voicemail_settings">Anrufbeantworter-Einstellungen</string>
     <string name="voicemail_directory_number">Anrufbeantworter-Nummer</string>
-    <string name="voicemail_sample_transcript">Transkription: \"Hallo! Wollte mich nur kurz melden. Sag Bescheid, wenn du heute Abend Zeit hast!\"</string>
+    <string name="voicemail_sample_transcript">Transkripte der Mobilbox sind offline nicht verfügbar. Tippen Sie auf Wiedergabe, um Ihre Mailbox anzurufen.</string>
     <string name="cat_sound_gestures">Ton &amp; Gesten</string>
     <string name="cat_calling_accounts">SIM &amp; Anrufkonten</string>
     <string name="cat_speed_dial_quick_responses">Kurzwahl &amp; Schnellantworten</string>
@@ -877,4 +877,26 @@ Version v%1$s (Stabile Version)
     <string name="toast_recording_started_autotune">⏺️ Aufnahme gestartet. Lautsprecher für klaren Ton abgestimmt.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ Aufnahme gestartet. Tipp: Lautsprecher einschalten.</string>
     <string name="toast_recording_cannot_start_mic">Aufnahme nicht möglich. Mikrofonberechtigung erteilen.</string>
+    <string name="desc_play">Wiedergeben</string>
+    <string name="desc_pause">Pausieren</string>
+    <string name="desc_expand">Erweitern</string>
+    <string name="desc_collapse">Einklappen</string>
+    <string name="desc_open_dialpad">Tastenfeld öffnen</string>
+    <string name="desc_minimize_call">Anruf minimieren</string>
+    <string name="dynamic_island_full_screen">Vollbild</string>
+    <string name="toast_recording_failed_empty">Anrufaufnahme fehlgeschlagen oder Datei leer</string>
+    <string name="toast_call_merged">Anrufe zusammengeführt</string>
+    <string name="recordings_storage_summary">%1$d Datei(en) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">Notiz: %1$s</string>
+    <string name="toast_reminder_cancelled">Rückruf-Erinnerung abgebrochen</string>
+    <string name="fake_call_all_cancelled">Geplante Täuschungsanrufe abgebrochen</string>
+    <string name="fake_call_custom_audio_file">Benutzerdefinierte Audiodatei</string>
+    <string name="fake_call_waiting_test_title">Anklopfen &amp; Mehrfachanruf-Test</string>
+    <string name="fake_call_waiting_test_desc">Simulieren Sie einen zweiten eingehenden Anruf während eines aktiven Gesprächs, um Anklopfen oder die Unterdrückung desselben Anrufers zu testen.</string>
+    <string name="fake_call_waiting_diff_caller">Anderer Anrufer (Hinweis)</string>
+    <string name="fake_call_waiting_same_caller">Gleicher Anrufer (Stumm)</string>
+    <string name="toast_fake_call_waiting_scheduled">Anklopfen simuliert von %1$s (%2$s)</string>
+    <string name="sim_system_slot_info">System: %1$s (Steckplatz %2$d)</string>
+    <string name="toast_sim_label_reset">Auf Standard-SIM-Bezeichnung zurückgesetzt</string>
+    <string name="btn_reset">Zurücksetzen</string>
 </resources>

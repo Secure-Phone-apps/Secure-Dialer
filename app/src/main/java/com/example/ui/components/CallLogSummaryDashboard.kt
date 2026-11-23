@@ -192,7 +192,7 @@ fun CallLogSummaryDashboard(
                     }
                     Icon(
                         imageVector = if (isExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                        contentDescription = stringResource(if (isExpanded) R.string.btn_cancel else R.string.btn_answer),
+                        contentDescription = stringResource(if (isExpanded) R.string.desc_collapse else R.string.desc_expand),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(18.dp)
                     )

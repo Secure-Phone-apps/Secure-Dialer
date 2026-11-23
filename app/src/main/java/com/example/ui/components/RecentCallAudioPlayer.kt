@@ -74,7 +74,7 @@ fun RecentCallAudioPlayerCard(
                 ) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = stringResource(if (isPlaying) R.string.btn_answer else R.string.call_status_ongoing)
+                        contentDescription = stringResource(if (isPlaying) R.string.desc_pause else R.string.desc_play)
                     )
                 }
 

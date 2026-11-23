@@ -14,8 +14,8 @@ android {
     applicationId = "io.github.securephoneapps.securedialer"
     minSdk = 24
     targetSdk = 36
-    versionCode = 16
-    versionName = "1.8.0"
+    versionCode = 17
+    versionName = "1.9.0"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -86,7 +86,14 @@ android {
     abortOnError = false
     disable += "ExtraTranslation"
   }
-  testOptions { unitTests { isIncludeAndroidResources = true } }
+  testOptions {
+    unitTests {
+      isIncludeAndroidResources = true
+      all {
+        it.forkEvery = 10
+      }
+    }
+  }
 }
 
 configurations.all {

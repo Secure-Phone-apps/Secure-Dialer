@@ -2,6 +2,25 @@
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
 
+## [1.9.0] - 2026-11-22
+
+### Security, Call Screening & Privacy Hardening
+- **Block Unknown & Private Calls**: Added a new Call Blocking toggle (`PREF_BLOCK_UNKNOWN_PRIVATE`) screening hidden, restricted, unknown, payphone, and blank presentations across `CallScreeningService` and `MyInCallService`, with emergency numbers strictly exempt.
+- **Broadcast & Device-Transfer Hardening**: Protected `MissedCallNotificationReceiver` with `MODIFY_PHONE_STATE`, scoped missed-call dial intents, clamped badge counts, excluded `dialer_database-wal`, journal files, and `dialer_prefs.xml` from `<device-transfer>`, and added an auth loop guard (`suppressAutoAuthUntilStop`) for biometric/keyguard prompts.
+- **Runtime Mic & WakeLock Safeguards**: Enforced `RECORD_AUDIO` runtime permission checks before Dynamic Island and fake-call auto-recording triggers, and added a 6-hour safety timeout to active-call CPU WakeLocks.
+
+### Telephony, Call Recording & Storage Reliability
+- **MediaRecorder & ToneGenerator Lifecycle**: Fixed `MediaRecorder` handle leaks during audio-source fallback retries, synced notification stop-recording with Downloads Vault auto-export & deduplication, released `ToneGenerator` cleanly on call teardown, and capped cached `cnap_*` database rows.
+- **Call Log & Recording Vault Integrity**: Preserved negative-ID manual call records and caller metadata during system call log sync/clear, and moved bulk recording "Export All" and "Cleanup" operations to async background execution with UI busy guards.
+
+### 11-Language Localization, Regional Accuracy & System Time
+- **Per-App Language Support & 896-Key Parity**: Registered all 11 supported BCP-47 locales (`en`, `ar`, `de`, `es`, `fr`, `hi`, `ja`, `pl`, `pt`, `tr`, `zh`) via `locales_config.xml`, extracted hardcoded Kotlin strings (Settings Search, Biometric, Post-Call, USSD, Notifications, Audio Profiles) into `strings.xml`, fixed Japan CLIR prefix (`184`) and DE/FR/AR/JA/ZH translation defects, and replaced placeholder voicemail sample copy with an offline carrier notice.
+- **System 12h/24h Clock & Locale-Independent States**: Unified Recordings, Scheduled Reminders, Call Notes, and Fake Call pickers with system 12h/24h formatting, and replaced English-prefix USSD loading detection with a structured `isLoading` boolean.
+
+### Compose Performance, Adaptive Layout & Accessibility
+- **120 FPS & Crash Hardening**: Hoisted per-row StateFlow and Telephony binder calls out of `RecentCallRow`, made `InCallActivity` and `DynamicIslandOverlayManager` reactive to theme/AMOLED/accent preference changes, eliminated UI `!!` force-unwraps, and deleted unused `DisplayAndSoundSettings`.
+- **Adaptive Layout & TalkBack Polish**: Fixed `PrivacyAndBackupSettings` narrow (`320dp`) / `1.5x` font-scale tab measure looping with a single-pass horizontal tab strip, aligned `ContactsTab` A–Z scroller with sorted visible contacts, computed contrast-safe `onPrimary` for bright custom accent seeds, and updated TalkBack labels and touch targets across compact recording and call rows.
+
 ## [1.8.0] - 2026-11-03
 
 ### WhatsApp Multi-Account & Contacts Integration

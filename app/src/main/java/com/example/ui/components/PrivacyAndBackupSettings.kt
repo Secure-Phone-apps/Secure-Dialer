@@ -24,9 +24,12 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -36,10 +39,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.R
 import com.example.model.PRIVATE_VAULT_ACCOUNT_NAME
@@ -75,20 +82,86 @@ fun PrivacyAndBackupSettings(
         Pair(stringResource(R.string.backup_service_health_title), Icons.Default.Backup)
     )
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        TabRow(
-            selectedTabIndex = selectedSubTab,
-            containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            tabs.forEachIndexed { index, (title, icon) ->
-                Tab(
-                    selected = selectedSubTab == index,
-                    onClick = { selectedSubTab = index },
-                    text = { Text(title, maxLines = 1) },
-                    icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }
-                )
+    val density = LocalDensity.current
+    val fontScale = density.fontScale
+    var availableWidthDp by remember { mutableStateOf(400.dp) }
+    val useScrollableTabs = availableWidthDp < 380.dp || fontScale >= 1.25f
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged { size ->
+                val measured = with(density) { size.width.toDp() }
+                if (measured > 0.dp && measured != availableWidthDp) {
+                    availableWidthDp = measured
+                }
+            }
+    ) {
+        if (useScrollableTabs) {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        tabs.forEachIndexed { index, (title, icon) ->
+                            val isSelected = selectedSubTab == index
+                            val tint = if (isSelected) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                            Column(
+                                modifier = Modifier
+                                    .widthIn(min = 96.dp)
+                                    .defaultMinSize(minHeight = 48.dp)
+                                    .clickable(role = Role.Tab) { selectedSubTab = index }
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(20.dp))
+                                Text(
+                                    text = title,
+                                    color = tint,
+                                    style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .width(36.dp)
+                                        .height(3.dp)
+                                        .clip(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp))
+                                        .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                )
+                            }
+                        }
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+            }
+        } else {
+            TabRow(
+                selectedTabIndex = selectedSubTab,
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                tabs.forEachIndexed { index, (title, icon) ->
+                    Tab(
+                        selected = selectedSubTab == index,
+                        onClick = { selectedSubTab = index },
+                        text = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                        icon = { Icon(icon, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                    )
+                }
             }
         }
 
@@ -636,7 +709,7 @@ private fun DataAndBackupSection(
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_save_backup_file), fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.btn_save_backup_file), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
 
                         OutlinedButton(
@@ -648,7 +721,7 @@ private fun DataAndBackupSection(
                         ) {
                             Icon(Icons.Default.FolderOpen, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_restore_backup_file), fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.btn_restore_backup_file), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -706,7 +779,7 @@ private fun DataAndBackupSection(
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_save_vcf_file), fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.btn_save_vcf_file), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
 
                         OutlinedButton(
@@ -718,7 +791,7 @@ private fun DataAndBackupSection(
                         ) {
                             Icon(Icons.Default.UploadFile, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_choose_vcf_file), fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.btn_choose_vcf_file), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }

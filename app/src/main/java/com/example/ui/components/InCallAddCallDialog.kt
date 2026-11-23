@@ -30,6 +30,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -193,7 +194,7 @@ fun InCallAddCallDialog(
                 if (onSimulateCallWaiting != null) {
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                     Text(
-                        text = "Call Waiting Simulation",
+                        text = stringResource(R.string.fake_call_waiting_test_title),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -211,7 +212,12 @@ fun InCallAddCallDialog(
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
                         ) {
-                            Text("New Caller (Waiting)", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                stringResource(R.string.fake_call_waiting_diff_caller),
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
 
                         OutlinedButton(
@@ -224,7 +230,12 @@ fun InCallAddCallDialog(
                             modifier = Modifier.weight(1f),
                             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp)
                         ) {
-                            Text("Same Caller (Suppress)", style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                stringResource(R.string.fake_call_waiting_same_caller),
+                                style = MaterialTheme.typography.labelSmall,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }

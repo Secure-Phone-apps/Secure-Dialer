@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">Está al día</string>
     <string name="voicemail_settings">Ajustes de buzón de voz</string>
     <string name="voicemail_directory_number">Número de correo de voz</string>
-    <string name="voicemail_sample_transcript">Transcripción: \"¡Hola! Solo llamaba para ponernos al día. ¡Avisame cuando estés libre esta tarde!\"</string>
+    <string name="voicemail_sample_transcript">Las transcripciones del buzón de voz no están disponibles sin conexión. Toca Reproducir para llamar al buzón.</string>
     <string name="cat_sound_gestures">Sonido y gestos</string>
     <string name="cat_calling_accounts">SIM y cuentas de llamada</string>
     <string name="cat_speed_dial_quick_responses">Marcación rápida y respuestas</string>
@@ -877,4 +877,26 @@ Versión v%1$s (Versión estable)
     <string name="toast_recording_started_autotune">⏺️ Grabación iniciada. Altavoz ajustado para audio equilibrado.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ Grabación iniciada. Consejo: Activa el altavoz.</string>
     <string name="toast_recording_cannot_start_mic">No se puede grabar. Concede el permiso de micrófono.</string>
+    <string name="desc_play">Reproducir</string>
+    <string name="desc_pause">Pausar</string>
+    <string name="desc_expand">Expandir</string>
+    <string name="desc_collapse">Contraer</string>
+    <string name="desc_open_dialpad">Abrir teclado</string>
+    <string name="desc_minimize_call">Minimizar llamada</string>
+    <string name="dynamic_island_full_screen">Pantalla completa</string>
+    <string name="toast_recording_failed_empty">Error al grabar la llamada o archivo vacío</string>
+    <string name="toast_call_merged">Llamada combinada</string>
+    <string name="recordings_storage_summary">%1$d archivo(s) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">Nota: %1$s</string>
+    <string name="toast_reminder_cancelled">Recordatorio de devolución cancelado</string>
+    <string name="fake_call_all_cancelled">Llamadas falsas programadas canceladas</string>
+    <string name="fake_call_custom_audio_file">Archivo de audio personalizado</string>
+    <string name="fake_call_waiting_test_title">Prueba de llamada en espera y multillamada</string>
+    <string name="fake_call_waiting_test_desc">Simula recibir una llamada secundaria durante una llamada activa para probar alertas de llamada en espera o supresión del mismo contacto.</string>
+    <string name="fake_call_waiting_diff_caller">Otro contacto (Alerta)</string>
+    <string name="fake_call_waiting_same_caller">Mismo contacto (Suprimir)</string>
+    <string name="toast_fake_call_waiting_scheduled">Llamada en espera simulada de %1$s (%2$s)</string>
+    <string name="sim_system_slot_info">Sistema: %1$s (Ranura %2$d)</string>
+    <string name="toast_sim_label_reset">Restablecido a la etiqueta SIM predeterminada</string>
+    <string name="btn_reset">Restablecer</string>
 </resources>

@@ -180,7 +180,7 @@
     <string name="no_voicemails_subtitle">You\'re all caught up</string>
     <string name="voicemail_settings">Voicemail Settings</string>
     <string name="voicemail_directory_number">Voicemail Directory Number</string>
-    <string name="voicemail_sample_transcript">Transcript: \"Hey, just calling to catch up. Let me know when you\'re free this evening!\"</string>
+    <string name="voicemail_sample_transcript">Carrier voicemail transcripts are unavailable offline. Tap Play to call your carrier voicemail.</string>
 
     <!-- Settings Categories -->
     <string name="cat_sound_gestures">Sound &amp; Gestures</string>
@@ -941,4 +941,26 @@ Version v%1$s (Stable Release)
     <string name="toast_recording_started_autotune">⏺️ Recording started. Speaker tuned for balanced audio.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ Recording started. Tip: Turn ON Speakerphone.</string>
     <string name="toast_recording_cannot_start_mic">Cannot start recording. Grant Microphone permission.</string>
+    <string name="desc_play">Play</string>
+    <string name="desc_pause">Pause</string>
+    <string name="desc_expand">Expand</string>
+    <string name="desc_collapse">Collapse</string>
+    <string name="desc_open_dialpad">Open Dialpad</string>
+    <string name="desc_minimize_call">Minimize Call</string>
+    <string name="dynamic_island_full_screen">Full Screen</string>
+    <string name="toast_recording_failed_empty">Call recording failed or file empty</string>
+    <string name="toast_call_merged">Call merged</string>
+    <string name="recordings_storage_summary">%1$d file(s) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">Note: %1$s</string>
+    <string name="toast_reminder_cancelled">Callback reminder cancelled</string>
+    <string name="fake_call_all_cancelled">Scheduled fake calls cancelled</string>
+    <string name="fake_call_custom_audio_file">Custom Audio File</string>
+    <string name="fake_call_waiting_test_title">Call Waiting &amp; Multi-Call Testing</string>
+    <string name="fake_call_waiting_test_desc">Simulate receiving a secondary call while on an active call to test Call Waiting alerts or verify same-caller suppression.</string>
+    <string name="fake_call_waiting_diff_caller">Different Caller (Alert)</string>
+    <string name="fake_call_waiting_same_caller">Same Caller (Suppress)</string>
+    <string name="toast_fake_call_waiting_scheduled">Call Waiting simulated from %1$s (%2$s)</string>
+    <string name="sim_system_slot_info">System: %1$s (Slot %2$d)</string>
+    <string name="toast_sim_label_reset">Reset to default SIM label</string>
+    <string name="btn_reset">Reset</string>
 </resources>

@@ -92,18 +92,19 @@ fun parseHexColor(hex: String, fallback: Color = Color(0xFF68A500)): Color {
 
 fun getCustomSeedColorScheme(hex: String, darkTheme: Boolean): ColorScheme {
     val seed = parseHexColor(hex)
+    val onSeed = if (seed.luminance() > 0.35f) Color(0xFF0F172A) else Color.White
     return if (darkTheme) {
         darkColorScheme(
             primary = seed,
-            onPrimary = Color.Black,
+            onPrimary = onSeed,
             primaryContainer = seed.copy(alpha = 0.35f),
             onPrimaryContainer = Color.White,
             secondary = seed.copy(alpha = 0.80f),
-            onSecondary = Color.Black,
+            onSecondary = onSeed,
             secondaryContainer = seed.copy(alpha = 0.25f),
             onSecondaryContainer = Color.White,
             tertiary = seed.copy(alpha = 0.90f),
-            onTertiary = Color.Black,
+            onTertiary = onSeed,
             tertiaryContainer = seed.copy(alpha = 0.30f),
             onTertiaryContainer = Color.White,
             background = Color(0xFF000000),
@@ -115,15 +116,15 @@ fun getCustomSeedColorScheme(hex: String, darkTheme: Boolean): ColorScheme {
     } else {
         lightColorScheme(
             primary = seed,
-            onPrimary = Color.White,
+            onPrimary = onSeed,
             primaryContainer = seed.copy(alpha = 0.20f),
             onPrimaryContainer = Color.Black,
             secondary = seed.copy(alpha = 0.85f),
-            onSecondary = Color.White,
+            onSecondary = onSeed,
             secondaryContainer = seed.copy(alpha = 0.15f),
             onSecondaryContainer = Color.Black,
             tertiary = seed.copy(alpha = 0.75f),
-            onTertiary = Color.White,
+            onTertiary = onSeed,
             tertiaryContainer = seed.copy(alpha = 0.18f),
             onTertiaryContainer = Color.Black,
             background = Color(0xFFFFFFFF),

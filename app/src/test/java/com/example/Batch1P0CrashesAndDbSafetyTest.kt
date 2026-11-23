@@ -34,7 +34,7 @@ import org.robolectric.annotation.Implements
 import org.robolectric.shadows.ShadowUserManager
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class Batch1P0CrashesAndDbSafetyTest {
 
     private lateinit var context: Application

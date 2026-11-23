@@ -20,6 +20,7 @@ package com.example.util
 import android.app.KeyguardManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.graphics.PixelFormat
 import android.os.Build
 import android.provider.Settings
@@ -27,7 +28,11 @@ import android.telecom.CallAudioState
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.WindowManager
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.*
@@ -58,6 +63,26 @@ object DynamicIslandOverlayManager {
         val inForeground: Boolean,
         val audioRoute: Int?
     )
+
+    private data class OverlayThemePrefs(
+        val isDarkTheme: Boolean,
+        val useDynamicColor: Boolean,
+        val themeColor: String,
+        val customColorHex: String,
+        val isAmoledMode: Boolean,
+        val isM3Expressive: Boolean
+    )
+
+    private fun readOverlayThemePrefs(prefs: SharedPreferences): OverlayThemePrefs {
+        return OverlayThemePrefs(
+            isDarkTheme = prefs.getBoolean("is_dark_theme", true),
+            useDynamicColor = prefs.getBoolean("use_dynamic_color", Build.VERSION.SDK_INT >= Build.VERSION_CODES.S),
+            themeColor = prefs.getString("theme_color", "expressive_lime") ?: "expressive_lime",
+            customColorHex = prefs.getString("custom_color_hex", "#68A500") ?: "#68A500",
+            isAmoledMode = prefs.getBoolean("is_amoled_mode", false),
+            isM3Expressive = prefs.getBoolean("is_m3_expressive", true)
+        )
+    }
 
     fun canDrawOverlay(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -207,7 +232,28 @@ object DynamicIslandOverlayManager {
                 setViewTreeViewModelStoreOwner(lifecycleOwner)
 
                 setContent {
-                    MyApplicationTheme(darkTheme = true) {
+                    val prefs = remember(context) {
+                        context.applicationContext.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                    }
+                    var themePrefs by remember(prefs) { mutableStateOf(readOverlayThemePrefs(prefs)) }
+                    DisposableEffect(prefs) {
+                        val listener = SharedPreferences.OnSharedPreferenceChangeListener { sp, _ ->
+                            themePrefs = readOverlayThemePrefs(sp)
+                        }
+                        prefs.registerOnSharedPreferenceChangeListener(listener)
+                        onDispose {
+                            prefs.unregisterOnSharedPreferenceChangeListener(listener)
+                        }
+                    }
+
+                    MyApplicationTheme(
+                        darkTheme = themePrefs.isDarkTheme,
+                        dynamicColor = themePrefs.useDynamicColor,
+                        themeColor = themePrefs.themeColor,
+                        customColorHex = themePrefs.customColorHex,
+                        isAmoledMode = themePrefs.isAmoledMode,
+                        isM3Expressive = themePrefs.isM3Expressive
+                    ) {
                         val callerName by CallManager.callerName.collectAsStateWithLifecycle()
                         val callerNumber by CallManager.callerNumber.collectAsStateWithLifecycle()
                         val callerPhotoUri by CallManager.callerPhotoUri.collectAsStateWithLifecycle()

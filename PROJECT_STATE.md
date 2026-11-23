@@ -52,6 +52,11 @@
 - **Floating Dialer FAB Integration**: Added a customized Material 3 floating call button (`FloatingDialpadButton`) to the Recents and Contacts tabs, allowing the user to reveal the dialer overlay dynamically with exquisite spring physics.
 - **Tactile Button Press Feedback (Duarte & Mike Matas Polish)**: Added physical scaling effects (`scale` state driven by `MutableInteractionSource` collectIsPressedAsState) using spring physics onto dialpad numbers, the clear button, paste buttons, backspace, and primary dial keys.
 - **Frictionless Gesture / BackHandler Support**: Added native system back gesture interception to cleanly dismiss the sliding drawer before exiting the application, optimizing ergonomic flow.
+- **v1.9.0 Release Hardening, Localization Parity & Security Audit (`Batch3`–`Batch6`, `ReleaseHardeningAuditTest.kt`)**:
+  - **Call Screening & Privacy**: Added "Block Unknown & Private Calls" with emergency bypass, protected `MissedCallNotificationReceiver` with `MODIFY_PHONE_STATE`, excluded DB WAL/prefs from `<device-transfer>`, added auth loop guard, and enforced 6-hour CPU WakeLock safety timeouts.
+  - **Telephony & Recording Reliability**: Fixed `MediaRecorder` retry handle leaks, synced notification stop-recording with Downloads Vault auto-export/deduplication, released `ToneGenerator` on disconnect, capped `cnap_*` cache rows, preserved negative-ID manual call records on sync/clear, and moved bulk recording export/cleanup to guarded async execution.
+  - **11-Language Localization (`896` keys/locale) & System 12h/24h**: Added Android 13–17 `locales_config.xml`, extracted remaining Kotlin UI/service strings into `strings.xml`, corrected Japan CLIR (`184`) and DE/FR/AR/JA/ZH strings, respected system 12h/24h time settings, and moved USSD progress state to `UssdDialogData.isLoading`.
+  - **Compose Performance, Contrast & Narrow-Screen Stability**: Hoisted `RecentsTab` row collectors, made `DynamicIslandOverlayManager` & `InCallActivity` theme-reactive, synced `ContactsTab` A–Z scroller sorting, eliminated UI `!!` unwraps, computed luminance-aware `onPrimary`, fixed `PrivacyAndBackupSettings` `320dp`/`1.5x` tab layout remeasure loop, and removed dead `DisplayAndSoundSettings`.
 
 ## Active Blockers
-- None. Build successfully verified, compiled, and all automated tests passed.
+- None. Build, release assembly, and Robolectric verification updated for v1.9.0 release readiness.

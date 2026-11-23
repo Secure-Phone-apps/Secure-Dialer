@@ -178,7 +178,7 @@ fun VoicemailTabContent(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.PlayArrow,
-                                            contentDescription = stringResource(R.string.call_status_ongoing)
+                                            contentDescription = stringResource(R.string.desc_play)
                                         )
                                     }
                                 },

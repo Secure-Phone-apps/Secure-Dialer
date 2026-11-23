@@ -180,7 +180,7 @@
     <string name="no_voicemails_subtitle">Her şeyi tamamladınız</string>
     <string name="voicemail_settings">Sesli Mesaj Ayarları</string>
     <string name="voicemail_directory_number">Sesli Mesaj Erişim Numarası</string>
-    <string name="voicemail_sample_transcript">Döküm: \"Merhaba, sadece hal hatır sormak için aradım. Bu akşam müsait olduğunda haber ver!\"</string>
+    <string name="voicemail_sample_transcript">Operatör sesli mesaj dökümü çevrimdışı kullanılamıyor. Sesli mesajı aramak için Oynat\'a dokunun.</string>
 
     <!-- Ayar Kategorileri -->
     <string name="cat_sound_gestures">Ses ve Hareketler</string>
@@ -941,4 +941,26 @@ Sürüm v%1$s (Kararlı Sürüm)
     <string name="toast_recording_started_autotune">⏺️ Kayıt başladı. Hoparlör dengeli ses için ayarlandı.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ Kayıt başladı. İpucu: Hoparlörü AÇIN.</string>
     <string name="toast_recording_cannot_start_mic">Kayıt başlatılamıyor. Mikrofon izni verin.</string>
+    <string name="desc_play">Oynat</string>
+    <string name="desc_pause">Duraklat</string>
+    <string name="desc_expand">Genişlet</string>
+    <string name="desc_collapse">Daralt</string>
+    <string name="desc_open_dialpad">Tuş takımını aç</string>
+    <string name="desc_minimize_call">Aramayı küçült</string>
+    <string name="dynamic_island_full_screen">Tam Ekran</string>
+    <string name="toast_recording_failed_empty">Arama kaydı başarısız oldu veya dosya boş</string>
+    <string name="toast_call_merged">Arama birleştirildi</string>
+    <string name="recordings_storage_summary">%1$d dosya • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">Not: %1$s</string>
+    <string name="toast_reminder_cancelled">Geri arama hatırlatıcısı iptal edildi</string>
+    <string name="fake_call_all_cancelled">Planlanan sahte aramalar iptal edildi</string>
+    <string name="fake_call_custom_audio_file">Özel Ses Dosyası</string>
+    <string name="fake_call_waiting_test_title">Çağrı Bekletme ve Çoklu Arama Testi</string>
+    <string name="fake_call_waiting_test_desc">Çağrı Bekletme uyarılarını veya aynı arayanı engellemeyi test etmek için aktif arama sırasında ikinci bir aramayı simüle edin.</string>
+    <string name="fake_call_waiting_diff_caller">Farklı Arayan (Uyarı)</string>
+    <string name="fake_call_waiting_same_caller">Aynı Arayan (Gizle)</string>
+    <string name="toast_fake_call_waiting_scheduled">%1$s (%2$s) için Çağrı Bekletme simüle edildi</string>
+    <string name="sim_system_slot_info">Sistem: %1$s (Yuva %2$d)</string>
+    <string name="toast_sim_label_reset">Varsayılan SIM etiketine sıfırlandı</string>
+    <string name="btn_reset">Sıfırla</string>
 </resources>

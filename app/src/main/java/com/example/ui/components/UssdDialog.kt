@@ -36,7 +36,7 @@ fun UssdResponseDialog(
     onDismiss: () -> Unit = { UssdManager.dismissDialog() }
 ) {
     val context = LocalContext.current
-    val isRunning = data.message.startsWith("Running USSD code")
+    val isRunning = data.isLoading
 
     AlertDialog(
         onDismissRequest = onDismiss,

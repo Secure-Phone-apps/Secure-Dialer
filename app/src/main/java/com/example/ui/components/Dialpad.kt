@@ -253,7 +253,7 @@ fun DialpadTabContent(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Call,
-                                                contentDescription = stringResource(R.string.call_status_ongoing),
+                                                contentDescription = stringResource(R.string.action_call),
                                                 tint = getCallGreenColor(),
                                                 modifier = Modifier.size(20.dp)
                                             )
@@ -770,7 +770,7 @@ fun DialpadTabContent(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Default.Call,
-                        contentDescription = stringResource(R.string.call_status_ongoing),
+                        contentDescription = stringResource(R.string.action_call),
                         modifier = Modifier.size(28.dp)
                     )
                 }

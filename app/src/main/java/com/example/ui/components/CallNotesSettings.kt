@@ -43,10 +43,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ContactCache
 import com.example.R
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.CallAudioRecorder
 import com.example.util.RichHapticEngine
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun CallNotesSettings(
@@ -131,7 +129,7 @@ fun CallNotesSettings(
                             ?: note.number
                     }
                     val dateStr = remember(note.lastUpdated) {
-                        SimpleDateFormat("MMM d, yyyy · h:mm a", Locale.getDefault()).format(Date(note.lastUpdated))
+                        CallAudioRecorder.formatFullDateTime(context, note.lastUpdated)
                     }
 
                     Card(

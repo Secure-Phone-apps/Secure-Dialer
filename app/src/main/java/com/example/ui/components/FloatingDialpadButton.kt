@@ -28,7 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.R
 import com.example.ui.theme.AppShapes
 import com.example.util.RichHapticEngine
 
@@ -50,7 +52,7 @@ fun FloatingDialpadButton(
     ) {
         Icon(
             imageVector = Icons.Default.Call,
-            contentDescription = "Open Dialpad",
+            contentDescription = stringResource(R.string.desc_open_dialpad),
             modifier = Modifier.size(24.dp)
         )
     }

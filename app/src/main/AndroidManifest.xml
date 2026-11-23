@@ -198,6 +198,7 @@
         <!-- Telecom Missed Call Notification Delegation (API 24+ / Android 7-17+) -->
         <receiver
             android:name=".util.MissedCallNotificationReceiver"
+            android:permission="android.permission.MODIFY_PHONE_STATE"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.telecom.action.SHOW_MISSED_CALLS_NOTIFICATION" />

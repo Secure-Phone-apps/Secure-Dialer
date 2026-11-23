@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">新しいメッセージはありません</string>
     <string name="voicemail_settings">留守番電話設定</string>
     <string name="voicemail_directory_number">留守番電話番号</string>
-    <string name="voicemail_sample_transcript">文字起こし: 「こんにちは！近況報告で電話しました。今晩時間がある時に連絡してね！」</string>
+    <string name="voicemail_sample_transcript">通信事業者の留守番電話の文字起こしはオフラインでは利用できません。再生をタップして留守番電話に発信します。</string>
     <string name="cat_sound_gestures">音とジェスチャー</string>
     <string name="cat_calling_accounts">SIMと通話アカウント</string>
     <string name="cat_speed_dial_quick_responses">スピードダイヤルとクイック返信</string>
@@ -387,7 +387,7 @@
     <string name="dedup_desc">同一の電話番号を持つ重複エントリーをローカルDBから自動スキャンして統合します。</string>
     <string name="no_duplicates_title">重複はありません</string>
     <string name="no_duplicates_desc">連絡先リストは綺麗です！重複番号は見つかりませんでした。</string>
-    <string name="merge_all_duplicates">検出された重複を photo 統合 (%1$d グループ)</string>
+    <string name="merge_all_duplicates">検出された重複をすべて統合 (%1$d グループ)</string>
     <string name="merge_group">グループを統合</string>
     <string name="btn_add_merge">追加して統合</string>
     <string name="toast_merged_all_duplicates">すべての重複を正常に結合しました</string>
@@ -877,4 +877,26 @@
     <string name="toast_recording_started_autotune">⏺️ 録音を開始しました。クリアな音質にスピーカーを調整しました。</string>
     <string name="toast_recording_started_speaker_tip">⏺️ 録音を開始しました。ヒント：スピーカーをオンにしてください。</string>
     <string name="toast_recording_cannot_start_mic">録音を開始できません。マイク権限を許可してください。</string>
+    <string name="desc_play">再生</string>
+    <string name="desc_pause">一時停止</string>
+    <string name="desc_expand">展開</string>
+    <string name="desc_collapse">折りたたむ</string>
+    <string name="desc_open_dialpad">ダイヤルパッドを開く</string>
+    <string name="desc_minimize_call">通話を最小化</string>
+    <string name="dynamic_island_full_screen">全画面</string>
+    <string name="toast_recording_failed_empty">通話の録音に失敗したか、ファイルが空です</string>
+    <string name="toast_call_merged">通話を統合しました</string>
+    <string name="recordings_storage_summary">%1$d 件のファイル • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">メモ: %1$s</string>
+    <string name="toast_reminder_cancelled">折り返しリマインダーをキャンセルしました</string>
+    <string name="fake_call_all_cancelled">予約されたフェイク通話をキャンセルしました</string>
+    <string name="fake_call_custom_audio_file">カスタム音声ファイル</string>
+    <string name="fake_call_waiting_test_title">割込通話・マルチ通話テスト</string>
+    <string name="fake_call_waiting_test_desc">通話中に第2着信をシミュレートし、割込通話通知や同一発信者の抑制動作をテストします。</string>
+    <string name="fake_call_waiting_diff_caller">別発信者 (通知)</string>
+    <string name="fake_call_waiting_same_caller">同一発信者 (抑制)</string>
+    <string name="toast_fake_call_waiting_scheduled">%1$s (%2$s) からの割込通話をシミュレート中</string>
+    <string name="sim_system_slot_info">システム: %1$s (スロット %2$d)</string>
+    <string name="toast_sim_label_reset">デフォルトのSIMラベルにリセットしました</string>
+    <string name="btn_reset">リセット</string>
 </resources>

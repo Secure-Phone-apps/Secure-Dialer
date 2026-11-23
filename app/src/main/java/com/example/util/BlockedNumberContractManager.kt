@@ -107,11 +107,57 @@ object BlockedNumberContractManager {
         return rules.any { rule -> matchesRule(trimmed, rule) }
     }
 
+    const val PREF_BLOCK_UNKNOWN_PRIVATE = "is_block_unknown_private_enabled"
+
+    private val UNKNOWN_NUMBER_TOKENS = setOf(
+        "-1", "-2", "-3", "unknown", "private", "restricted", "anonymous", "p"
+    )
+
+    fun isPrivateOrUnknownNumber(
+        number: String,
+        presentation: Int = android.telecom.TelecomManager.PRESENTATION_ALLOWED
+    ): Boolean {
+        if (presentation == android.telecom.TelecomManager.PRESENTATION_RESTRICTED ||
+            presentation == android.telecom.TelecomManager.PRESENTATION_UNKNOWN ||
+            presentation == android.telecom.TelecomManager.PRESENTATION_PAYPHONE
+        ) {
+            return true
+        }
+        val trimmed = number.trim()
+        if (trimmed.isEmpty()) return true
+        val lower = trimmed.lowercase(java.util.Locale.ROOT)
+        if (lower in UNKNOWN_NUMBER_TOKENS) return true
+        val digits = trimmed.filter { it.isDigit() }
+        return digits == "0"
+    }
+
     suspend fun shouldBlockIncomingCall(
         context: Context,
         number: String,
-        dao: DialerDao? = null
-    ): Boolean = isBlocked(context = context, number = number, dao = dao, includeSpam = true)
+        dao: DialerDao? = null,
+        presentation: Int = android.telecom.TelecomManager.PRESENTATION_ALLOWED
+    ): Boolean {
+        val trimmed = number.trim()
+        try {
+            if (trimmed.isNotEmpty() && com.example.CallManager.isEmergencyNumber(trimmed, context)) {
+                return false
+            }
+        } catch (_: Exception) {}
+
+        if (isPrivateOrUnknownNumber(trimmed, presentation)) {
+            val blockUnknownEnabled = try {
+                dao?.getSetting(PREF_BLOCK_UNKNOWN_PRIVATE)?.toBooleanStrictOrNull()
+                    ?: context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                        .getBoolean(PREF_BLOCK_UNKNOWN_PRIVATE, false)
+            } catch (_: Exception) {
+                context.getSharedPreferences("dialer_prefs", Context.MODE_PRIVATE)
+                    .getBoolean(PREF_BLOCK_UNKNOWN_PRIVATE, false)
+            }
+            if (blockUnknownEnabled) return true
+        }
+
+        return isBlocked(context = context, number = trimmed, dao = dao, includeSpam = true)
+    }
 
     suspend fun isBlocked(
         context: Context,

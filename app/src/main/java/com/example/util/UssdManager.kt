@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 data class UssdDialogData(
     val title: String,
     val message: String,
-    val code: String
+    val code: String,
+    val isLoading: Boolean = false
 )
 
 object UssdManager {
@@ -124,7 +125,8 @@ object UssdManager {
                     _ussdDialogData.value = UssdDialogData(
                         title = context.getString(R.string.ussd_carrier_title),
                         message = context.getString(R.string.ussd_running_code, trimmed),
-                        code = trimmed
+                        code = trimmed,
+                        isLoading = true
                     )
 
                     tm.sendUssdRequest(

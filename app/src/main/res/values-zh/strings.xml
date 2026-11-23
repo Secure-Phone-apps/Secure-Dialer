@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">您已全部处理完毕</string>
     <string name="voicemail_settings">语音信箱设置</string>
     <string name="voicemail_directory_number">语音信箱号码</string>
-    <string name="voicemail_sample_transcript">转录：“嘿，就是打个电话问候一下。今晚有空的话告诉我一声！”</string>
+    <string name="voicemail_sample_transcript">运营商语音信箱转录离线不可用。点按播放即可拨打语音信箱。</string>
     <string name="cat_sound_gestures">声音与手势</string>
     <string name="cat_calling_accounts">SIM 卡与通话</string>
     <string name="cat_speed_dial_quick_responses">快速拨号与快捷回复</string>
@@ -694,7 +694,7 @@
     <string name="battery_warning_toggle_active">仅在电池受限时显示横幅</string>
     <string name="battery_warning_toggle_snoozed">已暂停提醒至 %1$s</string>
     <string name="battery_warning_toggle_disabled">已完全隐藏（仍可使用下方快捷入口）</string>
-    <string name="battery_schedule_show_now">立即开启</string>
+    <string name="battery_schedule_show_now">已激活</string>
     <string name="battery_schedule_1_day">暂停 1 天</string>
     <string name="battery_schedule_1_week">暂停 1 周</string>
     <string name="battery_schedule_disable">永久关闭</string>
@@ -877,4 +877,26 @@
     <string name="toast_recording_started_autotune">⏺️ 已开始录音。已调优扬声器以获得均衡音质。</string>
     <string name="toast_recording_started_speaker_tip">⏺️ 已开始录音。提示：请开启免提扬声器。</string>
     <string name="toast_recording_cannot_start_mic">无法开始录音。请授予麦克风权限。</string>
+    <string name="desc_play">播放</string>
+    <string name="desc_pause">暂停</string>
+    <string name="desc_expand">展开</string>
+    <string name="desc_collapse">收起</string>
+    <string name="desc_open_dialpad">打开拨号盘</string>
+    <string name="desc_minimize_call">最小化通话</string>
+    <string name="dynamic_island_full_screen">全屏</string>
+    <string name="toast_recording_failed_empty">通话录音失败或文件为空</string>
+    <string name="toast_call_merged">通话已合并</string>
+    <string name="recordings_storage_summary">%1$d 个文件 • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">备注：%1$s</string>
+    <string name="toast_reminder_cancelled">已取消回电提醒</string>
+    <string name="fake_call_all_cancelled">已取消计划的模拟来电</string>
+    <string name="fake_call_custom_audio_file">自定义音频文件</string>
+    <string name="fake_call_waiting_test_title">呼叫等待与多路通话测试</string>
+    <string name="fake_call_waiting_test_desc">在通话期间模拟第二通来电，以测试呼叫等待提醒或验证相同来电抑制。</string>
+    <string name="fake_call_waiting_diff_caller">不同来电者 (提醒)</string>
+    <string name="fake_call_waiting_same_caller">相同来电者 (抑制)</string>
+    <string name="toast_fake_call_waiting_scheduled">正在模拟来自 %1$s (%2$s) 的呼叫等待</string>
+    <string name="sim_system_slot_info">系统：%1$s（卡槽 %2$d）</string>
+    <string name="toast_sim_label_reset">已重置为默认 SIM 卡标签</string>
+    <string name="btn_reset">重置</string>
 </resources>

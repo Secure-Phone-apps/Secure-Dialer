@@ -92,6 +92,7 @@ fun CallRecordingsSettings(
     var shareSheetRecording by remember { mutableStateOf<CallRecording?>(null) }
     var pendingSingleExportPath by remember { mutableStateOf<String?>(null) }
     var pendingExportAll by remember { mutableStateOf(false) }
+    var isStorageOpInProgress by remember { mutableStateOf(false) }
 
     val legacyWritePermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -109,12 +110,15 @@ fun CallRecordingsSettings(
                     Toast.LENGTH_SHORT
                 ).show()
             } else if (doAll) {
-                val count = viewModel.exportAllRecordingsToDownloads(context)
-                Toast.makeText(
-                    context,
-                    context.getString(if (count > 0) R.string.file_saved_success else R.string.file_save_failed),
-                    Toast.LENGTH_SHORT
-                ).show()
+                isStorageOpInProgress = true
+                viewModel.exportAllRecordingsToDownloadsAsync(context) { count ->
+                    isStorageOpInProgress = false
+                    Toast.makeText(
+                        context,
+                        context.getString(if (count > 0) R.string.file_saved_success else R.string.file_save_failed),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         } else {
             Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
@@ -930,7 +934,7 @@ fun CallRecordingsSettings(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = "$totalDiskFiles file(s) • Downloads/SecureDialer",
+                                text = stringResource(R.string.recordings_storage_summary, totalDiskFiles),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -942,9 +946,12 @@ fun CallRecordingsSettings(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         OutlinedButton(
+                            enabled = !isStorageOpInProgress,
                             onClick = {
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                isStorageOpInProgress = true
                                 viewModel.syncRecordingsFromDisk(context) {
+                                    isStorageOpInProgress = false
                                     Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
                                 }
                             },
@@ -953,10 +960,11 @@ fun CallRecordingsSettings(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_restore_backup_file), style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.btn_restore_backup_file), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
 
                         Button(
+                            enabled = !isStorageOpInProgress,
                             onClick = {
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                                 if (!CallAudioRecorder.hasLegacyStorageWritePermission(context)) {
@@ -964,11 +972,14 @@ fun CallRecordingsSettings(
                                     pendingExportAll = true
                                     legacyWritePermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
                                 } else {
-                                    val count = viewModel.exportAllRecordingsToDownloads(context)
-                                    if (count > 0) {
-                                        Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                                    isStorageOpInProgress = true
+                                    viewModel.exportAllRecordingsToDownloadsAsync(context) { count ->
+                                        isStorageOpInProgress = false
+                                        if (count > 0) {
+                                            Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            Toast.makeText(context, context.getString(R.string.file_save_failed), Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                             },
@@ -977,19 +988,23 @@ fun CallRecordingsSettings(
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.backup_export_title), style = MaterialTheme.typography.labelMedium)
+                            Text(stringResource(R.string.backup_export_title), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
 
                     OutlinedButton(
+                        enabled = !isStorageOpInProgress,
                         onClick = {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                            val cleaned = viewModel.cleanupCorruptOrEmptyRecordings(context)
-                            Toast.makeText(
-                                context,
-                                if (cleaned > 0) context.getString(R.string.toast_deleted_recording) else context.getString(R.string.file_saved_success),
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            isStorageOpInProgress = true
+                            viewModel.cleanupCorruptOrEmptyRecordingsAsync(context) { cleaned ->
+                                isStorageOpInProgress = false
+                                Toast.makeText(
+                                    context,
+                                    if (cleaned > 0) context.getString(R.string.toast_deleted_recording) else context.getString(R.string.file_saved_success),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp)
@@ -1140,7 +1155,7 @@ private fun CompactRecordingRow(
             ) {
                 FilledIconButton(
                     onClick = onPlayToggle,
-                    modifier = Modifier.size(34.dp),
+                    modifier = Modifier.sizeIn(minWidth = 40.dp, minHeight = 40.dp),
                     colors = IconButtonDefaults.filledIconButtonColors(
                         containerColor = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondaryContainer,
                         contentColor = if (isPlaying) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSecondaryContainer
@@ -1148,7 +1163,7 @@ private fun CompactRecordingRow(
                 ) {
                     Icon(
                         imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                        contentDescription = stringResource(if (isPlaying) R.string.btn_answer else R.string.call_status_ongoing),
+                        contentDescription = stringResource(if (isPlaying) R.string.desc_pause else R.string.desc_play),
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1180,7 +1195,7 @@ private fun CompactRecordingRow(
                     )
                     if (recording.note.isNotBlank()) {
                         Text(
-                            text = "📝 ${recording.note}",
+                            text = stringResource(R.string.recording_note_prefix, recording.note),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.primary,
@@ -1195,36 +1210,36 @@ private fun CompactRecordingRow(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy((-4).dp)
                 ) {
-                    IconButton(onClick = onEditNote, modifier = Modifier.size(30.dp)) {
+                    IconButton(onClick = onEditNote, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = stringResource(R.string.btn_edit),
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
-                    IconButton(onClick = onExport, modifier = Modifier.size(30.dp)) {
+                    IconButton(onClick = onExport, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Default.Download,
                             contentDescription = stringResource(R.string.backup_export_title),
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
-                    IconButton(onClick = onShare, modifier = Modifier.size(30.dp)) {
+                    IconButton(onClick = onShare, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = stringResource(R.string.share_recording),
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
-                    IconButton(onClick = onDelete, modifier = Modifier.size(30.dp)) {
+                    IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = stringResource(R.string.btn_delete),
                             tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }

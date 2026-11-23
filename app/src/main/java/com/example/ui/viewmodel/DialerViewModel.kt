@@ -514,6 +514,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var vibrateOnClickEnabled = mutableStateOf(prefs.getBoolean("vibrate_on_click_enabled", true))
     var flipToSilenceEnabled = mutableStateOf(prefs.getBoolean("flip_to_silence_enabled", false))
     var isHideCallerIdEnabled = mutableStateOf(prefs.getBoolean("is_hide_caller_id_enabled", false))
+    var isBlockUnknownPrivateEnabled = mutableStateOf(
+        prefs.getBoolean(com.example.util.BlockedNumberContractManager.PREF_BLOCK_UNKNOWN_PRIVATE, false)
+    )
     var clirPrefix = mutableStateOf(prefs.getString("clir_prefix", "#31#") ?: "#31#")
 
     // DUAL SIM FIX: Default to "Ask" on first launch so user is never locked out of SIM 2
@@ -665,6 +668,10 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings["is_hide_caller_id_enabled"]?.toBooleanStrictOrNull()?.let {
                     isHideCallerIdEnabled.value = it
                     editor.putBoolean("is_hide_caller_id_enabled", it)
+                }
+                settings[com.example.util.BlockedNumberContractManager.PREF_BLOCK_UNKNOWN_PRIVATE]?.toBooleanStrictOrNull()?.let {
+                    isBlockUnknownPrivateEnabled.value = it
+                    editor.putBoolean(com.example.util.BlockedNumberContractManager.PREF_BLOCK_UNKNOWN_PRIVATE, it)
                 }
                 settings["clir_prefix"]?.let {
                     clirPrefix.value = it
@@ -1034,6 +1041,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun addBlockedNumber(num: String) = spamAndBackupCoordinator.addBlockedNumber(num)
     fun removeBlockedNumber(num: String) = spamAndBackupCoordinator.removeBlockedNumber(num)
 
+    fun updateBlockUnknownPrivateEnabled(enabled: Boolean) {
+        isBlockUnknownPrivateEnabled.value = enabled
+        settingsCoordinator.updateSettingBoolean(
+            com.example.util.BlockedNumberContractManager.PREF_BLOCK_UNKNOWN_PRIVATE,
+            enabled
+        )
+    }
+
     fun writeTextToUri(uri: Uri, content: String, onResult: (Boolean) -> Unit) =
         spamAndBackupCoordinator.writeTextToUri(uri, content, onResult)
 
@@ -1238,8 +1253,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun exportAllRecordingsToDownloads(context: Context): Int =
         recordingsCoordinator.exportAllRecordingsToDownloads(context)
 
+    fun exportAllRecordingsToDownloadsAsync(context: Context, onComplete: (Int) -> Unit) =
+        recordingsCoordinator.exportAllRecordingsToDownloadsAsync(context, onComplete)
+
     fun cleanupCorruptOrEmptyRecordings(context: Context): Int =
         recordingsCoordinator.cleanupCorruptOrEmptyRecordings(context)
+
+    fun cleanupCorruptOrEmptyRecordingsAsync(context: Context, onComplete: (Int) -> Unit) =
+        recordingsCoordinator.cleanupCorruptOrEmptyRecordingsAsync(context, onComplete)
 
     fun deleteContact(contact: Contact) {
         viewModelScope.launch {

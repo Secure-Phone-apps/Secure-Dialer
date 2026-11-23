@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">सब कुछ अप-टू-डेट है</string>
     <string name="voicemail_settings">वॉइसमेल सेटिंग्स</string>
     <string name="voicemail_directory_number">वॉइसमेल नंबर</string>
-    <string name="voicemail_sample_transcript">ट्रांसक्रिप्ट: \"हेलो! बस हाल-चाल लेने के लिए कॉल किया था। जब भी शाम को फ्री हों बताना!\"</string>
+    <string name="voicemail_sample_transcript">कैरियर वॉइसमेल ट्रांसक्रिप्ट ऑफ़लाइन उपलब्ध नहीं है। वॉइसमेल पर कॉल करने के लिए चलाएं दबाएं।</string>
     <string name="cat_sound_gestures">ध्वनि और जेस्चर</string>
     <string name="cat_calling_accounts">सिम और कॉलिंग खाते</string>
     <string name="cat_speed_dial_quick_responses">स्पीड डायल और त्वरित उत्तर</string>
@@ -877,4 +877,26 @@
     <string name="toast_recording_started_autotune">⏺️ रिकॉर्डिंग शुरू हुई। स्पष्ट ऑडियो के लिए स्पीकर ट्यून किया गया।</string>
     <string name="toast_recording_started_speaker_tip">⏺️ रिकॉर्डिंग शुरू हुई। सुझाव: स्पीकरफ़ोन चालू करें।</string>
     <string name="toast_recording_cannot_start_mic">रिकॉर्डिंग शुरू नहीं हो सकी। माइक्रोफ़ोन अनुमति दें।</string>
+    <string name="desc_play">चलाएं</string>
+    <string name="desc_pause">रोकें</string>
+    <string name="desc_expand">विस्तृत करें</string>
+    <string name="desc_collapse">संक्षिप्त करें</string>
+    <string name="desc_open_dialpad">डायलपैड खोलें</string>
+    <string name="desc_minimize_call">कॉल छोटा करें</string>
+    <string name="dynamic_island_full_screen">पूर्ण स्क्रीन</string>
+    <string name="toast_recording_failed_empty">कॉल रिकॉर्डिंग विफल रही या फ़ाइल खाली है</string>
+    <string name="toast_call_merged">कॉल मर्ज हो गई</string>
+    <string name="recordings_storage_summary">%1$d फ़ाइल(ें) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">नोट: %1$s</string>
+    <string name="toast_reminder_cancelled">कॉलबैक रिमाइंडर रद्द किया गया</string>
+    <string name="fake_call_all_cancelled">शेड्यूल की गई नकली कॉल रद्द कर दी गईं</string>
+    <string name="fake_call_custom_audio_file">कस्टम ऑडियो फ़ाइल</string>
+    <string name="fake_call_waiting_test_title">कॉल वेटिंग और मल्टी-कॉल परीक्षण</string>
+    <string name="fake_call_waiting_test_desc">कॉल वेटिंग अलर्ट या समान-कॉलर दमन का परीक्षण करने के लिए सक्रिय कॉल के दौरान दूसरी कॉल आने का अनुकरण करें।</string>
+    <string name="fake_call_waiting_diff_caller">अलग कॉलर (अलर्ट)</string>
+    <string name="fake_call_waiting_same_caller">समान कॉलर (दबाएं)</string>
+    <string name="toast_fake_call_waiting_scheduled">%1$s (%2$s) से कॉल वेटिंग का अनुकरण किया गया</string>
+    <string name="sim_system_slot_info">सिस्टम: %1$s (स्लॉट %2$d)</string>
+    <string name="toast_sim_label_reset">डिफ़ॉल्ट SIM लेबल पर रीसेट किया गया</string>
+    <string name="btn_reset">रीसेट करें</string>
 </resources>

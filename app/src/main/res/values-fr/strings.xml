@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">Vous êtes à jour</string>
     <string name="voicemail_settings">Paramètres de messagerie vocale</string>
     <string name="voicemail_directory_number">Numéro de messagerie vocale</string>
-    <string name="voicemail_sample_transcript">Transcription: \"Salut, je voulais prendre de tes nouvelles. Dis-moi quand tu es disponible ce soir !\"</string>
+    <string name="voicemail_sample_transcript">Les transcriptions de messagerie vocale sont indisponibles hors ligne. Appuyez sur Lire pour appeler la messagerie.</string>
     <string name="cat_sound_gestures">Son et gestes</string>
     <string name="cat_calling_accounts">Comptes SIM et d\'appel</string>
     <string name="cat_speed_dial_quick_responses">Numérotation rapide et réponses</string>
@@ -877,4 +877,26 @@ Version v%1$s (Version stable)
     <string name="toast_recording_started_autotune">⏺️ Enregistrement démarré. Haut-parleur optimisé pour l\'audio.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ Enregistrement démarré. Conseil : activez le haut-parleur.</string>
     <string name="toast_recording_cannot_start_mic">Impossible de démarrer. Accordez l\'accès au microphone.</string>
+    <string name="desc_play">Lire</string>
+    <string name="desc_pause">Pause</string>
+    <string name="desc_expand">Développer</string>
+    <string name="desc_collapse">Réduire</string>
+    <string name="desc_open_dialpad">Ouvrir le clavier</string>
+    <string name="desc_minimize_call">Réduire l\'appel</string>
+    <string name="dynamic_island_full_screen">Plein écran</string>
+    <string name="toast_recording_failed_empty">Échec de l\'enregistrement ou fichier vide</string>
+    <string name="toast_call_merged">Appel fusionné</string>
+    <string name="recordings_storage_summary">%1$d fichier(s) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">Note : %1$s</string>
+    <string name="toast_reminder_cancelled">Rappel de rappel annulé</string>
+    <string name="fake_call_all_cancelled">Appels factices planifiés annulés</string>
+    <string name="fake_call_custom_audio_file">Fichier audio personnalisé</string>
+    <string name="fake_call_waiting_test_title">Test de double appel et multi-appels</string>
+    <string name="fake_call_waiting_test_desc">Simulez un second appel entrant pendant un appel actif pour tester les alertes de double appel ou la suppression du même appelant.</string>
+    <string name="fake_call_waiting_diff_caller">Autre appelant (Alerte)</string>
+    <string name="fake_call_waiting_same_caller">Même appelant (Ignorer)</string>
+    <string name="toast_fake_call_waiting_scheduled">Double appel simulé depuis %1$s (%2$s)</string>
+    <string name="sim_system_slot_info">Système : %1$s (Emplacement %2$d)</string>
+    <string name="toast_sim_label_reset">Libellé SIM réinitialisé par défaut</string>
+    <string name="btn_reset">Réinitialiser</string>
 </resources>

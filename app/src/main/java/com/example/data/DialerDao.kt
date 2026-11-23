@@ -190,11 +190,14 @@ interface DialerDao {
 
     // ================= CALL HISTORY =================
 
-    @Query("SELECT * FROM call_history ORDER BY id DESC")
+    @Query("SELECT * FROM call_history ORDER BY timestampMs DESC, id DESC")
     fun getCallHistoryPaged(): PagingSource<Int, CallRecord>
 
     @Query("SELECT * FROM call_history ORDER BY timestampMs DESC, id DESC LIMIT 5000")
     fun getAllCallHistoryFlow(): Flow<List<CallRecord>>
+
+    @Query("SELECT * FROM call_history")
+    suspend fun getAllCallLogsList(): List<CallRecord>
 
     @Query("SELECT COUNT(*) FROM call_history")
     suspend fun getCallLogCount(): Int
@@ -202,12 +205,18 @@ interface DialerDao {
     @Query("SELECT MAX(id) FROM call_history")
     suspend fun getMaxCallLogId(): Int?
 
+    @Query("SELECT MIN(id) FROM call_history")
+    suspend fun getMinCallLogId(): Int?
+
     @Transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertCallLogs(logs: List<CallRecord>)
 
     @Query("DELETE FROM call_history")
     suspend fun clearCallLogs()
+
+    @Query("DELETE FROM call_history WHERE id > 0")
+    suspend fun clearSystemCallLogs()
 
     @Query("DELETE FROM call_history WHERE id = :id")
     suspend fun deleteCallLog(id: Int)

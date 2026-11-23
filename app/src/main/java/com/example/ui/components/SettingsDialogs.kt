@@ -175,7 +175,11 @@ fun SimRenameDialog(
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = "System: ${sim.carrierName.ifEmpty { sim.displayName }} (Slot ${sim.slotIndex + 1})",
+                                        text = stringResource(
+                                            R.string.sim_system_slot_info,
+                                            sim.carrierName.ifEmpty { sim.displayName },
+                                            sim.slotIndex + 1
+                                        ),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -215,11 +219,11 @@ fun SimRenameDialog(
                         onClick = {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
                             viewModel.updateSimCustomLabel(activeEditingSim.subscriptionId, "")
-                            Toast.makeText(context, "Reset to default SIM label", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, context.getString(R.string.toast_sim_label_reset), Toast.LENGTH_SHORT).show()
                             editingSim = null
                         }
                     ) {
-                        Text("Reset")
+                        Text(stringResource(R.string.btn_reset))
                     }
                     Button(
                         onClick = {

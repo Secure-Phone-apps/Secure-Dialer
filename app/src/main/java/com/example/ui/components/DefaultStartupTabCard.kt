@@ -333,7 +333,8 @@ fun TabSlotDropdown(
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
                     )
                     Icon(
                         imageVector = Icons.Default.ArrowDropDown,

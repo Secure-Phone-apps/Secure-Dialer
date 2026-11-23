@@ -199,28 +199,21 @@ fun ContactsTabContent(
         map
     }
 
-    val activeLetter = remember(listState, alphabet, showOnlyFavorites, sortedFavorites, contactsPaged, nameFormat) {
+    val activeLetter = remember(listState, alphabet, showOnlyFavorites, sortedFavorites, activeContactsList, contactsPaged, nameFormat) {
         derivedStateOf {
             val firstVisibleIndex = listState.firstVisibleItemIndex
-            if (showOnlyFavorites) {
-                if (firstVisibleIndex < sortedFavorites.size) {
-                    val contact = sortedFavorites.getOrNull(firstVisibleIndex)
-                    val formatted = if (contact != null) com.example.formatContactName(contact.name, nameFormat).trim() else ""
-                    val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
-                    if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
-                } else {
-                    alphabet.firstOrNull() ?: '#'
-                }
+            val contact = if (showOnlyFavorites) {
+                sortedFavorites.getOrNull(firstVisibleIndex)
+            } else if (activeContactsList.isNotEmpty()) {
+                activeContactsList.getOrNull(firstVisibleIndex)
+            } else if (firstVisibleIndex < contactsPaged.itemCount) {
+                contactsPaged.peek(firstVisibleIndex)
             } else {
-                if (firstVisibleIndex < contactsPaged.itemCount) {
-                    val contact = contactsPaged.peek(firstVisibleIndex)
-                    val formatted = if (contact != null) com.example.formatContactName(contact.name, nameFormat).trim() else ""
-                    val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
-                    if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
-                } else {
-                    alphabet.firstOrNull() ?: '#'
-                }
+                null
             }
+            val formatted = if (contact != null) com.example.formatContactName(contact.name, nameFormat).trim() else ""
+            val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
+            if (alphabet.contains(firstChar)) firstChar else if (!firstChar.isLetter() && alphabet.contains('#')) '#' else alphabet.firstOrNull() ?: '#'
         }
     }
 
@@ -553,7 +546,8 @@ fun ContactsTabContent(
                         // FIXED: itemsIndexed eliminates O(N^2) indexOf lookup on every scroll frame
                         itemsIndexed(
                             items = sortedFavorites,
-                            key = { _, contact -> "${contact.id}_${contact.number}" }
+                            key = { _, contact -> "${contact.id}_${contact.number}" },
+                            contentType = { _, _ -> "contact" }
                         ) { index, contact ->
                             val currentDisplayName = com.example.formatContactName(contact.name, nameFormat).trim()
                             val firstLetter = currentDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
@@ -604,7 +598,7 @@ fun ContactsTabContent(
                                 }
                             )
                         }
-                    } else if (contactsPaged.itemCount > 0) {
+                    } else if (activeContactsList.isEmpty() && contactsPaged.itemCount > 0) {
                         items(
                             count = contactsPaged.itemCount,
                             key = contactsPaged.itemKey { "${it.id}_${it.number}" },
@@ -665,7 +659,8 @@ fun ContactsTabContent(
                     } else {
                         itemsIndexed(
                             items = activeContactsList,
-                            key = { _, contact -> "${contact.id}_${contact.number}" }
+                            key = { _, contact -> "${contact.id}_${contact.number}" },
+                            contentType = { _, _ -> "contact" }
                         ) { index, contact ->
                             val currentDisplayName = com.example.formatContactName(contact.name, nameFormat).trim()
                             val firstLetter = currentDisplayName.firstOrNull()?.uppercaseChar()?.toString() ?: "#"
@@ -730,10 +725,10 @@ fun ContactsTabContent(
         }
 
         // A-Z Scroller Rail
-        val hasItems = if (showOnlyFavorites) sortedFavorites.isNotEmpty() else contactsPaged.itemCount > 0
+        val hasItems = if (showOnlyFavorites) sortedFavorites.isNotEmpty() else (activeContactsList.isNotEmpty() || contactsPaged.itemCount > 0)
         if (hasItems) {
             val haptic = LocalHapticFeedback.current
-            val maxScrollTarget = (if (showOnlyFavorites) sortedFavorites.size else contactsPaged.itemCount) - 1
+            val maxScrollTarget = (if (showOnlyFavorites) sortedFavorites.size else if (activeContactsList.isNotEmpty()) activeContactsList.size else contactsPaged.itemCount) - 1
 
             BoxWithConstraints(
                 modifier = Modifier
@@ -751,10 +746,11 @@ fun ContactsTabContent(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
+                        .pointerInput(visibleAlphabet, letterToIndex, maxScrollTarget) {
                             detectTapGestures { offset ->
-                                val index = (offset.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
-                                val char = alphabet[index]
+                                if (visibleAlphabet.isEmpty()) return@detectTapGestures
+                                val index = (offset.y / size.height * visibleAlphabet.size).toInt().coerceIn(0, visibleAlphabet.size - 1)
+                                val char = visibleAlphabet[index]
                                 letterToIndex[char]?.let { targetIndex ->
                                     val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
                                     coroutineScope.launch {
@@ -764,10 +760,11 @@ fun ContactsTabContent(
                                 }
                             }
                         }
-                        .pointerInput(alphabet, letterToIndex, maxScrollTarget) {
+                        .pointerInput(visibleAlphabet, letterToIndex, maxScrollTarget) {
                             detectDragGestures { change, _ ->
-                                val index = (change.position.y / size.height * alphabet.size).toInt().coerceIn(0, alphabet.size - 1)
-                                val char = alphabet[index]
+                                if (visibleAlphabet.isEmpty()) return@detectDragGestures
+                                val index = (change.position.y / size.height * visibleAlphabet.size).toInt().coerceIn(0, visibleAlphabet.size - 1)
+                                val char = visibleAlphabet[index]
                                 letterToIndex[char]?.let { targetIndex ->
                                     val safeIndex = targetIndex.coerceIn(0, maxScrollTarget.coerceAtLeast(0))
                                     coroutineScope.launch {

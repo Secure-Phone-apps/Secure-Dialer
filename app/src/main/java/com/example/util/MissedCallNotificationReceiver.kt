@@ -144,6 +144,7 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
             rawNumber: String?,
             displayName: String
         ) {
+            val safeCount = count.coerceAtLeast(1)
             ensureMissedCallChannel(context, nm)
 
             val contentPendingIntent = PendingIntent.getActivity(
@@ -153,13 +154,13 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
                 PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
-            val title = if (count > 1) {
-                context.getString(R.string.missed_calls_notification_title, count)
+            val title = if (safeCount > 1) {
+                context.getString(R.string.missed_calls_notification_title, safeCount)
             } else {
                 context.getString(R.string.call_type_missed)
             }
 
-            val text = if (count > 1) {
+            val text = if (safeCount > 1) {
                 if (!rawNumber.isNullOrBlank() && displayName != context.getString(R.string.unknown)) {
                     "$displayName • ${context.getString(R.string.tap_to_view_call_log)}"
                 } else {
@@ -173,7 +174,7 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
                 .setSmallIcon(android.R.drawable.sym_call_missed)
                 .setContentTitle(title)
                 .setContentText(text)
-                .setNumber(count)
+                .setNumber(safeCount)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setCategory(NotificationCompat.CATEGORY_MISSED_CALL)
                 .setContentIntent(contentPendingIntent)
@@ -182,11 +183,12 @@ class MissedCallNotificationReceiver : BroadcastReceiver() {
             val validCallbackNumber = rawNumber?.takeIf {
                 it.isNotBlank() && it !in listOf("-1", "-2", "-3") && !it.equals("Unknown", ignoreCase = true)
             }
-            if (count == 1 && validCallbackNumber != null) {
+            if (safeCount == 1 && validCallbackNumber != null) {
                 val callBackPendingIntent = PendingIntent.getActivity(
                     context,
                     302,
                     Intent(Intent.ACTION_DIAL).apply {
+                        setPackage(context.packageName)
                         data = Uri.parse("tel:$validCallbackNumber")
                     },
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT

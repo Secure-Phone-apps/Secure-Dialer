@@ -141,6 +141,50 @@ fun CallBlockingSettings(
             }
         }
 
+        val isBlockUnknownPrivateEnabled by viewModel.isBlockUnknownPrivateEnabled
+        HighlightableCard(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            cardBgColor = cardBgColor,
+            isHighlighted = isMatchTitle("Block Unknown & Private Calls", highlightedTitle),
+            shape = MaterialTheme.shapes.medium,
+            onClick = {
+                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                viewModel.updateBlockUnknownPrivateEnabled(!isBlockUnknownPrivateEnabled)
+            }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = stringResource(R.string.search_item_block_unknown_private),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = stringResource(R.string.search_desc_block_unknown_private),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = isBlockUnknownPrivateEnabled,
+                    onCheckedChange = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        viewModel.updateBlockUnknownPrivateEnabled(it)
+                    }
+                )
+            }
+        }
+
         // Expandable Blocklist
         HighlightableCard(
             modifier = Modifier
@@ -148,7 +192,6 @@ fun CallBlockingSettings(
                 .padding(horizontal = 16.dp),
             cardBgColor = cardBgColor,
             isHighlighted = isMatchTitle("Blocked Numbers & Blacklist", highlightedTitle) ||
-                isMatchTitle("Block Unknown & Private Calls", highlightedTitle) ||
                 isMatchTitle("Blocked Numbers", highlightedTitle),
             shape = MaterialTheme.shapes.medium
         ) {

@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">Wszystkie wiadomości zostały sprawdzone</string>
     <string name="voicemail_settings">Ustawienia poczty głosowej</string>
     <string name="voicemail_directory_number">Numer dostępowy poczty głosowej</string>
-    <string name="voicemail_sample_transcript">Transkrypcja: „Cześć, dzwonię, żeby pogadać. Daj znać, kiedy znajdziesz chwilę wolnego czasu wieczorem!”</string>
+    <string name="voicemail_sample_transcript">Transkrypcje poczty głosowej operatora są niedostępne offline. Stuknij Odtwórz, aby zadzwonić na pocztę.</string>
     <string name="cat_sound_gestures">Dźwięk i gesty</string>
     <string name="cat_calling_accounts">Karty SIM i połączenia</string>
     <string name="cat_speed_dial_quick_responses">Szybkie wybieranie i odpowiedzi</string>
@@ -877,4 +877,26 @@ Wersja v%1$s (Wydanie stabilne)
     <string name="toast_recording_started_autotune">⏺️ Rozpoczęto nagrywanie. Głośnik dostrojony dla czystego dźwięku.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ Rozpoczęto nagrywanie. Wskazówka: Włącz tryb głośnomówiący.</string>
     <string name="toast_recording_cannot_start_mic">Nie można rozpocząć nagrywania. Przyznaj dostęp do mikrofonu.</string>
+    <string name="desc_play">Odtwórz</string>
+    <string name="desc_pause">Wstrzymaj</string>
+    <string name="desc_expand">Rozwiń</string>
+    <string name="desc_collapse">Zwiń</string>
+    <string name="desc_open_dialpad">Otwórz klawiaturę</string>
+    <string name="desc_minimize_call">Minimalizuj połączenie</string>
+    <string name="dynamic_island_full_screen">Pełny ekran</string>
+    <string name="toast_recording_failed_empty">Nagrywanie połączenia nie powiodło się lub plik jest pusty</string>
+    <string name="toast_call_merged">Połączono rozmowy</string>
+    <string name="recordings_storage_summary">%1$d plik(i) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">Notatka: %1$s</string>
+    <string name="toast_reminder_cancelled">Anulowano przypomnienie o oddzwonieniu</string>
+    <string name="fake_call_all_cancelled">Anulowano zaplanowane fałszywe połączenia</string>
+    <string name="fake_call_custom_audio_file">Własny plik audio</string>
+    <string name="fake_call_waiting_test_title">Test połączeń oczekujących i wielokrotnych</string>
+    <string name="fake_call_waiting_test_desc">Symuluj drugie połączenie przychodzące podczas aktywnej rozmowy, aby przetestować powiadomienia o połączeniu oczekującym lub tłumienie tego samego rozmówcy.</string>
+    <string name="fake_call_waiting_diff_caller">Inny rozmówca (Alert)</string>
+    <string name="fake_call_waiting_same_caller">Ten sam rozmówca (Wycisz)</string>
+    <string name="toast_fake_call_waiting_scheduled">Symulacja połączenia oczekującego od %1$s (%2$s)</string>
+    <string name="sim_system_slot_info">System: %1$s (Gniazdo %2$d)</string>
+    <string name="toast_sim_label_reset">Przywrócono domyślną etykietę karty SIM</string>
+    <string name="btn_reset">Resetuj</string>
 </resources>

@@ -36,14 +36,10 @@ class SecureCallScreeningService : CallScreeningService() {
         }
 
         val rawNumber = callDetails.handle?.schemeSpecificPart.orEmpty().trim()
+        val presentation = callDetails.handlePresentation
         val isEmergencyCallback = callDetails.hasProperty(Call.Details.PROPERTY_EMERGENCY_CALLBACK_MODE)
 
         if (isEmergencyCallback || (rawNumber.isNotEmpty() && CallManager.isEmergencyNumber(rawNumber, this))) {
-            respondToCall(callDetails, CallResponse.Builder().build())
-            return
-        }
-
-        if (rawNumber.isEmpty()) {
             respondToCall(callDetails, CallResponse.Builder().build())
             return
         }
@@ -56,7 +52,8 @@ class SecureCallScreeningService : CallScreeningService() {
                     BlockedNumberContractManager.shouldBlockIncomingCall(
                         context = applicationContext,
                         number = rawNumber,
-                        dao = dao
+                        dao = dao,
+                        presentation = presentation
                     )
                 } ?: false
             } catch (_: Exception) {

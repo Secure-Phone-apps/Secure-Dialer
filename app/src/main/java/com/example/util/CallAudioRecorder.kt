@@ -287,6 +287,38 @@ object CallAudioRecorder {
         return SimpleDateFormat(pattern, locale).format(Date(timeMs))
     }
 
+    fun formatFullDateTime(context: Context, timeMs: Long): String {
+        val locale = com.example.ui.components.getCurrentLocale(context)
+        val skeleton = if (DateFormat.is24HourFormat(context)) "MMM d, yyyy, HH:mm" else "MMM d, yyyy, h:mm a"
+        val pattern = try {
+            DateFormat.getBestDateTimePattern(locale, skeleton)
+        } catch (_: Exception) {
+            skeleton
+        }
+        return SimpleDateFormat(pattern, locale).format(Date(timeMs))
+    }
+
+    fun formatTimeOnly(context: Context, timeMs: Long): String {
+        val locale = com.example.ui.components.getCurrentLocale(context)
+        val skeleton = if (DateFormat.is24HourFormat(context)) "HH:mm" else "h:mm a"
+        val pattern = try {
+            DateFormat.getBestDateTimePattern(locale, skeleton)
+        } catch (_: Exception) {
+            skeleton
+        }
+        return SimpleDateFormat(pattern, locale).format(Date(timeMs))
+    }
+
+    fun formatDateOnly(context: Context, timeMs: Long): String {
+        val locale = com.example.ui.components.getCurrentLocale(context)
+        val pattern = try {
+            DateFormat.getBestDateTimePattern(locale, "EEE, MMM d, yyyy")
+        } catch (_: Exception) {
+            "EEE, MMM d, yyyy"
+        }
+        return SimpleDateFormat(pattern, locale).format(Date(timeMs))
+    }
+
     fun formatRecordingTimestamp(context: Context, timeMs: Long = System.currentTimeMillis()): String {
         return formatShortDateTime(context, timeMs)
     }
@@ -380,13 +412,31 @@ object CallAudioRecorder {
         try {
             val fileName = sourceFile.name
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val resolver = context.contentResolver
+                try {
+                    resolver.query(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.SIZE),
+                        "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND ${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ?",
+                        arrayOf(fileName, "%${Environment.DIRECTORY_DOWNLOADS}/SecureDialer%"),
+                        null
+                    )?.use { cursor ->
+                        val sizeIdx = cursor.getColumnIndex(MediaStore.MediaColumns.SIZE)
+                        if (cursor.moveToFirst()) {
+                            val existingSize = if (sizeIdx != -1) cursor.getLong(sizeIdx) else sourceFile.length()
+                            if (existingSize > 0L) {
+                                return true
+                            }
+                        }
+                    }
+                } catch (_: Exception) {}
+
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
                     put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp4")
                     put(MediaStore.MediaColumns.RELATIVE_PATH, "${Environment.DIRECTORY_DOWNLOADS}/SecureDialer")
                     put(MediaStore.MediaColumns.IS_PENDING, 1)
                 }
-                val resolver = context.contentResolver
                 val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues) ?: return false
                 resolver.openOutputStream(uri)?.use { out ->
                     FileInputStream(sourceFile).use { input -> input.copyTo(out) }
@@ -402,6 +452,9 @@ object CallAudioRecorder {
                     if (!exists()) mkdirs()
                 }
                 val destFile = File(publicDir, fileName)
+                if (destFile.exists() && destFile.length() == sourceFile.length() && destFile.length() > 0L) {
+                    return true
+                }
                 FileInputStream(sourceFile).use { input ->
                     FileOutputStream(destFile).use { output -> input.copyTo(output) }
                 }

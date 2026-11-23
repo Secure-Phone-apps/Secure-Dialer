@@ -392,7 +392,7 @@ fun RecentCallRow(
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Call,
-                                    contentDescription = stringResource(R.string.call_status_ongoing),
+                                    contentDescription = stringResource(R.string.action_call),
                                     tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(22.dp)
                                 )

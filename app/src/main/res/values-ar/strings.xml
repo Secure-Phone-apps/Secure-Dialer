@@ -154,7 +154,7 @@
     <string name="no_voicemails_subtitle">كل شيء محدّث</string>
     <string name="voicemail_settings">إعدادات البريد الصوتي</string>
     <string name="voicemail_directory_number">رقم البريد الصوتي</string>
-    <string name="voicemail_sample_transcript">النص: \"مرحبًا! أردت الاطمئنان عليك. أخبرني عندما تكون متفرغًا هذا المساء!\"</string>
+    <string name="voicemail_sample_transcript">نصوص البريد الصوتي للشركة المشغلة غير متوفرة دون اتصال. انقر على تشغيل للاتصال بالبريد الصوتي.</string>
     <string name="cat_sound_gestures">الصوت والإيماءات</string>
     <string name="cat_calling_accounts">شريحة SIM والحسابات</string>
     <string name="cat_speed_dial_quick_responses">الاتصال السريع والردود السريعة</string>
@@ -589,7 +589,7 @@
     <string name="about_mission_desc">توفير تجربة اتصال بسيطة وموثوقة وآمنة دون المساس بخصوصية المستخدم.</string>
     <string name="about_app_desc">Secure Dialer هو أداة اتصال تركز على الخصوصية. جميع الوظائف تعمل محلياً على جهازك فقط.</string>
     <string name="privacy_policy_title">سياسة الخصوصية</string>
-    <string name="privacy_intro">In Secure Dialer, we prioritize your privacy.</string>
+    <string name="privacy_intro">في Secure Dialer، نضع خصوصيتك في مقدمة أولوياتنا.</string>
     <string name="privacy_section_1_title">عدم الاتصال بالإنترنت أولاً</string>
     <string name="privacy_section_1_desc">يعمل التطبيق بدون أي اتصال بالإنترنت، ولا يرسل أي بيانات إلى خوادم خارجية.</string>
     <string name="privacy_section_2_title">تخزين مشفر محلياً</string>
@@ -877,4 +877,26 @@
     <string name="toast_recording_started_autotune">⏺️ بدأ التسجيل. تم ضبط السماعة لصوت متوازن.</string>
     <string name="toast_recording_started_speaker_tip">⏺️ بدأ التسجيل. تلميح: شغّل مكبر الصوت.</string>
     <string name="toast_recording_cannot_start_mic">تعذر بدء التسجيل. امنح إذن الميكروفون.</string>
+    <string name="desc_play">تشغيل</string>
+    <string name="desc_pause">إيقاف مؤقت</string>
+    <string name="desc_expand">توسيع</string>
+    <string name="desc_collapse">طي</string>
+    <string name="desc_open_dialpad">فتح لوحة الاتصال</string>
+    <string name="desc_minimize_call">تصغير المكالمة</string>
+    <string name="dynamic_island_full_screen">ملء الشاشة</string>
+    <string name="toast_recording_failed_empty">فشل تسجيل المكالمة أو الملف فارغ</string>
+    <string name="toast_call_merged">تم دمج المكالمة</string>
+    <string name="recordings_storage_summary">%1$d ملف(ات) • Downloads/SecureDialer</string>
+    <string name="recording_note_prefix">ملاحظة: %1$s</string>
+    <string name="toast_reminder_cancelled">تم إلغاء تذكير معاودة الاتصال</string>
+    <string name="fake_call_all_cancelled">تم إلغاء المكالمات الوهمية المجدولة</string>
+    <string name="fake_call_custom_audio_file">ملف صوتي مخصص</string>
+    <string name="fake_call_waiting_test_title">اختبار انتظار المكالمات وتعدد المكالمات</string>
+    <string name="fake_call_waiting_test_desc">محاكاة تلقي مكالمة ثانية أثناء مكالمة نشطة لاختبار تنبيهات انتظار المكالمات أو التحقق من كتم نفس المتصل.</string>
+    <string name="fake_call_waiting_diff_caller">متصل مختلف (تنبيه)</string>
+    <string name="fake_call_waiting_same_caller">نفس المتصل (كتم)</string>
+    <string name="toast_fake_call_waiting_scheduled">تمت محاكاة انتظار المكالمة من %1$s (%2$s)</string>
+    <string name="sim_system_slot_info">النظام: %1$s (الشريحة %2$d)</string>
+    <string name="toast_sim_label_reset">تمت استعادة تسمية SIM الافتراضية</string>
+    <string name="btn_reset">إعادة تعيين</string>
 </resources>

@@ -224,13 +224,41 @@ class DialerRepository(rawContext: Context) {
 
             val systemLogs = fetchSystemCallLogs()
 
-            // ATOMIC TRANSACTION: Eliminates call log UI flash
+            val existingLogs = dao.getAllCallLogsList()
+            val existingById = existingLogs.associateBy { it.id }
+            val localManualLogs = existingLogs.filter { it.id < 0 }
+            val mergedSystemLogs = systemLogs.map { sysLog ->
+                val prev = existingById[sysLog.id]
+                if (sysLog.blockReason == 0 && prev != null && prev.blockReason != 0) {
+                    sysLog.copy(
+                        blockReason = prev.blockReason,
+                        callScreeningAppName = sysLog.callScreeningAppName.ifBlank { prev.callScreeningAppName }
+                    )
+                } else {
+                    sysLog
+                }
+            }
+
+            // Reconcile any local-only manual/fake records that later appeared in system logs
+            for (localLog in localManualLogs) {
+                val localDigits = localLog.number.filter { it.isDigit() }.takeLast(7)
+                val appearedInSystem = mergedSystemLogs.any { sysLog ->
+                    val sysDigits = sysLog.number.filter { it.isDigit() }.takeLast(7)
+                    kotlin.math.abs(sysLog.timestampMs - localLog.timestampMs) <= 3000L &&
+                        (sysLog.number == localLog.number || (localDigits.isNotEmpty() && localDigits == sysDigits))
+                }
+                if (appearedInSystem) {
+                    dao.deleteCallLog(localLog.id)
+                }
+            }
+
+            // ATOMIC TRANSACTION: Eliminates call log UI flash while preserving local-only manual logs
             db.withTransaction {
-                if (systemLogs.isNotEmpty()) {
-                    dao.clearCallLogs()
-                    dao.insertCallLogs(systemLogs)
+                if (mergedSystemLogs.isNotEmpty()) {
+                    dao.clearSystemCallLogs()
+                    dao.insertCallLogs(mergedSystemLogs)
                 } else if (systemCount == 0 && lastSyncedCount > 0) {
-                    dao.clearCallLogs()
+                    dao.clearSystemCallLogs()
                 }
             }
 
@@ -245,7 +273,7 @@ class DialerRepository(rawContext: Context) {
                 val systemLogs = fetchSystemCallLogs()
                 if (systemLogs.isNotEmpty()) {
                     db.withTransaction {
-                        dao.clearCallLogs()
+                        dao.clearSystemCallLogs()
                         dao.insertCallLogs(systemLogs)
                     }
                 }
@@ -1035,6 +1063,7 @@ class DialerRepository(rawContext: Context) {
     ) = withContext(Dispatchers.IO) {
         val timestampMs = System.currentTimeMillis()
         SimCallTracker.recordOutgoingCall(context, number, simSlot)
+        var insertedSystemUri: Uri? = null
         try {
             val systemType = when (type) {
                 CallType.MISSED -> CallLog.Calls.MISSED_TYPE
@@ -1051,13 +1080,19 @@ class DialerRepository(rawContext: Context) {
                 put(CallLog.Calls.DURATION, durationSeconds)
                 put(CallLog.Calls.IS_READ, 1)
             }
-            context.contentResolver.insert(CallLog.Calls.CONTENT_URI, values)
+            insertedSystemUri = context.contentResolver.insert(CallLog.Calls.CONTENT_URI, values)
         } catch (_: Exception) {}
 
         try {
             val colors = listOf(AvatarBlue to AvatarBlueText, AvatarOrange to AvatarOrangeText, AvatarGreen to AvatarGreenText)
             val pair = colors[Math.abs(name.hashCode()) % colors.size]
+            val localId = if (insertedSystemUri == null) {
+                (dao.getMinCallLogId() ?: 0).coerceAtMost(0) - 1
+            } else {
+                0
+            }
             val record = CallRecord(
+                id = localId,
                 name = name,
                 number = number,
                 label = "Mobile",

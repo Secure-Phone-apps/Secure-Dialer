@@ -37,6 +37,7 @@ import android.telecom.CallAudioState
 import android.telecom.CallEndpoint
 import android.telecom.DisconnectCause
 import android.telecom.InCallService
+import android.telecom.TelecomManager
 import android.telephony.PhoneNumberUtils
 import androidx.core.app.NotificationCompat
 import androidx.core.app.Person
@@ -336,7 +337,7 @@ class MyInCallService : InCallService() {
                 }
             }
             if (cpuWakeLock?.isHeld != true) {
-                cpuWakeLock?.acquire()
+                cpuWakeLock?.acquire(6 * 60 * 60 * 1000L)
             }
         } catch (_: Exception) {}
     }
@@ -611,16 +612,22 @@ class MyInCallService : InCallService() {
         }
 
         val num = call.details?.handle?.schemeSpecificPart ?: ""
+        val presentation = call.details?.handlePresentation ?: TelecomManager.PRESENTATION_ALLOWED
         val isEmergency = num.isNotEmpty() && CallManager.isEmergencyNumber(num, this)
 
-        if (call.state == Call.STATE_RINGING && !isEmergency && num.isNotBlank()) {
+        if (call.state == Call.STATE_RINGING && !isEmergency) {
             // Pre-presentation blocklist + offline spam screening fallback across Android 9-17 and all OEMs
             serviceScope.launch {
                 val shouldBlock = try {
                     withTimeoutOrNull(350L) {
                         AppDatabase.retryOpenOnTransientRecoveryIfUnlocked(applicationContext)
                         val dao = AppDatabase.getDatabase(applicationContext).dialerDao()
-                        BlockedNumberContractManager.shouldBlockIncomingCall(applicationContext, num, dao)
+                        BlockedNumberContractManager.shouldBlockIncomingCall(
+                            context = applicationContext,
+                            number = num,
+                            dao = dao,
+                            presentation = presentation
+                        )
                     } ?: false
                 } catch (_: Exception) {
                     false

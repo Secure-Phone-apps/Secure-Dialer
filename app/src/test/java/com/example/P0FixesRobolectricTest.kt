@@ -34,7 +34,7 @@ import java.security.ProviderException
 import javax.crypto.AEADBadTagException
 
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [36])
+@Config(sdk = [34])
 class P0FixesRobolectricTest {
 
     private lateinit var context: Application

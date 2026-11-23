@@ -117,9 +117,32 @@ class DialerRecordingsCoordinator(
     fun exportAllRecordingsToDownloads(context: Context): Int =
         CallAudioRecorder.exportAllRecordingsToDownloads(context)
 
+    fun exportAllRecordingsToDownloadsAsync(context: Context, onComplete: (Int) -> Unit) {
+        scope.launch(Dispatchers.IO) {
+            val count = try {
+                CallAudioRecorder.exportAllRecordingsToDownloads(context)
+            } catch (_: Exception) {
+                0
+            }
+            withContext(Dispatchers.Main) { onComplete(count) }
+        }
+    }
+
     fun cleanupCorruptOrEmptyRecordings(context: Context): Int {
         val count = CallAudioRecorder.cleanupCorruptOrEmptyFiles(context)
         syncRecordingsFromDisk(context)
         return count
+    }
+
+    fun cleanupCorruptOrEmptyRecordingsAsync(context: Context, onComplete: (Int) -> Unit) {
+        scope.launch(Dispatchers.IO) {
+            val count = try {
+                CallAudioRecorder.cleanupCorruptOrEmptyFiles(context)
+            } catch (_: Exception) {
+                0
+            }
+            syncRecordingsFromDisk(context)
+            withContext(Dispatchers.Main) { onComplete(count) }
+        }
     }
 }

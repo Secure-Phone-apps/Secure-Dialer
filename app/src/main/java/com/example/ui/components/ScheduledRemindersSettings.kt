@@ -42,9 +42,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.model.CallReminder
 import com.example.ui.viewmodel.DialerViewModel
+import com.example.util.CallAudioRecorder
 import com.example.util.RichHapticEngine
-import java.text.SimpleDateFormat
-import java.util.*
 
 @Composable
 fun ScheduledRemindersSettings(
@@ -56,8 +55,6 @@ fun ScheduledRemindersSettings(
 
     val activeReminders = remember(reminders) { reminders.filter { !it.isCompleted } }
     val completedReminders = remember(reminders) { reminders.filter { it.isCompleted } }
-
-    val sdf = remember { SimpleDateFormat("MMM dd, yyyy - hh:mm a", Locale.getDefault()) }
 
     Column(
         modifier = Modifier
@@ -113,7 +110,7 @@ fun ScheduledRemindersSettings(
                                     )
                                 }
                                 Text(
-                                    text = stringResource(R.string.scheduled_prefix, sdf.format(Date(reminder.reminderTime))),
+                                    text = stringResource(R.string.scheduled_prefix, CallAudioRecorder.formatFullDateTime(context, reminder.reminderTime)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     maxLines = 1,
@@ -141,7 +138,7 @@ fun ScheduledRemindersSettings(
                             IconButton(onClick = {
                                 RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                                 viewModel.deleteReminder(reminder)
-                                Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.toast_reminder_cancelled), Toast.LENGTH_SHORT).show()
                             }) {
                                 Icon(
                                     imageVector = Icons.Default.Cancel,
@@ -189,7 +186,7 @@ fun ScheduledRemindersSettings(
                                     )
                                 }
                                 Text(
-                                    text = stringResource(R.string.triggered_prefix, sdf.format(Date(reminder.reminderTime))),
+                                    text = stringResource(R.string.triggered_prefix, CallAudioRecorder.formatFullDateTime(context, reminder.reminderTime)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     maxLines = 1,
