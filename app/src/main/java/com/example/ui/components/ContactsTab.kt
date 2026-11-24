@@ -199,17 +199,17 @@ fun ContactsTabContent(
         map
     }
 
-    val activeLetter = remember(listState, alphabet, showOnlyFavorites, sortedFavorites, activeContactsList, contactsPaged, nameFormat) {
+    val usePagedContacts = !showOnlyFavorites && contactsPaged.itemCount > 0
+
+    val activeLetter = remember(listState, alphabet, showOnlyFavorites, usePagedContacts, sortedFavorites, activeContactsList, contactsPaged, nameFormat) {
         derivedStateOf {
             val firstVisibleIndex = listState.firstVisibleItemIndex
             val contact = if (showOnlyFavorites) {
                 sortedFavorites.getOrNull(firstVisibleIndex)
-            } else if (activeContactsList.isNotEmpty()) {
-                activeContactsList.getOrNull(firstVisibleIndex)
-            } else if (firstVisibleIndex < contactsPaged.itemCount) {
-                contactsPaged.peek(firstVisibleIndex)
+            } else if (usePagedContacts) {
+                if (firstVisibleIndex < contactsPaged.itemCount) contactsPaged.peek(firstVisibleIndex) else null
             } else {
-                null
+                activeContactsList.getOrNull(firstVisibleIndex)
             }
             val formatted = if (contact != null) com.example.formatContactName(contact.name, nameFormat).trim() else ""
             val firstChar = formatted.firstOrNull()?.uppercaseChar() ?: '#'
@@ -598,7 +598,7 @@ fun ContactsTabContent(
                                 }
                             )
                         }
-                    } else if (activeContactsList.isEmpty() && contactsPaged.itemCount > 0) {
+                    } else if (usePagedContacts) {
                         items(
                             count = contactsPaged.itemCount,
                             key = contactsPaged.itemKey { "${it.id}_${it.number}" },
@@ -725,10 +725,10 @@ fun ContactsTabContent(
         }
 
         // A-Z Scroller Rail
-        val hasItems = if (showOnlyFavorites) sortedFavorites.isNotEmpty() else (activeContactsList.isNotEmpty() || contactsPaged.itemCount > 0)
+        val hasItems = if (showOnlyFavorites) sortedFavorites.isNotEmpty() else (usePagedContacts || activeContactsList.isNotEmpty())
         if (hasItems) {
             val haptic = LocalHapticFeedback.current
-            val maxScrollTarget = (if (showOnlyFavorites) sortedFavorites.size else if (activeContactsList.isNotEmpty()) activeContactsList.size else contactsPaged.itemCount) - 1
+            val maxScrollTarget = (if (showOnlyFavorites) sortedFavorites.size else if (usePagedContacts) contactsPaged.itemCount else activeContactsList.size) - 1
 
             BoxWithConstraints(
                 modifier = Modifier

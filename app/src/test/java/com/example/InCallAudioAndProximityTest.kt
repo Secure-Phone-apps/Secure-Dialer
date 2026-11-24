@@ -95,6 +95,8 @@ class InCallAudioAndProximityTest {
             AudioManager.STREAM_VOICE_CALL,
             activity.volumeControlStream
         )
+
+        controller.pause().stop().destroy()
     }
 
     @Test
@@ -211,7 +213,8 @@ class InCallAudioAndProximityTest {
 
     @Test
     fun testVolumeKeyEventsNotConsumed() {
-        val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
+        val controller = Robolectric.buildActivity(MainActivity::class.java).setup()
+        val activity = controller.get()
 
         val volUpEvent = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_VOLUME_UP)
         val volDownEvent = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_VOLUME_DOWN)
@@ -228,5 +231,7 @@ class InCallAudioAndProximityTest {
             AudioManager.STREAM_VOICE_CALL,
             activity.volumeControlStream
         )
+
+        controller.pause().stop().destroy()
     }
 }

@@ -22,7 +22,8 @@ class DialerSpamAndBackupCoordinator(
     private val application: Application,
     private val repository: DialerRepository,
     private val scope: CoroutineScope,
-    private val onDataChanged: () -> Unit
+    private val onDataChanged: () -> Unit,
+    private val onBackupRestored: () -> Unit = {}
 ) {
 
     fun writeTextToUri(uri: Uri, content: String, onResult: (Boolean) -> Unit) {
@@ -55,16 +56,37 @@ class DialerSpamAndBackupCoordinator(
     }
 
     fun exportBackup(password: String = "", onResult: (String) -> Unit) {
+        val chars = password.toCharArray()
+        exportBackup(chars, onResult)
+    }
+
+    fun exportBackup(passwordChars: CharArray, onResult: (String) -> Unit) {
         scope.launch {
-            val data = repository.exportBackup(password)
+            val data = try {
+                repository.exportBackup(passwordChars)
+            } finally {
+                passwordChars.fill('\u0000')
+            }
             onResult(data)
         }
     }
 
     fun importBackup(rawData: String, password: String = "", onResult: (Boolean) -> Unit) {
+        val chars = password.toCharArray()
+        importBackup(rawData, chars, onResult)
+    }
+
+    fun importBackup(rawData: String, passwordChars: CharArray, onResult: (Boolean) -> Unit) {
         scope.launch {
-            val success = repository.importBackup(rawData, password)
-            if (success) onDataChanged()
+            val success = try {
+                repository.importBackup(rawData, passwordChars)
+            } finally {
+                passwordChars.fill('\u0000')
+            }
+            if (success) {
+                onBackupRestored()
+                onDataChanged()
+            }
             onResult(success)
         }
     }

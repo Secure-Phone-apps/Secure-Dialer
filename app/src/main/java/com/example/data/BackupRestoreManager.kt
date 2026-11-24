@@ -135,96 +135,112 @@ object BackupRestoreManager {
         val nickname: String
     )
 
-    suspend fun exportBackup(context: Context, password: String = ""): String = withContext(Dispatchers.IO) {
-        val dao = AppDatabase.getDatabase(context).dialerDao()
-        val converters = Converters()
-
-        val json = JSONObject().apply {
-            put("version", 3)
-            put("timestamp", System.currentTimeMillis())
-
-            put("blocked_numbers", JSONArray().apply {
-                dao.getBlockedNumbersList().forEach { put(it.number) }
-            })
-
-            put("speed_dial", JSONArray().apply {
-                dao.getSpeedDialList().forEach {
-                    put(JSONObject().apply {
-                        put("key", it.key)
-                        put("number", it.number)
-                        put("name", it.name)
-                    })
-                }
-            })
-
-            put("quick_responses", JSONArray().apply {
-                dao.getQuickResponsesList().forEach { put(it.message) }
-            })
-
-            put("app_settings", JSONArray().apply {
-                dao.getAllSettingsList().forEach {
-                    put(JSONObject().apply {
-                        put("key", it.key)
-                        put("value", it.value)
-                    })
-                }
-            })
-
-            put("call_notes", JSONArray().apply {
-                dao.getAllCallNotesList().forEach {
-                    put(JSONObject().apply {
-                        put("number", it.number)
-                        put("note", it.note)
-                        put("lastUpdated", it.lastUpdated)
-                    })
-                }
-            })
-
-            put("spam_numbers", JSONArray().apply {
-                dao.getAllSpamNumbersList().forEach { put(it.number) }
-            })
-
-            put("call_reminders", JSONArray().apply {
-                dao.getAllRemindersList().forEach {
-                    put(JSONObject().apply {
-                        put("number", it.number)
-                        put("contactName", it.contactName)
-                        put("reminderTime", it.reminderTime)
-                        put("note", it.note)
-                    })
-                }
-            })
-
-            put("private_contacts", JSONArray().apply {
-                dao.getAllPrivateContactsList().forEach { pc ->
-                    put(JSONObject().apply {
-                        put("name", pc.name)
-                        put("number", pc.number)
-                        put("label", pc.label)
-                        put("favorite", pc.favorite)
-                        put("email", pc.email)
-                        put("photoUri", pc.photoUri)
-                        put("note", pc.note)
-                        put("numbersJson", converters.fromLabeledNumberList(pc.numbers))
-                        put("emailsJson", converters.fromLabeledEmailList(pc.emails))
-                        put("addressesJson", converters.fromLabeledAddressList(pc.addresses))
-                    })
-                }
-            })
-        }
-
-        val jsonString = json.toString(2)
-        if (password.isNotBlank()) encryptData(jsonString, password) else jsonString
+    suspend fun exportBackup(context: Context, password: String = ""): String {
+        val chars = password.toCharArray()
+        return exportBackup(context, chars)
     }
 
-    suspend fun importBackup(context: Context, rawData: String, password: String = ""): Boolean = withContext(Dispatchers.IO) {
+    suspend fun exportBackup(context: Context, passwordChars: CharArray): String = withContext(Dispatchers.IO) {
+        try {
+            val dao = AppDatabase.getDatabase(context).dialerDao()
+            val converters = Converters()
+
+            val json = JSONObject().apply {
+                put("version", 3)
+                put("timestamp", System.currentTimeMillis())
+
+                put("blocked_numbers", JSONArray().apply {
+                    dao.getBlockedNumbersList().forEach { put(it.number) }
+                })
+
+                put("speed_dial", JSONArray().apply {
+                    dao.getSpeedDialList().forEach {
+                        put(JSONObject().apply {
+                            put("key", it.key)
+                            put("number", it.number)
+                            put("name", it.name)
+                        })
+                    }
+                })
+
+                put("quick_responses", JSONArray().apply {
+                    dao.getQuickResponsesList().forEach { put(it.message) }
+                })
+
+                put("app_settings", JSONArray().apply {
+                    dao.getAllSettingsList().forEach {
+                        put(JSONObject().apply {
+                            put("key", it.key)
+                            put("value", it.value)
+                        })
+                    }
+                })
+
+                put("call_notes", JSONArray().apply {
+                    dao.getAllCallNotesList().forEach {
+                        put(JSONObject().apply {
+                            put("number", it.number)
+                            put("note", it.note)
+                            put("lastUpdated", it.lastUpdated)
+                        })
+                    }
+                })
+
+                put("spam_numbers", JSONArray().apply {
+                    dao.getAllSpamNumbersList().forEach { put(it.number) }
+                })
+
+                put("call_reminders", JSONArray().apply {
+                    dao.getAllRemindersList().forEach {
+                        put(JSONObject().apply {
+                            put("number", it.number)
+                            put("contactName", it.contactName)
+                            put("reminderTime", it.reminderTime)
+                            put("note", it.note)
+                        })
+                    }
+                })
+
+                put("private_contacts", JSONArray().apply {
+                    dao.getAllPrivateContactsList().forEach { pc ->
+                        put(JSONObject().apply {
+                            put("name", pc.name)
+                            put("number", pc.number)
+                            put("label", pc.label)
+                            put("favorite", pc.favorite)
+                            put("email", pc.email)
+                            put("photoUri", pc.photoUri)
+                            put("note", pc.note)
+                            put("numbersJson", converters.fromLabeledNumberList(pc.numbers))
+                            put("emailsJson", converters.fromLabeledEmailList(pc.emails))
+                            put("addressesJson", converters.fromLabeledAddressList(pc.addresses))
+                        })
+                    }
+                })
+            }
+
+            val jsonString = json.toString(2)
+            val hasPassword = passwordChars.any { !it.isWhitespace() && it != '\u0000' }
+            if (hasPassword) encryptData(jsonString, passwordChars) else jsonString
+        } finally {
+            passwordChars.fill('\u0000')
+        }
+    }
+
+    suspend fun importBackup(context: Context, rawData: String, password: String = ""): Boolean {
+        val chars = password.toCharArray()
+        return importBackup(context, rawData, chars)
+    }
+
+    suspend fun importBackup(context: Context, rawData: String, passwordChars: CharArray): Boolean = withContext(Dispatchers.IO) {
         val dao = AppDatabase.getDatabase(context).dialerDao()
         val converters = Converters()
         try {
-            val jsonString = if (password.isNotBlank()) {
-                decryptData(rawData, password)
+            val hasPassword = passwordChars.any { !it.isWhitespace() && it != '\u0000' }
+            val jsonString = if (hasPassword) {
+                decryptData(rawData, passwordChars)
             } else {
-                if (rawData.trim().startsWith("{")) rawData else decryptData(rawData, password)
+                if (rawData.trim().startsWith("{")) rawData else decryptData(rawData, passwordChars)
             }
 
             val json = JSONObject(jsonString)
@@ -819,24 +835,26 @@ object BackupRestoreManager {
         }
     }
 
-    private fun deriveKey(password: String, salt: ByteArray, iterations: Int): SecretKeySpec {
-        val chars = password.toCharArray()
-        val spec = PBEKeySpec(chars, salt, iterations, 256)
+    private fun deriveKey(passwordChars: CharArray, salt: ByteArray, iterations: Int): SecretKeySpec {
+        val spec = PBEKeySpec(passwordChars, salt, iterations, 256)
         return try {
             val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
             SecretKeySpec(factory.generateSecret(spec).encoded, "AES")
         } finally {
             spec.clearPassword()
-            chars.fill('\u0000') // Zeroize password in memory immediately
         }
     }
 
-    private fun encryptData(plainText: String, password: String): String {
+    private fun encryptData(plainText: String, passwordChars: CharArray): String {
         val random = SecureRandom()
         val salt = ByteArray(16).also { random.nextBytes(it) }
         val iv = ByteArray(12).also { random.nextBytes(it) }
 
-        val key = deriveKey(password, salt, 250000)
+        val key = try {
+            deriveKey(passwordChars, salt, 250000)
+        } finally {
+            passwordChars.fill('\u0000')
+        }
         val cipher = Cipher.getInstance("AES/GCM/NoPadding")
         cipher.init(Cipher.ENCRYPT_MODE, key, GCMParameterSpec(128, iv))
 
@@ -850,7 +868,7 @@ object BackupRestoreManager {
         return Base64.encodeToString(combined, Base64.NO_WRAP)
     }
 
-    private fun decryptData(cipherText: String, password: String): String {
+    private fun decryptData(cipherText: String, passwordChars: CharArray): String {
         val combined = Base64.decode(cipherText, Base64.DEFAULT)
         if (combined.size < 28) throw IllegalArgumentException("Corrupt backup payload")
 
@@ -863,15 +881,19 @@ object BackupRestoreManager {
         System.arraycopy(combined, 28, encrypted, 0, encrypted.size)
 
         return try {
-            val key = deriveKey(password, salt, 250000)
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv))
-            String(cipher.doFinal(encrypted), Charsets.UTF_8)
-        } catch (_: Exception) {
-            val legacyKey = deriveKey(password, salt, 10000)
-            val cipher = Cipher.getInstance("AES/GCM/NoPadding")
-            cipher.init(Cipher.DECRYPT_MODE, legacyKey, GCMParameterSpec(128, iv))
-            String(cipher.doFinal(encrypted), Charsets.UTF_8)
+            try {
+                val key = deriveKey(passwordChars, salt, 250000)
+                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                cipher.init(Cipher.DECRYPT_MODE, key, GCMParameterSpec(128, iv))
+                String(cipher.doFinal(encrypted), Charsets.UTF_8)
+            } catch (_: Exception) {
+                val legacyKey = deriveKey(passwordChars, salt, 10000)
+                val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+                cipher.init(Cipher.DECRYPT_MODE, legacyKey, GCMParameterSpec(128, iv))
+                String(cipher.doFinal(encrypted), Charsets.UTF_8)
+            }
+        } finally {
+            passwordChars.fill('\u0000')
         }
     }
 

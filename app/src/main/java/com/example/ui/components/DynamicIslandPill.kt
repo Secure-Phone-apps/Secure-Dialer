@@ -245,7 +245,7 @@ fun DynamicIslandPill(
                             isMuted -> Icons.Default.MicOff
                             else -> Icons.Default.Call
                         },
-                        contentDescription = "Restore Call Pill",
+                        contentDescription = stringResource(R.string.desc_restore_call_pill),
                         tint = dotTint,
                         modifier = Modifier.size(16.dp)
                     )
@@ -491,7 +491,7 @@ fun DynamicIslandPill(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.KeyboardArrowUp,
-                                            contentDescription = "Minimize to camera dot",
+                                            contentDescription = stringResource(R.string.desc_minimize_camera_dot),
                                             tint = Color.White.copy(alpha = 0.6f),
                                             modifier = Modifier.size(15.dp)
                                         )
@@ -609,7 +609,7 @@ fun DynamicIslandPill(
                                                     color = Color.White.copy(alpha = 0.15f)
                                                 ) {
                                                     Text(
-                                                        text = "SIM $simSlot",
+                                                        text = stringResource(R.string.label_sim_slot, simSlot),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Medium,
@@ -638,7 +638,7 @@ fun DynamicIslandPill(
                                                     color = Color(0xFFFF5252).copy(alpha = 0.25f)
                                                 ) {
                                                     Text(
-                                                        text = "REC",
+                                                        text = stringResource(R.string.label_rec_badge),
                                                         style = MaterialTheme.typography.labelSmall,
                                                         fontSize = 9.sp,
                                                         fontWeight = FontWeight.Bold,
@@ -708,7 +708,7 @@ fun DynamicIslandPill(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Close,
-                                            contentDescription = "Minimize to camera dot",
+                                            contentDescription = stringResource(R.string.desc_minimize_camera_dot),
                                             tint = Color.White.copy(alpha = 0.8f),
                                             modifier = Modifier.size(18.dp)
                                         )

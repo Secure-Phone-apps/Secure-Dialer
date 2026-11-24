@@ -52,6 +52,8 @@ import com.example.util.CallAudioRecorder
 import com.example.util.CallAudioRouteCoordinator
 import com.example.util.DynamicIslandOverlayManager
 import com.example.util.FlashLightManager
+import com.example.util.IncomingCallPresentationDecision
+import com.example.util.LockScreenCallPolicy
 import com.example.util.PhoneFormatHelper
 import com.example.util.RecordingFeedbackHelper
 import com.example.util.RichHapticEngine
@@ -84,10 +86,19 @@ class MyInCallService : InCallService() {
     private val blockedRejectedCalls: MutableSet<Call> =
         Collections.synchronizedSet(Collections.newSetFromMap(IdentityHashMap()))
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var ringingStartedAtMs: Long = 0L
     private val screenOffReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == Intent.ACTION_SCREEN_OFF) {
-                silence()
+                val elapsedSinceRing = android.os.SystemClock.elapsedRealtime() - ringingStartedAtMs
+                val hasRingingCall = CallManager.calls.value.any { it.state == Call.STATE_RINGING } ||
+                    CallManager.waitingCall.value?.state == Call.STATE_RINGING
+                val prefs = getSharedPreferences(LockScreenCallPolicy.PREFS_NAME, Context.MODE_PRIVATE)
+                val pocketProtection = prefs.getBoolean("is_pocket_protection_enabled", false)
+                // Only silence on intentional power-button screen-off after initial arrival, avoiding sleep/pocket clashes
+                if (hasRingingCall && elapsedSinceRing >= 1500L && !(pocketProtection && !CallManager.isInCallUiVisible.value)) {
+                    silence()
+                }
             }
         }
     }
@@ -659,7 +670,6 @@ class MyInCallService : InCallService() {
 
     private fun presentAllowedCall(call: Call, num: String) {
         if (call.state == Call.STATE_DISCONNECTED || blockedRejectedCalls.contains(call)) return
-        acquireScreenWakeLock()
         acquireCpuWakeLock()
         registerActiveCallAudioMonitors()
         val resolvedName = resolveCallerDisplayName(call, num)
@@ -819,21 +829,42 @@ class MyInCallService : InCallService() {
                         showIncomingCallNotification(call, isCallWaiting = true)
                     }
                 } else {
-                    FlashLightManager.startFlashing(this)
-                    startRinging()
-                    showIncomingCallNotification(call, isCallWaiting = false)
-
-                    // INDUSTRY-STANDARD INCOMING CALL PRESENTATION (Google Phone / Samsung One UI / iOS):
-                    // Screen OFF or Locked: Present dedicated lockscreen-safe InCallActivity without forcing keyguard unlock.
-                    // Unlocked & inside MainActivity: MainActivity's inline ActiveCallScreen presents immediately.
-                    // Unlocked & inside another app: Heads-Up CallStyle notification + Dynamic Island present non-intrusively.
+                    // Capture pre-wake display & keyguard state BEFORE waking the screen or posting notifications
+                    // so Android SystemUI never pops a competing heads-up banner on top of full-screen InCallActivity.
                     val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
                     val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
                     val isScreenInteractive = pm?.isInteractive ?: false
                     val isKeyguardLocked = km?.isKeyguardLocked ?: false
+                    val decision = LockScreenCallPolicy.resolveIncomingCallPresentation(
+                        context = this,
+                        isScreenInteractive = isScreenInteractive,
+                        isKeyguardLocked = isKeyguardLocked
+                    )
 
-                    if (!isScreenInteractive || isKeyguardLocked) {
-                        launchCallScreen(answerOnLaunch = false)
+                    ringingStartedAtMs = android.os.SystemClock.elapsedRealtime()
+                    FlashLightManager.startFlashing(this)
+                    startRinging()
+                    showIncomingCallNotification(
+                        call = call,
+                        isCallWaiting = false,
+                        decision = decision
+                    )
+
+                    if (decision.launchFullScreenUi) {
+                        val launched = launchCallScreen(answerOnLaunch = false)
+                        if (!launched && !decision.attachFullScreenIntent) {
+                            showIncomingCallNotification(
+                                call = call,
+                                isCallWaiting = false,
+                                decision = decision.copy(
+                                    attachFullScreenIntent = true,
+                                    useSilentShadeNotification = false
+                                )
+                            )
+                        }
+                    }
+                    if (decision.wakeScreen) {
+                        acquireScreenWakeLock()
                     }
                 }
             }
@@ -852,10 +883,18 @@ class MyInCallService : InCallService() {
                 FlashLightManager.stopFlashing(this)
                 if (!CallManager.isDisconnectRequested(call)) {
                     showActiveCallNotification(call)
-                    val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-                    val isKeyguardLocked = km?.isKeyguardLocked ?: false
-                    if (isKeyguardLocked) {
-                        launchCallScreen(answerOnLaunch = false)
+                    if (call.state in listOf(
+                            Call.STATE_ACTIVE,
+                            Call.STATE_DIALING,
+                            Call.STATE_CONNECTING,
+                            Call.STATE_HOLDING
+                        )
+                    ) {
+                        val km = getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+                        val isKeyguardLocked = km?.isKeyguardLocked ?: false
+                        if (isKeyguardLocked) {
+                            launchCallScreen(answerOnLaunch = false)
+                        }
                     }
                 }
             }
@@ -869,7 +908,16 @@ class MyInCallService : InCallService() {
         }
     }
 
-    private fun showIncomingCallNotification(call: Call, isCallWaiting: Boolean = false) {
+    private fun showIncomingCallNotification(
+        call: Call,
+        isCallWaiting: Boolean = false,
+        decision: IncomingCallPresentationDecision = IncomingCallPresentationDecision(
+            launchFullScreenUi = false,
+            wakeScreen = false,
+            attachFullScreenIntent = false,
+            useSilentShadeNotification = false
+        )
+    ) {
         val number = call.details?.handle?.schemeSpecificPart ?: ""
         val displayName = resolveCallerDisplayName(call, number)
 
@@ -949,17 +997,21 @@ class MyInCallService : InCallService() {
         } else {
             val caller = Person.Builder().setName(displayName).setKey(number).build()
             val style = NotificationCompat.CallStyle.forIncomingCall(caller, declinePendingIntent, answerPendingIntent)
-            NotificationCompat.Builder(this, CHANNEL_INCOMING)
+            val channelId = if (decision.useSilentShadeNotification) CHANNEL_INCOMING_SHADE else CHANNEL_INCOMING
+            val priority = if (decision.useSilentShadeNotification) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_MAX
+            NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(android.R.drawable.sym_call_incoming)
                 .setStyle(style)
-                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setPriority(priority)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setOngoing(true)
                 .setAutoCancel(false)
                 .setContentIntent(contentIntent)
                 .also {
-                    it.setFullScreenIntent(contentIntent, true)
+                    if (decision.attachFullScreenIntent) {
+                        it.setFullScreenIntent(contentIntent, true)
+                    }
                 }
         }
 
@@ -1137,8 +1189,8 @@ class MyInCallService : InCallService() {
         }
     }
 
-    private fun launchCallScreen(answerOnLaunch: Boolean) {
-        try {
+    private fun launchCallScreen(answerOnLaunch: Boolean): Boolean {
+        return try {
             val intent = Intent(this, InCallActivity::class.java).apply {
                 action = if (answerOnLaunch) ACTION_ANSWER else ACTION_INCOMING_CALL
                 setPackage(packageName)
@@ -1149,7 +1201,10 @@ class MyInCallService : InCallService() {
                 if (answerOnLaunch) putExtra(EXTRA_ANSWER, true)
             }
             startActivity(intent)
-        } catch (_: Exception) {}
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun initNotificationChannels() {
@@ -1165,8 +1220,21 @@ class MyInCallService : InCallService() {
                 setBypassDnd(true)
             }
 
+            val incomingShadeChannel = NotificationChannel(
+                CHANNEL_INCOMING_SHADE,
+                getString(R.string.notif_channel_incoming_shade_name),
+                NotificationManager.IMPORTANCE_DEFAULT
+            ).apply {
+                description = getString(R.string.notif_channel_incoming_shade_desc)
+                setSound(null, null)
+                enableVibration(false)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
+                setShowBadge(false)
+            }
+
             nm.createNotificationChannels(listOf(
                 incomingChannel,
+                incomingShadeChannel,
                 NotificationChannel(CHANNEL_ACTIVE, getString(R.string.notif_channel_active_name), NotificationManager.IMPORTANCE_LOW).apply {
                     description = getString(R.string.notif_channel_active_desc)
                     setShowBadge(false)
@@ -1180,6 +1248,7 @@ class MyInCallService : InCallService() {
 
     companion object {
         const val CHANNEL_INCOMING = "incoming_call_channel_v4"
+        const val CHANNEL_INCOMING_SHADE = "incoming_call_shade_channel_v1"
         const val CHANNEL_ACTIVE = "active_call_channel"
         const val CHANNEL_MISSED = "missed_call_channel"
 

@@ -123,15 +123,13 @@ fun CallLogSummaryDashboard(
     }
     val totalDurationSeconds = remember(filteredRecords) { filteredRecords.sumOf { it.duration } }
 
-    val formattedTotalDuration = remember(totalDurationSeconds) {
-        val hrs = totalDurationSeconds / 3600
-        val mins = (totalDurationSeconds % 3600) / 60
-        val secs = totalDurationSeconds % 60
-        when {
-            hrs > 0 -> "${hrs}h ${mins}m"
-            mins > 0 -> "${mins}m"
-            else -> "${secs}s"
-        }
+    val hrs = totalDurationSeconds / 3600
+    val mins = (totalDurationSeconds % 3600) / 60
+    val secs = totalDurationSeconds % 60
+    val formattedTotalDuration = when {
+        hrs > 0 -> stringResource(R.string.duration_hm, hrs, mins)
+        mins > 0 -> stringResource(R.string.duration_m, mins)
+        else -> stringResource(R.string.duration_s, secs)
     }
 
     val isExpressive = LocalM3Expressive.current
@@ -165,12 +163,11 @@ fun CallLogSummaryDashboard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    val headerTitle = if (dashboardMode == "COMPACT_FILTERS" || activeRange == SummaryTimeRange.ALL) {
-                        stringResource(R.string.today_call_summary)
-                    } else if (activeRange == SummaryTimeRange.TODAY) {
-                        stringResource(R.string.today_call_summary)
-                    } else {
-                        stringResource(R.string.call_summary_prefix, activeRange.getLabel())
+                    val headerTitle = when {
+                        dashboardMode == "COMPACT_FILTERS" -> stringResource(R.string.call_summary_compact)
+                        activeRange == SummaryTimeRange.ALL -> stringResource(R.string.call_summary_all)
+                        activeRange == SummaryTimeRange.TODAY -> stringResource(R.string.today_call_summary)
+                        else -> stringResource(R.string.call_summary_prefix, activeRange.getLabel())
                     }
 
                     Text(

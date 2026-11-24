@@ -1007,10 +1007,11 @@ fun RecentActionItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .defaultMinSize(minWidth = 56.dp, minHeight = 48.dp)
             .clip(AppShapes.Small)
             .clickable(onClick = onClick)
-            .padding(8.dp)
-            .width(64.dp)
+            .padding(horizontal = 4.dp, vertical = 6.dp)
+            .widthIn(min = 56.dp, max = 80.dp)
     ) {
         Icon(
             imageVector = icon,
@@ -1023,7 +1024,9 @@ fun RecentActionItem(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             color = tint,
-            maxLines = 1,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 2,
+            softWrap = true,
             overflow = TextOverflow.Ellipsis
         )
     }

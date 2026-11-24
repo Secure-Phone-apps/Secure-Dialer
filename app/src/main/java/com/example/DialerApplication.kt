@@ -14,23 +14,10 @@ import kotlinx.coroutines.launch
 
 class DialerApplication : Application() {
 
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
     override fun onCreate() {
         super.onCreate()
         com.example.util.DynamicIslandOverlayManager.startCallMonitoring(this)
-        // Fast-path non-blocking native SQLCipher preload and database warm-up
-        appScope.launch {
-            try {
-                if (!AppDatabase.isRobolectricEnvironment()) {
-                    try {
-                        System.loadLibrary("sqlcipher")
-                    } catch (_: UnsatisfiedLinkError) {
-                        // AppDatabase.warmUpAsync -> buildDatabase will surface NativeCryptoLoadError
-                    }
-                }
-                AppDatabase.warmUpAsync(this@DialerApplication)
-            } catch (_: Throwable) {}
-        }
+        // Fast-path coordinated non-blocking native SQLCipher preload and database warm-up
+        AppDatabase.warmUpAsync(this)
     }
 }

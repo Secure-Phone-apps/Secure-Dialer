@@ -69,6 +69,8 @@ fun PrivacySecurityAboutSettings(
 
         // Biometric Lock Card (FIXED: Authenticates before enabling to prevent permanent lockouts)
         item {
+            val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+            val isDeviceSecure = keyguardManager?.isDeviceSecure == true
             HighlightableCard(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -80,53 +82,66 @@ fun PrivacySecurityAboutSettings(
                         isMatchTitle("Biometric Lock", highlightedTitle),
                 shape = MaterialTheme.shapes.medium
             ) {
-                SettingsRowToggle(
-                    title = stringResource(R.string.settings_biometric_lock),
-                    subtitle = stringResource(R.string.settings_biometric_lock_sub),
-                    checked = isBiometricLockEnabled,
-                    onCheckedChange = { enabled ->
-                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
-                        if (activity != null) {
-                            if (enabled) {
-                                val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
-                                if (keyguardManager?.isDeviceSecure != true) {
-                                    Toast.makeText(context, context.getString(R.string.settings_biometric_lock_sub), Toast.LENGTH_LONG).show()
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    SettingsRowToggle(
+                        title = stringResource(R.string.settings_biometric_lock),
+                        subtitle = stringResource(R.string.settings_biometric_lock_sub),
+                        checked = isBiometricLockEnabled,
+                        onCheckedChange = { enabled ->
+                            RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                            if (activity != null) {
+                                if (enabled) {
+                                    if (!isDeviceSecure) {
+                                        Toast.makeText(context, context.getString(R.string.biometric_requires_screen_lock), Toast.LENGTH_LONG).show()
+                                    } else {
+                                        VaultBiometricAuthHelper.authenticate(
+                                            activity = activity,
+                                            title = context.getString(R.string.biometric_enable_title),
+                                            subtitle = context.getString(R.string.biometric_enable_subtitle),
+                                            onSuccess = {
+                                                viewModel.updateBiometricLockEnabled(true)
+                                            },
+                                            onError = { err ->
+                                                viewModel.updateBiometricLockEnabled(false)
+                                                Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
                                 } else {
-                                    VaultBiometricAuthHelper.authenticate(
-                                        activity = activity,
-                                        title = context.getString(R.string.biometric_enable_title),
-                                        subtitle = context.getString(R.string.biometric_enable_subtitle),
-                                        onSuccess = {
-                                            viewModel.updateBiometricLockEnabled(true)
-                                        },
-                                        onError = { err ->
-                                            viewModel.updateBiometricLockEnabled(false)
-                                            Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
-                                        }
-                                    )
+                                    if (!isDeviceSecure) {
+                                        viewModel.updateBiometricLockEnabled(false)
+                                    } else {
+                                        VaultBiometricAuthHelper.authenticate(
+                                            activity = activity,
+                                            title = context.getString(R.string.biometric_disable_title),
+                                            subtitle = context.getString(R.string.biometric_disable_subtitle),
+                                            onSuccess = {
+                                                viewModel.updateBiometricLockEnabled(false)
+                                            },
+                                            onError = { err ->
+                                                viewModel.updateBiometricLockEnabled(true)
+                                                Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                                            }
+                                        )
+                                    }
                                 }
                             } else {
-                                VaultBiometricAuthHelper.authenticate(
-                                    activity = activity,
-                                    title = context.getString(R.string.biometric_disable_title),
-                                    subtitle = context.getString(R.string.biometric_disable_subtitle),
-                                    onSuccess = {
-                                        viewModel.updateBiometricLockEnabled(false)
-                                    },
-                                    onError = { err ->
-                                        viewModel.updateBiometricLockEnabled(true)
-                                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
-                                    }
-                                )
+                                viewModel.updateBiometricLockEnabled(enabled)
                             }
-                        } else {
-                            viewModel.updateBiometricLockEnabled(enabled)
-                        }
-                    },
-                    icon = Icons.Default.Lock,
-                    iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                    iconTint = MaterialTheme.colorScheme.primary
-                )
+                        },
+                        icon = Icons.Default.Lock,
+                        iconBgColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                        iconTint = MaterialTheme.colorScheme.primary
+                    )
+                    if (!isDeviceSecure && isBiometricLockEnabled) {
+                        androidx.compose.material3.Text(
+                            text = stringResource(R.string.biometric_requires_screen_lock),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 56.dp, end = 16.dp, bottom = 12.dp)
+                        )
+                    }
+                }
             }
         }
 

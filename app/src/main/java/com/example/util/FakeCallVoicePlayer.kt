@@ -26,6 +26,7 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
+import com.example.R
 import java.util.Locale
 
 object FakeCallVoicePlayer {
@@ -104,11 +105,15 @@ object FakeCallVoicePlayer {
         voiceType: String,
         onPlaybackCompleted: (() -> Unit)?
     ) {
-        val script = getScript(voiceType)
+        val script = getScript(context, voiceType).ifEmpty { getScript(voiceType) }
         textToSpeech = TextToSpeech(context.applicationContext) { status ->
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech?.let { tts ->
-                    tts.language = Locale.getDefault()
+                    val appLocale = LocaleHelper.getActiveLocale(context)
+                    val langResult = tts.setLanguage(appLocale)
+                    if (langResult == TextToSpeech.LANG_MISSING_DATA || langResult == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        tts.language = Locale.US
+                    }
                     tts.setPitch(1.0f)
                     tts.setSpeechRate(1.0f)
 
@@ -184,6 +189,15 @@ object FakeCallVoicePlayer {
         textToSpeech = null
 
         isPlaying = false
+    }
+
+    fun getScript(context: Context, voiceType: String): String {
+        return when (voiceType) {
+            "OFFICE" -> context.getString(R.string.fake_call_script_office)
+            "FAMILY" -> context.getString(R.string.fake_call_script_family)
+            "FRIEND" -> context.getString(R.string.fake_call_script_friend)
+            else -> ""
+        }
     }
 
     fun getScript(voiceType: String): String {

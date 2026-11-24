@@ -87,10 +87,10 @@ class LockScreenCallBehaviorTest {
         assertEquals("", mainElement.getAttributeNS(androidNs, "turnScreenOn"))
         assertEquals("", mainElement.getAttributeNS(androidNs, "inheritShowWhenLocked"))
 
-        // InCallActivity must declare non-exported, isolated lockscreen presentation attributes
+        // InCallActivity must declare non-exported, isolated lockscreen presentation attributes without static force-wake
         assertEquals("false", inCallElement!!.getAttributeNS(androidNs, "exported"))
         assertEquals("true", inCallElement.getAttributeNS(androidNs, "showWhenLocked"))
-        assertEquals("true", inCallElement.getAttributeNS(androidNs, "turnScreenOn"))
+        assertEquals("", inCallElement.getAttributeNS(androidNs, "turnScreenOn"))
         assertEquals("true", inCallElement.getAttributeNS(androidNs, "excludeFromRecents"))
         assertEquals("singleInstance", inCallElement.getAttributeNS(androidNs, "launchMode"))
 
@@ -129,7 +129,19 @@ class LockScreenCallBehaviorTest {
         val controller = Robolectric.buildActivity(ComponentActivity::class.java).create()
         val activity = controller.get()
 
-        LockScreenCallPolicy.applyLockScreenWindowFlags(activity, showWhenLocked = true, keepScreenOn = true)
+        // First: showWhenLocked without waking screen (Notification-only or already interactive)
+        LockScreenCallPolicy.applyLockScreenWindowFlags(activity, showWhenLocked = true, keepScreenOn = true, turnScreenOn = false)
+        @Suppress("DEPRECATION")
+        val showOnlyFlags = activity.window.attributes.flags
+        @Suppress("DEPRECATION")
+        assertTrue((showOnlyFlags and WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED) != 0)
+        @Suppress("DEPRECATION")
+        assertEquals(0, showOnlyFlags and WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
+        @Suppress("DEPRECATION")
+        assertTrue((showOnlyFlags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0)
+
+        // Second: showWhenLocked with explicit wake when Screen Off + Full Screen
+        LockScreenCallPolicy.applyLockScreenWindowFlags(activity, showWhenLocked = true, keepScreenOn = true, turnScreenOn = true)
         @Suppress("DEPRECATION")
         val inCallFlags = activity.window.attributes.flags
         @Suppress("DEPRECATION")
@@ -139,7 +151,7 @@ class LockScreenCallBehaviorTest {
         @Suppress("DEPRECATION")
         assertTrue((inCallFlags and WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0)
 
-        LockScreenCallPolicy.applyLockScreenWindowFlags(activity, showWhenLocked = false, keepScreenOn = false)
+        LockScreenCallPolicy.applyLockScreenWindowFlags(activity, showWhenLocked = false, keepScreenOn = false, turnScreenOn = false)
         @Suppress("DEPRECATION")
         val clearedFlags = activity.window.attributes.flags
         @Suppress("DEPRECATION")

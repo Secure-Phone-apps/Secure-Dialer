@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Secure Dialer</string>
     <string name="tab_favorites">Ulubione</string>
@@ -448,6 +448,7 @@
     <string name="settings_security_protection">Bezpieczeństwo i ochrona</string>
     <string name="settings_biometric_lock">Blokada aplikacji</string>
     <string name="settings_biometric_lock_sub">Wymagaj blokady urządzenia (kod PIN/wzór/biometria) do otwarcia aplikacji</string>
+    <string name="biometric_requires_screen_lock">Najpierw skonfiguruj kod PIN, wzór lub blokadę biometryczną w Ustawieniach Androida.</string>
     <string name="settings_require_unlock_answer">Wymagaj odblokowania, aby odebrać</string>
     <string name="settings_require_unlock_answer_sub">Żądaj kodu PIN, wzoru lub biometrii przed odebraniem połączeń na ekranie blokady</string>
     <string name="lockscreen_unlock_for_action">Odblokuj urządzenie, aby uzyskać dostęp do tej funkcji</string>
@@ -517,7 +518,7 @@
     <string name="trigger_delay_timer">Opóźnienie uruchomienia</string>
     <string name="duration_label">Czas trwania</string>
     <string name="sequential_multi_call_title">Opcje sekwencyjnych połączeń wielokrotnych</string>
-    <string name="sequential_multi_call_desc">Uruchamia wiele połączeń po sobie. Jeśli jedno połączenie „ratunkowe” nie wystarczy, kolejne będą przychodzić automatycznie.</string>
+    <string name="sequential_multi_call_desc">Uruchamia kolejne połączenia przychodzące automatycznie</string>
     <string name="repeat_interval_label">Interwał powtarzania</string>
     <string name="multi_call_note">Uwaga: Interwał powtarzania ma zastosowanie, gdy liczba połączeń wynosi 2 lub więcej.</string>
     <string name="schedule_sequential_calls">Zaplanuj %1$d sekwencyjnych połączeń</string>
@@ -602,10 +603,7 @@
     <string name="checking_mirrors">Sprawdzanie bezpiecznych serwerów zwierciadlanych...</string>
     <string name="app_up_to_date_desc">Używasz najnowszej oficjalnej kompilacji Secure Dialer z podpisem kryptograficznym.</string>
     <string name="check_for_updates_now">Sprawdź aktualizacje teraz</string>
-    <string name="up_to_date_result">
-        Aplikacja Secure Dialer jest aktualna!
-Wersja v%1$s (Wydanie stabilne)
-    </string>
+    <string name="up_to_date_result">Aplikacja Secure Dialer jest aktualna!\nWersja v%1$s (Wydanie stabilne)</string>
     <string name="settings_app_updates">Aktualizacje aplikacji</string>
     <string name="settings_app_updates_sub">Sprawdź status wersji i listę zmian</string>
     <string name="settings_updates_title">Aktualizacje aplikacji</string>
@@ -614,6 +612,7 @@ Wersja v%1$s (Wydanie stabilne)
     <string name="settings_support_desc">Secure Dialer jest w 100% darmowy, otwartoźródłowy (open-source), wolny od reklam i stawia prywatność na pierwszym miejscu. Jeśli uważasz tę aplikację za przydatną, rozważ współtworzenie kodu, nadsyłanie tłumaczeń lub wsparcie rozwoju darmowych i bezpiecznych narzędzi.</string>
     <string name="settings_contribute_github">Współtwórz projekt na GitHubie</string>
     <string name="app_version_name">Wersja %1$s</string>
+    <string name="about_version_telemetry">Wersja %1$s • Zero telemetrii</string>
     <string name="btn_cancel">Anuluj</string>
     <string name="btn_save">Zapisz</string>
     <string name="btn_delete">Usuń</string>
@@ -899,4 +898,60 @@ Wersja v%1$s (Wydanie stabilne)
     <string name="sim_system_slot_info">System: %1$s (Gniazdo %2$d)</string>
     <string name="toast_sim_label_reset">Przywrócono domyślną etykietę karty SIM</string>
     <string name="btn_reset">Resetuj</string>
+    <string name="header_incoming_call_display">Wyświetlanie połączeń przychodzących</string>
+    <string name="settings_incoming_screen_on_title">Gdy ekran jest aktywny</string>
+    <string name="settings_incoming_screen_on_sub">Pokaż baner powiadomienia lub otwórz pełnoekranowy widok połączenia po odblokowaniu</string>
+    <string name="settings_incoming_screen_off_title">Gdy ekran jest wyłączony lub zablokowany</string>
+    <string name="settings_incoming_screen_off_sub">Wybudź do pełnoekranowego interfejsu połączenia lub pokaż samo powiadomienie</string>
+    <string name="incoming_display_mode_notification">Powiadomienie</string>
+    <string name="incoming_display_mode_full_screen">Pełny ekran</string>
+    <string name="notif_channel_incoming_shade_name">Połączenia przychodzące (Pełny ekran)</string>
+    <string name="notif_channel_incoming_shade_desc">Wpis paska stanu podczas otwartego pełnoekranowego widoku połączenia</string>
+    <string name="search_item_incoming_screen_on">Widok połączenia (Aktywny ekran)</string>
+    <string name="search_desc_incoming_screen_on">Wybierz powiadomienie lub pełny ekran przy aktywnym ekranie</string>
+    <string name="search_item_incoming_screen_off">Widok połączenia (Ekran wyłączony / zablokowany)</string>
+    <string name="search_desc_incoming_screen_off">Wybierz pełny ekran lub samo powiadomienie przy zablokowanym ekranie</string>
+    <string name="toast_spam_added">Dodano numer do bazy danych spamu offline</string>
+    <string name="toast_spam_cleared">Wyczyszczono bazę danych spamu offline</string>
+    <string name="label_spam_default">Spam</string>
+    <string name="recordings_storage_header">Pamięć nagrań i kopia zapasowa</string>
+    <string name="btn_sync_disk">Synchronizuj dysk</string>
+    <string name="btn_export_all">Eksportuj wszystko</string>
+    <string name="toast_recordings_synced">Zsynchronizowano nagrania z pamięci urządzenia</string>
+    <string name="toast_recordings_cleaned">Wyczyszczono %1$d puste lub uszkodzone nagranie(-a)</string>
+    <string name="toast_recordings_none_empty">Nie znaleziono pustych ani uszkodzonych nagrań</string>
+    <string name="toast_recording_playback_error">Nie można odtworzyć nagrania — brak pliku lub błąd odczytu</string>
+    <string name="toast_recording_share_error">Nie można udostępnić nagrania — brak pliku lub błąd odczytu</string>
+    <string name="error_open_dialer">Nie można otworzyć aplikacji telefonu</string>
+    <string name="call_summary_all">Podsumowanie wszystkich połączeń</string>
+    <string name="call_summary_compact">Podsumowanie połączeń</string>
+    <string name="duration_hm">%1$d godz. %2$d min</string>
+    <string name="duration_ms">%1$d min %2$d s</string>
+    <string name="duration_m">%1$d min</string>
+    <string name="duration_s">%1$d s</string>
+    <string name="inline_exact_alarm_note">Dokładne alarmy są ograniczone w tej wersji Androida. Zaplanowane akcje mogą być opóźnione bez zezwolenia.</string>
+    <string name="inline_notifications_disabled_note">Powiadomienia są wyłączone. Zaplanowane alerty nie pojawią się do momentu zezwolenia.</string>
+    <string name="btn_allow_in_settings">Zezwól</string>
+    <string name="recordings_oem_hardware_note">Android 9+ ogranicza bezpośrednie nagrywanie rozmów na niektórych urządzeniach. Włącz głośnik lub Auto-Tune, aby uzyskać wyraźny dźwięk obu stron.</string>
+    <string name="label_potential_spoofed_number">Potencjalnie sfałszowany numer</string>
+    <string name="desc_restore_call_pill">Przywróć pigułkę połączenia</string>
+    <string name="desc_minimize_camera_dot">Zminimalizuj do kropki aparatu</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">REC</string>
+    <string name="whatsapp_web_link_suffix"> (link www wa.me)</string>
+    <string name="whatsapp_auto_detected">Wykryto automatycznie: %1$s</string>
+    <string name="whatsapp_business_label">Business</string>
+    <string name="post_call_recording_summary">%1$s (nagranie %2$ds)</string>
+    <string name="fake_call_script_office">Cześć, przepraszam, że przeszkadzam, ale mamy krytyczną sytuację w biurze. Musisz natychmiast wyjść i dołączyć do telekonferencji. Czy możesz przeprosić obecnych i zaraz do mnie oddzwonić?</string>
+    <string name="fake_call_script_family">Cześć! Dobrze, że udało mi się do Ciebie dodzwonić. Coś nagłego wypadło w domu i potrzebujemy Twojej pomocy natychmiast. Czy możesz wszystko skończyć i przyjechać jak najszybciej?</string>
+    <string name="fake_call_script_friend">Hej, nadal tam utknąłeś? Pomyślałem, że przyda Ci się wymówka, żeby się zmyć. Pokiwaj głową, udaj, że to coś pilnego i uciekaj stamtąd. Zadzwoń jak będziesz wolny!</string>
+    <string name="settings_app_language">Język aplikacji</string>
+    <string name="settings_app_language_sub">Wybierz język wyświetlania lub użyj domyślnego systemu</string>
+    <string name="language_system_default">Domyślny systemu</string>
+    <string name="btn_open_system_language_settings">Otwórz ustawienia językowe systemu</string>
+    <string name="company_colon_prefix">Firma: </string>
+    <string name="title_colon_prefix">Stanowisko: </string>
+    <string name="birthday_colon_prefix">Urodziny: </string>
+    <string name="website_colon_prefix">Strona WWW: </string>
+    <string name="nickname_colon_prefix">Pseudonim: </string>
 </resources>

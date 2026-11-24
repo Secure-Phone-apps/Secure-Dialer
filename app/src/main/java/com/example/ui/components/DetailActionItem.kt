@@ -52,7 +52,7 @@ fun DetailActionItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
-            .widthIn(min = 52.dp, max = 84.dp)
+            .widthIn(min = 52.dp, max = 92.dp)
             .clip(AppShapes.Small)
             .clickable(
                 role = Role.Button,
@@ -61,7 +61,7 @@ fun DetailActionItem(
                     onClick()
                 }
             )
-            .padding(vertical = 6.dp, horizontal = 2.dp)
+            .padding(vertical = 4.dp, horizontal = 2.dp)
     ) {
         Box(
             modifier = Modifier
@@ -83,7 +83,8 @@ fun DetailActionItem(
             fontWeight = FontWeight.Medium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
-            maxLines = 1,
+            maxLines = 2,
+            softWrap = true,
             overflow = TextOverflow.Ellipsis
         )
     }

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Secure Dialer</string>
     <string name="tab_favorites">お気に入り</string>
@@ -448,6 +448,7 @@
     <string name="settings_security_protection">セキュリティと保護</string>
     <string name="settings_biometric_lock">アプリのロック</string>
     <string name="settings_biometric_lock_sub">アプリ起動時に端末のロック (PIN/パターン/生体認証) を要求する</string>
+    <string name="biometric_requires_screen_lock">最初にAndroid設定で画面ロック（PIN、パターン、生体認証）を設定してください。</string>
     <string name="settings_require_unlock_answer">応答時にロック解除を要求</string>
     <string name="settings_require_unlock_answer_sub">ロック画面から着信に応答する前に PIN、パターン、または生体認証を要求します</string>
     <string name="lockscreen_unlock_for_action">この機能を使用するには端末のロックを解除してください</string>
@@ -602,10 +603,7 @@
     <string name="checking_mirrors">安全なミラーを確認中...</string>
     <string name="app_up_to_date_desc">暗号化された最新の公式ビルドを使用しています。</string>
     <string name="check_for_updates_now">今すぐアップデートを確認</string>
-    <string name="up_to_date_result">
-        Secure Dialer は最新です！
-バージョン v%1$s (安定版)
-    </string>
+    <string name="up_to_date_result">Secure Dialer は最新です！\nバージョン v%1$s (安定版)</string>
     <string name="settings_app_updates">アプリの更新</string>
     <string name="settings_app_updates_sub">バージョン状態と変更履歴</string>
     <string name="settings_updates_title">アップデート</string>
@@ -614,6 +612,7 @@
     <string name="settings_support_desc">Secure Dialerは100%無料、オープンソース、広告なし、プライバシー重視です。コードや翻訳の貢献を歓迎します。</string>
     <string name="settings_contribute_github">GitHubで貢献する</string>
     <string name="app_version_name">バージョン %1$s</string>
+    <string name="about_version_telemetry">バージョン %1$s • テレメトリゼロ</string>
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_save">保存</string>
     <string name="btn_delete">削除</string>
@@ -899,4 +898,60 @@
     <string name="sim_system_slot_info">システム: %1$s (スロット %2$d)</string>
     <string name="toast_sim_label_reset">デフォルトのSIMラベルにリセットしました</string>
     <string name="btn_reset">リセット</string>
+    <string name="header_incoming_call_display">着信表示方法</string>
+    <string name="settings_incoming_screen_on_title">画面がオンのとき</string>
+    <string name="settings_incoming_screen_on_sub">ロック解除中にバナー通知を表示するか、全画面の通話画面を開きます</string>
+    <string name="settings_incoming_screen_off_title">画面がオフまたはロック中のとき</string>
+    <string name="settings_incoming_screen_off_sub">全画面の通話画面で画面を点灯するか、通知のみを表示します</string>
+    <string name="incoming_display_mode_notification">通知</string>
+    <string name="incoming_display_mode_full_screen">全画面</string>
+    <string name="notif_channel_incoming_shade_name">着信（全画面表示中）</string>
+    <string name="notif_channel_incoming_shade_desc">全画面着信UI表示中のステータスバー項目</string>
+    <string name="search_item_incoming_screen_on">着信表示（画面オン時）</string>
+    <string name="search_desc_incoming_screen_on">画面使用中の着信を通知バナーにするか全画面にするか選択</string>
+    <string name="search_item_incoming_screen_off">着信表示（画面オフ／ロック時）</string>
+    <string name="search_desc_incoming_screen_off">画面オフまたはロック中の着信を全画面にするか通知のみにするか選択</string>
+    <string name="toast_spam_added">オフライン迷惑電話データベースに番号を追加しました</string>
+    <string name="toast_spam_cleared">オフライン迷惑電話データベースを消去しました</string>
+    <string name="label_spam_default">迷惑電話</string>
+    <string name="recordings_storage_header">録音ストレージとバックアップ</string>
+    <string name="btn_sync_disk">ストレージを同期</string>
+    <string name="btn_export_all">すべてエクスポート</string>
+    <string name="toast_recordings_synced">端末ストレージから録音を同期しました</string>
+    <string name="toast_recordings_cleaned">%1$d件の空または破損した録音をクリーンアップしました</string>
+    <string name="toast_recordings_none_empty">空または破損した録音は見つかりませんでした</string>
+    <string name="toast_recording_playback_error">録音を再生できません — ファイルが見つからないか破損しています</string>
+    <string name="toast_recording_share_error">録音を共有できません — ファイルが見つからないか破損しています</string>
+    <string name="error_open_dialer">ダイヤラーアプリを開けませんでした</string>
+    <string name="call_summary_all">通話全体の概要</string>
+    <string name="call_summary_compact">通話の概要</string>
+    <string name="duration_hm">%1$d時間%2$d分</string>
+    <string name="duration_ms">%1$d分%2$d秒</string>
+    <string name="duration_m">%1$d分</string>
+    <string name="duration_s">%1$d秒</string>
+    <string name="inline_exact_alarm_note">このAndroidバージョンでは正確なアラームが制限されています。許可されない場合、スケジュールが遅延する可能性があります。</string>
+    <string name="inline_notifications_disabled_note">通知が無効です。許可されるまでスケジュールされたアラートは表示されません。</string>
+    <string name="btn_allow_in_settings">許可</string>
+    <string name="recordings_oem_hardware_note">一部の端末ではAndroid 9以降で音声キャプチャが制限されます。両側の音声を明瞭に録音するにはスピーカーフォンまたはオートチューンを有効にしてください。</string>
+    <string name="label_potential_spoofed_number">なりすましの疑いがある番号</string>
+    <string name="desc_restore_call_pill">通話ピルを復元</string>
+    <string name="desc_minimize_camera_dot">カメラドットに最小化</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">録音</string>
+    <string name="whatsapp_web_link_suffix"> (wa.me ウェブリンク)</string>
+    <string name="whatsapp_auto_detected">自動検出: %1$s</string>
+    <string name="whatsapp_business_label">ビジネス</string>
+    <string name="post_call_recording_summary">%1$s（%2$d秒の録音）</string>
+    <string name="fake_call_script_office">もしもし、取り込み中すみません。オフィスで緊急の事態が発生しました。今すぐ席を外して会議ラインに入っていただく必要があります。失礼して折り返しお電話いただけますか？</string>
+    <string name="fake_call_script_family">もしもし！連絡がついてよかった。今、家で急用ができてあなたの助けが必要です。用事を切り上げてできるだけ早く戻ってもらえますか？</string>
+    <string name="fake_call_script_friend">お疲れ様、まだ抜け出せない？助け舟が必要だと思って電話したよ。うなずいて緊急の用事のふりをして、すぐそこを出ておいで。落ち着いたら電話ちょうだい！</string>
+    <string name="settings_app_language">アプリの言語</string>
+    <string name="settings_app_language_sub">表示言語を選択するか、システムデフォルトに従います</string>
+    <string name="language_system_default">システムデフォルト</string>
+    <string name="btn_open_system_language_settings">システム言語設定を開く</string>
+    <string name="company_colon_prefix">会社: </string>
+    <string name="title_colon_prefix">役職: </string>
+    <string name="birthday_colon_prefix">誕生日: </string>
+    <string name="website_colon_prefix">ウェブサイト: </string>
+    <string name="nickname_colon_prefix">ニックネーム: </string>
 </resources>

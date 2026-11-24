@@ -389,23 +389,23 @@ class DialerRepository(rawContext: Context) {
                 if (note.isNotBlank()) append(note.trim())
                 if (organization.isNotBlank() && !note.contains(organization.trim())) {
                     if (isNotEmpty()) append("\n")
-                    append("Company: ").append(organization.trim())
+                    append(context.getString(R.string.company_colon_prefix)).append(organization.trim())
                 }
                 if (title.isNotBlank() && !note.contains(title.trim())) {
                     if (isNotEmpty()) append("\n")
-                    append("Title: ").append(title.trim())
+                    append(context.getString(R.string.title_colon_prefix)).append(title.trim())
                 }
                 if (birthday.isNotBlank() && !note.contains(birthday.trim())) {
                     if (isNotEmpty()) append("\n")
-                    append("Birthday: ").append(birthday.trim())
+                    append(context.getString(R.string.birthday_colon_prefix)).append(birthday.trim())
                 }
                 if (website.isNotBlank() && !note.contains(website.trim())) {
                     if (isNotEmpty()) append("\n")
-                    append("Website: ").append(website.trim())
+                    append(context.getString(R.string.website_colon_prefix)).append(website.trim())
                 }
                 if (nickname.isNotBlank() && !note.contains(nickname.trim())) {
                     if (isNotEmpty()) append("\n")
-                    append("Nickname: ").append(nickname.trim())
+                    append(context.getString(R.string.nickname_colon_prefix)).append(nickname.trim())
                 }
             }
             val entity = buildPrivateContactEntity(

@@ -325,8 +325,7 @@ fun ActiveCallScreen(
             BoxWithConstraints(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
-                    .navigationBarsPadding()
+                    .safeDrawingPadding()
             ) {
                 val fontScale = LocalDensity.current.fontScale
                 val adaptive = remember(maxWidth, maxHeight, fontScale) {

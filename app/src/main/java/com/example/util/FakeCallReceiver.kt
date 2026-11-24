@@ -17,7 +17,9 @@
 
 package com.example.util
 
+import android.Manifest
 import android.app.AlarmManager
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -25,10 +27,13 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.os.Build
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import com.example.MainActivity
 import com.example.R
 import com.example.model.ScheduledFakeCall
@@ -96,20 +101,69 @@ class FakeCallReceiver : BroadcastReceiver() {
                 nm.createNotificationChannel(channel)
             }
 
+            val pm = appContext.getSystemService(Context.POWER_SERVICE) as? PowerManager
+            val km = appContext.getSystemService(Context.KEYGUARD_SERVICE) as? KeyguardManager
+            val isScreenInteractive = pm?.isInteractive ?: false
+            val isKeyguardLocked = km?.isKeyguardLocked ?: false
+            val decision = LockScreenCallPolicy.resolveIncomingCallPresentation(
+                context = appContext,
+                isScreenInteractive = isScreenInteractive,
+                isKeyguardLocked = isKeyguardLocked
+            )
+
+            val channelToUse = if (decision.useSilentShadeNotification) {
+                "${channelId}_shade"
+            } else {
+                channelId
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && decision.useSilentShadeNotification) {
+                val shadeChannel = NotificationChannel(
+                    channelToUse,
+                    appContext.getString(R.string.notif_channel_incoming_shade_name),
+                    NotificationManager.IMPORTANCE_DEFAULT
+                ).apply {
+                    description = appContext.getString(R.string.notif_channel_incoming_shade_desc)
+                    enableVibration(true)
+                    lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+                    setSound(
+                        RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE),
+                        AudioAttributes.Builder()
+                            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                            .setUsage(AudioAttributes.USAGE_NOTIFICATION_RINGTONE)
+                            .build()
+                    )
+                }
+                nm.createNotificationChannel(shadeChannel)
+            }
+
             // Authentic incoming call appearance: zero "fake" branding on lockscreen or status bar
-            val notification = NotificationCompat.Builder(appContext, channelId)
+            val notification = NotificationCompat.Builder(appContext, channelToUse)
                 .setSmallIcon(android.R.drawable.sym_action_call)
                 .setContentTitle(name)
                 .setContentText(appContext.getString(R.string.notif_incoming_call_number, number))
-                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setPriority(if (decision.useSilentShadeNotification) NotificationCompat.PRIORITY_DEFAULT else NotificationCompat.PRIORITY_MAX)
                 .setCategory(NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setFullScreenIntent(fullScreenPendingIntent, true)
                 .setContentIntent(fullScreenPendingIntent)
                 .setAutoCancel(true)
+                .also {
+                    if (decision.attachFullScreenIntent) {
+                        it.setFullScreenIntent(fullScreenPendingIntent, true)
+                    }
+                }
                 .build()
 
-            nm.notify(NOTIFICATION_ID, notification)
+            val canNotify = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                ContextCompat.checkSelfPermission(appContext, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            if (canNotify) {
+                nm.notify(NOTIFICATION_ID, notification)
+            }
+            if (decision.launchFullScreenUi && (!canNotify || !decision.attachFullScreenIntent)) {
+                try {
+                    appContext.startActivity(mainIntent)
+                } catch (_: Exception) {}
+            }
         } catch (_: Exception) {}
     }
 

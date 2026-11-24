@@ -34,30 +34,7 @@ import kotlinx.coroutines.withContext
 import java.text.Normalizer
 import java.util.Locale
 
-internal fun nameToT9(name: String): String {
-    // FIXED: Strips diacritics/accents (e.g. É -> E, Ç -> C) for global T9 search support
-    val normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
-        .replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
-        .uppercase(Locale.ROOT)
-
-    return buildString(normalized.length) {
-        for (char in normalized) {
-            append(
-                when (char) {
-                    in 'A'..'C' -> '2'
-                    in 'D'..'F' -> '3'
-                    in 'G'..'I' -> '4'
-                    in 'J'..'L' -> '5'
-                    in 'M'..'O' -> '6'
-                    in 'P'..'S' -> '7'
-                    in 'T'..'V' -> '8'
-                    in 'W'..'Z' -> '9'
-                    else -> char
-                }
-            )
-        }
-    }
-}
+internal fun nameToT9(name: String): String = com.example.util.T9HighlightHelper.nameToT9(name)
 
 internal fun getNormalizedPhoneNumberKey(number: String): String {
     val digits = number.filter { it.isDigit() }

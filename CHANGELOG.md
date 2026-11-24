@@ -2,6 +2,14 @@
 
 All notable changes, fixes, and release milestones for Secure Dialer are documented here.
 
+## [1.9.1] - 2026-11-23
+
+### Incoming Call Display Controls & Screen-Off Notification Race Fix
+- **Separate Active vs. Screen-Off Incoming Call Display Modes**: Added two persisted preferences in **Settings > Sound & Gestures > Incoming Call Display** (`When Screen is Active` defaulting to `Notification Banner`; `When Screen is Off / Locked` defaulting to `Full Screen`), synced across `SharedPreferences`, Room `app_settings`, `DialerViewModel`, and `GeneralSettings` search.
+- **Eliminated Duplicate Banner on Screen-Off Wake**: Fixed `MyInCallService.presentAllowedCall()` acquiring `SCREEN_BRIGHT_WAKE_LOCK` before evaluating `PowerManager.isInteractive` and `KeyguardManager.isKeyguardLocked`. Ringing calls now capture true screen/keyguard state first, launch full-screen `InCallActivity` only when selected, wake the screen only when `wakeScreen` is active, and route active full-screen call notifications through a dedicated non-HUN shade channel (`incoming_call_shade_channel_v1`) without competing `fullScreenIntent` banners.
+- **Simulated Call & State Alignment**: Aligned `FakeCallReceiver` `fullScreenIntent` attachment and `MyInCallService` active/dialing/connecting/holding lockscreen guards (`STATE_NEW` / `STATE_SELECT_PHONE_ACCOUNT` excluded) with user display preferences.
+- **11-Language String Parity & Automated Verification**: Added 13 localized keys across all 11 supported locales (`909` keys/locale), verified layout on `320dp` at `1.5x` fontScale, cleaned up `InCallAudioAndProximityTest` activity teardown, and verified all **41 test suites / 265 tests** pass cleanly.
+
 ## [1.9.0] - 2026-11-22
 
 ### Security, Call Screening & Privacy Hardening

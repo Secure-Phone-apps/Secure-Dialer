@@ -329,8 +329,8 @@ fun AdvancedFeaturesSettings(
                         )
                         Text(
                             text = when {
-                                installedFlavors.isEmpty() -> stringResource(R.string.whatsapp_standard_desc) + " (wa.me web link)"
-                                installedFlavors.size == 1 -> "Auto-detected: " + stringResource(installedFlavors[0].titleRes)
+                                installedFlavors.isEmpty() -> stringResource(R.string.whatsapp_standard_desc) + stringResource(R.string.whatsapp_web_link_suffix)
+                                installedFlavors.size == 1 -> stringResource(R.string.whatsapp_auto_detected, stringResource(installedFlavors[0].titleRes))
                                 else -> stringResource(R.string.settings_whatsapp_pref_sub)
                             },
                             style = MaterialTheme.typography.bodySmall,
@@ -351,7 +351,7 @@ fun AdvancedFeaturesSettings(
                         val options = listOf(
                             "ASK" to stringResource(R.string.whatsapp_pref_ask),
                             "STANDARD" to "WhatsApp",
-                            "BUSINESS" to "Business"
+                            "BUSINESS" to stringResource(R.string.whatsapp_business_label)
                         )
                         options.forEach { (key, label) ->
                             val isSelected = preferredWhatsAppPackage.equals(key, ignoreCase = true)

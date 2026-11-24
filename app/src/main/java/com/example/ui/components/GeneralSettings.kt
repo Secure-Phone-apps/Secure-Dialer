@@ -152,9 +152,12 @@ fun GeneralSettings(
             SettingsSearchItem("Expressive Material 3 Layout", context.getString(R.string.search_item_expressive_m3), context.getString(R.string.search_desc_expressive_m3), catAppearance, 1, Icons.Default.Style),
             SettingsSearchItem("Dynamic Colors (Monet)", context.getString(R.string.search_item_dynamic_colors), context.getString(R.string.search_desc_dynamic_colors), catAppearance, 1, Icons.Default.ColorLens),
             SettingsSearchItem("Accent Color Palette", context.getString(R.string.search_item_accent_palette), context.getString(R.string.search_desc_accent_palette), catAppearance, 1, Icons.Default.Brush),
+            SettingsSearchItem("App Language", context.getString(R.string.settings_app_language), context.getString(R.string.settings_app_language_sub), catAppearance, 1, Icons.Default.Language),
 
             // 2. SOUND & GESTURES
             SettingsSearchItem("Sound & Gestures Settings", context.getString(R.string.search_item_sound_gestures), context.getString(R.string.search_desc_sound_gestures), catSoundGestures, 2, Icons.Default.VolumeUp),
+            SettingsSearchItem("Incoming Call Display (Screen Active)", context.getString(R.string.search_item_incoming_screen_on), context.getString(R.string.search_desc_incoming_screen_on), catSoundGestures, 2, Icons.Default.PhoneInTalk),
+            SettingsSearchItem("Incoming Call Display (Screen Off / Locked)", context.getString(R.string.search_item_incoming_screen_off), context.getString(R.string.search_desc_incoming_screen_off), catSoundGestures, 2, Icons.Default.Fullscreen),
             SettingsSearchItem("Dialpad Keypad Tones", context.getString(R.string.search_item_keypad_tones), context.getString(R.string.search_desc_keypad_tones), catSoundGestures, 2, Icons.Default.Dialpad),
             SettingsSearchItem("Call Vibration & Haptics", context.getString(R.string.search_item_call_vibration), context.getString(R.string.search_desc_call_vibration), catSoundGestures, 2, Icons.Default.Vibration),
             SettingsSearchItem("Default Startup Tab & Home Layout", context.getString(R.string.search_item_startup_tab), context.getString(R.string.search_desc_startup_tab), catSoundGestures, 2, Icons.Default.Home),

@@ -294,10 +294,33 @@ fun MainScreen(
     fun initiateCall(name: String, number: String, label: String = "Mobile", simChoice: String? = null) {
         focusManager.clearFocus()
         keyboardController?.hide()
-        if (com.example.util.UssdManager.handleUssdOrMmi(context, number)) {
-            isDialpadVisible = false
-            return
+
+        val targetSim = simChoice ?: preferredSim
+        val isEmergency = CallManager.isEmergencyNumber(number, context)
+        val isUssd = com.example.util.UssdManager.isMmiOrUssdCode(number)
+
+        if (isUssd) {
+            val simAccounts = com.example.util.MultiSimManager.getActiveSimAccounts(context)
+            if (targetSim == "Ask" && simAccounts.size > 1) {
+                pendingCallName = name.ifEmpty { number }
+                pendingCallNumber = number
+                showSimSelectDialog = true
+                return
+            }
+            val (resolvedAccount, resolvedSlot) = com.example.util.MultiSimManager.resolvePreferredSimTarget(targetSim, simAccounts)
+            val subId = resolvedAccount?.subscriptionId?.takeIf { it != android.telephony.SubscriptionManager.INVALID_SUBSCRIPTION_ID }
+            if (com.example.util.UssdManager.handleUssdOrMmi(
+                    context = context,
+                    code = number,
+                    subscriptionId = subId,
+                    accountHandle = resolvedAccount?.accountHandle,
+                    simSlot = resolvedSlot
+                )) {
+                isDialpadVisible = false
+                return
+            }
         }
+
         if (com.example.util.BlockedNumberContractManager.matchesAnyRule(number, blockedNumbers, context)) {
             Toast.makeText(context, context.getString(R.string.call_blocked_toast), Toast.LENGTH_LONG).show()
             return
@@ -315,8 +338,6 @@ fun MainScreen(
             }
         }
 
-        val targetSim = simChoice ?: preferredSim
-        val isEmergency = CallManager.isEmergencyNumber(number, context)
         if (targetSim == "Ask" && !isEmergency) {
             pendingCallName = resolvedName
             pendingCallNumber = number
@@ -430,10 +451,7 @@ fun MainScreen(
                     onDismiss = { showSimSelectDialog = false },
                     onSimSelected = { simLabel ->
                         showSimSelectDialog = false
-                        callingContactName = pendingCallName
-                        callingContactNumber = pendingCallNumber
-                        isCallActive = true
-                        CallManager.placeCall(context, pendingCallNumber, simLabel)
+                        initiateCall(pendingCallName, pendingCallNumber, simChoice = simLabel)
                     }
                 )
             }
@@ -860,7 +878,11 @@ fun MainScreen(
                     text = {
                         Column {
                             Text(
-                                text = "${pendingRecNote.name.ifEmpty { pendingRecNote.number }} (${pendingRecNote.duration}s recording)",
+                                text = stringResource(
+                                    R.string.post_call_recording_summary,
+                                    pendingRecNote.name.ifEmpty { pendingRecNote.number },
+                                    pendingRecNote.duration
+                                ),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(bottom = 12.dp)

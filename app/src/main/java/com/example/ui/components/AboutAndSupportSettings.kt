@@ -87,7 +87,7 @@ fun AboutAndSupportSettings(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Version 1.4.0 • Zero Telemetry",
+                            text = stringResource(R.string.about_version_telemetry, com.example.BuildConfig.VERSION_NAME),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )

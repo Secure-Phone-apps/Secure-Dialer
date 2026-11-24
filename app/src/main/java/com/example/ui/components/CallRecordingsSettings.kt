@@ -296,10 +296,10 @@ fun CallRecordingsSettings(
                                     }
                                     context.startActivity(chooser)
                                 } catch (_: Exception) {
-                                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_recording_share_error), Toast.LENGTH_SHORT).show()
                                 }
                             } else {
-                                Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.toast_recording_share_error), Toast.LENGTH_SHORT).show()
                             }
                         }
                 ) {
@@ -500,6 +500,12 @@ fun CallRecordingsSettings(
                         text = stringResource(R.string.settings_call_recording_sub),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 16.sp
+                    )
+                    Text(
+                        text = stringResource(R.string.recordings_oem_hardware_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.85f),
                         lineHeight = 16.sp
                     )
                 }
@@ -928,7 +934,7 @@ fun CallRecordingsSettings(
                         }
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = stringResource(R.string.header_contacts_import_export),
+                                text = stringResource(R.string.recordings_storage_header),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -952,7 +958,7 @@ fun CallRecordingsSettings(
                                 isStorageOpInProgress = true
                                 viewModel.syncRecordingsFromDisk(context) {
                                     isStorageOpInProgress = false
-                                    Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_recordings_synced), Toast.LENGTH_SHORT).show()
                                 }
                             },
                             modifier = Modifier.weight(1f),
@@ -960,7 +966,7 @@ fun CallRecordingsSettings(
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.btn_restore_backup_file), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(stringResource(R.string.btn_sync_disk), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
 
                         Button(
@@ -988,7 +994,7 @@ fun CallRecordingsSettings(
                         ) {
                             Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(stringResource(R.string.backup_export_title), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(stringResource(R.string.btn_export_all), style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
 
@@ -1001,7 +1007,7 @@ fun CallRecordingsSettings(
                                 isStorageOpInProgress = false
                                 Toast.makeText(
                                     context,
-                                    if (cleaned > 0) context.getString(R.string.toast_deleted_recording) else context.getString(R.string.file_saved_success),
+                                    if (cleaned > 0) context.getString(R.string.toast_recordings_cleaned, cleaned) else context.getString(R.string.toast_recordings_none_empty),
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -1044,7 +1050,7 @@ fun CallRecordingsSettings(
                                 mediaPlayer?.release()
                                 val file = File(rec.filePath)
                                 if (!file.exists() || file.length() == 0L) {
-                                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_recording_playback_error), Toast.LENGTH_SHORT).show()
                                     return@CompactRecordingRow
                                 }
                                 var mp: MediaPlayer? = null
@@ -1069,7 +1075,7 @@ fun CallRecordingsSettings(
                                 } catch (_: Exception) {
                                     // FIXED: Immediate release prevents native C++ audio track leak on corrupt files
                                     mp?.release()
-                                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.toast_recording_playback_error), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         },

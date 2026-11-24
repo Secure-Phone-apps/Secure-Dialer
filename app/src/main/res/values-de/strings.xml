@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Secure Dialer</string>
     <string name="tab_favorites">Favoriten</string>
@@ -448,6 +448,7 @@
     <string name="settings_security_protection">Sicherheit &amp; Schutz</string>
     <string name="settings_biometric_lock">App-Sperre</string>
     <string name="settings_biometric_lock_sub">Gerätesperre zum Öffnen der App anfordern</string>
+    <string name="biometric_requires_screen_lock">Richten Sie zuerst eine PIN, ein Muster oder eine biometrische Displaysperre in den Android-Einstellungen ein.</string>
     <string name="settings_require_unlock_answer">Entsperren zum Annehmen erforderlich</string>
     <string name="settings_require_unlock_answer_sub">PIN, Muster oder Biometrie anfordern, bevor eingehende Anrufe vom Sperrbildschirm angenommen werden</string>
     <string name="lockscreen_unlock_for_action">Gerät entsperren, um diese Funktion zu nutzen</string>
@@ -466,7 +467,7 @@
     <string name="history_timeline">Zeitleiste</string>
     <string name="call_details">Anrufdetails</string>
     <string name="delete_all_history">Verlauf löschen</string>
-    <string name="no_matching_calls_for">Keine passenden Anrufe für \"%1$s\"</string>
+    <string name="no_matching_calls_for">Keine passenden Anrufe für \&quot;%1$s\&quot;</string>
     <string name="summary_missed_and_time">Verpasst: %1$d • Zeit: %2$s</string>
     <string name="summary_range_today">Heute</string>
     <string name="summary_range_this_week">Woche</string>
@@ -602,10 +603,7 @@
     <string name="checking_mirrors">Sichere Server werden geprüft...</string>
     <string name="app_up_to_date_desc">Sie verwenden die neueste offizielle Version von Secure Dialer.</string>
     <string name="check_for_updates_now">Jetzt nach Updates suchen</string>
-    <string name="up_to_date_result">
-        Secure Dialer ist aktuell!
-Version v%1$s (Stabile Version)
-    </string>
+    <string name="up_to_date_result">Secure Dialer ist aktuell!\nVersion v%1$s (Stabile Version)</string>
     <string name="settings_app_updates">In-App-Updates</string>
     <string name="settings_app_updates_sub">Versionsstatus prüfen</string>
     <string name="settings_updates_title">Updates</string>
@@ -614,6 +612,7 @@ Version v%1$s (Stabile Version)
     <string name="settings_support_desc">Secure Dialer ist 100 % kostenlos, Open-Source, werbefrei und datenschutzorientiert.</string>
     <string name="settings_contribute_github">Auf GitHub beitragen</string>
     <string name="app_version_name">Version %1$s</string>
+    <string name="about_version_telemetry">Version %1$s • Null Telemetrie</string>
     <string name="btn_cancel">Abbrechen</string>
     <string name="btn_save">Speichern</string>
     <string name="btn_delete">Löschen</string>
@@ -899,4 +898,60 @@ Version v%1$s (Stabile Version)
     <string name="sim_system_slot_info">System: %1$s (Steckplatz %2$d)</string>
     <string name="toast_sim_label_reset">Auf Standard-SIM-Bezeichnung zurückgesetzt</string>
     <string name="btn_reset">Zurücksetzen</string>
+    <string name="header_incoming_call_display">Anzeige eingehender Anrufe</string>
+    <string name="settings_incoming_screen_on_title">Bei aktivem Bildschirm</string>
+    <string name="settings_incoming_screen_on_sub">Banner-Benachrichtigung anzeigen oder Vollbild-Anrufansicht öffnen, wenn entsperrt</string>
+    <string name="settings_incoming_screen_off_title">Bei ausgeschaltetem oder gesperrtem Bildschirm</string>
+    <string name="settings_incoming_screen_off_sub">In die Vollbild-Anrufansicht aufwecken oder nur eine Benachrichtigung anzeigen</string>
+    <string name="incoming_display_mode_notification">Benachrichtigung</string>
+    <string name="incoming_display_mode_full_screen">Vollbild</string>
+    <string name="notif_channel_incoming_shade_name">Eingehende Anrufe (Vollbild aktiv)</string>
+    <string name="notif_channel_incoming_shade_desc">Statusleisten-Eintrag für eingehende Anrufe bei geöffneter Vollbildansicht</string>
+    <string name="search_item_incoming_screen_on">Anrufanzeige (Aktiver Bildschirm)</string>
+    <string name="search_desc_incoming_screen_on">Bei aktivem Bildschirm zwischen Benachrichtigung und Vollbild wählen</string>
+    <string name="search_item_incoming_screen_off">Anrufanzeige (Bildschirm aus / gesperrt)</string>
+    <string name="search_desc_incoming_screen_off">Bei gesperrtem Bildschirm zwischen Vollbild und Nur-Benachrichtigung wählen</string>
+    <string name="toast_spam_added">Nummer zur Offline-Spam-Datenbank hinzugefügt</string>
+    <string name="toast_spam_cleared">Offline-Spam-Datenbank gelöscht</string>
+    <string name="label_spam_default">Spam</string>
+    <string name="recordings_storage_header">Aufnahmespeicher &amp; Sicherung</string>
+    <string name="btn_sync_disk">Speicher synchronisieren</string>
+    <string name="btn_export_all">Alle exportieren</string>
+    <string name="toast_recordings_synced">Aufnahmen aus Gerätespeicher synchronisiert</string>
+    <string name="toast_recordings_cleaned">%1$d leere oder beschädigte Aufnahme(n) bereinigt</string>
+    <string name="toast_recordings_none_empty">Keine leeren oder beschädigten Aufnahmen gefunden</string>
+    <string name="toast_recording_playback_error">Aufnahme kann nicht abgespielt werden — Datei fehlt oder ist unlesbar</string>
+    <string name="toast_recording_share_error">Aufnahme kann nicht geteilt werden — Datei fehlt oder ist unlesbar</string>
+    <string name="error_open_dialer">Telefon-App konnte nicht geöffnet werden</string>
+    <string name="call_summary_all">Übersicht aller Anrufe</string>
+    <string name="call_summary_compact">Anrufübersicht</string>
+    <string name="duration_hm">%1$d Std. %2$d Min.</string>
+    <string name="duration_ms">%1$d Min. %2$d Sek.</string>
+    <string name="duration_m">%1$d Min.</string>
+    <string name="duration_s">%1$d Sek.</string>
+    <string name="inline_exact_alarm_note">Genaue Wecker sind auf dieser Android-Version eingeschränkt. Zeitpläne können leicht verzögert sein, wenn sie nicht erlaubt werden.</string>
+    <string name="inline_notifications_disabled_note">Benachrichtigungen sind deaktiviert. Geplante Benachrichtigungen erscheinen erst nach Erlaubnis.</string>
+    <string name="btn_allow_in_settings">Zulassen</string>
+    <string name="recordings_oem_hardware_note">Android 9+ beschränkt die direkte Tonaufnahme auf einigen Geräten. Lassen Sie Freisprechen oder Auto-Tune aktiviert, um beide Seiten klar aufzunehmen.</string>
+    <string name="label_potential_spoofed_number">Möglicherweise gefälschte Rufnummer</string>
+    <string name="desc_restore_call_pill">Anrufpille wiederherstellen</string>
+    <string name="desc_minimize_camera_dot">Auf Kameradot minimieren</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">REC</string>
+    <string name="whatsapp_web_link_suffix"> (wa.me Weblink)</string>
+    <string name="whatsapp_auto_detected">Automatisch erkannt: %1$s</string>
+    <string name="whatsapp_business_label">Business</string>
+    <string name="post_call_recording_summary">%1$s (%2$ds Aufnahme)</string>
+    <string name="fake_call_script_office">Hallo, tut mir leid, dass ich störe, aber wir haben hier im Büro gerade eine kritische Situation. Du musst unbedingt rauskommen und sofort der Telefonkonferenz beitreten. Kannst du dich entschuldigen und mich gleich zurückrufen?</string>
+    <string name="fake_call_script_family">Hallo! Gut, dass ich dich erreiche. Zu Hause ist gerade etwas dazwischengekommen und wir brauchen sofort deine Hilfe. Kannst du bitte alles zum Abschluss bringen und so schnell wie möglich herkommen?</string>
+    <string name="fake_call_script_friend">Hey, steckst du da immer noch fest? Ich dachte mir, du brauchst vielleicht eine Ausrede zum Abhauen. Nick einfach, tu so als wäre es mega dringend, und sieh zu dass du rauskommst. Ruf mich an wenn du frei bist!</string>
+    <string name="settings_app_language">App-Sprache</string>
+    <string name="settings_app_language_sub">Anzeigesprache wählen oder Systemstandard folgen</string>
+    <string name="language_system_default">Systemstandard</string>
+    <string name="btn_open_system_language_settings">System-Spracheinstellungen öffnen</string>
+    <string name="company_colon_prefix">Unternehmen: </string>
+    <string name="title_colon_prefix">Titel: </string>
+    <string name="birthday_colon_prefix">Geburtstag: </string>
+    <string name="website_colon_prefix">Website: </string>
+    <string name="nickname_colon_prefix">Spitzname: </string>
 </resources>

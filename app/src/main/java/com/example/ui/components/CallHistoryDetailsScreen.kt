@@ -409,7 +409,11 @@ fun CallHistoryDetailsScreen(
                     val numberNotesFlow = remember(number) { viewModel.getCallNotesForNumberFlow(number) }
                     val numberNotes by numberNotesFlow.collectAsStateWithLifecycle(initialValue = emptyList())
                     var showNotesListModal by remember { mutableStateOf(false) }
-                    val noteSdf = remember { SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()) }
+                    val noteSdf = remember(context) {
+                        val skeleton = if (android.text.format.DateFormat.is24HourFormat(context)) "MMMdHm" else "MMMdhm"
+                        val pattern = android.text.format.DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton)
+                        SimpleDateFormat(pattern, Locale.getDefault())
+                    }
 
                     Surface(
                         shape = AppShapes.Card,

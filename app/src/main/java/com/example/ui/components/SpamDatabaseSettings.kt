@@ -198,8 +198,8 @@ fun SpamDatabaseSettings(
                         val trimmedNum = manualNumber.trim()
                         if (trimmedNum.isNotBlank()) {
                             RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
-                            viewModel.addSpamNumber(trimmedNum, manualLabel.ifBlank { "Spam" })
-                            Toast.makeText(context, context.getString(R.string.file_saved_success), Toast.LENGTH_SHORT).show()
+                            viewModel.addSpamNumber(trimmedNum, manualLabel.ifBlank { context.getString(R.string.label_spam_default) })
+                            Toast.makeText(context, context.getString(R.string.toast_spam_added), Toast.LENGTH_SHORT).show()
                             manualNumber = ""
                             manualLabel = ""
                         }
@@ -238,7 +238,7 @@ fun SpamDatabaseSettings(
                 TextButton(onClick = {
                     RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.WARNING)
                     viewModel.clearAllSpam()
-                    Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.toast_spam_cleared), Toast.LENGTH_SHORT).show()
                 }) {
                     Icon(Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))

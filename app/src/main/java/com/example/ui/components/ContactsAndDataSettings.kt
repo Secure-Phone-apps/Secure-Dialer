@@ -70,6 +70,15 @@ fun ContactsAndDataSettings(
     var showPasswordPromptDialog by remember { mutableStateOf(false) }
     var pendingVcfImportContent by remember { mutableStateOf<String?>(null) }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            exportPasswordInput = ""
+            restorePasswordInput = ""
+            pendingBackupData = null
+            pendingEncryptedRestoreContent = null
+        }
+    }
+
     val saveBackupFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
@@ -348,7 +357,10 @@ fun ContactsAndDataSettings(
     // Dialogs
     if (showExportPasswordDialog) {
         AlertDialog(
-            onDismissRequest = { showExportPasswordDialog = false },
+            onDismissRequest = {
+                exportPasswordInput = ""
+                showExportPasswordDialog = false
+            },
             title = { Text(stringResource(R.string.backup_export_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -373,8 +385,10 @@ fun ContactsAndDataSettings(
                 Button(
                     onClick = {
                         RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.SUCCESS)
+                        val chars = exportPasswordInput.toCharArray()
+                        exportPasswordInput = ""
                         showExportPasswordDialog = false
-                        viewModel.exportBackup(exportPasswordInput) { data ->
+                        viewModel.exportBackup(chars) { data ->
                             pendingBackupData = data
                             saveBackupFileLauncher.launch("dialer_backup_$timestamp.json")
                         }
@@ -384,7 +398,12 @@ fun ContactsAndDataSettings(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showExportPasswordDialog = false }) {
+                TextButton(
+                    onClick = {
+                        exportPasswordInput = ""
+                        showExportPasswordDialog = false
+                    }
+                ) {
                     Text(stringResource(R.string.btn_cancel))
                 }
             }
@@ -645,6 +664,7 @@ fun ContactsAndDataSettings(
     if (showPasswordPromptDialog && pendingEncryptedRestoreContent != null) {
         AlertDialog(
             onDismissRequest = {
+                restorePasswordInput = ""
                 showPasswordPromptDialog = false
                 pendingEncryptedRestoreContent = null
             },
@@ -670,7 +690,9 @@ fun ContactsAndDataSettings(
                 Button(
                     onClick = {
                         val content = pendingEncryptedRestoreContent ?: ""
-                        viewModel.importBackup(content, restorePasswordInput) { success ->
+                        val chars = restorePasswordInput.toCharArray()
+                        restorePasswordInput = ""
+                        viewModel.importBackup(content, chars) { success ->
                             if (success) {
                                 Toast.makeText(context, context.getString(R.string.backup_restored_success_toast), Toast.LENGTH_LONG).show()
                                 showPasswordPromptDialog = false
@@ -687,6 +709,7 @@ fun ContactsAndDataSettings(
             dismissButton = {
                 TextButton(
                     onClick = {
+                        restorePasswordInput = ""
                         showPasswordPromptDialog = false
                         pendingEncryptedRestoreContent = null
                     }

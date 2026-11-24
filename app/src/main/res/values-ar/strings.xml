@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Secure Dialer</string>
     <string name="tab_favorites">المفضلة</string>
@@ -448,6 +448,7 @@
     <string name="settings_security_protection">الأمان والحماية</string>
     <string name="settings_biometric_lock">قفل التطبيق</string>
     <string name="settings_biometric_lock_sub">طلب قفل الجهاز (رمز PIN/نمط/بصمة) لفتح التطبيق</string>
+    <string name="biometric_requires_screen_lock">يرجى تعيين قفل الشاشة (PIN أو نمط أو بصمة) في إعدادات Android أولاً.</string>
     <string name="settings_require_unlock_answer">طلب فتح القفل للرد على المكالمات</string>
     <string name="settings_require_unlock_answer_sub">طلب رمز PIN أو النمط أو البصمة قبل الرد على المكالمات الواردة من شاشة القفل</string>
     <string name="lockscreen_unlock_for_action">افتح قفل الجهاز للوصول إلى هذه الميزة</string>
@@ -466,7 +467,7 @@
     <string name="history_timeline">مخطط السجل الزمني</string>
     <string name="call_details">تفاصيل المكالمة</string>
     <string name="delete_all_history">حذف السجل بالكامل</string>
-    <string name="no_matching_calls_for">لا توجد مكالمات مطابقة لـ \"%1$s\"</string>
+    <string name="no_matching_calls_for">لا توجد مكالمات مطابقة لـ \&quot;%1$s\&quot;</string>
     <string name="summary_missed_and_time">الفائتة: %1$d • الوقت: %2$s</string>
     <string name="summary_range_today">اليوم</string>
     <string name="summary_range_this_week">هذا الأسبوع</string>
@@ -602,10 +603,7 @@
     <string name="checking_mirrors">جاري فحص الخوادم الآمنة...</string>
     <string name="app_up_to_date_desc">أنت تستخدم أحدث إصدار مشفر رسمي من Secure Dialer.</string>
     <string name="check_for_updates_now">التحقق من التحديثات الآن</string>
-    <string name="up_to_date_result">
-        تطبيق Secure Dialer محدّث!
-الإصدار v%1$s (إصدار مستقر)
-    </string>
+    <string name="up_to_date_result">تطبيق Secure Dialer محدّث!\nالإصدار v%1$s (إصدار مستقر)</string>
     <string name="settings_app_updates">التحديثات داخل التطبيق</string>
     <string name="settings_app_updates_sub">التحقق من حالة الإصدار وسجل التغييرات</string>
     <string name="settings_updates_title">التحديثات</string>
@@ -614,6 +612,7 @@
     <string name="settings_support_desc">Secure Dialer مجاني 100%، مفتوح المصدر، بدون إعلانات ويهتم بالخصوصية.</string>
     <string name="settings_contribute_github">المساهمة على GitHub</string>
     <string name="app_version_name">الإصدار %1$s</string>
+    <string name="about_version_telemetry">الإصدار %1$s • انعدام تام لجمع البيانات</string>
     <string name="btn_cancel">إلغاء</string>
     <string name="btn_save">حفظ</string>
     <string name="btn_delete">حذف</string>
@@ -899,4 +898,60 @@
     <string name="sim_system_slot_info">النظام: %1$s (الشريحة %2$d)</string>
     <string name="toast_sim_label_reset">تمت استعادة تسمية SIM الافتراضية</string>
     <string name="btn_reset">إعادة تعيين</string>
+    <string name="header_incoming_call_display">عرض المكالمة الواردة</string>
+    <string name="settings_incoming_screen_on_title">عندما تكون الشاشة نشطة</string>
+    <string name="settings_incoming_screen_on_sub">عرض إشعار منبثق أو فتح واجهة المكالمة بملء الشاشة عندما يكون الهاتف مفتوحاً</string>
+    <string name="settings_incoming_screen_off_title">عندما تكون الشاشة مغلقة أو مقفلة</string>
+    <string name="settings_incoming_screen_off_sub">إيقاظ الشاشة بملء الشاشة للمكالمة أو الاكتفاء بإشعار فقط</string>
+    <string name="incoming_display_mode_notification">إشعار</string>
+    <string name="incoming_display_mode_full_screen">ملء الشاشة</string>
+    <string name="notif_channel_incoming_shade_name">المكالمات الواردة (ملء الشاشة)</string>
+    <string name="notif_channel_incoming_shade_desc">إدخال شريط الحالة للمكالمة الواردة أثناء فتح واجهة ملء الشاشة</string>
+    <string name="search_item_incoming_screen_on">عرض المكالمة الواردة (الشاشة نشطة)</string>
+    <string name="search_desc_incoming_screen_on">الاختيار بين إشعار أو ملء الشاشة للمكالمة الواردة عندما تكون الشاشة نشطة</string>
+    <string name="search_item_incoming_screen_off">عرض المكالمة الواردة (الشاشة مغلقة / مقفلة)</string>
+    <string name="search_desc_incoming_screen_off">الاختيار بين ملء الشاشة أو الإشعار فقط عندما تكون الشاشة مغلقة أو مقفلة</string>
+    <string name="toast_spam_added">تمت إضافة الرقم إلى قاعدة بيانات الأرقام المزعجة دون اتصال</string>
+    <string name="toast_spam_cleared">تم مسح قاعدة بيانات الأرقام المزعجة دون اتصال</string>
+    <string name="label_spam_default">احتيال</string>
+    <string name="recordings_storage_header">تخزين التسجيلات والنسخ الاحتياطي</string>
+    <string name="btn_sync_disk">مزامنة القرص</string>
+    <string name="btn_export_all">تصدير الكل</string>
+    <string name="toast_recordings_synced">تمت مزامنة التسجيلات من ذاكرة الجهاز</string>
+    <string name="toast_recordings_cleaned">تم تنظيف %1$d تسجيل فارغ أو تالف</string>
+    <string name="toast_recordings_none_empty">لم يتم العثور على تسجيلات فارغة أو تالفة</string>
+    <string name="toast_recording_playback_error">تعذر تشغيل التسجيل — الملف مفقود أو غير قابل للقراءة</string>
+    <string name="toast_recording_share_error">تعذر مشاركة التسجيل — الملف مفقود أو غير قابل للقراءة</string>
+    <string name="error_open_dialer">تعذر فتح تطبيق الهاتف</string>
+    <string name="call_summary_all">ملخص جميع المكالمات</string>
+    <string name="call_summary_compact">ملخص المكالمات</string>
+    <string name="duration_hm">%1$d س %2$d د</string>
+    <string name="duration_ms">%1$d د %2$d ث</string>
+    <string name="duration_m">%1$d د</string>
+    <string name="duration_s">%1$d ث</string>
+    <string name="inline_exact_alarm_note">الإنذارات الدقيقة مقيدة في إصدار Android هذا. قد تتأخر المواعيد قليلاً ما لم يتم السماح بها.</string>
+    <string name="inline_notifications_disabled_note">الإشعارات معطلة. لن تظهر التنبيهات المجدولة ما لم يتم السماح بها.</string>
+    <string name="btn_allow_in_settings">سماح</string>
+    <string name="recordings_oem_hardware_note">يقيّد Android 9+ التقاط الصوت المباشر على بعض الأجهزة. اترك مكبر الصوت أو التوليف التلقائي مفعّلاً للحصول على أوضح صوت للطرفين.</string>
+    <string name="label_potential_spoofed_number">رقم منتحل محتمل</string>
+    <string name="desc_restore_call_pill">استعادة مؤشر المكالمة</string>
+    <string name="desc_minimize_camera_dot">تصغير إلى نقطة الكاميرا</string>
+    <string name="label_sim_slot">شريحة %1$d</string>
+    <string name="label_rec_badge">تسجيل</string>
+    <string name="whatsapp_web_link_suffix"> (رابط ويب wa.me)</string>
+    <string name="whatsapp_auto_detected">تم الاكتشاف تلقائياً: %1$s</string>
+    <string name="whatsapp_business_label">الأعمال</string>
+    <string name="post_call_recording_summary">%1$s (تسجيل %2$d ثانية)</string>
+    <string name="fake_call_script_office">مرحباً، أعتذر عن إزعاجك، ولكن لدينا ظرف طارئ وحرج في المكتب الآن. نحتاج منك المغادرة والانضمام لمكالمة الاجتماع فوراً. هل يمكنك الاعتذار ومعاودة الاتصال بي حالاً؟</string>
+    <string name="fake_call_script_family">أهلاً بك! سعيد جداً لأنني تمكنت من الوصول إليك. حدث أمر عاجل في المنزل ونحتاج لمساعدتك فوراً. هل يمكنك إنهاء ما بيدك والعودة في أقرب وقت؟</string>
+    <string name="fake_call_script_friend">مرحباً، هل ما زلت عالقاً هناك؟ خمنت أنك قد تحتاج إلى عذر للمغادرة. فقط أومئ برأسك وتظاهر بأن الأمر عاجل واخرج من هناك. اتصل بي بمجرد أن تتفرغ!</string>
+    <string name="settings_app_language">لغة التطبيق</string>
+    <string name="settings_app_language_sub">اختيار لغة العرض أو اتباع لغة النظام الافتراضية</string>
+    <string name="language_system_default">افتراضي النظام</string>
+    <string name="btn_open_system_language_settings">فتح إعدادات لغة النظام</string>
+    <string name="company_colon_prefix">الشركة: </string>
+    <string name="title_colon_prefix">المسمى الوظيفي: </string>
+    <string name="birthday_colon_prefix">تاريخ الميلاد: </string>
+    <string name="website_colon_prefix">الموقع الإلكتروني: </string>
+    <string name="nickname_colon_prefix">اللقب: </string>
 </resources>

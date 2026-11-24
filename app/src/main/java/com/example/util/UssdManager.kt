@@ -12,6 +12,9 @@ import android.net.Uri
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.telecom.PhoneAccountHandle
+import android.telecom.TelecomManager
+import android.telephony.SubscriptionManager
 import android.telephony.TelephonyManager
 import com.example.R
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,10 +48,17 @@ object UssdManager {
 
     /**
      * Executes the USSD code or IMEI inquiry directly.
+     * Routes through the specified subscriptionId / accountHandle if available on multi-SIM devices.
      * Returns true if intercepted and handled internally; false if standard telephony call should proceed.
      */
     @SuppressLint("MissingPermission", "HardwareIds")
-    fun handleUssdOrMmi(context: Context, code: String): Boolean {
+    fun handleUssdOrMmi(
+        context: Context,
+        code: String,
+        subscriptionId: Int? = null,
+        accountHandle: PhoneAccountHandle? = null,
+        simSlot: Int? = null
+    ): Boolean {
         val trimmed = code.trim()
         if (!isMmiOrUssdCode(trimmed)) return false
 
@@ -100,7 +110,16 @@ object UssdManager {
 
         // 2. Carrier USSD Request (API 26+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val tm = appContext.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+            val baseTm = appContext.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager
+            val tm = if (subscriptionId != null &&
+                subscriptionId != SubscriptionManager.INVALID_SUBSCRIPTION_ID &&
+                subscriptionId > 0 &&
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+            ) {
+                baseTm?.createForSubscriptionId(subscriptionId) ?: baseTm
+            } else {
+                baseTm
+            }
             if (tm != null) {
                 try {
                     val mainHandler = Handler(Looper.getMainLooper())
@@ -175,6 +194,16 @@ object UssdManager {
             val uri = Uri.fromParts("tel", trimmed, null)
             val intent = Intent(Intent.ACTION_CALL, uri).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                if (accountHandle != null) {
+                    putExtra(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, accountHandle)
+                }
+                if (simSlot != null && simSlot in 1..2) {
+                    putExtra("com.android.phone.force.slot", true)
+                    putExtra("Cdma_SimId", simSlot - 1)
+                    putExtra("simId", simSlot - 1)
+                    putExtra("simSlot", simSlot - 1)
+                    putExtra("slot", simSlot - 1)
+                }
             }
             context.startActivity(intent)
             return true

@@ -151,7 +151,7 @@ fun DirectRecordingPlayerDialog(
         stopPlayer()
         val file = File(rec.filePath)
         if (!file.exists() || file.length() == 0L) {
-            Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.toast_recording_playback_error), Toast.LENGTH_SHORT).show()
             return
         }
         try {
@@ -169,7 +169,7 @@ fun DirectRecordingPlayerDialog(
             isPlaying = true
         } catch (_: Exception) {
             stopPlayer()
-            Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.toast_recording_playback_error), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -340,7 +340,7 @@ fun DirectRecordingPlayerDialog(
                                 }
                                 context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_recording)))
                             } else {
-                                Toast.makeText(context, context.getString(R.string.toast_deleted_recording), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.toast_recording_share_error), Toast.LENGTH_SHORT).show()
                             }
                         }
                     ) {

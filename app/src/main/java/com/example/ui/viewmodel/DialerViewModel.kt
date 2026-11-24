@@ -145,7 +145,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         application = application,
         repository = repository,
         scope = viewModelScope,
-        onDataChanged = { syncData() }
+        onDataChanged = { syncData() },
+        onBackupRestored = {
+            viewModelScope.launch {
+                hydrateSettingsFromRoom()
+            }
+        }
     )
 
     private val settingsCoordinator = DialerSettingsCoordinator(
@@ -459,6 +464,12 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     var isRequireUnlockToAnswerEnabled = mutableStateOf(
         prefs.getBoolean(com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER, false)
     )
+    var incomingCallScreenOnMode = mutableStateOf(
+        com.example.util.LockScreenCallPolicy.getIncomingDisplayModeScreenOn(getApplication()).key
+    )
+    var incomingCallScreenOffMode = mutableStateOf(
+        com.example.util.LockScreenCallPolicy.getIncomingDisplayModeScreenOff(getApplication()).key
+    )
     var isRecordingsBiometricLockEnabled = mutableStateOf(prefs.getBoolean("is_recordings_biometric_lock_enabled", false))
     var isAutoExportRecordingsEnabled = mutableStateOf(prefs.getBoolean("is_auto_export_recordings_enabled", true))
     var recordingCompressionProfile = mutableStateOf(
@@ -564,13 +575,102 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         viewModelScope.launch {
-            val savedSim = repository.getPreferredSim()
-            preferredSim.value = if (savedSim.isNotBlank()) savedSim else "Ask"
-            voicemailNumber.value = repository.getVoicemailNumber()
+            hydrateSettingsFromRoom()
+
+            val currentResponses = repository.getQuickResponses().first()
+            if (currentResponses.isEmpty()) {
+                listOf(
+                    "Can't talk right now. I'll call you later.",
+                    "I'm in a meeting. What's up?",
+                    "I'm driving. I'll get back to you shortly.",
+                    "Sorry, I'm busy. Can I call you back?"
+                ).forEach { repository.addQuickResponse(it) }
+            }
 
             try {
-                val settings = repository.dao.getAllSettingsList().associate { it.key to it.value }
-                val editor = prefs.edit()
+                syncRecordingsFromDisk(repository.context)
+            } catch (_: Exception) {}
+        }
+    }
+
+    suspend fun hydrateSettingsFromRoom() {
+        val savedSim = repository.getPreferredSim()
+        preferredSim.value = if (savedSim.isNotBlank()) savedSim else "Ask"
+        prefs.edit().putString("preferred_sim", preferredSim.value).apply()
+        voicemailNumber.value = repository.getVoicemailNumber()
+
+        try {
+            val settings = repository.dao.getAllSettingsList().associate { it.key to it.value }
+            val editor = prefs.edit()
+
+            settings["is_dark_theme"]?.toBooleanStrictOrNull()?.let {
+                isDarkTheme.value = it
+                editor.putBoolean("is_dark_theme", it)
+            }
+            settings["is_amoled_mode"]?.toBooleanStrictOrNull()?.let {
+                isAmoledMode.value = it
+                editor.putBoolean("is_amoled_mode", it)
+            }
+            settings["custom_color_hex"]?.takeIf { it.isNotBlank() }?.let {
+                customColorHex.value = it
+                editor.putString("custom_color_hex", it)
+            }
+            settings["is_m3_expressive"]?.toBooleanStrictOrNull()?.let {
+                isM3Expressive.value = it
+                editor.putBoolean("is_m3_expressive", it)
+            }
+            settings["avatar_shape_type"]?.takeIf { it.isNotBlank() }?.let {
+                avatarShapeType.value = it
+                editor.putString("avatar_shape_type", it)
+            }
+            settings["theme_color"]?.takeIf { it.isNotBlank() }?.let {
+                themeColor.value = it
+                editor.putString("theme_color", it)
+            }
+            settings["use_dynamic_color"]?.toBooleanStrictOrNull()?.let {
+                useDynamicColor.value = it
+                editor.putBoolean("use_dynamic_color", it)
+            }
+            settings["tab_slot_left"]?.takeIf { it.isNotBlank() }?.let {
+                tabSlotLeft.value = it
+                editor.putString("tab_slot_left", it)
+            }
+            settings["tab_slot_middle"]?.takeIf { it.isNotBlank() }?.let {
+                tabSlotMiddle.value = it
+                editor.putString("tab_slot_middle", it)
+            }
+            settings["tab_slot_right"]?.takeIf { it.isNotBlank() }?.let {
+                tabSlotRight.value = it
+                editor.putString("tab_slot_right", it)
+            }
+            settings["default_startup_tab_key"]?.takeIf { it.isNotBlank() }?.let { key ->
+                defaultStartupTabKey.value = key
+                editor.putString("default_startup_tab_key", key)
+                val slots = listOf(tabSlotLeft.value, tabSlotMiddle.value, tabSlotRight.value)
+                selectedTab.intValue = slots.indexOf(key).coerceAtLeast(0)
+            }
+            settings["recording_compression_profile"]?.let { saved ->
+                val profile = RecordingCompressionProfile.fromKey(saved)
+                recordingCompressionProfile.value = profile
+                CallAudioRecorder.setCompressionProfile(repository.context, profile)
+                editor.putString("recording_compression_profile", profile.key)
+            }
+            settings["contact_name_format"]?.let { saved ->
+                runCatching { ContactNameFormat.valueOf(saved) }.getOrNull()?.let { format ->
+                    contactNameFormat.value = format
+                    _contactNameFormatFlow.value = format
+                    editor.putString("contact_name_format", format.name)
+                }
+            }
+            settings["dashboard_mode"]?.takeIf { it.isNotBlank() }?.let {
+                dashboardMode.value = it
+                editor.putString("dashboard_mode", it)
+            }
+            settings["preferred_whatsapp_package"]?.takeIf { it.isNotBlank() }?.let { pkgKey ->
+                preferredWhatsAppPackage.value = pkgKey
+                com.example.util.WhatsAppHelper.setPreferredPackageKey(repository.context, pkgKey)
+                editor.putString("preferred_whatsapp_package", pkgKey)
+            }
 
                 settings["dialpad_tones_enabled"]?.toBooleanStrictOrNull()?.let {
                     dialpadTonesEnabled.value = it
@@ -622,6 +722,16 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                 settings[com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER]?.toBooleanStrictOrNull()?.let {
                     isRequireUnlockToAnswerEnabled.value = it
                     editor.putBoolean(com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER, it)
+                }
+                settings[com.example.util.LockScreenCallPolicy.PREF_INCOMING_DISPLAY_SCREEN_ON]?.let { saved ->
+                    val normalized = com.example.util.IncomingCallDisplayMode.fromScreenOnKey(saved).key
+                    incomingCallScreenOnMode.value = normalized
+                    editor.putString(com.example.util.LockScreenCallPolicy.PREF_INCOMING_DISPLAY_SCREEN_ON, normalized)
+                }
+                settings[com.example.util.LockScreenCallPolicy.PREF_INCOMING_DISPLAY_SCREEN_OFF]?.let { saved ->
+                    val normalized = com.example.util.IncomingCallDisplayMode.fromScreenOffKey(saved).key
+                    incomingCallScreenOffMode.value = normalized
+                    editor.putString(com.example.util.LockScreenCallPolicy.PREF_INCOMING_DISPLAY_SCREEN_OFF, normalized)
                 }
                 settings["is_recordings_biometric_lock_enabled"]?.toBooleanStrictOrNull()?.let {
                     isRecordingsBiometricLockEnabled.value = it
@@ -709,23 +819,8 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 }
 
-                editor.apply()
-            } catch (_: Exception) {}
-
-            val currentResponses = repository.getQuickResponses().first()
-            if (currentResponses.isEmpty()) {
-                listOf(
-                    "Can't talk right now. I'll call you later.",
-                    "I'm in a meeting. What's up?",
-                    "I'm driving. I'll get back to you shortly.",
-                    "Sorry, I'm busy. Can I call you back?"
-                ).forEach { repository.addQuickResponse(it) }
-            }
-
-            try {
-                syncRecordingsFromDisk(repository.context)
-            } catch (_: Exception) {}
-        }
+            editor.apply()
+        } catch (_: Exception) {}
     }
 
     fun updatePreferredSim(sim: String) {
@@ -776,7 +871,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateDefaultStartupTabKey(key: String) {
         defaultStartupTabKey.value = key
-        prefs.edit().putString("default_startup_tab_key", key).apply()
+        settingsCoordinator.updateSettingString("default_startup_tab_key", key)
         val slots = listOf(tabSlotLeft.value, tabSlotMiddle.value, tabSlotRight.value)
         selectedTab.intValue = slots.indexOf(key).coerceAtLeast(0)
     }
@@ -845,6 +940,22 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         settingsCoordinator.updateSettingBoolean(
             com.example.util.LockScreenCallPolicy.PREF_REQUIRE_UNLOCK_TO_ANSWER,
             enabled
+        )
+    }
+
+    fun updateIncomingCallScreenOnMode(mode: com.example.util.IncomingCallDisplayMode) {
+        incomingCallScreenOnMode.value = mode.key
+        settingsCoordinator.updateSettingString(
+            com.example.util.LockScreenCallPolicy.PREF_INCOMING_DISPLAY_SCREEN_ON,
+            mode.key
+        )
+    }
+
+    fun updateIncomingCallScreenOffMode(mode: com.example.util.IncomingCallDisplayMode) {
+        incomingCallScreenOffMode.value = mode.key
+        settingsCoordinator.updateSettingString(
+            com.example.util.LockScreenCallPolicy.PREF_INCOMING_DISPLAY_SCREEN_OFF,
+            mode.key
         )
     }
 
@@ -947,11 +1058,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         tabSlotMiddle.value = newMiddle
         tabSlotRight.value = newRight
 
-        prefs.edit()
-            .putString("tab_slot_left", screen)
-            .putString("tab_slot_middle", newMiddle)
-            .putString("tab_slot_right", newRight)
-            .apply()
+        settingsCoordinator.updateSettingString("tab_slot_left", screen)
+        settingsCoordinator.updateSettingString("tab_slot_middle", newMiddle)
+        settingsCoordinator.updateSettingString("tab_slot_right", newRight)
 
         val slots = listOf(screen, newMiddle, newRight)
         selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
@@ -975,11 +1084,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         tabSlotLeft.value = newLeft
         tabSlotRight.value = newRight
 
-        prefs.edit()
-            .putString("tab_slot_left", newLeft)
-            .putString("tab_slot_middle", screen)
-            .putString("tab_slot_right", newRight)
-            .apply()
+        settingsCoordinator.updateSettingString("tab_slot_left", newLeft)
+        settingsCoordinator.updateSettingString("tab_slot_middle", screen)
+        settingsCoordinator.updateSettingString("tab_slot_right", newRight)
 
         val slots = listOf(newLeft, screen, newRight)
         selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
@@ -1003,11 +1110,9 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
         tabSlotLeft.value = newLeft
         tabSlotMiddle.value = newMiddle
 
-        prefs.edit()
-            .putString("tab_slot_left", newLeft)
-            .putString("tab_slot_middle", newMiddle)
-            .putString("tab_slot_right", screen)
-            .apply()
+        settingsCoordinator.updateSettingString("tab_slot_left", newLeft)
+        settingsCoordinator.updateSettingString("tab_slot_middle", newMiddle)
+        settingsCoordinator.updateSettingString("tab_slot_right", screen)
 
         val slots = listOf(newLeft, newMiddle, screen)
         selectedTab.intValue = slots.indexOf(defaultStartupTabKey.value).coerceAtLeast(0)
@@ -1015,7 +1120,7 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateRowSwipeEnabled(enabled: Boolean) {
         isRowSwipeEnabled.value = enabled
-        prefs.edit().putBoolean("is_row_swipe_enabled", enabled).apply()
+        settingsCoordinator.updateRowSwipeEnabled(enabled)
     }
 
     fun saveLastOutgoingNumber(number: String) {
@@ -1064,8 +1169,14 @@ class DialerViewModel(application: Application) : AndroidViewModel(application) 
     fun exportBackup(password: String = "", onResult: (String) -> Unit) =
         spamAndBackupCoordinator.exportBackup(password, onResult)
 
+    fun exportBackup(passwordChars: CharArray, onResult: (String) -> Unit) =
+        spamAndBackupCoordinator.exportBackup(passwordChars, onResult)
+
     fun importBackup(rawData: String, password: String = "", onResult: (Boolean) -> Unit) =
         spamAndBackupCoordinator.importBackup(rawData, password, onResult)
+
+    fun importBackup(rawData: String, passwordChars: CharArray, onResult: (Boolean) -> Unit) =
+        spamAndBackupCoordinator.importBackup(rawData, passwordChars, onResult)
 
     fun exportContactsVcf(
         contactsOverride: List<Contact>? = null,

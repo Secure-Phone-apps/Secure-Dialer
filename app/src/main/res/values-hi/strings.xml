@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Secure Dialer</string>
     <string name="tab_favorites">पसंदीदा</string>
@@ -448,6 +448,7 @@
     <string name="settings_security_protection">सुरक्षा और संरक्षण</string>
     <string name="settings_biometric_lock">ऐप लॉक</string>
     <string name="settings_biometric_lock_sub">ऐप खोलने के लिए डिवाइस लॉक (PIN/पैटर्न/बायोमेट्रिक) आवश्यक है</string>
+    <string name="biometric_requires_screen_lock">पहले Android सेटिंग्स में डिवाइस पिन, पैटर्न या बायोमेट्रिक स्क्रीन लॉक सेट करें।</string>
     <string name="settings_require_unlock_answer">कॉल उठाने के लिए अनलॉक आवश्यक</string>
     <string name="settings_require_unlock_answer_sub">लॉक स्क्रीन से कॉल उठाने से पहले डिवाइस PIN, पैटर्न या बायोमेट्रिक मांगें</string>
     <string name="lockscreen_unlock_for_action">इस सुविधा का उपयोग करने के लिए डिवाइस अनलॉक करें</string>
@@ -466,7 +467,7 @@
     <string name="history_timeline">इतिहास समयरेखा</string>
     <string name="call_details">कॉल विवरण</string>
     <string name="delete_all_history">सभी इतिहास हटाएं</string>
-    <string name="no_matching_calls_for">\"%1$s\" के लिए कोई मेल खाती कॉल नहीं</string>
+    <string name="no_matching_calls_for">\&quot;%1$s\&quot; के लिए कोई मेल खाती कॉल नहीं</string>
     <string name="summary_missed_and_time">मिस कॉल: %1$d • समय: %2$s</string>
     <string name="summary_range_today">आज</string>
     <string name="summary_range_this_week">इस सप्ताह</string>
@@ -602,10 +603,7 @@
     <string name="checking_mirrors">सुरक्षित सर्वर जांच रहे हैं...</string>
     <string name="app_up_to_date_desc">आप Secure Dialer के नवीनतम आधिकारिक बिल्ड का उपयोग कर रहे हैं।</string>
     <string name="check_for_updates_now">अब अपडेट की जांच करें</string>
-    <string name="up_to_date_result">
-        Secure Dialer अद्यतित है!
-संस्करण v%1$s (स्थिर रिलीज़)
-    </string>
+    <string name="up_to_date_result">Secure Dialer अद्यतित है!\nसंस्करण v%1$s (स्थिर रिलीज़)</string>
     <string name="settings_app_updates">इन-ऐप अपडेट</string>
     <string name="settings_app_updates_sub">संस्करण स्थिति जांचें</string>
     <string name="settings_updates_title">अपडेट</string>
@@ -614,6 +612,7 @@
     <string name="settings_support_desc">Secure Dialer 100% मुफ़्त, ओपन-सोर्स और विज्ञापन-मुक्त है। यदि यह ऐप उपयोगी लगे, तो योगदान पर विचार करें।</string>
     <string name="settings_contribute_github">GitHub पर योगदान करें</string>
     <string name="app_version_name">संस्करण %1$s</string>
+    <string name="about_version_telemetry">संस्करण %1$s • शून्य टेलीमेट्री</string>
     <string name="btn_cancel">रद्द करें</string>
     <string name="btn_save">सहेजें</string>
     <string name="btn_delete">हटाएं</string>
@@ -899,4 +898,60 @@
     <string name="sim_system_slot_info">सिस्टम: %1$s (स्लॉट %2$d)</string>
     <string name="toast_sim_label_reset">डिफ़ॉल्ट SIM लेबल पर रीसेट किया गया</string>
     <string name="btn_reset">रीसेट करें</string>
+    <string name="header_incoming_call_display">इनकमिंग कॉल डिस्प्ले</string>
+    <string name="settings_incoming_screen_on_title">जब स्क्रीन सक्रिय हो</string>
+    <string name="settings_incoming_screen_on_sub">फ़ोन अनलॉक होने पर हेड-अप सूचना बैनर दिखाएं या फ़ुल-स्क्रीन कॉल खोलें</string>
+    <string name="settings_incoming_screen_off_title">जब स्क्रीन बंद या लॉक हो</string>
+    <string name="settings_incoming_screen_off_sub">फ़ुल-स्क्रीन कॉल इंटरफ़ेस के साथ स्क्रीन जगाएं या केवल सूचना दिखाएं</string>
+    <string name="incoming_display_mode_notification">सूचना</string>
+    <string name="incoming_display_mode_full_screen">फ़ुल स्क्रीन</string>
+    <string name="notif_channel_incoming_shade_name">इनकमिंग कॉल (फ़ुल-स्क्रीन सक्रिय)</string>
+    <string name="notif_channel_incoming_shade_desc">फ़ुल-स्क्रीन कॉल इंटरफ़ेस खुले होने पर स्टेटस बार में कॉल प्रविष्टि</string>
+    <string name="search_item_incoming_screen_on">इनकमिंग कॉल डिस्प्ले (स्क्रीन सक्रिय)</string>
+    <string name="search_desc_incoming_screen_on">स्क्रीन सक्रिय होने पर सूचना बैनर या फ़ुल-स्क्रीन कॉल चुनें</string>
+    <string name="search_item_incoming_screen_off">इनकमिंग कॉल डिस्प्ले (स्क्रीन बंद / लॉक)</string>
+    <string name="search_desc_incoming_screen_off">स्क्रीन बंद या लॉक होने पर फ़ुल-स्क्रीन या केवल सूचना चुनें</string>
+    <string name="toast_spam_added">ऑफ़लाइन स्पैम डेटाबेस में नंबर जोड़ा गया</string>
+    <string name="toast_spam_cleared">ऑफ़लाइन स्पैम डेटाबेस साफ़ किया गया</string>
+    <string name="label_spam_default">स्पैम</string>
+    <string name="recordings_storage_header">रिकॉर्डिंग स्टोरेज और बैकअप</string>
+    <string name="btn_sync_disk">डिस्क सिंक करें</string>
+    <string name="btn_export_all">सभी निर्यात करें</string>
+    <string name="toast_recordings_synced">डिवाइस स्टोरेज से रिकॉर्डिंग सिंक की गईं</string>
+    <string name="toast_recordings_cleaned">%1$d खाली या दूषित रिकॉर्डिंग साफ़ की गईं</string>
+    <string name="toast_recordings_none_empty">कोई खाली या दूषित रिकॉर्डिंग नहीं मिली</string>
+    <string name="toast_recording_playback_error">रिकॉर्डिंग चलाने में असमर्थ — फ़ाइल गायब है या पढ़ने योग्य नहीं है</string>
+    <string name="toast_recording_share_error">रिकॉर्डिंग साझा करने में असमर्थ — फ़ाइल गायब है या पढ़ने योग्य नहीं है</string>
+    <string name="error_open_dialer">डायलर ऐप खोलने में विफल</string>
+    <string name="call_summary_all">सभी कॉलों का सारांश</string>
+    <string name="call_summary_compact">कॉल सारांश</string>
+    <string name="duration_hm">%1$d घंटे %2$d मिनट</string>
+    <string name="duration_ms">%1$d मिनट %2$d सेकंड</string>
+    <string name="duration_m">%1$d मिनट</string>
+    <string name="duration_s">%1$d सेकंड</string>
+    <string name="inline_exact_alarm_note">इस Android संस्करण पर सटीक अलार्म प्रतिबंधित हैं। जब तक अनुमति न दी जाए, शेड्यूल में थोड़ा विलंब हो सकता है।</string>
+    <string name="inline_notifications_disabled_note">सूचनाएं अक्षम हैं। अनुमति मिलने तक शेड्यूल किए गए अलर्ट दिखाई नहीं देंगे।</string>
+    <string name="btn_allow_in_settings">अनुमति दें</string>
+    <string name="recordings_oem_hardware_note">Android 9+ कुछ उपकरणों पर सीधे ऑडियो कैप्चर को प्रतिबंधित करता है। स्पष्ट दोतरफा ऑडियो के लिए स्पीकरफोन या ऑटो-ट्यून सक्षम रखें।</string>
+    <string name="label_potential_spoofed_number">संभावित रूप से स्पूफ़ किया गया नंबर</string>
+    <string name="desc_restore_call_pill">कॉल पिल पुनर्स्थापित करें</string>
+    <string name="desc_minimize_camera_dot">कैमरा बिंदु तक छोटा करें</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">रिकॉर्ड</string>
+    <string name="whatsapp_web_link_suffix"> (wa.me वेब लिंक)</string>
+    <string name="whatsapp_auto_detected">स्वतः पता लगाया गया: %1$s</string>
+    <string name="whatsapp_business_label">बिज़नेस</string>
+    <string name="post_call_recording_summary">%1$s (%2$d सेकंड रिकॉर्डिंग)</string>
+    <string name="fake_call_script_office">नमस्ते, परेशान करने के लिए खेद है, लेकिन अभी कार्यालय में एक बेहद जरूरी स्थिति है। हमें तुरंत आपसे कॉन्फ्रेंस लाइन में शामिल होने की आवश्यकता है। क्या आप बहाना बनाकर तुरंत मुझे वापस कॉल कर सकते हैं?</string>
+    <string name="fake_call_script_family">अरे! अच्छा हुआ कि आपसे बात हो गई। घर पर अचानक एक जरूरी काम आ गया है और हमें अभी आपकी मदद चाहिए। क्या आप जल्द से जल्द सब कुछ समेटकर आ सकते हैं?</string>
+    <string name="fake_call_script_friend">अरे, क्या तुम अब भी वहीं फंसे हो? मुझे लगा तुम्हें वहां से निकलने का बहाना चाहिए होगा। बस सिर हिलाओ, दिखाओ कि बहुत ज़रूरी है, और वहां से निकल आओ। फ्री होकर कॉल करना!</string>
+    <string name="settings_app_language">ऐप की भाषा</string>
+    <string name="settings_app_language_sub">प्रदर्शन भाषा चुनें या सिस्टम डिफ़ॉल्ट का पालन करें</string>
+    <string name="language_system_default">सिस्टम डिफ़ॉल्ट</string>
+    <string name="btn_open_system_language_settings">सिस्टम भाषा सेटिंग्स खोलें</string>
+    <string name="company_colon_prefix">कंपनी: </string>
+    <string name="title_colon_prefix">पद: </string>
+    <string name="birthday_colon_prefix">जन्मदिन: </string>
+    <string name="website_colon_prefix">वेबसाइट: </string>
+    <string name="nickname_colon_prefix">उपनाम: </string>
 </resources>

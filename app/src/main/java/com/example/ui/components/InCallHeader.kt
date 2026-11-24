@@ -246,7 +246,7 @@ fun InCallHeader(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Potential Spoofed Number",
+                            text = stringResource(R.string.label_potential_spoofed_number),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onErrorContainer,
                             fontWeight = FontWeight.Bold

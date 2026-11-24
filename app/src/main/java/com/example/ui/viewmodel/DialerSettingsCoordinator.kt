@@ -48,40 +48,39 @@ class DialerSettingsCoordinator(
     }
 
     fun updateDarkTheme(dark: Boolean) {
-        prefs.edit().putBoolean("is_dark_theme", dark).apply()
+        updateSettingBoolean("is_dark_theme", dark)
     }
 
     fun updateAmoledMode(amoled: Boolean, isDarkTheme: Boolean, onDarkThemeForceTrue: () -> Unit) {
-        val editor = prefs.edit().putBoolean("is_amoled_mode", amoled)
+        updateSettingBoolean("is_amoled_mode", amoled)
         if (amoled && !isDarkTheme) {
             onDarkThemeForceTrue()
-            editor.putBoolean("is_dark_theme", true)
+            updateSettingBoolean("is_dark_theme", true)
         }
-        editor.apply()
     }
 
     fun updateCustomColorHex(hex: String) {
-        prefs.edit().putString("custom_color_hex", hex).apply()
+        updateSettingString("custom_color_hex", hex)
     }
 
     fun updateM3Expressive(expressive: Boolean) {
-        prefs.edit().putBoolean("is_m3_expressive", expressive).apply()
+        updateSettingBoolean("is_m3_expressive", expressive)
     }
 
     fun updateAvatarShapeType(shapeType: String) {
-        prefs.edit().putString("avatar_shape_type", shapeType).apply()
+        updateSettingString("avatar_shape_type", shapeType)
     }
 
     fun updateUseDynamicColor(dynamic: Boolean) {
-        prefs.edit().putBoolean("use_dynamic_color", dynamic).apply()
+        updateSettingBoolean("use_dynamic_color", dynamic)
     }
 
     fun updateThemeColor(color: String) {
-        prefs.edit().putString("theme_color", color).apply()
+        updateSettingString("theme_color", color)
     }
 
     fun updateRowSwipeEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean("is_row_swipe_enabled", enabled).apply()
+        updateSettingBoolean("is_row_swipe_enabled", enabled)
     }
 
     fun updateVibrateOnClickEnabled(enabled: Boolean) {

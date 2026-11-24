@@ -14,6 +14,7 @@ import android.content.SharedPreferences
 import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import android.telecom.Call
 import android.view.KeyEvent
 import android.view.WindowManager
@@ -86,6 +87,11 @@ class InCallActivity : ComponentActivity() {
         }
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        val wrapped = com.example.util.LocaleHelper.applyLocale(newBase)
+        super.attachBaseContext(wrapped)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CallManager.appContext = applicationContext
@@ -99,7 +105,12 @@ class InCallActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
-        LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = true, keepScreenOn = true)
+        LockScreenCallPolicy.applyLockScreenWindowFlags(
+            activity = this,
+            showWhenLocked = true,
+            keepScreenOn = true,
+            turnScreenOn = shouldTurnScreenOnForCurrentCall()
+        )
         refreshLockState()
         handleLaunchIntent(intent)
 
@@ -286,7 +297,12 @@ class InCallActivity : ComponentActivity() {
         super.onStart()
         volumeControlStream = AudioManager.STREAM_VOICE_CALL
         CallManager.setInCallUiVisible(true)
-        LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = true, keepScreenOn = true)
+        LockScreenCallPolicy.applyLockScreenWindowFlags(
+            activity = this,
+            showWhenLocked = true,
+            keepScreenOn = true,
+            turnScreenOn = shouldTurnScreenOnForCurrentCall()
+        )
         registerKeyguardReceiver()
         refreshLockState()
         refreshPreferences()
@@ -325,7 +341,12 @@ class InCallActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = true, keepScreenOn = true)
+        LockScreenCallPolicy.applyLockScreenWindowFlags(
+            activity = this,
+            showWhenLocked = true,
+            keepScreenOn = true,
+            turnScreenOn = shouldTurnScreenOnForCurrentCall()
+        )
         refreshLockState()
         refreshPreferences()
         handleLaunchIntent(intent)
@@ -385,9 +406,24 @@ class InCallActivity : ComponentActivity() {
         )
     }
 
+    private fun shouldTurnScreenOnForCurrentCall(): Boolean {
+        val isRinging = CallManager.callState.value == Call.STATE_RINGING ||
+            CallManager.calls.value.any { it.state == Call.STATE_RINGING } ||
+            intent?.action == MyInCallService.ACTION_INCOMING_CALL
+        if (!isRinging) return false
+        val pm = getSystemService(Context.POWER_SERVICE) as? PowerManager
+        val isScreenInteractive = pm?.isInteractive ?: true
+        val isKeyguardLocked = LockScreenCallPolicy.isDeviceLocked(this)
+        return LockScreenCallPolicy.resolveIncomingCallPresentation(
+            context = this,
+            isScreenInteractive = isScreenInteractive,
+            isKeyguardLocked = isKeyguardLocked
+        ).wakeScreen
+    }
+
     private fun finishCallScreen() {
         CallManager.setInCallUiVisible(false)
-        LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = false, keepScreenOn = false)
+        LockScreenCallPolicy.applyLockScreenWindowFlags(this, showWhenLocked = false, keepScreenOn = false, turnScreenOn = false)
         if (!isFinishing && !isDestroyed) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 finishAndRemoveTask()

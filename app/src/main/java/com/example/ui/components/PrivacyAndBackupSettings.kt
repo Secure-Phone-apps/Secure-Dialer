@@ -564,6 +564,15 @@ private fun DataAndBackupSection(
     var pendingEncryptedRestoreContent by remember { mutableStateOf<String?>(null) }
     var pendingVcfImportContent by remember { mutableStateOf<String?>(null) }
 
+    DisposableEffect(Unit) {
+        onDispose {
+            exportPassword = ""
+            restorePasswordInput = ""
+            pendingBackupData = null
+            pendingEncryptedRestoreContent = null
+        }
+    }
+
     val saveBackupFileLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
     ) { uri: Uri? ->
@@ -698,7 +707,9 @@ private fun DataAndBackupSection(
                     ) {
                         Button(
                             onClick = {
-                                viewModel.exportBackup(exportPassword) { data ->
+                                val chars = exportPassword.toCharArray()
+                                exportPassword = ""
+                                viewModel.exportBackup(chars) { data ->
                                     pendingBackupData = data
                                     val defaultName = "dialer_backup_$timestamp.json"
                                     saveBackupFileLauncher.launch(defaultName)
@@ -802,6 +813,7 @@ private fun DataAndBackupSection(
     if (showPasswordPromptDialog && pendingEncryptedRestoreContent != null) {
         AlertDialog(
             onDismissRequest = {
+                restorePasswordInput = ""
                 showPasswordPromptDialog = false
                 pendingEncryptedRestoreContent = null
             },
@@ -827,7 +839,9 @@ private fun DataAndBackupSection(
                 Button(
                     onClick = {
                         val content = pendingEncryptedRestoreContent ?: ""
-                        viewModel.importBackup(content, restorePasswordInput) { success ->
+                        val chars = restorePasswordInput.toCharArray()
+                        restorePasswordInput = ""
+                        viewModel.importBackup(content, chars) { success ->
                             if (success) {
                                 Toast.makeText(context, context.getString(R.string.backup_restored_success_toast), Toast.LENGTH_LONG).show()
                                 showPasswordPromptDialog = false
@@ -844,6 +858,7 @@ private fun DataAndBackupSection(
             dismissButton = {
                 TextButton(
                     onClick = {
+                        restorePasswordInput = ""
                         showPasswordPromptDialog = false
                         pendingEncryptedRestoreContent = null
                     }

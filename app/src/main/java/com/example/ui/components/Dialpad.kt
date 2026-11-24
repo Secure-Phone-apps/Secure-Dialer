@@ -41,10 +41,12 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.LocalTextInputService
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -557,7 +559,10 @@ fun DialpadTabContent(
                 contentAlignment = Alignment.Center
             ) {
             @Suppress("DEPRECATION")
-            CompositionLocalProvider(LocalTextInputService provides null) {
+            CompositionLocalProvider(
+                LocalTextInputService provides null,
+                LocalLayoutDirection provides LayoutDirection.Ltr
+            ) {
                 BasicTextField(
                     value = currentTfv,
                     onValueChange = { newTfv ->

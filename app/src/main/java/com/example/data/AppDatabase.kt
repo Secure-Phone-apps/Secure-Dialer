@@ -334,12 +334,43 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        @Volatile
+        private var warmUpStarted = false
+        private val warmUpLock = Any()
+        @Volatile
+        private var warmUpCompleted: kotlinx.coroutines.CompletableDeferred<Unit> =
+            kotlinx.coroutines.CompletableDeferred<Unit>().apply { complete(Unit) }
+
+        suspend fun awaitWarmUp() {
+            try {
+                warmUpCompleted.await()
+            } catch (_: Throwable) {}
+        }
+
         fun warmUpAsync(context: Context) {
+            val deferredToRun: kotlinx.coroutines.CompletableDeferred<Unit>
+            synchronized(warmUpLock) {
+                if (warmUpStarted || INSTANCE != null) return
+                warmUpStarted = true
+                deferredToRun = kotlinx.coroutines.CompletableDeferred()
+                warmUpCompleted = deferredToRun
+            }
+            val appContext = context.applicationContext
             kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                 try {
-                    val db = getDatabase(context)
+                    if (!isRobolectricEnvironment()) {
+                        try {
+                            System.loadLibrary("sqlcipher")
+                        } catch (_: UnsatisfiedLinkError) {
+                            // buildDatabase will report NativeCryptoLoadError if missing
+                        }
+                    }
+                    val db = getDatabase(appContext)
                     db.dialerDao().getContactsCount()
-                } catch (_: Throwable) {}
+                } catch (_: Throwable) {
+                } finally {
+                    deferredToRun.complete(Unit)
+                }
             }
         }
 
@@ -356,6 +387,10 @@ abstract class AppDatabase : RoomDatabase() {
                 INSTANCE = null
                 try { prev?.close() } catch (_: Throwable) {}
                 _integrityStatus.value = status
+            }
+            synchronized(warmUpLock) {
+                warmUpStarted = false
+                warmUpCompleted = kotlinx.coroutines.CompletableDeferred<Unit>().apply { complete(Unit) }
             }
         }
 

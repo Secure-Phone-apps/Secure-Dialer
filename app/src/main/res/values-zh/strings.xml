@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Secure Dialer</string>
     <string name="tab_favorites">收藏</string>
@@ -448,6 +448,7 @@
     <string name="settings_security_protection">安全与保护</string>
     <string name="settings_biometric_lock">应用锁</string>
     <string name="settings_biometric_lock_sub">需要设备锁（PIN/图案/生物识别）才能打开应用</string>
+    <string name="biometric_requires_screen_lock">请先在 Android 设置中配置设备 PIN、图案或生物识别屏幕锁定。</string>
     <string name="settings_require_unlock_answer">接听来电前需要解锁</string>
     <string name="settings_require_unlock_answer_sub">在锁屏界面接听来电前要求验证设备 PIN 码、图案或生物识别</string>
     <string name="lockscreen_unlock_for_action">请先解锁设备以使用此功能</string>
@@ -602,10 +603,7 @@
     <string name="checking_mirrors">正在检查安全镜像...</string>
     <string name="app_up_to_date_desc">您正在使用 Secure Dialer 最新的官方签名版本。</string>
     <string name="check_for_updates_now">立即检查更新</string>
-    <string name="up_to_date_result">
-        Secure Dialer 已是最新版本！
-版本 v%1$s（稳定版）
-    </string>
+    <string name="up_to_date_result">Secure Dialer 已是最新版本！\n版本 v%1$s（稳定版）</string>
     <string name="settings_app_updates">应用内更新</string>
     <string name="settings_app_updates_sub">检查版本状态与更新日志</string>
     <string name="settings_updates_title">应用内更新</string>
@@ -614,6 +612,7 @@
     <string name="settings_support_desc">Secure Dialer 100% 免费、开源、无广告，并始终以隐私为先。如果您觉得这款应用对您有帮助，欢迎贡献代码、提交翻译，或支持自由且安全的工具的开发。</string>
     <string name="settings_contribute_github">在 GitHub 上贡献</string>
     <string name="app_version_name">版本 %1$s</string>
+    <string name="about_version_telemetry">版本 %1$s • 零遥测</string>
     <string name="btn_cancel">取消</string>
     <string name="btn_save">保存</string>
     <string name="btn_delete">删除</string>
@@ -899,4 +898,60 @@
     <string name="sim_system_slot_info">系统：%1$s（卡槽 %2$d）</string>
     <string name="toast_sim_label_reset">已重置为默认 SIM 卡标签</string>
     <string name="btn_reset">重置</string>
+    <string name="header_incoming_call_display">来电显示方式</string>
+    <string name="settings_incoming_screen_on_title">亮屏解锁时</string>
+    <string name="settings_incoming_screen_on_sub">屏幕解锁使用时显示顶部横幅通知或直接打开全屏来电界面</string>
+    <string name="settings_incoming_screen_off_title">息屏或锁屏时</string>
+    <string name="settings_incoming_screen_off_sub">唤醒并显示全屏来电界面，或仅在通知中静默提醒</string>
+    <string name="incoming_display_mode_notification">通知</string>
+    <string name="incoming_display_mode_full_screen">全屏</string>
+    <string name="notif_channel_incoming_shade_name">来电（全屏界面已打开）</string>
+    <string name="notif_channel_incoming_shade_desc">全屏来电界面显示期间在状态栏保留的来电条目</string>
+    <string name="search_item_incoming_screen_on">来电显示方式（亮屏时）</string>
+    <string name="search_desc_incoming_screen_on">选择亮屏解锁时显示横幅通知或全屏来电</string>
+    <string name="search_item_incoming_screen_off">来电显示方式（息屏 / 锁屏时）</string>
+    <string name="search_desc_incoming_screen_off">选择息屏或锁屏时唤醒全屏或仅显示通知</string>
+    <string name="toast_spam_added">已将号码添加到离线骚扰数据库</string>
+    <string name="toast_spam_cleared">离线骚扰数据库已清空</string>
+    <string name="label_spam_default">骚扰电话</string>
+    <string name="recordings_storage_header">录音存储与备份</string>
+    <string name="btn_sync_disk">同步磁盘</string>
+    <string name="btn_export_all">导出全部</string>
+    <string name="toast_recordings_synced">已从设备存储同步录音</string>
+    <string name="toast_recordings_cleaned">已清理 %1$d 个空白或损坏的录音</string>
+    <string name="toast_recordings_none_empty">未发现空白或损坏的录音</string>
+    <string name="toast_recording_playback_error">无法播放录音 — 文件缺失或无法读取</string>
+    <string name="toast_recording_share_error">无法分享录音 — 文件缺失或无法读取</string>
+    <string name="error_open_dialer">无法打开电话应用</string>
+    <string name="call_summary_all">全部通话摘要</string>
+    <string name="call_summary_compact">通话摘要</string>
+    <string name="duration_hm">%1$d小时%2$d分</string>
+    <string name="duration_ms">%1$d分%2$d秒</string>
+    <string name="duration_m">%1$d分</string>
+    <string name="duration_s">%1$d秒</string>
+    <string name="inline_exact_alarm_note">此 Android 版本限制了精确闹钟。除非允许，否则计划任务可能会略有延迟。</string>
+    <string name="inline_notifications_disabled_note">通知已禁用。在允许通知前，计划提醒将不会显示。</string>
+    <string name="btn_allow_in_settings">允许</string>
+    <string name="recordings_oem_hardware_note">Android 9+ 在某些设备上限制直接通话录音。建议开启免提或自动调音以获得最清晰的双向声音。</string>
+    <string name="label_potential_spoofed_number">疑似伪造号码</string>
+    <string name="desc_restore_call_pill">恢复通话胶囊</string>
+    <string name="desc_minimize_camera_dot">最小化至摄像头圆点</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">录音</string>
+    <string name="whatsapp_web_link_suffix"> (wa.me 网页链接)</string>
+    <string name="whatsapp_auto_detected">自动检测: %1$s</string>
+    <string name="whatsapp_business_label">商业版</string>
+    <string name="post_call_recording_summary">%1$s（%2$d秒录音）</string>
+    <string name="fake_call_script_office">喂，不好意思打扰了，办公室现在有个非常紧急的突发状况。需要你立即出来加入电话会议。你能跟旁边的人说一声，然后马上给我回个电话吗？</string>
+    <string name="fake_call_script_family">喂！太好了终于打通你了。家里刚出了点紧急的事，现在急需你帮忙。你能尽快把手头的事处理完赶过来吗？</string>
+    <string name="fake_call_script_friend">喂，你还被困在那儿呢？我猜你可能需要一个溜走的借口。点点头，假装有急事赶紧抽身出来吧。等你忙完了给我回个电话！</string>
+    <string name="settings_app_language">应用语言</string>
+    <string name="settings_app_language_sub">选择显示语言或跟随系统默认</string>
+    <string name="language_system_default">系统默认</string>
+    <string name="btn_open_system_language_settings">打开系统语言设置</string>
+    <string name="company_colon_prefix">公司: </string>
+    <string name="title_colon_prefix">职位: </string>
+    <string name="birthday_colon_prefix">生日: </string>
+    <string name="website_colon_prefix">网站: </string>
+    <string name="nickname_colon_prefix">昵称: </string>
 </resources>

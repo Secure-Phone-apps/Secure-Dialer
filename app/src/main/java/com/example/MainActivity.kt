@@ -78,6 +78,11 @@ class MainActivity : ComponentActivity() {
     }
 
 
+    override fun attachBaseContext(newBase: Context) {
+        val wrapped = com.example.util.LocaleHelper.applyLocale(newBase)
+        super.attachBaseContext(wrapped)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         CallManager.appContext = applicationContext
@@ -435,10 +440,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun setLockScreenVisibility(show: Boolean) {
+        val turnScreenOn = if (show) {
+            val pm = getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+            com.example.util.LockScreenCallPolicy.resolveIncomingCallPresentation(
+                context = this,
+                isScreenInteractive = pm?.isInteractive ?: true,
+                isKeyguardLocked = com.example.util.LockScreenCallPolicy.isDeviceLocked(this)
+            ).wakeScreen
+        } else {
+            false
+        }
         com.example.util.LockScreenCallPolicy.applyLockScreenWindowFlags(
             activity = this,
             showWhenLocked = show,
-            keepScreenOn = show
+            keepScreenOn = show,
+            turnScreenOn = turnScreenOn
         )
     }
 

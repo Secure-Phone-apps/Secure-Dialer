@@ -502,6 +502,7 @@
     <string name="settings_security_protection">Security &amp; Protection</string>
     <string name="settings_biometric_lock">App Lock</string>
     <string name="settings_biometric_lock_sub">Require device lock (PIN/Pattern/Biometric) to open the app</string>
+    <string name="biometric_requires_screen_lock">Set up a device PIN, pattern, or biometric screen lock in Android Settings first.</string>
     <string name="settings_require_unlock_answer">Require Unlock to Answer Calls</string>
     <string name="settings_require_unlock_answer_sub">Ask for device PIN, pattern, or biometrics before answering incoming calls from the lock screen</string>
     <string name="lockscreen_unlock_for_action">Unlock device to access this feature</string>
@@ -664,10 +665,7 @@
     <string name="checking_mirrors">Checking secure mirrors...</string>
     <string name="app_up_to_date_desc">You are using the latest official cryptographic build of Secure Dialer.</string>
     <string name="check_for_updates_now">Check for Updates Now</string>
-    <string name="up_to_date_result">
-        Secure Dialer is up to date!
-Version v%1$s (Stable Release)
-    </string>
+    <string name="up_to_date_result">Secure Dialer is up to date!\nVersion v%1$s (Stable Release)</string>
     <string name="settings_app_updates">In-App Updates</string>
     <string name="settings_app_updates_sub">Check version status &amp; changelog</string>
     <string name="settings_updates_title">In-App Updates</string>
@@ -676,6 +674,7 @@ Version v%1$s (Stable Release)
     <string name="settings_support_desc" formatted="false">Secure Dialer is 100% free, open-source, ad-free, and privacy-first. If you find this app helpful, consider contributing code, submitting translations, or supporting the development of free and secure tools.</string>
     <string name="settings_contribute_github">Contribute on GitHub</string>
     <string name="app_version_name">Version %1$s</string>
+    <string name="about_version_telemetry">Version %1$s • Zero Telemetry</string>
 
     <!-- General Buttons, Common Utilities & Common Dialogs -->
     <string name="btn_cancel">Cancel</string>
@@ -963,4 +962,60 @@ Version v%1$s (Stable Release)
     <string name="sim_system_slot_info">System: %1$s (Slot %2$d)</string>
     <string name="toast_sim_label_reset">Reset to default SIM label</string>
     <string name="btn_reset">Reset</string>
+    <string name="header_incoming_call_display">Incoming Call Display</string>
+    <string name="settings_incoming_screen_on_title">When Screen is Active</string>
+    <string name="settings_incoming_screen_on_sub">Show a heads-up notification banner or open the full-screen call interface when unlocked</string>
+    <string name="settings_incoming_screen_off_title">When Screen is Off or Locked</string>
+    <string name="settings_incoming_screen_off_sub">Wake into the full-screen call interface or show only a notification</string>
+    <string name="incoming_display_mode_notification">Notification</string>
+    <string name="incoming_display_mode_full_screen">Full Screen</string>
+    <string name="notif_channel_incoming_shade_name">Incoming Calls (Full-Screen Active)</string>
+    <string name="notif_channel_incoming_shade_desc">Status bar incoming call entry while the full-screen call interface is open</string>
+    <string name="search_item_incoming_screen_on">Incoming Call Display (Screen Active)</string>
+    <string name="search_desc_incoming_screen_on">Choose between notification banner or full-screen incoming call when screen is active</string>
+    <string name="search_item_incoming_screen_off">Incoming Call Display (Screen Off / Locked)</string>
+    <string name="search_desc_incoming_screen_off">Choose between full-screen wake or notification only when screen is off or locked</string>
+    <string name="toast_spam_added">Added number to offline spam database</string>
+    <string name="toast_spam_cleared">Offline spam database cleared</string>
+    <string name="label_spam_default">Spam</string>
+    <string name="recordings_storage_header">Recordings Storage &amp; Backup</string>
+    <string name="btn_sync_disk">Sync Disk</string>
+    <string name="btn_export_all">Export All</string>
+    <string name="toast_recordings_synced">Recordings synced from device storage</string>
+    <string name="toast_recordings_cleaned">Cleaned %1$d empty or corrupt recording(s)</string>
+    <string name="toast_recordings_none_empty">No empty or corrupt recordings found</string>
+    <string name="toast_recording_playback_error">Unable to play recording — file missing or unreadable</string>
+    <string name="toast_recording_share_error">Unable to share recording — file missing or unreadable</string>
+    <string name="error_open_dialer">Could not open dialer app</string>
+    <string name="call_summary_all">All Calls Summary</string>
+    <string name="call_summary_compact">Call Summary</string>
+    <string name="duration_hm">%1$dh %2$dm</string>
+    <string name="duration_ms">%1$dm %2$ds</string>
+    <string name="duration_m">%1$dm</string>
+    <string name="duration_s">%1$ds</string>
+    <string name="inline_exact_alarm_note">Exact alarms are restricted on this Android version. Schedules may be slightly delayed unless allowed.</string>
+    <string name="inline_notifications_disabled_note">Notifications are disabled. Scheduled alerts will not appear until allowed.</string>
+    <string name="btn_allow_in_settings">Allow</string>
+    <string name="recordings_oem_hardware_note">Android 9+ restricts direct downlink capture on some devices. Keep Speakerphone or Auto-Tune enabled for clearest dual-side audio.</string>
+    <string name="label_potential_spoofed_number">Potential Spoofed Number</string>
+    <string name="desc_restore_call_pill">Restore Call Pill</string>
+    <string name="desc_minimize_camera_dot">Minimize to camera dot</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">REC</string>
+    <string name="whatsapp_web_link_suffix"> (wa.me web link)</string>
+    <string name="whatsapp_auto_detected">Auto-detected: %1$s</string>
+    <string name="whatsapp_business_label">Business</string>
+    <string name="post_call_recording_summary">%1$s (%2$ds recording)</string>
+    <string name="fake_call_script_office">Hey, sorry to disturb you, but we have a critical situation at the office right now. We really need you to step out and join the conference line immediately. Can you excuse yourself and call me back right away?</string>
+    <string name="fake_call_script_family">Hey! I am so glad I caught you. Something just came up at home and we need your help right now. Could you please wrap things up and head over as soon as possible?</string>
+    <string name="fake_call_script_friend">Hey, are you still stuck there? I figured you might need an escape excuse. Just nod, pretend this is urgent, and get out of there. Call me back once you are free!</string>
+    <string name="settings_app_language">App Language</string>
+    <string name="settings_app_language_sub">Choose display language or follow system default</string>
+    <string name="language_system_default">System Default</string>
+    <string name="btn_open_system_language_settings">Open System Language Settings</string>
+    <string name="company_colon_prefix">Company: </string>
+    <string name="title_colon_prefix">Title: </string>
+    <string name="birthday_colon_prefix">Birthday: </string>
+    <string name="website_colon_prefix">Website: </string>
+    <string name="nickname_colon_prefix">Nickname: </string>
 </resources>

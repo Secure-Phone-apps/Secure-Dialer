@@ -24,6 +24,8 @@ import android.os.Build
 import android.provider.Settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -50,6 +52,17 @@ fun AppearanceSettings(
     val isAmoledMode by viewModel.isAmoledMode
     val useDynamicColor by viewModel.useDynamicColor
     val isM3Expressive by viewModel.isM3Expressive
+
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    val currentLangTag = remember(context) { com.example.util.LocaleHelper.getPersistedLanguageTag(context) }
+    val currentLangDesc = remember(currentLangTag) {
+        val found = com.example.util.LocaleHelper.SUPPORTED_LANGUAGES.find { it.tag == currentLangTag }
+        if (found == null || found.tag.isEmpty()) {
+            context.getString(R.string.language_system_default)
+        } else {
+            "${found.nativeName} (${found.englishName})"
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -184,6 +197,31 @@ fun AppearanceSettings(
             }
         }
 
+        // App Language Card
+        item {
+            HighlightableCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                cardBgColor = cardBgColor,
+                isHighlighted = isMatchTitle("App Language", highlightedTitle) ||
+                        isMatchTitle("Language", highlightedTitle),
+                shape = MaterialTheme.shapes.medium
+            ) {
+                SettingsRowNav(
+                    title = stringResource(R.string.settings_app_language),
+                    subtitle = currentLangDesc,
+                    icon = Icons.Default.Language,
+                    iconBgColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f),
+                    iconTint = MaterialTheme.colorScheme.secondary,
+                    onClick = {
+                        RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                        showLanguageDialog = true
+                    }
+                )
+            }
+        }
+
         // [Header] DYNAMIC ISLAND & CALL CAPSULE
         item {
             PreferenceHeader(stringResource(R.string.settings_dynamic_island_title))
@@ -285,5 +323,97 @@ fun AppearanceSettings(
                 }
             }
         }
+    }
+
+    if (showLanguageDialog) {
+        val languages = com.example.util.LocaleHelper.SUPPORTED_LANGUAGES
+        var selectedTag by remember { mutableStateOf(currentLangTag) }
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = {
+                Text(
+                    text = stringResource(R.string.settings_app_language),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 380.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    languages.forEach { lang ->
+                        val isSelected = lang.tag == selectedTag
+                        val label = if (lang.tag.isEmpty()) {
+                            stringResource(R.string.language_system_default)
+                        } else {
+                            "${lang.nativeName} (${lang.englishName})"
+                        }
+                        Surface(
+                            onClick = {
+                                RichHapticEngine.performHaptic(context, RichHapticEngine.HapticStyle.KEY_TICK)
+                                selectedTag = lang.tag
+                                com.example.util.LocaleHelper.setPersistedLanguageTag(context, lang.tag)
+                                showLanguageDialog = false
+                                (context as? android.app.Activity)?.recreate()
+                            },
+                            shape = MaterialTheme.shapes.small,
+                            color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = isSelected,
+                                    onClick = null
+                                )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    TextButton(
+                        onClick = {
+                            showLanguageDialog = false
+                            try {
+                                val intent = Intent(android.provider.Settings.ACTION_APP_LOCALE_SETTINGS).apply {
+                                    data = Uri.fromParts("package", context.packageName, null)
+                                }
+                                context.startActivity(intent)
+                            } catch (_: Exception) {
+                                try {
+                                    val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {}
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.btn_open_system_language_settings))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(stringResource(R.string.btn_cancel))
+                }
+            }
+        )
     }
 }

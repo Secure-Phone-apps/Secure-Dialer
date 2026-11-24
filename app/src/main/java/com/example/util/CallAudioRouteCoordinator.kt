@@ -206,7 +206,20 @@ object CallAudioRouteCoordinator {
         if (isUserAction) {
             noteUserRequestedRoute(targetRoute)
         }
-        if (inCallService == null) return
+        if (inCallService == null) {
+            val ctx = com.example.CallManager.appContext
+            val am = ctx?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
+            if (am != null) {
+                try {
+                    if (targetRoute == CallAudioState.ROUTE_SPEAKER) {
+                        am.isSpeakerphoneOn = true
+                    } else if (targetRoute == CallAudioState.ROUTE_EARPIECE) {
+                        am.isSpeakerphoneOn = false
+                    }
+                } catch (_: Exception) {}
+            }
+            return
+        }
 
         if (targetRoute != CallAudioState.ROUTE_BLUETOOTH) {
             // Defensively clear stuck SCO flags when switching away from Bluetooth on OEM HALs

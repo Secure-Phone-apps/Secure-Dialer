@@ -153,4 +153,63 @@ class Batch5LocalizationExtractionAndDateFormatTest {
         assertEquals(esCtx.getString(R.string.notif_channel_missed_name), channel?.name?.toString())
         assertEquals(esCtx.getString(R.string.notif_channel_missed_desc), channel?.description)
     }
+
+    @Test
+    fun tier3ExtractedStringsResolveAcrossAll11Locales() {
+        val base = ApplicationProvider.getApplicationContext<Context>()
+        val locales = listOf("en", "ar", "de", "es", "fr", "hi", "ja", "pl", "pt", "tr", "zh")
+
+        for (lang in locales) {
+            val ctx = localizedContext(base, lang)
+
+            assertTrue(ctx.getString(R.string.label_potential_spoofed_number).isNotBlank())
+            assertTrue(ctx.getString(R.string.desc_restore_call_pill).isNotBlank())
+            assertTrue(ctx.getString(R.string.desc_minimize_camera_dot).isNotBlank())
+            assertTrue(ctx.getString(R.string.label_sim_slot, 2).contains(Regex("[2٢]")))
+            assertTrue(ctx.getString(R.string.label_rec_badge).isNotBlank())
+            assertTrue(ctx.getString(R.string.whatsapp_web_link_suffix).isNotBlank())
+            assertTrue(ctx.getString(R.string.whatsapp_auto_detected, "WhatsApp").contains("WhatsApp"))
+            assertTrue(ctx.getString(R.string.whatsapp_business_label).isNotBlank())
+            assertTrue(ctx.getString(R.string.post_call_recording_summary, "John", 45).contains("John"))
+
+            // Fake call scripts localized
+            val officeScript = com.example.util.FakeCallVoicePlayer.getScript(ctx, "OFFICE")
+            val familyScript = com.example.util.FakeCallVoicePlayer.getScript(ctx, "FAMILY")
+            val friendScript = com.example.util.FakeCallVoicePlayer.getScript(ctx, "FRIEND")
+            assertTrue("Office script empty in $lang", officeScript.isNotBlank())
+            assertTrue("Family script empty in $lang", familyScript.isNotBlank())
+            assertTrue("Friend script empty in $lang", friendScript.isNotBlank())
+
+            // Language settings strings
+            assertTrue(ctx.getString(R.string.settings_app_language).isNotBlank())
+            assertTrue(ctx.getString(R.string.settings_app_language_sub).isNotBlank())
+            assertTrue(ctx.getString(R.string.language_system_default).isNotBlank())
+
+            // Up-to-date result whitespace trimmed
+            val upToDate = ctx.getString(R.string.up_to_date_result, "2.0.0")
+            assertFalse("up_to_date_result should not start with newline in $lang", upToDate.startsWith("\n"))
+            assertFalse("up_to_date_result should not end with newline in $lang", upToDate.endsWith("\n"))
+        }
+    }
+
+    @Test
+    fun multiSimUssdHandlingAttachesRoutingExtras() {
+        val base = ApplicationProvider.getApplicationContext<Context>()
+        // Verify isMmiOrUssdCode
+        assertTrue(UssdManager.isMmiOrUssdCode("*123#"))
+        assertTrue(UssdManager.isMmiOrUssdCode("*#06#"))
+        assertTrue(UssdManager.isMmiOrUssdCode("#123#"))
+        assertFalse(UssdManager.isMmiOrUssdCode("+15551234567"))
+        assertFalse(UssdManager.isMmiOrUssdCode("123456"))
+
+        // Invoking with multi-SIM params on IMEI code
+        val handled = UssdManager.handleUssdOrMmi(
+            context = base,
+            code = "*#06#",
+            subscriptionId = 2,
+            simSlot = 2
+        )
+        assertTrue(handled)
+        assertNotNull(UssdManager.ussdDialogData.value)
+    }
 }

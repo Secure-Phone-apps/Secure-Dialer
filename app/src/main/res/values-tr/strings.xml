@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (C) 2026 MovStore
-  ~
-  ~ This program is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  -->
 <resources>
-
-    <!-- Uygulama Kimliği -->
     <string name="app_name">Secure Dialer</string>
-
-    <!-- Gezinme Sekmeleri -->
     <string name="tab_favorites">Favoriler</string>
     <string name="tab_recents">Son Aramalar</string>
     <string name="tab_contacts">Kişiler</string>
@@ -25,8 +13,6 @@
     <string name="tab_slot_left">Sol Yuva</string>
     <string name="tab_slot_middle">Orta Yuva</string>
     <string name="tab_slot_right">Sağ Yuva</string>
-
-    <!-- Arama ve Genel Arayüz -->
     <string name="search_placeholder">Kişileri ve numaraları ara</string>
     <string name="search_settings_placeholder">Ayarlarda ara...</string>
     <string name="search_clear">Temizle</string>
@@ -42,14 +28,10 @@
     <string name="default_dialer_warning">Tüm özellikleri etkinleştirmek için varsayılan telefon uygulaması olarak ayarlayın.</string>
     <string name="battery_optimization_warning">Aramaların düşmesini veya 1 saat sonra geçiş yapmasını önlemek için Pil Optimizasyonunu devre dışı bırakın.</string>
     <string name="btn_unrestricted">Kısıtlanmamış</string>
-
-    <!-- İzinler -->
     <string name="enable_contacts_perm">Telefon Kişilerini Etkinleştir</string>
     <string name="enable_call_log_perm">Arama Kaydını Etkinleştir</string>
     <string name="contacts_perm_desc">Cihazınızdaki gerçek kişilere erişmek, yüklemek, düzenlemek ve arama yapmak için lütfen Kişiler İznini etkinleştirin.</string>
     <string name="call_log_perm_desc">Cihazınızdaki gerçek arama geçmişine erişmek, yüklemek ve arama yapmak için lütfen Arama Kaydı İznini etkinleştirin.</string>
-
-    <!-- Kişi Yönetimi ve Ayrıntılar -->
     <string name="contacts_header">Kişiler</string>
     <string name="no_contacts_title">Kişi bulunamadı</string>
     <string name="no_contacts_subtitle">Kişi oluşturmak için \'Yeni Ekle\'ye dokunun</string>
@@ -95,8 +77,6 @@
     <string name="settings_whatsapp_pref_title">Varsayılan WhatsApp Hesabı</string>
     <string name="settings_whatsapp_pref_sub">Hem WhatsApp hem de Business yüklüyken açılacak uygulama</string>
     <string name="whatsapp_pref_ask">Her Zaman Sor</string>
-
-    <!-- Son Aramalar ve Arama Geçmişi -->
     <string name="recents_header">Son Aramalar</string>
     <string name="no_call_log_title">Arama kaydınız boş</string>
     <string name="no_call_log_subtitle">Son aramalar burada görünecek</string>
@@ -115,8 +95,6 @@
     <string name="showing_last_5_calls">Son 5 arama gösteriliyor</string>
     <string name="call_summary_prefix">%1$s Arama Özeti</string>
     <string name="today_call_summary">Bugünün Arama Özeti</string>
-
-    <!-- Tuş Takımı ve T9 Arama -->
     <string name="dialpad_enter_number">Numara Girin</string>
     <string name="dialpad_create_contact">Kişi Oluştur</string>
     <string name="dialpad_add_to_existing">Mevcut Kişiye Ekle</string>
@@ -127,8 +105,6 @@
     <string name="dialpad_clear">Temizle</string>
     <string name="dialpad_paste">Yapıştır</string>
     <string name="dialpad_copy">Numarayı Kopyala</string>
-
-    <!-- Arama İçi Eylemler ve Durumlar -->
     <string name="btn_answer">Yanıtla</string>
     <string name="btn_decline">Reddet</string>
     <string name="btn_hangup">Kapat</string>
@@ -170,8 +146,6 @@
     <string name="conference">Konferans (%1$d)</string>
     <string name="caller_verified">Doğrulandı</string>
     <string name="no_answer">Cevap Yok</string>
-
-    <!-- Favoriler ve Sesli Mesaj -->
     <string name="favorites_header">Favoriler</string>
     <string name="no_favorites_title">Henüz favori yok</string>
     <string name="no_favorites_subtitle">Kolayca bulmak için kişileri yıldızlayın</string>
@@ -181,8 +155,6 @@
     <string name="voicemail_settings">Sesli Mesaj Ayarları</string>
     <string name="voicemail_directory_number">Sesli Mesaj Erişim Numarası</string>
     <string name="voicemail_sample_transcript">Operatör sesli mesaj dökümü çevrimdışı kullanılamıyor. Sesli mesajı aramak için Oynat\'a dokunun.</string>
-
-    <!-- Ayar Kategorileri -->
     <string name="cat_sound_gestures">Ses ve Hareketler</string>
     <string name="cat_calling_accounts">SIM ve Arama</string>
     <string name="cat_speed_dial_quick_responses">Hızlı Arama ve Hızlı Yanıt</string>
@@ -204,8 +176,6 @@
     <string name="settings_title">Ayarlar</string>
     <string name="settings_back">Geri</string>
     <string name="settings_info_utilities">Bilgi ve Yardımcı Programlar</string>
-
-    <!-- Ayar Başlıkları -->
     <string name="header_sim_carrier">SIM VE OPERATÖR YAPILANDIRMASI</string>
     <string name="header_incoming_alerts">GELEN ARAMA UYARILARI</string>
     <string name="header_threat_intelligence">TEHDİT İSTİHBARATI</string>
@@ -220,8 +190,6 @@
     <string name="header_app_specs">UYGULAMA ÖZELLİKLERİ</string>
     <string name="header_navigation_layout">GEZİNME VE DÜZEN</string>
     <string name="header_community">TOPLULUK</string>
-
-    <!-- Ayarlar - Genel ve Görünüm -->
     <string name="settings_carrier_call_settings">Operatör Arama Ayarları</string>
     <string name="settings_carrier_call_settings_sub">Arama bekleme, arama yönlendirme ve ek telefon hizmetleri</string>
     <string name="settings_appearance">Görünüm</string>
@@ -246,8 +214,6 @@
     <string name="settings_tab_layout_sub">Her gezinme yuvasına ayrı ekranlar atayın. Seçim, yinelenenleri otomatik olarak değiştirir.</string>
     <string name="settings_startup_options">Başlangıç Seçenekleri</string>
     <string name="settings_default_startup_tab">Varsayılan Başlangıç Sekmesi</string>
-
-    <!-- Ayarlar - Ses, Titreşim ve Hareketler -->
     <string name="settings_sound_haptics">Ses ve Dokunsal Geri Bildirim</string>
     <string name="settings_dialpad_tones">Tuş Takımı Tonları</string>
     <string name="settings_dialpad_tones_sub">Tuşlara basıldığında ses çal</string>
@@ -260,11 +226,9 @@
     <string name="settings_flash_alerts">Aramada Flaş Uyarıları</string>
     <string name="settings_flash_alerts_sub">Gelen çalan aramalarda kamera flaşını yakıp söndürür</string>
     <string name="settings_auto_tune_volume">Kayıt için hoparlör sesini otomatik ayarla</string>
-    <string name="settings_auto_tune_volume_sub" formatted="false">Net iki yönlü akustik yakalama için kayıt sırasında hoparlör sesini otomatik olarak %55\'te dengeler.</string>
+    <string name="settings_auto_tune_volume_sub">Net iki yönlü akustik yakalama için kayıt sırasında hoparlör sesini otomatik olarak %55\'te dengeler.</string>
     <string name="header_theme_styling">TEMA VE STİL</string>
     <string name="header_sound_haptics">SES VE DOKUNSAL GERİ BİLDİRİM</string>
-
-    <!-- Ayarlar - Arama Hesapları, SIM ve Telefon -->
     <string name="settings_calling_features">Arama Özellikleri</string>
     <string name="settings_call_waiting">Arama Bekletme</string>
     <string name="settings_call_waiting_sub">Aktif arama sırasında gelen aramaları bildir</string>
@@ -276,8 +240,6 @@
     <string name="sim_ask">Sor</string>
     <string name="select_sim_card">SIM Kart Seç</string>
     <string name="choose_sim_card">%1$s için bu aramayı yapmak üzere SIM kart seçin:</string>
-
-    <!-- Ayarlar - Giden Arayan Kimliği, Gizlilik ve CLIR -->
     <string name="header_caller_id_privacy">Giden Arayan Kimliği ve Gizlilik (CLIR)</string>
     <string name="settings_hide_caller_id">Arayan Kimliğini Gizle</string>
     <string name="settings_hide_caller_id_sub">Numaranızı maskelemek için giden aramalara operatör gizlilik kodu öneki ekleyin</string>
@@ -294,8 +256,6 @@
     <string name="settings_clir_prefix_japan">Japonya (184)</string>
     <string name="settings_clir_prefix_custom">Özel Önek</string>
     <string name="settings_clir_custom_label">Özel CLIR operatör önek kodu girin</string>
-
-    <!-- Ayarlar - Hızlı Arama ve Hızlı Yanıtlar -->
     <string name="settings_speed_dial">Hızlı Arama</string>
     <string name="settings_speed_dial_sub">1-9 hızlı arama tuşlarını atayın</string>
     <string name="speed_dial">Hızlı Arama</string>
@@ -317,15 +277,11 @@
     <string name="no_responses_saved_desc">Gelen aramaları reddederken hızlıca göndermek için özel mesaj şablonları ekleyin.</string>
     <string name="delete_response">Yanıtı sil</string>
     <string name="send_quick_response">💬 Hızlı Yanıt Gönder</string>
-
-    <!-- Ayarlar - Operatör Sesli Mesajı ve Tercihleri -->
     <string name="settings_voicemail_num">Sesli Mesaj Numarası</string>
     <string name="settings_voicemail_num_sub">Hızlı arama 1 hedefini yapılandır</string>
     <string name="settings_voicemail_setup_title">Sesli Mesaj Kurulumu</string>
     <string name="voicemail_setup_desc">Tuş takımında \'1\' tuşuna uzun basıldığında tetiklenecek telefon numarasını ayarlayın.</string>
     <string name="save_voicemail_number">Sesli Mesaj Numarasını Kaydet</string>
-
-    <!-- Ayarlar - Arama Engelleme, Spam Veritabanı ve Çevrimdışı Koruma -->
     <string name="settings_calls_blocking">Aramalar ve Engelleme</string>
     <string name="settings_blocked_numbers">Engellenen Numaralar</string>
     <string name="settings_blocked_numbers_sub">Kısıtlanmış gelen arayanları yönet</string>
@@ -371,8 +327,6 @@
     <string name="btn_import_spam_file">Dosya İçe Aktar</string>
     <string name="blocklist_import_count_success">%1$d engellenen numara içe aktarıldı!</string>
     <string name="spam_import_count_success">%1$d spam girdisi içe aktarıldı!</string>
-
-    <!-- Ayarlar - Arama Kaydı Kasası, Ses ve Sıkıştırma -->
     <string name="settings_call_recording">Arama Kaydı</string>
     <string name="settings_call_recording_sub">Arama içi kayıt kontrollerini etkinleştir ve yerel olarak kaydet</string>
     <string name="settings_recordings">Kaydedilen Kayıtlar</string>
@@ -408,8 +362,6 @@
     <string name="vault_locked_title">Kayıt Kasası Kilitli</string>
     <string name="vault_locked_desc">Gizli arama kayıtlarına erişmek için biyometrik kimlik doğrulama gereklidir.</string>
     <string name="btn_unlock_vault">Kasanın Kilidini Aç</string>
-
-    <!-- Ayarlar - Dynamic Island Arama Kapsülü -->
     <string name="settings_dynamic_island_title">Dynamic Island Arama Kapsülü</string>
     <string name="settings_dynamic_island_sub">Devam eden aramalar için kamera çentiği etrafında yüzen etkileşimli bir arama kapsülü göster</string>
     <string name="settings_dynamic_island_speaker_only">Yalnızca Hoparlördeyken Göster</string>
@@ -420,8 +372,6 @@
     <string name="dynamic_island_muted">Sessiz</string>
     <string name="dynamic_island_recording">KAYIT</string>
     <string name="dynamic_island_tap_to_expand">Arama kontrollerini genişletmek için dokun</string>
-
-    <!-- Ayarlar - Kişiler, Yinelenenleri Kaldırma ve Depolama -->
     <string name="settings_contact_preferences">Kişi Tercihleri</string>
     <string name="settings_contacts_to_display">Görüntülenecek Kişiler</string>
     <string name="settings_contacts_to_display_sub">Kişileri hesap kaynağına göre filtrele (ör. Google, Telefon, SIM)</string>
@@ -444,8 +394,6 @@
     <string name="toast_merged_duplicates_for">%1$s için yinelenenler birleştirildi</string>
     <string name="settings_merge_duplicate_contacts">Yinelenen Kişileri Birleştir</string>
     <string name="settings_merge_duplicate_contacts_sub">Yinelenen kişi girişlerini tara ve temizle</string>
-
-    <!-- Ayarlar - Yedekleme, Geri Yükleme ve Şifreli Taşıma -->
     <string name="settings_data_utilities">Veri ve Yardımcı Programlar</string>
     <string name="settings_backup_restore_sub">Şifreli JSON dosyasından arama kayıtlarını ve ayarları geri yükle</string>
     <string name="backup_service_health_title">Veri ve Yedekleme</string>
@@ -497,11 +445,10 @@
     <string name="file_saved_success">Dosya başarıyla kaydedildi!</string>
     <string name="file_save_failed">Dosya kaydedilemedi</string>
     <string name="file_read_failed">Seçilen dosya okunamadı</string>
-
-    <!-- Ayarlar - Güvenlik, Biyometri, PIN ve Uygulama Kilidi -->
     <string name="settings_security_protection">Güvenlik ve Koruma</string>
     <string name="settings_biometric_lock">Uygulama Kilidi</string>
     <string name="settings_biometric_lock_sub">Uygulamayı açmak için cihaz kilidi (PIN/Desen/Biyometri) gerektir</string>
+    <string name="biometric_requires_screen_lock">Önce Android Ayarlarından cihaz PIN kodu, desen veya biyometrik ekran kilidi ayarlayın.</string>
     <string name="settings_require_unlock_answer">Aramaları Yanıtlamak için Kilit Açma Gerektir</string>
     <string name="settings_require_unlock_answer_sub">Kilit ekranından gelen aramaları yanıtlamadan önce cihaz PIN\'i, deseni veya biyometrisi iste</string>
     <string name="lockscreen_unlock_for_action">Bu özelliğe erişmek için cihazın kilidini açın</string>
@@ -517,12 +464,10 @@
     <string name="restricted_settings_title">Kısıtlı Ayarlar</string>
     <string name="restricted_settings_desc">Bu uygulamayı varsayılan telefon uygulaması olarak kullanmak için elle etkinleştirmeniz gerekebilir. Sistem Ayarları &gt; Uygulamalar &gt; Secure Dialer &gt; Gelişmiş &gt; Kısıtlı Ayarlara İzin Ver bölümüne gidin ve tekrar deneyin.</string>
     <string name="btn_open_settings">Ayarları Aç</string>
-
-    <!-- Ayarlar - Arama Analitiği, Gösterge Paneli ve Arama Notları -->
     <string name="history_timeline">Geçmiş Zaman Çizelgesi</string>
     <string name="call_details">Arama Ayrıntıları</string>
     <string name="delete_all_history">Tüm geçmişi sil</string>
-    <string name="no_matching_calls_for">\"%1$s\" için eşleşen arama yok</string>
+    <string name="no_matching_calls_for">\&quot;%1$s\&quot; için eşleşen arama yok</string>
     <string name="summary_missed_and_time">Cevapsız: %1$d • Süre: %2$s</string>
     <string name="summary_range_today">Bugün</string>
     <string name="summary_range_this_week">Bu Hafta</string>
@@ -558,8 +503,6 @@
     <string name="note_placeholder">Önemli ayrıntıları girin...</string>
     <string name="btn_save_note">Notu Kaydet</string>
     <string name="header_productivity_notes">ÜRETKENLİK VE NOTLAR</string>
-
-    <!-- Ayarlar - Sahte Arama Simülatörü ve Hatırlatıcılar -->
     <string name="settings_post_call_actions">Arama Sonrası Hızlı Eylemler</string>
     <string name="settings_post_call_actions_sub">Aramalar sona erdikten sonra Geri Ara, Mesaj, WhatsApp ve Not eylemlerini göster</string>
     <string name="settings_post_call_timer">Otomatik Kapatma Geri Sayımı</string>
@@ -622,8 +565,6 @@
     <string name="settings_callback_reminders">Geri Arama Hatırlatıcıları</string>
     <string name="settings_callback_reminders_sub">Bekleyen geri arama alarmlarını yönet</string>
     <string name="btn_call_back">Geri Ara</string>
-
-    <!-- Ayarlar - Sistem Araması ve Kilit Ekranı İzinleri -->
     <string name="btn_grant">İzin Ver</string>
     <string name="btn_configure">Yapılandır</string>
     <string name="btn_set_default">Varsayılan Olarak Ayarla</string>
@@ -640,8 +581,6 @@
     <string name="feature_disabled_hint">Özellik devre dışı</string>
     <string name="btn_enable_feature">Özelliği Etkinleştir</string>
     <string name="permissions_required">İzinler Gerekli</string>
-
-    <!-- Ayarlar - Hakkında, Gizlilik Politikası ve Topluluk Desteği -->
     <string name="settings_about">Secure Dialer Hakkında</string>
     <string name="settings_about_sub">Sürüm bilgisi, lisanslar ve temel teknolojiler</string>
     <string name="settings_privacy">Gizlilik Politikası</string>
@@ -664,20 +603,16 @@
     <string name="checking_mirrors">Güvenli yansılar kontrol ediliyor...</string>
     <string name="app_up_to_date_desc">Secure Dialer\'ın en son resmi kriptografik yapısını kullanıyorsunuz.</string>
     <string name="check_for_updates_now">Şimdi Güncellemeleri Kontrol Et</string>
-    <string name="up_to_date_result">
-        Secure Dialer güncel!
-Sürüm v%1$s (Kararlı Sürüm)
-    </string>
+    <string name="up_to_date_result">Secure Dialer güncel!\nSürüm v%1$s (Kararlı Sürüm)</string>
     <string name="settings_app_updates">Uygulama İçi Güncellemeler</string>
     <string name="settings_app_updates_sub">Sürüm durumunu ve değişiklik günlüğünü kontrol et</string>
     <string name="settings_updates_title">Uygulama İçi Güncellemeler</string>
     <string name="settings_contribution">Katkı</string>
     <string name="settings_support_title">Secure Dialer\'ı Destekleyin</string>
-    <string name="settings_support_desc" formatted="false">Secure Dialer %100 ücretsiz, açık kaynaklı, reklamsız ve gizlilik önceliklidir. Bu uygulamayı faydalı bulursanız, kod katkısında bulunmayı, çeviri göndermeyi veya ücretsiz ve güvenli araçların geliştirilmesini desteklemeyi düşünün.</string>
+    <string name="settings_support_desc">Secure Dialer %100 ücretsiz, açık kaynaklı, reklamsız ve gizlilik önceliklidir. Bu uygulamayı faydalı bulursanız, kod katkısında bulunmayı, çeviri göndermeyi veya ücretsiz ve güvenli araçların geliştirilmesini desteklemeyi düşünün.</string>
     <string name="settings_contribute_github">GitHub\'da Katkıda Bulun</string>
     <string name="app_version_name">Sürüm %1$s</string>
-
-    <!-- Genel Düğmeler, Ortak Yardımcı Programlar ve Ortak Diyaloglar -->
+    <string name="about_version_telemetry">Sürüm %1$s • Sıfır Telemetri</string>
     <string name="btn_cancel">İptal</string>
     <string name="btn_save">Kaydet</string>
     <string name="btn_delete">Sil</string>
@@ -699,7 +634,7 @@ Sürüm v%1$s (Kararlı Sürüm)
     <string name="error_open_messages">Mesajlaşma uygulaması açılamadı</string>
     <string name="history">Geçmiş</string>
     <string name="permissions_dialog_title">İzinler ve Yerel Veri Gizliliği</string>
-    <string name="permissions_dialog_desc" formatted="false">Secure Dialer\'ın arama geçmişini görüntülemek, gelen arayanları tanımlamak ve arama yapmaya izin vermek için Kişilerinize ve Arama Kayıtlarınıza erişmesi gerekir. Tüm veriler cihazınızda %100 yerel olarak işlenir ve asla yüklenmez veya paylaşılmaz.</string>
+    <string name="permissions_dialog_desc">Secure Dialer\'ın arama geçmişini görüntülemek, gelen arayanları tanımlamak ve arama yapmaya izin vermek için Kişilerinize ve Arama Kayıtlarınıza erişmesi gerekir. Tüm veriler cihazınızda %100 yerel olarak işlenir ve asla yüklenmez veya paylaşılmaz.</string>
     <string name="btn_continue">Devam Et</string>
     <string name="btn_not_now">Şimdi Değil</string>
     <string name="about_version_label">Secure Dialer v%1$s</string>
@@ -727,7 +662,7 @@ Sürüm v%1$s (Kararlı Sürüm)
     <string name="action_export_vcf">VCF Dışa Aktar</string>
     <string name="confirm_delete_contact_title">Kişi silinsin mi?</string>
     <string name="confirm_delete_contact_msg">%1$s kalıcı olarak kaldırılsın mı?</string>
-    <string name="confirm_delete_contacts_title">"%1$d kişi silinsin mi?"</string>
+    <string name="confirm_delete_contacts_title">&quot;%1$d kişi silinsin mi?&quot;</string>
     <string name="confirm_delete_contacts_msg">Seçilen %1$d kişi kalıcı olarak kaldırılsın mı? Bu işlem geri alınamaz.</string>
     <string name="vcf_import_dest_title">İçe Aktarma Depolama Alanı Seç</string>
     <string name="vcf_import_dest_desc">İçe aktarılan vCard kişileri nereye kaydedilsin?</string>
@@ -963,4 +898,60 @@ Sürüm v%1$s (Kararlı Sürüm)
     <string name="sim_system_slot_info">Sistem: %1$s (Yuva %2$d)</string>
     <string name="toast_sim_label_reset">Varsayılan SIM etiketine sıfırlandı</string>
     <string name="btn_reset">Sıfırla</string>
+    <string name="header_incoming_call_display">Gelen Arama Görünümü</string>
+    <string name="settings_incoming_screen_on_title">Ekran Açıkken</string>
+    <string name="settings_incoming_screen_on_sub">Kilit açıkken üst bildirim bandı gösterin veya tam ekran arama arayüzünü açın</string>
+    <string name="settings_incoming_screen_off_title">Ekran Kapalı veya Kilitliyken</string>
+    <string name="settings_incoming_screen_off_sub">Tam ekran arama arayüzüyle ekranı uyandırın veya yalnızca bildirim gösterin</string>
+    <string name="incoming_display_mode_notification">Bildirim</string>
+    <string name="incoming_display_mode_full_screen">Tam Ekran</string>
+    <string name="notif_channel_incoming_shade_name">Gelen Aramalar (Tam Ekran Açık)</string>
+    <string name="notif_channel_incoming_shade_desc">Tam ekran arama arayüzü açıkken durum çubuğu gelen arama öğesi</string>
+    <string name="search_item_incoming_screen_on">Gelen Arama Görünümü (Ekran Açık)</string>
+    <string name="search_desc_incoming_screen_on">Ekran açıkken bildirim veya tam ekran gelen arama seçin</string>
+    <string name="search_item_incoming_screen_off">Gelen Arama Görünümü (Ekran Kapalı / Kilitli)</string>
+    <string name="search_desc_incoming_screen_off">Ekran kapalı veya kilitliyken tam ekran veya yalnızca bildirim seçin</string>
+    <string name="toast_spam_added">Numara çevrimdışı spam veritabanına eklendi</string>
+    <string name="toast_spam_cleared">Çevrimdışı spam veritabanı temizlendi</string>
+    <string name="label_spam_default">Spam</string>
+    <string name="recordings_storage_header">Kayıt Depolama ve Yedekleme</string>
+    <string name="btn_sync_disk">Diski Senkronize Et</string>
+    <string name="btn_export_all">Tümünü Dışa Aktar</string>
+    <string name="toast_recordings_synced">Kayıtlar cihaz hafızasından senkronize edildi</string>
+    <string name="toast_recordings_cleaned">%1$d boş veya bozuk kayıt temizlendi</string>
+    <string name="toast_recordings_none_empty">Boş veya bozuk kayıt bulunamadı</string>
+    <string name="toast_recording_playback_error">Kayıt oynatılamıyor — dosya eksik veya okunamıyor</string>
+    <string name="toast_recording_share_error">Kayıt paylaşılamıyor — dosya eksik veya okunamıyor</string>
+    <string name="error_open_dialer">Telefon uygulaması açılamadı</string>
+    <string name="call_summary_all">Tüm Aramaların Özeti</string>
+    <string name="call_summary_compact">Arama Özeti</string>
+    <string name="duration_hm">%1$d sa %2$d dk</string>
+    <string name="duration_ms">%1$d dk %2$d sn</string>
+    <string name="duration_m">%1$d dk</string>
+    <string name="duration_s">%1$d sn</string>
+    <string name="inline_exact_alarm_note">Bu Android sürümünde kesin alarmlar kısıtlanmıştır. İzin verilmedikçe programlar biraz gecikebilir.</string>
+    <string name="inline_notifications_disabled_note">Bildirimler devre dışı. İzin verilene kadar planlanmış uyarılar görünmez.</string>
+    <string name="btn_allow_in_settings">İzin Ver</string>
+    <string name="recordings_oem_hardware_note">Android 9+, bazı cihazlarda doğrudan ses yakalamayı kısıtlar. En net çift yönlü ses için Hoparlörü veya Otomatik Ayarı açık tutun.</string>
+    <string name="label_potential_spoofed_number">Olası Sahte Numara</string>
+    <string name="desc_restore_call_pill">Arama Hapını Geri Yükle</string>
+    <string name="desc_minimize_camera_dot">Kamera noktasına küçült</string>
+    <string name="label_sim_slot">SIM %1$d</string>
+    <string name="label_rec_badge">KAYIT</string>
+    <string name="whatsapp_web_link_suffix"> (wa.me web bağlantısı)</string>
+    <string name="whatsapp_auto_detected">Otomatik algılandı: %1$s</string>
+    <string name="whatsapp_business_label">İşletme</string>
+    <string name="post_call_recording_summary">%1$s (%2$d sn kayıt)</string>
+    <string name="fake_call_script_office">Merhaba, rahatsız ettiğim için üzgünüm ama ofiste şu anda çok acil bir durum var. Hemen dışarı çıkıp konferans görüşmesine katılman gerekiyor. Müsait olup beni hemen geri arayabilir misin?</string>
+    <string name="fake_call_script_family">Selam! Sana ulaştığıma çok sevindim. Evde acil bir durum çıktı ve hemen yardımına ihtiyacımız var. Lütfen işlerini toparlayıp en kısa sürede gelebilir misin?</string>
+    <string name="fake_call_script_friend">Selam, hâlâ orada mısın? Kaçmak için bir bahaneye ihtiyacın olabileceğini düşündüm. Başını salla, acil bir şeymiş gibi davran ve oradan çık. Müsait olunca beni ara!</string>
+    <string name="settings_app_language">Uygulama Dili</string>
+    <string name="settings_app_language_sub">Görüntüleme dilini seçin veya sistem varsayılanını takip edin</string>
+    <string name="language_system_default">Sistem Varsayılanı</string>
+    <string name="btn_open_system_language_settings">Sistem Dil Ayarlarını Aç</string>
+    <string name="company_colon_prefix">Şirket: </string>
+    <string name="title_colon_prefix">Unvan: </string>
+    <string name="birthday_colon_prefix">Doğum Günü: </string>
+    <string name="website_colon_prefix">Web Sitesi: </string>
+    <string name="nickname_colon_prefix">Takma Ad: </string>
 </resources>

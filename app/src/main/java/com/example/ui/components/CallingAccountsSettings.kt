@@ -302,7 +302,7 @@ private fun VoicemailCallingAccountsRow(
                                     }
                                     context.startActivity(dialIntent)
                                 } catch (_: Exception) {
-                                    Toast.makeText(context, context.getString(R.string.error_open_messages), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, context.getString(R.string.error_open_dialer), Toast.LENGTH_SHORT).show()
                                 }
                             }
                         ) {

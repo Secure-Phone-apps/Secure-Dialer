@@ -181,4 +181,65 @@ class T9HighlightHelperTest {
         val highlightedSpan = result.spanStyles.find { it.item.color == primaryColor }
         assertNull("No match should have no primary highlight span", highlightedSpan)
     }
+
+    @Test
+    fun testMultiScriptT9MappingAndLengthPreservation() {
+        // Cyrillic: Иван (И=4, в=2, а=2, н=5) -> "4225"
+        val cyrillicName = "Иван"
+        val cyrillicT9 = T9HighlightHelper.nameToT9(cyrillicName)
+        assertEquals("4225", cyrillicT9)
+        assertEquals(cyrillicName.length, cyrillicT9.length)
+
+        // Arabic: أحمد (أ=2, ح=3, م=8, د=4) -> "2384"
+        val arabicName = "أحمد"
+        val arabicT9 = T9HighlightHelper.nameToT9(arabicName)
+        assertEquals("2384", arabicT9)
+        assertEquals(arabicName.length, arabicT9.length)
+
+        // Greek: Νίκος (Ν=6, ί=4, κ=5, ο=6, ς=7) -> "64567"
+        val greekName = "Νίκος"
+        val greekT9 = T9HighlightHelper.nameToT9(greekName)
+        assertEquals("64567", greekT9)
+        assertEquals(greekName.length, greekT9.length)
+
+        // Devanagari: अमन (अ=2, म=6, न=5) -> "265"
+        val hindiName = "अमन"
+        val hindiT9 = T9HighlightHelper.nameToT9(hindiName)
+        assertEquals("265", hindiT9)
+        assertEquals(hindiName.length, hindiT9.length)
+
+        // Turkish: Barış (B=2, a=2, r=7, ı=4, ş=7) -> "22747"
+        val turkishName = "Barış"
+        val turkishT9 = T9HighlightHelper.nameToT9(turkishName)
+        assertEquals("22747", turkishT9)
+        assertEquals(turkishName.length, turkishT9.length)
+
+        // Japanese Kana: さくら (さ=3, く=2, ら=8) -> "328"
+        val kanaName = "さくら"
+        val kanaT9 = T9HighlightHelper.nameToT9(kanaName)
+        assertEquals("328", kanaT9)
+        assertEquals(kanaName.length, kanaT9.length)
+
+        // Full-width Latin: Ｊｏｈｎ -> "5646"
+        val fullWidth = "Ｊｏｈｎ"
+        val fullWidthT9 = T9HighlightHelper.nameToT9(fullWidth)
+        assertEquals("5646", fullWidthT9)
+        assertEquals(fullWidth.length, fullWidthT9.length)
+    }
+
+    @Test
+    fun testMultiScriptHighlightName() {
+        val displayName = "Barış Özcan"
+        val query = "22747" // Barış
+        val result = T9HighlightHelper.highlightName(
+            displayName = displayName,
+            query = query,
+            highlightColor = primaryColor,
+            defaultColor = defaultOnSurface
+        )
+        val highlightedSpan = result.spanStyles.find { it.item.color == primaryColor }
+        assertNotNull("Should highlight Barış via multi-script T9", highlightedSpan)
+        assertEquals(0, highlightedSpan?.start)
+        assertEquals(5, highlightedSpan?.end)
+    }
 }
